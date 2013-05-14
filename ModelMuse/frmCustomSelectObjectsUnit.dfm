@@ -4,7 +4,7 @@ inherited frmCustomSelectObjects: TfrmCustomSelectObjects
   ClientWidth = 422
   ExplicitWidth = 440
   ExplicitHeight = 459
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -55,6 +55,7 @@ inherited frmCustomSelectObjects: TfrmCustomSelectObjects
     Header.Options = [hoColumnResize, hoDrag]
     TabOrder = 0
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toWheelPanning]
+    TreeOptions.SelectionOptions = [toFullRowSelect]
     OnChecking = vstObjectsChecking
     OnFreeNode = vstObjectsFreeNode
     OnGetText = vstObjectsGetText

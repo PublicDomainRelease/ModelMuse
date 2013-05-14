@@ -4,9 +4,9 @@ inherited frmSutraTimes: TfrmSutraTimes
   Caption = 'SUTRA Time Controls'
   ClientHeight = 549
   ClientWidth = 697
-  ExplicitWidth = 713
-  ExplicitHeight = 587
-  PixelsPerInch = 96
+  ExplicitWidth = 715
+  ExplicitHeight = 594
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -204,6 +204,7 @@ inherited frmSutraTimes: TfrmSutraTimes
           Header.Font.Style = []
           Header.MainColumn = -1
           TabOrder = 0
+          TreeOptions.SelectionOptions = [toFullRowSelect]
           OnGetText = vstScedulesGetText
           OnGetNodeDataSize = vstScedulesGetNodeDataSize
           OnNodeClick = vstScedulesNodeClick
@@ -349,6 +350,7 @@ inherited frmSutraTimes: TfrmSutraTimes
                       WordWrapCaptions = True
                       WordWrapCells = False
                       CaseSensitivePicklist = False
+                      CheckStyle = csCheck
                       AutoAdjustColWidths = True
                     end>
                   ExplicitWidth = 513
@@ -622,6 +624,7 @@ inherited frmSutraTimes: TfrmSutraTimes
                       WordWrapCaptions = True
                       WordWrapCells = False
                       CaseSensitivePicklist = False
+                      CheckStyle = csCheck
                       AutoAdjustColWidths = True
                     end>
                   ExplicitWidth = 513

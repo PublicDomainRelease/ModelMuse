@@ -376,9 +376,9 @@ uses
   framePackageNwtUnit in 'framePackageNwtUnit.pas' {framePackageNwt: TFrame},
   ModflowNWT_WriterUnit in 'ModflowNWT_WriterUnit.pas',
   ModflowUPW_WriterUnit in 'ModflowUPW_WriterUnit.pas',
-  {$IFDEF WIN32}
+{$IFDEF WIN32}
   Pcx in 'Pcx.pas',
-  {$ENDIF}
+{$ENDIF}
   frameScreenObjectUnit in 'frameScreenObjectUnit.pas' {frameScreenObject: TFrame},
   ModflowHeadObsResults in 'ModflowHeadObsResults.pas',
   frameStreamLinkUnit in 'frameStreamLinkUnit.pas' {frameStreamLink: TFrame},
@@ -518,7 +518,9 @@ uses
   frmHelpVersionUnit in 'frmHelpVersionUnit.pas' {frmHelpVersion},
   ModflowCfpWriterUnit in 'ModflowCfpWriterUnit.pas',
   ModflowCfpRechargeUnit in 'ModflowCfpRechargeUnit.pas',
-  framePackageSwiUnit in 'framePackageSwiUnit.pas' {framePackageSWI: TFrame};
+  framePackageSwiUnit in 'framePackageSwiUnit.pas' {framePackageSWI: TFrame},
+  ModflowSwiWriterUnit in 'ModflowSwiWriterUnit.pas',
+  frameDrawCrossSectionUnit in 'frameDrawCrossSectionUnit.pas' {frameDrawCrossSection: TFrame};
 
 {$R *.res}
 {#BACKUP ModelMuse.cfg}

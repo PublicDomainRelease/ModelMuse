@@ -201,7 +201,7 @@ var
 
 implementation
 
-uses {ShellApi,} forceforeground, JvVersionInfo, contnrs;
+uses {ShellApi,} forceforeground, JvVersionInfo, contnrs, System.Math;
 
 resourcestring
   StrPERCENTDISCREPANCY = 'PERCENT DISCREPANCY =';
@@ -1727,7 +1727,8 @@ var
   Cum: Double;
   Rate: Double;
 begin
-  Position :=Pos('UNSATURATED ZONE PACKAGE VOLUMETRIC BUDGET', ALine);
+  Position := Max(Pos('UNSATURATED ZONE PACKAGE VOLUMETRIC BUDGET', ALine),
+    Pos('VOLUMETRIC SWI', ALine));
   if Position > 0 then
   begin
     FVolBudget := False;

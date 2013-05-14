@@ -23,10 +23,8 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Width = 91
     Height = 47
     Anchors = [akRight, akBottom]
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 5
     OnClick = btnHelpClick
   end
@@ -36,11 +34,9 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Width = 91
     Height = 47
     Anchors = [akRight, akBottom]
-    DoubleBuffered = True
     Enabled = False
     Kind = bkOK
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 6
     OnClick = btnOKClick
   end
@@ -50,10 +46,8 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Width = 91
     Height = 47
     Anchors = [akRight, akBottom]
-    DoubleBuffered = True
     Kind = bkCancel
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 7
   end
   object comboColorGrid: TComboBox
@@ -145,7 +139,6 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
       OnBeforeDrawCell = rdgModelsBeforeDrawCell
       OnButtonClick = rdgModelsButtonClick
       ColorRangeSelection = False
-      ColorSelectedRow = True
       Columns = <
         item
           AutoAdjustRowHeights = False
@@ -167,6 +160,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
           WordWrapCaptions = False
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -189,6 +183,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -211,8 +206,10 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
           WordWrapCaptions = False
           WordWrapCells = True
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end>
+      WordWrapRowCaptions = False
       ColWidths = (
         20
         20

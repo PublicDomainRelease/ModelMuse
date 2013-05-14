@@ -200,11 +200,7 @@ type
       ;
     property ConduitFlowProcess: TConduitFlowProcess read FConduitFlowProcess
       write SetConduitFlowProcess;
-    property SwiPackage: TSwiPackage read FSwiPackage write SetSwiPackage
-    {$IFNDEF SWI}
-      stored False
-    {$ENDIF}
-    ;
+    property SwiPackage: TSwiPackage read FSwiPackage write SetSwiPackage;
     // Assign, Create, Destroy, SelectedModflowPackageCount
     // and Reset must be updated each time a new package is added.
   end;

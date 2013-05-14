@@ -5,7 +5,6 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
   ClientWidth = 472
   OnResize = FormResize
   ExplicitWidth = 490
-  ExplicitHeight = 271
   PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
@@ -82,6 +81,7 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
     Header.Font.Style = []
     Header.Options = [hoColumnResize, hoDrag]
     TabOrder = 0
+    TreeOptions.SelectionOptions = [toFullRowSelect]
     OnGetText = vstWarningsAndErrorsGetText
     OnInitNode = vstWarningsAndErrorsInitNode
     OnMeasureItem = vstWarningsAndErrorsMeasureItem

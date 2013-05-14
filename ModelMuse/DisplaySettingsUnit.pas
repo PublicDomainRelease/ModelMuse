@@ -282,6 +282,9 @@ type
     FMinVectors: TPredefinedVectors;
     FMidVectors: TPredefinedVectors;
     FShowHeadObsLegend: Boolean;
+    FCrossSectionDataSets: TStringList;
+    FCrossSectionLayersToUse: TIntegerCollection;
+    FCrossSectionColors: TIntegerCollection;
     procedure OnChangeEventHandler(Sender: TObject);
     procedure SetAdditionalText(const Value: TTextCollection);
     procedure SetGridDisplayChoice(const Value: TGridLineDrawingChoice);
@@ -311,6 +314,9 @@ type
     procedure SetMinVectors(const Value: TPredefinedVectors);
     procedure SetVelocityVectors(const Value: TVectorCollection);
     procedure SetShowHeadObsLegend(const Value: Boolean);
+    procedure SetCrossSectionDataSets(const Value: TStringList);
+    procedure SetCrossSectionLayersToUse(const Value: TIntegerCollection);
+    procedure SetCrossSectionColors(const Value: TIntegerCollection);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Collection: TCollection); override;
@@ -367,7 +373,14 @@ type
       write SetMinVectors;
     property VelocityVectors: TVectorCollection read FVelocityVectors
       write SetVelocityVectors;
-    property ShowHeadObsLegend: Boolean read FShowHeadObsLegend write SetShowHeadObsLegend;
+    property ShowHeadObsLegend: Boolean read FShowHeadObsLegend
+      write SetShowHeadObsLegend;
+    property CrossSectionDataSets: TStringList read FCrossSectionDataSets
+      write SetCrossSectionDataSets;
+    property CrossSectionColors: TIntegerCollection read FCrossSectionColors
+      write SetCrossSectionColors;
+    property CrossSectionLayersToUse: TIntegerCollection
+      read FCrossSectionLayersToUse write SetCrossSectionLayersToUse;
   end;
 
   { @name is a collection of @link(TDisplaySettingsItem)s.
@@ -606,6 +619,10 @@ begin
     MinVectors := SourceDisplay.MinVectors;
     VelocityVectors := SourceDisplay.VelocityVectors;
     ShowHeadObsLegend := SourceDisplay.ShowHeadObsLegend;
+    CrossSectionDataSets := SourceDisplay.CrossSectionDataSets;
+    CrossSectionLayersToUse := SourceDisplay.CrossSectionLayersToUse;
+    CrossSectionColors := SourceDisplay.CrossSectionColors;
+
   end
   else
   begin
@@ -635,10 +652,16 @@ begin
   FMidVectors := TPredefinedVectors.Create(nil);
   FMinVectors := TPredefinedVectors.Create(nil);
   FVelocityVectors := TVectorCollection.Create(nil);
+  FCrossSectionDataSets := TStringList.Create;
+  FCrossSectionLayersToUse := TIntegerCollection.Create(nil);
+  FCrossSectionColors := TIntegerCollection.Create(nil);
 end;
 
 destructor TDisplaySettingsItem.Destroy;
 begin
+  FCrossSectionColors.Free;
+  FCrossSectionLayersToUse.Free;
+  FCrossSectionDataSets.Free;
   FVelocityVectors.Free;
   FMinVectors.Free;
   FMidVectors.Free;
@@ -709,6 +732,24 @@ end;
 procedure TDisplaySettingsItem.SetContourFont(const Value: TFont);
 begin
   FContourFont.Assign(Value);
+end;
+
+procedure TDisplaySettingsItem.SetCrossSectionColors(
+  const Value: TIntegerCollection);
+begin
+  FCrossSectionColors.Assign(Value);
+end;
+
+procedure TDisplaySettingsItem.SetCrossSectionDataSets(
+  const Value: TStringList);
+begin
+  FCrossSectionDataSets.Assign(Value);
+end;
+
+procedure TDisplaySettingsItem.SetCrossSectionLayersToUse(
+  const Value: TIntegerCollection);
+begin
+  FCrossSectionLayersToUse.Assign(Value);
 end;
 
 procedure TDisplaySettingsItem.SetEdgeDisplaySettings(

@@ -6,8 +6,8 @@ inherited frmExportImage: TfrmExportImage
   ClientWidth = 721
   ShowHint = True
   OnClose = FormClose
-  ExplicitWidth = 739
-  ExplicitHeight = 564
+  ExplicitWidth = 737
+  ExplicitHeight = 557
   PixelsPerInch = 120
   TextHeight = 18
   object JvNetscapeSplitter2: TJvNetscapeSplitter
@@ -228,7 +228,7 @@ inherited frmExportImage: TfrmExportImage
             PopupMenu = pmChangeStates
             TabOrder = 1
             TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toWheelPanning]
-            TreeOptions.SelectionOptions = [toMultiSelect]
+            TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect]
             OnChecked = vstDataSetsChecked
             OnGetText = vstDataSetsGetText
             OnGetNodeDataSize = vstDataSetsGetNodeDataSize
@@ -338,6 +338,7 @@ inherited frmExportImage: TfrmExportImage
         Caption = 'View'
         TabOrder = 0
         OnExpand = cpViewExpand
+        ExplicitWidth = 185
         object Panel3: TPanel
           Left = 0
           Top = 0

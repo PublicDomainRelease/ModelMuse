@@ -9,7 +9,7 @@ inherited frmGridValue: TfrmGridValue
   OnResize = FormResize
   ExplicitWidth = 520
   ExplicitHeight = 558
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object btnHelp: TBitBtn
     Left = 306
@@ -264,8 +264,8 @@ inherited frmGridValue: TfrmGridValue
         Height = 26
         Tree.Left = 0
         Tree.Top = 0
-        Tree.Width = 304
-        Tree.Height = 202
+        Tree.Width = 302
+        Tree.Height = 195
         Tree.Align = alClient
         Tree.Header.AutoSizeIndex = 0
         Tree.Header.Font.Charset = DEFAULT_CHARSET
@@ -275,6 +275,7 @@ inherited frmGridValue: TfrmGridValue
         Tree.Header.Font.Style = []
         Tree.Header.MainColumn = -1
         Tree.TabOrder = 0
+        Tree.TreeOptions.SelectionOptions = [toFullRowSelect]
         Tree.OnChange = virttreecomboDataSetsTreeChange
         Tree.OnGetText = virttreecomboDataSetsTreeGetText
         Tree.OnGetNodeDataSize = virttreecomboDataSetsTreeGetNodeDataSize
@@ -322,7 +323,6 @@ inherited frmGridValue: TfrmGridValue
         ScrollBars = ssVertical
         TabOrder = 2
         OnKeyUp = memoExplanationKeyUp
-        ExplicitWidth = 389
       end
       object btnUpdate: TButton
         Left = 31
@@ -353,7 +353,6 @@ inherited frmGridValue: TfrmGridValue
       TabOrder = 2
       OnExpand = jvrltPathlineExpand
       OnCollapse = jvrltPathlineCollapse
-      ExplicitWidth = 145
       FAWidth = 426
       FAHeight = 511
       FCWidth = 22
@@ -471,8 +470,6 @@ inherited frmGridValue: TfrmGridValue
             AutoAdjustColWidths = True
           end>
         WordWrapRowCaptions = False
-        ExplicitWidth = 0
-        ExplicitHeight = 463
       end
       object pnlPathLength: TPanel
         Left = 21
@@ -481,8 +478,6 @@ inherited frmGridValue: TfrmGridValue
         Height = 36
         Align = alBottom
         TabOrder = 1
-        ExplicitLeft = 19
-        ExplicitTop = 430
         object lblLength: TLabel
           Left = 7
           Top = 6

@@ -1029,7 +1029,7 @@ begin
       ocStatistic:
         begin
           if TryStrToFloat(rdgObservations.Cells[
-            Ord(ocTime), ARow], AValue) then
+            Ord(ocStatistic), ARow], AValue) then
           begin
             ObsEdit := rdgObservations.Objects[0, ARow] as TObsEdit;
             ObsEdit.Statistic := AValue;

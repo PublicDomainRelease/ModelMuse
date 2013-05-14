@@ -204,6 +204,9 @@ const
   KCfpNodeElevation = 'CfpNodeElevation';
   KCfpFixedHeads = 'CfpFixedHeads';
   KActive_Surface_Elevation = 'Active_Surface_Elevation';
+  KEffectivePorosity = 'EffectivePorosity';
+  KSourceFluidDensityZone = 'SourceFluidDensityZone';
+  KSWI_Observation_Name = 'SWI_Observation_Name';
 
 
   // @name is the name of the @link(TDataArray) that specifies
@@ -1689,6 +1692,45 @@ that affects the model output should also have a comment. }
 
   TChildModelCollection = class;
 
+//  TDataArrayColor = class(TObject)
+//    DataArray: TDataArray;
+//    Color: TColor;
+//  end;
+//
+//  TDataArrayColorList = Class(TObjectList<TDataArrayColor>)
+//    procedure RemoveDataArray(ADataArray: TDataArray);
+//  end;
+
+  TCrossSection = class(TObserver)
+  private
+    FLayersToUse: TList<integer>;
+    FDataArrays: TDataArrayList;
+    FAllLayers: boolean;
+    FModel: TCustomModel;
+    FColors: TList<TColor>;
+    procedure SetAllLayers(const Value: boolean);
+    procedure SetDataArrays(const Value: TDataArrayList);
+    procedure SetLayersToUse(const Value: TList<integer>);
+    procedure DataArrayChanged (Sender: TObject; const Item: TDataArray;
+      Action: TCollectionNotification);
+    procedure LayerChanged (Sender: TObject; const Item: integer;
+      Action: TCollectionNotification);
+    procedure SetColors(const Value: TList<TColor>);
+    procedure ColorChanged (Sender: TObject; const Item: TColor;
+      Action: TCollectionNotification);
+  public
+    Constructor Create(AModel: TCustomModel); reintroduce;
+    destructor Destroy; override;
+    procedure Assign(Source: TCrossSection); reintroduce;
+    procedure Clear;
+    property AllLayers: boolean read FAllLayers write SetAllLayers;
+    property LayersToUse: TList<integer> read FLayersToUse write SetLayersToUse;
+    property DataArrays: TDataArrayList read FDataArrays write SetDataArrays;
+    property Colors: TList<TColor> read FColors write SetColors;
+    procedure Draw(ABitMap: TBitmap32; ViewDirection: TViewDirection);
+    procedure RemoveDataArray(ADataArray: TDataArray);
+  end;
+
   TCustomModel = class abstract (TBaseModel)
   private
     FOnModelSelectionChange: TNotifyEvent;
@@ -1800,6 +1842,7 @@ that affects the model output should also have a comment. }
     function ModflowOrPhastUsed(Sender: TObject): boolean; virtual;
     function SwiUsed(Sender: TObject): boolean;
     function ZetaUsed(Sender: TObject): boolean;
+    function SwiObsUsed(Sender: TObject): boolean;
     function IndenticalTransientArray(DataArray: TDataArray; DataArrays: TList;
       var CachedIndex: integer): TDataArray;
     // See @link(TimeLists).
@@ -1858,6 +1901,9 @@ that affects the model output should also have a comment. }
     FSutraFluidFluxUTimeList: TSutraMergedTimeList;
     FSutraMassEnergyFluxTimeList: TSutraMergedTimeList;
     FOnHeadOBsChanged: TNotifyEvent;
+    FCrossSection: TCrossSection;
+    FOnCrossSectionChanged: TNotifyEvent;
+    procedure CrossSectionChanged(Sender: TObject);
     procedure SetAlternateFlowPackage(const Value: boolean);
     procedure SetAlternateSolver(const Value: boolean);
     procedure SetBatchFileAdditionsAfterModel(const Value: TStrings);
@@ -2011,8 +2057,12 @@ that affects the model output should also have a comment. }
     procedure SetMt3dmsFhbFlowMassFluxObservations(
       const Value: TMt3dmsFluxObservationGroups);
     function StoreFhbFlowMassFluxObservations: Boolean;
+{$IFDEF FMP}
     procedure UpdateCropFullStressPeriods(TimeList: TRealList);
     procedure UpdateAllotmentFullStressPeriods(TimeList: TRealList);
+{$ENDIF}
+    procedure SetCrossSection(const Value: TCrossSection);
+
   protected
     procedure GenerateIrregularMesh(var ErrorMessage: string);
     procedure GenerateFishNetMesh(var ErrorMessage: string); virtual;
@@ -2647,6 +2697,9 @@ that affects the model output should also have a comment. }
     procedure ExportHeadObservationsToShapeFile(const FileName: string);
     property OnHeadOBsChanged: TNotifyEvent read FOnHeadOBsChanged
       write FOnHeadOBsChanged;
+    property CrossSection: TCrossSection read FCrossSection write SetCrossSection;
+    property OnCrossSectionChanged: TNotifyEvent read FOnCrossSectionChanged
+      write FOnCrossSectionChanged;
   published
     // @name defines the grid used with PHAST.
     property PhastGrid: TPhastGrid read FPhastGrid write SetPhastGrid;
@@ -6349,8 +6402,20 @@ const
   //       Bug fix: Fixed using objects on the front or side views to define
   //         pipes in MODFLOW-CFP.
 
+  //    '3.1.1.1' Bug fix: In the Manage Head Observations dialog box, the
+  //         Statistic was set incorrectly.
+  //       Bug fix: Fixed bug in import of 1 layer model that used parameters
+  //         in the LPF package.
+  //       Bug fix: Fixed bug in displaying the MODFLOW Packages and Programs
+  //         dialog box.
+  //       Bug fix: Fixed bug in displaying the Object Properties dialog box.
+  //       Bug fix: fixed bug that would cause access violations when
+  //         contouring data.
+  //       Change: Whenever a new version of ModelMuse is used, it will attempt
+  //         to also use the newest version of ModelMonitor.
+
 const
-  IModelVersion = '3.1.1.0';
+  IModelVersion = '3.1.1.1';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -6389,6 +6454,7 @@ const
   StrMt3dConcFile = '.ucn';
   StrMtName = '.mt_nam';
   strMtObs = '.mto';
+  strZeta = '.zta';
   kSUTRAMeshTop = 'SUTRA_Mesh_Top';
 
 
@@ -6445,7 +6511,7 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
   QuadMeshGenerator, MeshRenumbering, ModflowPCGN_WriterUnit, Character,
   SutraBoundaryWriterUnit, QuadtreeClass, frmMeshInformationUnit,
   MeshRenumberingTypes, ModflowStrWriterUnit, ModflowFhbWriterUnit,
-  ModflowFmpWriterUnit, ModflowCfpWriterUnit;
+  ModflowFmpWriterUnit, ModflowCfpWriterUnit, ModflowSwiWriterUnit;
 
 resourcestring
   StrMpathDefaultPath = 'C:\WRDAPP\Mpath.5_0\setup\Mpathr5_0.exe';
@@ -6572,6 +6638,11 @@ resourcestring
   strModflowCfpDefaultPath = 'C:\WRDAPP\CFP\mf2005cfp.exe';
   StrActiveSurfaceEleva = 'Active_Surface_Elevation';
   StrSWI = 'SWI';
+  StrEffectivePorosity = 'EffectivePorosity';
+  StrSourceFluidDensityZo = 'SourceFluidDensityZone';
+  StrSWIObservationName = 'SWI_Observation_Name';
+  StrVersion = 'Version';
+  StrModelMuseVersion = 'ModelMuse Version';
 
 
 const
@@ -8231,6 +8302,7 @@ begin
   ModelSelection := msUndefined;
 
 
+  FCrossSection.Clear;
   FDataArrayManager.ClearAllDataSets;
   ClearParsers;
 
@@ -8980,6 +9052,7 @@ procedure TCustomModel.SetModelSelection(const Value: TModelSelection);
 var
   Index: Integer;
   DataSet: TDataArray;
+  ActiveDataSet: TDataArray;
 begin
   if FModelSelection <> Value then
   begin
@@ -9081,7 +9154,6 @@ begin
       end;
     end;
 
-
     for Index := 0 to FDataArrayManager.DataSetCount - 1 do
     begin
       DataSet := FDataArrayManager.DataSets[Index] as TDataArray;
@@ -9091,6 +9163,13 @@ begin
     begin
       InvalidateScreenObjects;
     end;
+
+    ActiveDataSet := FDataArrayManager.GetDataSetByName(rsActive);
+    if (ActiveDataSet <> nil) and (CrossSection <> nil) then
+    begin
+      ActiveDataSet.TalksTo(CrossSection);
+    end;
+
     DataArrayManager.UpdateClassifications;
     Invalidate;
     if Assigned(OnModelSelectionChange) then
@@ -19272,6 +19351,7 @@ procedure TProgramLocations.ReadFromIniFile(IniFile: TMemInifile);
 var
   ADirectory: string;
   DefaultLocation: string;
+  ModelVersion: string;
 begin
   ModflowLocation := IniFile.ReadString(StrProgramLocations, StrMODFLOW2005,
     StrModflowDefaultPath);
@@ -19364,8 +19444,17 @@ begin
     SetCurrentDir(ExtractFileDir(ParamStr(0)));
     DefaultLocation :=
       ExpandFileName(StrModelMonitorDefaultPath);
-    ModelMonitorLocation := IniFile.ReadString(StrProgramLocations,
-      StrModelMonitor, DefaultLocation);
+
+    ModelVersion := IniFile.ReadString(StrVersion, StrModelMuseVersion, '');
+    if FileExists(DefaultLocation) and (ModelVersion <> IModelVersion) then
+    begin
+      ModelMonitorLocation := DefaultLocation;
+    end
+    else
+    begin
+      ModelMonitorLocation := IniFile.ReadString(StrProgramLocations,
+        StrModelMonitor, DefaultLocation);
+    end;
   finally
     SetCurrentDir(ADirectory);
   end;
@@ -19474,6 +19563,8 @@ end;
 
 procedure TProgramLocations.WriteToIniFile(IniFile: TMemInifile);
 begin
+  IniFile.WriteString(StrVersion, StrModelMuseVersion, IModelVersion);
+
   IniFile.WriteString(StrProgramLocations, StrMODFLOW2005, ModflowLocation);
   IniFile.WriteString(StrProgramLocations, StrTextEditor, TextEditorLocation);
   IniFile.WriteString(StrProgramLocations, StrMODPATH, ModPathLocation);
@@ -19519,6 +19610,8 @@ end;
 constructor TCustomModel.Create(AnOwner: TComponent);
 begin
   inherited;
+  FCrossSection := TCrossSection.Create(self);
+  FCrossSection.OnUpToDateSet := CrossSectionChanged;
   FGages := TStringList.Create;
   FHfbDisplayer:= THfbDisplayer.Create(self);
   FHfbDisplayer.OnNeedToUpdate := UpdateHfb;
@@ -19911,6 +20004,7 @@ begin
   FPathLine.Free;
   FTimeSeries.Free;
   FEndPoints.Free;
+  FreeAndNil(FCrossSection);
   inherited;
 end;
 
@@ -20028,6 +20122,11 @@ begin
     Invalidate;
   end;
   FBatchFileAdditionsBeforeModel.Assign(Value);
+end;
+
+procedure TCustomModel.SetCrossSection(const Value: TCrossSection);
+begin
+  FCrossSection.Assign(Value);
 end;
 
 procedure TCustomModel.SetBatchFileAdditionsAfterModel(const Value: TStrings);
@@ -20430,6 +20529,7 @@ begin
       ModflowGrid.ThreeDGridObserver.StopTalkingToAnyone;
     end;
   end;
+  FCrossSection.Clear;
   for Index := 0 to FDataArrayManager.DataSetCount - 1 do
   begin
     DataSet := FDataArrayManager.DataSets[Index];
@@ -21532,6 +21632,19 @@ begin
   end;
 end;
 
+procedure TCustomModel.CrossSectionChanged(Sender: TObject);
+begin
+  Assert(Sender = FCrossSection);
+  if not FCrossSection.UpToDate then
+  begin
+    FCrossSection.UpToDate := True;
+    if Assigned(FOnCrossSectionChanged) then
+    begin
+      FOnCrossSectionChanged(self);
+    end;
+  end;
+end;
+
 procedure TCustomModel.RemoveVariables(const DataSet: TDataArray);
 var
   TempCompiler: TRbwParser;
@@ -22011,7 +22124,7 @@ var
       DataArray.Classification := Classification;
       DataArray.Visible := DataSetCreationData.Visible;
     end
-    else if ArrayNeeded(self)
+    else if ArrayNeeded(DataArray)
       or (Assigned(ArrayArrayShouldBeCreated)
       and ArrayArrayShouldBeCreated(self)) then
     begin
@@ -22043,9 +22156,9 @@ var
     end;
   end;
 begin
-  { TODO : Find a way to extract common code from
-TPhastModel.CreateModflowDataSets and
-TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
+  // See DefinePackageDataArrays for the definition of the
+  // contents of DataArrayCreationRecords.
+
   if FCustomModel.SwiUsed(nil) then
   begin
     for Index := 1 to FCustomModel.ModflowPackages.SwiPackage.NumberOfSurfaces do
@@ -22061,12 +22174,10 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
       Classification := FZetaDataDefinition.Classification;
       Lock := FZetaDataDefinition.Lock;
       AngleType := FZetaDataDefinition.AngleType;
+      HandleDataArray(FZetaDataDefinition);
     end;
-    HandleDataArray(FZetaDataDefinition);
   end;
 
-  // See DefinePackageDataArrays for the definition of the
-  // contents of DataArrayCreationRecords.
   for Index := 0 to Length(FDataArrayCreationRecords) - 1 do
   begin
     DataSetName := FDataArrayCreationRecords[Index].Name;
@@ -22187,7 +22298,7 @@ procedure TDataArrayManager.DefinePackageDataArrays;
     ARecord.Min := 0;
   end;
 const
-  ArrayCount = 102;
+  ArrayCount = 105;
 var
   Index: integer;
 begin
@@ -22202,6 +22313,7 @@ begin
   FZetaDataDefinition.Lock := StandardLock;
   FZetaDataDefinition.EvaluatedAt := eaBlocks;
   FZetaDataDefinition.AssociatedDataSets := 'MODFLOW SWI: ZETA';
+  FZetaDataDefinition.Visible := True;
   NoCheck(FZetaDataDefinition);
 
 
@@ -23770,6 +23882,48 @@ begin
   FDataArrayCreationRecords[Index].Visible := False;
   Inc(Index);
 
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KEffectivePorosity;
+  FDataArrayCreationRecords[Index].DisplayName := StrEffectivePorosity;
+  FDataArrayCreationRecords[Index].Formula := '0.1';
+  FDataArrayCreationRecords[Index].Classification := StrSWI;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwiUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'MODFLOW, SWI Package: SSZ';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := KSourceFluidDensityZone;
+  FDataArrayCreationRecords[Index].DisplayName := StrSourceFluidDensityZo;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrSWI;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwiUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'MODFLOW, SWI Package: ISOURCE';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtString;
+  FDataArrayCreationRecords[Index].Name := KSWI_Observation_Name;
+  FDataArrayCreationRecords[Index].DisplayName := StrSWIObservationName;
+  FDataArrayCreationRecords[Index].Formula := '""';
+  FDataArrayCreationRecords[Index].Classification := StrSWI;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwiObsUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'MODFLOW, SWI Package: Data Set 8 OBSNAM';
+  Inc(Index);
+
   Assert(Length(FDataArrayCreationRecords) = Index);
 end;
 
@@ -24036,8 +24190,10 @@ begin
   for Index := DeletedDataSetList.Count - 1 downto 0 do
   begin
     DataArray := DeletedDataSetList[Index];
+    FCustomModel.FCrossSection.RemoveDataArray(DataArray);
     FCustomModel.RemoveVariables(DataArray);
     ExtractDataSet(DataArray);
+
   end;
   FDeletedDataSets.Assign(DeletedDataSetList, laOr);
   for ChildIndex := 0 to ChildDataArrayManagerCount - 1 do
@@ -24377,6 +24533,8 @@ begin
     Mt3dmsStrMassFluxObservations := SourceModel.Mt3dmsStrMassFluxObservations;
     Mt3dmsFhbHeadMassFluxObservations := SourceModel.Mt3dmsFhbHeadMassFluxObservations;
     Mt3dmsFhbFlowMassFluxObservations := SourceModel.Mt3dmsFhbFlowMassFluxObservations;
+
+    OnCrossSectionChanged := SourceModel.OnCrossSectionChanged;
 //    SfrStreamLinkPlot := SourceModel.SfrStreamLinkPlot;
   end
   else
@@ -25014,6 +25172,10 @@ begin
   result := SwiUsed(Sender);
   if result then
   begin
+    if Sender = nil then
+    begin
+      Exit
+    end;
     Assert(Sender <> nil);
     DataArray := Sender as TDataArray;
     Assert(Pos(KActive_Surface_Elevation, DataArray.Name) = 1);
@@ -25036,6 +25198,12 @@ function TCustomModel.SwtSelected(Sender: TObject): boolean;
 begin
   result := (ModelSelection in ModflowSelection)
     and ModflowPackages.SwtPackage.IsSelected
+end;
+
+function TCustomModel.SwiObsUsed(Sender: TObject): boolean;
+begin
+  result := SwiUsed(Sender)
+    and (ModflowPackages.SwiPackage.ObsChoice <> socNone);
 end;
 
 function TCustomModel.SwiUsed(Sender: TObject): boolean;
@@ -25279,16 +25447,14 @@ resourcestring
   StrAllotmentTooLate = 'The specified times for allotments include times '
     + 'after the end of the last stress period.';
 
-procedure TCustomModel.UpdateAllotmentFullStressPeriods(TimeList: TRealList);
 {$IFDEF FMP}
+procedure TCustomModel.UpdateAllotmentFullStressPeriods(TimeList: TRealList);
 var
   PhastModel: TPhastModel;
   TestFirstTime: double;
   LastTestTime: double;
   OutOfStartRange, OutOfEndRange: Boolean;
-{$ENDIF}
 begin
-{$IFDEF FMP}
   if ModflowPackages.FarmProcess.SurfaceWaterAllotment <> swaEqual then
   begin
     Exit;
@@ -25314,11 +25480,11 @@ begin
     frmErrorsAndWarnings.AddWarning(self,
       StrAnyTimesAfterThe, StrAllotmentTooLate);
   end;
-{$ENDIF}
 end;
+{$ENDIF}
 
-procedure TCustomModel.UpdateCropFullStressPeriods(TimeList: TRealList);
 {$IFDEF FMP}
+procedure TCustomModel.UpdateCropFullStressPeriods(TimeList: TRealList);
 var
   CropOutOfStartRange: TStringList;
   CropOutOfEndRange: TStringList;
@@ -25333,9 +25499,7 @@ var
   FirstTime: double;
   ErrorMessage: string;
   LastTime: double;
-{$ENDIF}
 begin
-{$IFDEF FMP}
   CropOutOfStartRange := TStringList.Create;
   CropOutOfEndRange := TStringList.Create;
   try
@@ -25403,8 +25567,8 @@ begin
     CropOutOfStartRange.Free;
     CropOutOfEndRange.Free;
   end;
-{$ENDIF}
 end;
+{$ENDIF}
 
 procedure TCustomModel.UpdateModflowFullStressPeriods;
 var
@@ -26481,6 +26645,7 @@ var
 {$IFDEF FMP}
   FmpWriter: TModflowFmpWriter;
 {$ENDIF}
+  SwiWriter: TSwiWriter;
   CfpWriter: TModflowCfpWriter;
 begin
   // Note: MODFLOW can not read Unicode text files.
@@ -26997,6 +27162,24 @@ begin
       end;
       if ModflowPackages.ConduitFlowProcess.IsSelected
         and (ModelSelection = msModflowCFP) then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      SwiWriter := TSwiWriter.Create(self, etExport);
+      try
+        SwiWriter.WriteFile(FileName);
+      finally
+        SwiWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.SwiPackage.IsSelected
+        and (ModelSelection in [msModflow, msModflowNWT]) then
       begin
         frmProgressMM.StepIt;
       end;
@@ -31149,6 +31332,275 @@ begin
     FEndPoints := TEndPointReader.Create(self);
   end;
   FEndPoints.Assign(Value);
+end;
+
+{ TCrossSection }
+
+procedure TCrossSection.Assign(Source: TCrossSection);
+begin
+  AllLayers := Source.AllLayers;
+  LayersToUse := Source.LayersToUse;
+  DataArrays := Source.DataArrays;
+  Colors := Source.Colors;
+end;
+
+procedure TCrossSection.Clear;
+begin
+  FAllLayers := True;
+  FColors.Clear;
+  FLayersToUse.Clear;
+  FDataArrays.Clear;
+end;
+
+procedure TCrossSection.ColorChanged(Sender: TObject; const Item: TColor;
+  Action: TCollectionNotification);
+begin
+  UpToDate := False;
+end;
+
+constructor TCrossSection.Create(AModel: TCustomModel);
+begin
+  inherited Create(nil);
+  FModel := AModel;
+  FLayersToUse := TList<integer>.Create;
+  FLayersToUse.OnNotify := LayerChanged;
+
+  FDataArrays := TDataArrayList.Create;
+  FDataArrays.OwnsObjects := False;
+  FDataArrays.OnNotify := DataArrayChanged;
+
+  FColors := TList<TColor>.Create;
+  FColors.OnNotify := ColorChanged;
+
+  FAllLayers := True;
+end;
+
+procedure TCrossSection.DataArrayChanged(Sender: TObject;
+  const Item: TDataArray; Action: TCollectionNotification);
+begin
+  case Action of
+    cnAdded: Item.TalksTo(self);
+    cnRemoved, cnExtracted: Item.StopsTalkingTo(self);
+    else Assert(False);
+  end;
+end;
+
+destructor TCrossSection.Destroy;
+begin
+  FColors.Free;
+  FLayersToUse.Free;
+  FDataArrays.Free;
+  inherited;
+end;
+
+procedure TCrossSection.Draw(ABitMap: TBitmap32; ViewDirection: TViewDirection);
+var
+  ADataArray: TDataArray;
+  ActiveDataArray: TDataArray;
+  DataArrayIndex: Integer;
+  LayerIndex: Integer;
+  AColor: TColor;
+  function UseCell(Layer, Row, Col: Integer; Orientation: TDataSetOrientation): boolean;
+  var
+    LayerIndex: Integer;
+  begin
+    result := False;
+    case Orientation of
+      dsoTop:
+        begin
+          for LayerIndex := 0 to ActiveDataArray.LayerCount - 1 do
+          begin
+            if ActiveDataArray.BooleanData[LayerIndex, Row, Col] then
+            begin
+              result := True;
+              Exit;
+            end;
+          end;
+        end;
+      dso3D:
+        begin
+          result := ActiveDataArray.BooleanData[Layer, Row, Col];
+        end
+      else Assert(False);
+    end;
+  end;
+  procedure DrawACrossSectionLine(LayerIndex: integer; AColor: TColor);
+  var
+    Points: array of TPoint;
+    ColIndex: Integer;
+    ARow: Integer;
+    DrawLine: Boolean;
+    APoint: TPoint;
+    StartIndex: integer;
+    NumPoints: Integer;
+    LastIndex: Integer;
+    ACol: Integer;
+    RowIndex: Integer;
+    ZoomBox: TQRbwZoomBox2;
+  begin
+    case ViewDirection of
+      vdFront:
+        begin
+          ZoomBox := frmGoPhast.frameFrontView.ZoomBox;
+          StartIndex := 0;
+          LastIndex := -1;
+          ARow := FModel.Grid.SelectedRow;
+          SetLength(Points, FModel.Grid.ColumnCount);
+          for ColIndex := 0 to FModel.Grid.ColumnCount - 1 do
+          begin
+            DrawLine := False;
+            if UseCell(LayerIndex, ARow, ColIndex, ADataArray.Orientation)  then
+            begin
+              APoint.x := ZoomBox.XCoord(FModel.Grid.ColumnCenter(ColIndex));
+              APoint.y := ZoomBox.YCoord(ADataArray.RealData[LayerIndex,ARow,ColIndex]);
+              Points[ColIndex] := APoint;
+              LastIndex := ColIndex;
+            end
+            else
+            begin
+              DrawLine := True;
+            end;
+            if DrawLine or (ColIndex = FModel.Grid.ColumnCount - 1) then
+            begin
+              NumPoints := LastIndex-StartIndex+1;
+              if NumPoints > 1 then
+              begin
+                DrawBigPolyline32(ABitMap, Color32(AColor), 1, Points, True, False,
+                  StartIndex, NumPoints);
+              end;
+              StartIndex := Succ(ColIndex);
+            end;
+          end;
+        end;
+      vdSide:
+        begin
+          ZoomBox := frmGoPhast.frameSideView.ZoomBox;
+          StartIndex := 0;
+          LastIndex := -1;
+          ACol := FModel.Grid.SelectedColumn;
+          SetLength(Points, FModel.Grid.RowCount);
+          for RowIndex := 0 to FModel.Grid.RowCount - 1 do
+          begin
+            DrawLine := False;
+            if UseCell(LayerIndex, RowIndex, ACol, ADataArray.Orientation)  then
+            begin
+              APoint.y := ZoomBox.YCoord(FModel.Grid.RowCenter(RowIndex));
+              APoint.x := ZoomBox.XCoord(ADataArray.RealData[LayerIndex,RowIndex,ACol]);
+              Points[RowIndex] := APoint;
+              LastIndex := RowIndex;
+            end
+            else
+            begin
+              DrawLine := True;
+            end;
+            if DrawLine or (RowIndex = FModel.Grid.RowCount - 1) then
+            begin
+              NumPoints := LastIndex-StartIndex+1;
+              if NumPoints > 1 then
+              begin
+                DrawBigPolyline32(ABitMap, Color32(AColor), 1, Points, True, False,
+                  StartIndex, NumPoints);
+              end;
+              StartIndex := Succ(RowIndex);
+            end;
+          end
+        end;
+      else
+        Assert(False);
+    end;
+  end;
+begin
+  if FModel.Grid = nil then
+  begin
+    Exit;
+  end;
+  if ViewDirection = vdTop then
+  begin
+    Exit;
+  end;
+  if (FModel.Grid.LayerCount = 0)
+    or (FModel.Grid.RowCount = 0)
+    or (FModel.Grid.ColumnCount = 0)
+    then
+  begin
+    Exit;
+  end;
+  if DataArrays.Count = 0 then
+  begin
+    Exit;
+  end;
+  ActiveDataArray := FModel.DataArrayManager.GetDataSetByName(rsActive);
+  ActiveDataArray.Initialize;
+  for DataArrayIndex := 0 to DataArrays.Count - 1 do
+  begin
+    ADataArray := DataArrays[DataArrayIndex];
+    AColor := Colors[DataArrayIndex];
+    Assert(ADataArray.DataType = rdtDouble);
+    ADataArray.Initialize;
+    case ADataArray.Orientation of
+      dsoTop:
+        begin
+          DrawACrossSectionLine(0, AColor);
+        end;
+      dso3D:
+        begin
+          for LayerIndex := 0 to ADataArray.LayerCount - 1 do
+          begin
+            if AllLayers
+              or (LayersToUse.IndexOf(LayerIndex) >= 0) then
+            begin
+              DrawACrossSectionLine(LayerIndex, AColor)
+            end;
+          end;
+        end;
+      else Assert(False);
+    end;
+  end;
+end;
+
+procedure TCrossSection.LayerChanged(Sender: TObject; const Item: integer;
+  Action: TCollectionNotification);
+begin
+  UpToDate := False;
+end;
+
+procedure TCrossSection.RemoveDataArray(ADataArray: TDataArray);
+var
+  DataSetIndex: Integer;
+begin
+  DataSetIndex := FDataArrays.IndexOf(ADataArray);
+  if DataSetIndex >= 0 then
+  begin
+    FDataArrays.Delete(DataSetIndex);
+    FColors.Delete(DataSetIndex);
+  end;
+end;
+
+procedure TCrossSection.SetAllLayers(const Value: boolean);
+begin
+  if FAllLayers <> Value then
+  begin
+    FAllLayers := Value;
+    UpToDate := False;
+  end;
+end;
+
+procedure TCrossSection.SetColors(const Value: TList<TColor>);
+begin
+  FColors.Clear;
+  FColors.AddRange(Value.ToArray);
+end;
+
+procedure TCrossSection.SetDataArrays(const Value: TDataArrayList);
+begin
+  FDataArrays.Clear;
+  FDataArrays.AddRange(Value.ToArray);
+end;
+
+procedure TCrossSection.SetLayersToUse(const Value: TList<integer>);
+begin
+  FLayersToUse.Clear;
+  FLayersToUse.AddRange(Value.ToArray);
 end;
 
 initialization

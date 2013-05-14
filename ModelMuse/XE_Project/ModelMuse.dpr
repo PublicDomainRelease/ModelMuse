@@ -515,7 +515,9 @@ uses
   frmHelpVersionUnit in '..\frmHelpVersionUnit.pas' {frmHelpVersion},
   ModflowCfpWriterUnit in '..\ModflowCfpWriterUnit.pas',
   ModflowCfpRechargeUnit in '..\ModflowCfpRechargeUnit.pas',
-  framePackageSwiUnit in '..\framePackageSwiUnit.pas' {framePackageSWI: TFrame};
+  framePackageSwiUnit in '..\framePackageSwiUnit.pas' {framePackageSWI: TFrame},
+  ModflowSwiWriterUnit in '..\ModflowSwiWriterUnit.pas',
+  frameDrawCrossSectionUnit in '..\frameDrawCrossSectionUnit.pas' {frameDrawCrossSection: TFrame};
 
 {$R *.res}
 

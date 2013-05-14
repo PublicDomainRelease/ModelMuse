@@ -9,11 +9,12 @@ uses
   frameHeadObservationResultsUnit, frameModpathDisplayUnit,
   frameModpathTimeSeriesDisplayUnit, frameModpathEndpointDisplayUnit,
   frameCustomColorUnit, frameColorGridUnit, frameContourDataUnit,
-  frameVectorsUnit;
+  frameVectorsUnit, frameDrawCrossSectionUnit;
 
 type
   TPostPages = (ppColorGrid, ppContourData, ppPathline, ppEndPoints,
-    ppTimeSeries, ppHeadObs, ppSfrStreamLink, ppStrStreamLink, ppVectors);
+    ppTimeSeries, ppHeadObs, ppSfrStreamLink, ppStrStreamLink, ppVectors,
+    ppCrossSection);
 
   TfrmDisplayData = class(TfrmCustomGoPhast)
     pglstMain: TJvPageList;
@@ -41,6 +42,8 @@ type
     frameVectors: TframeVectors;
     jvspStrStreamLinks: TJvStandardPage;
     frameStrStreamLink: TframeStreamLink;
+    jvspCrossSection: TJvStandardPage;
+    frameDrawCrossSection: TframeDrawCrossSection;
     procedure btnApplyClick(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
     procedure pglstMainChange(Sender: TObject);
@@ -83,6 +86,7 @@ resourcestring
   StrStreamLinks = 'SFR Stream Links';
   StrStreamStrLinks = 'STR Stream Links';
   StrVectors = 'Vectors';
+  StrCrossSections = 'Cross Sections';
 
 {$R *.dfm}
 
@@ -113,23 +117,25 @@ begin
 
   tvpglstMain.Items.Clear;
   Node := tvpglstMain.Items.Add(nil, StrColorGrid) as TJvPageIndexNode;
-  Node.PageIndex := 5;
+  Node.PageIndex := jvspColorGrid.PageIndex;
   Node := tvpglstMain.Items.Add(nil, StrContourData) as TJvPageIndexNode;
-  Node.PageIndex := 6;
+  Node.PageIndex := jvspContourData.PageIndex;
   Node := tvpglstMain.Items.Add(nil, StrMODPATHPathlines) as TJvPageIndexNode;
-  Node.PageIndex := 0;
+  Node.PageIndex := jvspModpathPathline.PageIndex;
   Node := tvpglstMain.Items.Add(nil, StrMODPATHEndPoints) as TJvPageIndexNode;
-  Node.PageIndex := 4;
+  Node.PageIndex := jvspModpathEndpoints.PageIndex;
   Node := tvpglstMain.Items.Add(nil, StrMODPATHTimeSeries) as TJvPageIndexNode;
-  Node.PageIndex := 3;
+  Node.PageIndex := jvspModpathTimeSeries.PageIndex;
   Node := tvpglstMain.Items.Add(nil, StrHeadObservationRes) as TJvPageIndexNode;
-  Node.PageIndex := 2;
+  Node.PageIndex := jvspHeadObsResults.PageIndex;
   Node := tvpglstMain.Items.Add(nil, StrStreamLinks) as TJvPageIndexNode;
-  Node.PageIndex := 1;
+  Node.PageIndex := jvspSfrStreamLinks.PageIndex;
   Node := tvpglstMain.Items.Add(nil, StrStreamStrLinks) as TJvPageIndexNode;
-  Node.PageIndex := 8;
+  Node.PageIndex := jvspStrStreamLinks.PageIndex;
   Node := tvpglstMain.Items.Add(nil, StrVectors) as TJvPageIndexNode;
-  Node.PageIndex := 7;
+  Node.PageIndex := jvspVectors.PageIndex;
+  Node := tvpglstMain.Items.Add(nil, StrCrossSections) as TJvPageIndexNode;
+  Node.PageIndex := jvspCrossSection.PageIndex;
 end;
 
 procedure TfrmDisplayData.frameContourDatavirttreecomboDataSetsChange(
@@ -149,6 +155,7 @@ var
   StrSelected: boolean;
   HeadObsSelected: Boolean;
   VectorSelected: Boolean;
+//  CrossSectionSelected: boolean;
 //  Node: TTreeNode;
 begin
   Handle;
@@ -161,6 +168,7 @@ begin
   StrSelected := ModflowSelected and LocalModel.StrIsSelected;
   HeadObsSelected := ModflowSelected and LocalModel.HobIsSelected;
   VectorSelected := LocalModel.ModelSelection = msSutra22;
+//  CrossSectionSelected := ModflowSelected;
 
   if Ord(High(TPostPages)) <> tvpglstMain.Items.Count-1 then
   begin
@@ -187,8 +195,7 @@ begin
   tvpglstMain.Items[Ord(ppStrStreamLink)].Enabled := StrSelected;
 
   tvpglstMain.Items[Ord(ppVectors)].Enabled := VectorSelected;
-
-
+  tvpglstMain.Items[Ord(ppCrossSection)].Enabled := ModflowSelected;
 
   if frmGoPhast.ModelSelection in ModflowSelection then
   begin
@@ -198,6 +205,7 @@ begin
     frameModpathDisplay.GetData;
     frameModpathTimeSeriesDisplay.GetData;
     frameModpathEndpointDisplay1.GetData;
+    frameDrawCrossSection.GetData;
   end
   else if frmGoPhast.ModelSelection = msSutra22 then
   begin
@@ -277,6 +285,10 @@ begin
   else if pglstMain.ActivePage = jvspVectors then
   begin
     frameVectors.SetData;
+  end
+  else if pglstMain.ActivePage = jvspCrossSection then
+  begin
+    frameDrawCrossSection.SetData;
   end;
 end;
 

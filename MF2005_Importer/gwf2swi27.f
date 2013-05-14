@@ -316,10 +316,10 @@ C         TEST FOR KEYWORD ARGUMENTS
               NSWIOPT = 1
             CASE ( '0', '' )
               EXIT
-            CASE DEFAULT
+!            CASE DEFAULT
 !              IF ( LEN(line(istart:istop)).EQ.0 ) EXIT
-              WRITE (IOUT,'(1X,A,1X,A)') 
-     2          'UNRECOGNIZED KEYWORD:', line(istart:istop)
+!              WRITE (IOUT,'(1X,A,1X,A)') 
+!     2          'UNRECOGNIZED KEYWORD:', line(istart:istop)
           END SELECT
         END DO
         Write(IOUT, *) 'iadptflg:'

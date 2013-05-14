@@ -1397,13 +1397,19 @@ begin
   begin
     Sender.Selected[Node] := False;
     Sender.FocusedNode := nil;
-    TreeCombo.Text := '';
+    if TreeCombo <> nil then
+    begin
+      TreeCombo.Text := '';
+    end;
   end;
   if Sender.Selected[Node] then
   begin
     SelectedNode := Node;
     GetNodeCaption(Node, CellText, Sender);
-    TreeCombo.Text := CellText;
+    if TreeCombo <> nil then
+    begin
+      TreeCombo.Text := CellText;
+    end;
   end
   else
   begin

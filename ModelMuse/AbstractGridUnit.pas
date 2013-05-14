@@ -7451,7 +7451,14 @@ destructor TCustomModelGrid.Destroy;
 begin
   if FListsCreated then
   begin
-    glDeleteLists(FGridShellGLIndex, NumberOfLists);
+    try
+      glDeleteLists(FGridShellGLIndex, NumberOfLists);
+    except on E: EExternalException do
+      begin
+        //
+      end;
+
+    end;
   end;
   FreeAndNil(FBlockGridCache);
   FreeAndNil(FNodeGridCache);

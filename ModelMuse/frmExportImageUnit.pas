@@ -9,7 +9,7 @@ uses
   DataSetUnit, RbwDataGrid4, Contnrs, DrawTextUnit,
   InPlaceEditUnit, Types, LegendUnit, GR32, RbwRuler, ExtDlgs, ComCtrls,
   DisplaySettingsUnit, JvExExtCtrls, JvNetscapeSplitter, Menus,
-  JvToolEdit, JvExButtons, JvBitBtn;
+  JvToolEdit, JvExButtons, JvBitBtn, PhastModelUnit;
 
 type
   TfrmExportImage = class(TfrmCustomGoPhast)
@@ -148,6 +148,8 @@ type
     procedure GetDataSets;
     procedure DrawHeadObsLegend(ACanvas: TCanvas; var LegendY: Integer;
       out HeadObsRect: TRect);
+    procedure ApplyCrossSectionSettings(AModel: TCustomModel;
+      ASetting: TDisplaySettingsItem);
     property SelectedItem: TDrawItem read FSelectedItem write SetSelectedItem;
     procedure SelectItemToDrag(X: Integer; Y: Integer);
     function DragItem(X, Y: Integer): Boolean;
@@ -199,11 +201,12 @@ implementation
 uses
   EdgeDisplayUnit, Math, JclStrings, GoPhastTypes, frmGoPhastUnit,
   AbstractGridUnit, BigCanvasMethods, ScreenObjectUnit,
-  CompressedImageUnit, frameViewUnit, PhastModelUnit, frmGoToUnit,
+  CompressedImageUnit, frameViewUnit, frmGoToUnit,
   UndoItems, frmManageSettingsUnit,
   UndoItemsScreenObjects, ClassificationUnit, frmProgressUnit,
   frmErrorsAndWarningsUnit, Clipbrd, RbwParser, frmDisplayDataUnit,
-  SutraMeshUnit, pngimage, jpeg, VectorDisplayUnit, ModflowHeadObsResults;
+  SutraMeshUnit, pngimage, jpeg, VectorDisplayUnit, ModflowHeadObsResults,
+  Generics.Collections;
 
 resourcestring
   StrProgress = 'Progress';
@@ -1008,7 +1011,6 @@ begin
     end
     else
     begin
-
       LocalModel.Grid.DrawColoredGridLines := cbShowColoredGridLines.Checked;
       if LocalModel.LgrUsed then
       begin
@@ -1064,7 +1066,6 @@ begin
           ChildModel.DrawStrStreamLinkages(FModelImage, frmGoPhast.frameTopView.ZoomBox);
         end;
       end;
-
     end;
     if (LocalModel.ModelSelection in ModflowSelection) then
     begin
@@ -1096,6 +1097,19 @@ begin
       end;
     end;
 
+    if (LocalModel.ModelSelection in ModflowSelection)
+      and (ViewDirection in [vdFront, vdSide]) then
+    begin
+      LocalModel.CrossSection.Draw(FModelImage, ViewDirection);
+      if LocalModel.LgrUsed then
+      begin
+        for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+        begin
+          ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+          ChildModel.CrossSection.Draw(FModelImage, ViewDirection);
+        end;
+      end;
+    end;
 
     if ViewDirection = vdSide then
     begin
@@ -1763,6 +1777,55 @@ begin
   end;
 end;
 
+procedure TfrmExportImage.ApplyCrossSectionSettings(AModel: TCustomModel;
+  ASetting: TDisplaySettingsItem);
+var
+  DataArrayList: TDataArrayList;
+  DataArrayIndex: Integer;
+  ADataArray: TDataArray;
+  LayersToUse: TList<Integer>;
+  index: Integer;
+  Colors: TList<TColor>;
+//  ACrossSectItem: TDataArrayColor;
+begin
+  DataArrayList := TDataArrayList.Create;
+  Colors := TList<TColor>.Create;
+  try
+    DataArrayList.OwnsObjects := False;
+    DataArrayList.Capacity := ASetting.CrossSectionDataSets.Count;
+    Colors.Capacity := ASetting.CrossSectionColors.Count;
+    for DataArrayIndex := 0 to ASetting.CrossSectionDataSets.Count - 1 do
+    begin
+      ADataArray := AModel.DataArrayManager.GetDataSetByName(
+        ASetting.CrossSectionDataSets[DataArrayIndex]);
+      if ADataArray <> nil then
+      begin
+//        ACrossSectItem := TDataArrayColor.Create;
+//        ACrossSectItem.DataArray := ADataArray;
+//        ACrossSectItem.Color := ASetting.CrossSectionColors[DataArrayIndex];
+        DataArrayList.Add(ADataArray);
+        Colors.Add(ASetting.CrossSectionColors[DataArrayIndex].Value);
+      end;
+    end;
+    AModel.CrossSection.DataArrays := DataArrayList;
+    AModel.CrossSection.Colors := Colors;
+  finally
+    DataArrayList.Free;
+    Colors.Free;
+  end;
+  LayersToUse := TList<Integer>.Create;
+  try
+    LayersToUse.Capacity := ASetting.CrossSectionLayersToUse.Count;
+    for index := 0 to ASetting.CrossSectionLayersToUse.Count - 1 do
+    begin
+      LayersToUse.Add(ASetting.CrossSectionLayersToUse[index].Value);
+    end;
+    AModel.CrossSection.LayersToUse := LayersToUse;
+  finally
+    LayersToUse.Free;
+  end;
+end;
+
 procedure TfrmExportImage.ApplySettings;
 var
   PhastModel: TPhastModel;
@@ -1778,6 +1841,7 @@ var
 //  SutraSettings: TSutraSettings;
   UndoShowHideObjects: TUndoShowHideScreenObject;
   SelectedVelocityDescription: string;
+  ChildIndex: Integer;
 begin
   PhastModel := frmGoPhast.PhastModel;
   DisplaySettings := PhastModel.DisplaySettings;
@@ -1915,6 +1979,16 @@ begin
   PhastModel.ShowContourLabels := ASetting.LabelContours;
   PhastModel.ContourFont := ASetting.ContourFont;
 
+  ApplyCrossSectionSettings(PhastModel, ASetting);
+  if PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ApplyCrossSectionSettings(
+        PhastModel.ChildModels[ChildIndex].ChildModel, ASetting);
+    end;
+  end;
+
   ApplyContourDisplaySettings(ASetting.ContourDisplaySettings);
   ApplyColorDisplaySettings(ASetting.ColorDisplaySettings);
 
@@ -1966,6 +2040,7 @@ var
   DrawItem: TDrawItem;
   Undo: TUndoEditDisplaySettings;
   AScreenObject: TScreenObject;
+  DataArrayIndex: Integer;
 begin
   PhastModel := frmGoPhast.PhastModel;
   ModifiedDisplaySettings := TDisplaySettingsCollection.Create(nil);
@@ -2069,6 +2144,27 @@ begin
     ASetting.MinVectors := PhastModel.MinVectors;
     ASetting.VelocityVectors := PhastModel.VelocityVectors;
     ASetting.ShowHeadObsLegend := cbHeadObsLegend.Checked;
+
+    ASetting.CrossSectionDataSets.Clear;
+    ASetting.CrossSectionColors.Clear;
+    ASetting.CrossSectionDataSets.Capacity :=
+      PhastModel.CrossSection.DataArrays.Count;
+    ASetting.CrossSectionColors.Capacity :=
+      PhastModel.CrossSection.DataArrays.Count;
+    for DataArrayIndex := 0 to PhastModel.CrossSection.DataArrays.Count - 1 do
+    begin
+      ASetting.CrossSectionDataSets.Add(
+        PhastModel.CrossSection.DataArrays[DataArrayIndex].Name);
+      ASetting.CrossSectionColors.Add.Value :=
+        PhastModel.CrossSection.Colors[DataArrayIndex];
+    end;
+    ASetting.CrossSectionLayersToUse.Clear;
+    ASetting.CrossSectionLayersToUse.Capacity := PhastModel.CrossSection.LayersToUse.Count;
+    for Index := 0 to PhastModel.CrossSection.LayersToUse.Count - 1 do
+    begin
+      ASetting.CrossSectionLayersToUse.Add.Value := PhastModel.CrossSection.LayersToUse[Index];
+    end;
+//    ASetting.CrossSectionLayersToUse := PhastModel.CrossSection.LayersToUse;
 
     Undo := TUndoEditDisplaySettings.Create(ModifiedDisplaySettings);
     frmGoPhast.UndoStack.Submit(Undo);
@@ -2577,6 +2673,7 @@ var
   PriorMaxSymbolSize: Integer;
   SymbolLeft: Integer;
   AColor: TColor;
+  ObsImported: Boolean;
 begin
   HeadObsRect.Left := 0;
   HeadObsRect.Top := 0;
@@ -2586,6 +2683,7 @@ begin
   if cbHeadObsLegend.Checked and (ViewDirection = vdTop) then
   begin
     PhastModel := frmGoPhast.PhastModel;
+    ObsImported := PhastModel.HeadObsResults.Count > 0;
     PhastModel.HeadObsResults.CalculateMaxResidual(frmGoPhast.PhastModel);
     MaxResid := PhastModel.HeadObsResults.MaxResidual;
     if frmGoPhast.PhastModel.LgrUsed then
@@ -2593,6 +2691,7 @@ begin
       for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
       begin
         AChild := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+        ObsImported := ObsImported or (AChild.HeadObsResults.Count > 0);
         AChild.HeadObsResults.CalculateMaxResidual(AChild);
         if MaxResid < AChild.HeadObsResults.MaxResidual then
         begin
@@ -2600,6 +2699,12 @@ begin
         end;
       end;
     end;
+
+    if not ObsImported then
+    begin
+      Exit;
+    end;
+
     MaxSymbolSize := PhastModel.HeadObsResults.MaxSymbolSize;
 
     AColor := ACanvas.Brush.Color;

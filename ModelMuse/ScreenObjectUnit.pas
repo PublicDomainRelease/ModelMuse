@@ -16339,9 +16339,11 @@ procedure TScreenObject.Loaded;
 var
   Index: Integer;
   Observer: TObserver;
+  {$IFDEF FMP}
   DataArrayIndex: Integer;
   LocalModel: TPhastModel;
   DataArray: TDataArray;
+  {$ENDIF}
 begin
   inherited;
   if FLeakyBoundary <> nil then

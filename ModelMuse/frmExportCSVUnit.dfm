@@ -3,9 +3,8 @@ inherited frmExportCSV: TfrmExportCSV
   HelpKeyword = 'Export_Data_as_CSV_Dialog_Box'
   Caption = 'Export Data as CSV'
   ClientHeight = 407
-  ExplicitWidth = 440
-  ExplicitHeight = 445
-  PixelsPerInch = 96
+  ExplicitHeight = 452
+  PixelsPerInch = 120
   TextHeight = 18
   object Panel1: TPanel
     Left = 0
@@ -33,6 +32,7 @@ inherited frmExportCSV: TfrmExportCSV
       Header.MainColumn = -1
       TabOrder = 0
       TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
+      TreeOptions.SelectionOptions = [toFullRowSelect]
       OnChecked = vstDataSetsChecked
       OnGetText = vstDataSetsGetText
       OnGetNodeDataSize = vstDataSetsGetNodeDataSize

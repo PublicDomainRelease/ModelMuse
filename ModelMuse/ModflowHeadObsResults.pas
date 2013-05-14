@@ -319,14 +319,14 @@ procedure THeadObsCollection.ExportToShapeFile(const FileName: string);
 var
   ShapeWriter: TShapefileGeometryWriter;
   ObsScreenObjects: TStringList;
-  HeadObsResults: integer;
+//  HeadObsResults: integer;
   ObsIndex: Integer;
   ObsItem: THeadObsItem;
   AShape: TShapeObject;
   XBase: TXBase;
   Fields: TStringList;
   LocalModel: TCustomModel;
-  ScreenObjectIndex: Integer;
+//  ScreenObjectIndex: Integer;
   AScreenObject: TScreenObject;
   ObsevationIndex: Integer;
   Observations: THobBoundary;
@@ -642,7 +642,7 @@ var
   ItemResidual: Double;
   LocalModel: TCustomModel;
   AScreenObject: TScreenObject;
-  Segments: TCellElementSegmentList;
+//  Segments: TCellElementSegmentList;
   ObsScreenObjects: TStringList;
   ObsIndex: Integer;
   Observations: THobBoundary;

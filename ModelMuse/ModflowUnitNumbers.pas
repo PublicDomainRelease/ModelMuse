@@ -131,6 +131,9 @@ const
   StrCFP = 'CFP';
   StrCRCH = 'CRCH';
   StrCOC = 'COC';
+  StrSWI = 'SWI2';
+  StrSWI_Obs = 'SWI_Obs';
+  StrSWI_Zeta = 'SWI_Zeta';
 
   Solvers: array[0..5] of string = (StrPCG, StrPCGN, StrGMG, StrSIP, StrDE4, StrNWT);
   FlowPackages: array[0..3] of string = (StrLPF, StrHUF2, StrBCF, StrUPW);
@@ -397,6 +400,9 @@ const
   CFP_Unit = 165;
   CRCH_Unit = 166;
   COC_Unit = 167;
+  SWI_Unit = 168;
+  SWI_Obs_Unit = 169;
+  SWI_Zeta_Unit = 170;
 
   GageOutputStartUnit = 20205;
 
@@ -571,6 +577,10 @@ begin
   AddItem(StrCFP, CFP_Unit);
   AddItem(StrCRCH, CRCH_Unit);
   AddItem(StrCOC, COC_Unit);
+  AddItem(StrSWI, SWI_Unit);
+  AddItem(StrSWI_Obs, SWI_Obs_Unit);
+  AddItem(StrSWI_Zeta, SWI_Zeta_Unit);
+
 
 
 end;

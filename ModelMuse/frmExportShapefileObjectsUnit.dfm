@@ -221,6 +221,7 @@ inherited frmExportShapefileObjects: TfrmExportShapefileObjects
     Header.Options = [hoColumnResize, hoDrag]
     TabOrder = 1
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toWheelPanning]
+    TreeOptions.SelectionOptions = [toFullRowSelect]
     OnChecked = vstDataSetsChecked
     OnChecking = vstDataSetsChecking
     OnGetText = vstDataSetsGetText

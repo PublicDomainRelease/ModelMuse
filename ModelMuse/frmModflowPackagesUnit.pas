@@ -313,6 +313,7 @@ type
     procedure CheckMt3dChemSpeciesDefined;
     procedure EnableFarmPrintRouting;
     procedure EnableConduitRecharge;
+    procedure NilNodes;
     { Private declarations }
   public
     procedure GetData;
@@ -1709,13 +1710,7 @@ begin
   {$ENDIF}
     AddNode(StrPostProcessors, StrPostProcessors, PriorNode);
     AddNode(StrMT3DMS_Classificaton, StrMT3DMS_Classificaton, PriorNode);
-
-    for Index := 0 to FPackageList.Count - 1 do
-    begin
-      APackage := FPackageList[Index];
-      Frame := APackage.Frame;
-      Frame.NilNode;
-    end;
+    NilNodes;
 
     FFrameNodeLinks.Clear;
     for Index := 0 to FPackageList.Count - 1 do
@@ -1788,6 +1783,10 @@ begin
     StorePackages;
     FPackageList.Free;
     FPackageList := TList.Create;
+
+    AddPackagesToList(frmGoPhast.PhastModel.ModflowPackages);
+    NilNodes;
+
     FSteadyParameters.Free;
     FSteadyParameters := TModflowSteadyParameters.Create(nil);
     FHufParameters.Free;
@@ -1851,6 +1850,20 @@ begin
     pnlModel.Visible := frmGoPhast.PhastModel.LgrUsed;
   finally
     IsLoaded := True;
+  end;
+end;
+
+procedure TfrmModflowPackages.NilNodes;
+var
+  AFrame: TframePackage;
+  FrameIndex: Integer;
+  APackage: TModflowPackageSelection;
+begin
+  for FrameIndex := 0 to FPackageList.Count - 1 do
+  begin
+    APackage := FPackageList[FrameIndex];
+    AFrame := APackage.Frame;
+    AFrame.NilNode;
   end;
 end;
 
@@ -2782,13 +2795,11 @@ begin
     FPackageList.Add(Packages.ConduitFlowProcess);
   end;
 
-{$IFDEF SWI}
   if frmGoPhast.ModelSelection in [msModflow, msModflowNWT] then
   begin
     Packages.SwiPackage.Frame := framePackageSWI;
     FPackageList.Add(Packages.SwiPackage);
   end;
-{$ENDIF}
 
 end;
 

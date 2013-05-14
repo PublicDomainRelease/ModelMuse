@@ -5,9 +5,9 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
   ClientHeight = 356
   ClientWidth = 738
   OnResize = FormResize
-  ExplicitWidth = 746
-  ExplicitHeight = 390
-  PixelsPerInch = 96
+  ExplicitWidth = 756
+  ExplicitHeight = 401
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -27,10 +27,8 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
       Height = 33
       Anchors = [akTop, akRight]
       Caption = '&OK'
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnOKClick
     end
@@ -41,10 +39,8 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
       Height = 33
       Anchors = [akTop, akRight]
       Caption = '&Cancel'
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 3
     end
     object btnHelp: TBitBtn
@@ -53,10 +49,8 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
       Width = 82
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnHelpClick
     end
@@ -80,10 +74,6 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
     TabOrder = 0
     object tabObservations: TTabSheet
       Caption = 'Observations'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rdgObservations: TRbwDataGrid4
         Left = 0
         Top = 41
@@ -108,7 +98,6 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
         OnColSize = rdgObservationsColSize
         ColorRangeSelection = False
         OnHorizontalScroll = rdgObservationsHorizontalScroll
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = True
@@ -130,6 +119,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -156,6 +146,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -181,6 +172,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -203,6 +195,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -225,6 +218,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -247,6 +241,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -269,6 +264,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -297,6 +293,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -319,8 +316,10 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
+        WordWrapRowCaptions = False
         ColWidths = (
           64
           106
@@ -416,10 +415,6 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
     object tabFilters: TTabSheet
       Caption = 'Filters'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rdgRowFilter: TRbwRowDataGrid
         Left = 0
         Top = 0
@@ -473,6 +468,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
           end
           item
             AutoAdjustRowHeights = False
@@ -494,6 +490,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
           end
           item
             AutoAdjustRowHeights = False
@@ -519,6 +516,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
           end
           item
             AutoAdjustRowHeights = False
@@ -543,6 +541,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
           end
           item
             AutoAdjustRowHeights = False
@@ -564,6 +563,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
           end
           item
             AutoAdjustRowHeights = False
@@ -585,6 +585,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
           end
           item
             AutoAdjustRowHeights = False
@@ -606,6 +607,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
           end
           item
             AutoAdjustRowHeights = False
@@ -627,6 +629,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
           end
           item
             AutoAdjustRowHeights = False
@@ -648,6 +651,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
           end
           item
             AutoAdjustRowHeights = False
@@ -669,6 +673,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
           end>
         ColWidths = (
           64

@@ -49,6 +49,10 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
     Options = [ftoAutoFontDirection, ftoExcludeGlyphs, ftoInheriteTabFonts, ftoWordWrap]
     object tabCrops: TTabSheet
       Caption = 'Crop Efficiencies'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline frameFormulaGridCrops: TframeFormulaGrid
         Left = 0
         Top = 65
@@ -66,10 +70,8 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
           ExplicitWidth = 482
           inherited lbNumber: TLabel
             Width = 95
-            Height = 16
             Caption = 'Number of times'
             ExplicitWidth = 95
-            ExplicitHeight = 16
           end
           inherited sbAdd: TSpeedButton
             Left = 359
@@ -175,11 +177,6 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
           Width = 482
           ExplicitWidth = 482
           inherited edFormula: TLabeledEdit
-            EditLabel.Width = 47
-            EditLabel.Height = 16
-            EditLabel.ExplicitTop = -19
-            EditLabel.ExplicitWidth = 61
-            EditLabel.ExplicitHeight = 16
             OnChange = frameFormulaGridCropsedFormulaChange
           end
         end
@@ -223,6 +220,10 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
     object tabCosts: TTabSheet
       Caption = 'Costs'
       ImageIndex = 5
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline frameFormulaGridCosts: TframeFormulaGrid
         Left = 0
         Top = 0
@@ -239,10 +240,8 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
           ExplicitWidth = 482
           inherited lbNumber: TLabel
             Width = 95
-            Height = 16
             Caption = 'Number of times'
             ExplicitWidth = 95
-            ExplicitHeight = 16
           end
           inherited sbAdd: TSpeedButton
             Left = 359
@@ -506,11 +505,6 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
           Width = 482
           ExplicitWidth = 482
           inherited edFormula: TLabeledEdit
-            EditLabel.Width = 47
-            EditLabel.Height = 16
-            EditLabel.ExplicitTop = -19
-            EditLabel.ExplicitWidth = 61
-            EditLabel.ExplicitHeight = 16
             OnChange = frameFormulaGridCostsedFormulaChange
           end
         end
@@ -519,6 +513,10 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
     object tabDiversionLocation: TTabSheet
       Caption = 'Diversion'#13#10'Location'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline frameFormulaGridDiversion: TframeFarmDiversion
         Left = 0
         Top = 0
@@ -535,10 +533,8 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
           ExplicitWidth = 482
           inherited lbNumber: TLabel
             Width = 99
-            Height = 16
             Caption = 'Number of times '
             ExplicitWidth = 99
-            ExplicitHeight = 16
           end
           inherited sbAdd: TSpeedButton
             Left = 359
@@ -555,16 +551,11 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
           inherited lblLocationMethod: TLabel
             Left = 217
             Top = 6
-            Width = 94
-            Height = 16
             ExplicitLeft = 217
             ExplicitTop = 6
-            ExplicitWidth = 94
-            ExplicitHeight = 16
           end
           inherited comboMethod: TComboBox
             Left = 276
-            Height = 24
             ExplicitLeft = 276
             ExplicitHeight = 24
           end
@@ -579,63 +570,14 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
         inherited pnlTop: TPanel
           Width = 482
           ExplicitWidth = 482
-          inherited lblSfrObjects: TLabel
-            Width = 37
-            Height = 16
-            ExplicitWidth = 37
-            ExplicitHeight = 16
-          end
-          inherited lblPositionChoice: TLabel
-            Width = 84
-            Height = 16
-            ExplicitWidth = 84
-            ExplicitHeight = 16
-          end
-          inherited lblVertexNumber: TLabel
-            Width = 37
-            Height = 16
-            ExplicitWidth = 37
-            ExplicitHeight = 16
-          end
-          inherited lblX: TLabel
-            Width = 8
-            Height = 16
-            ExplicitWidth = 8
-            ExplicitHeight = 16
-          end
-          inherited lblY: TLabel
-            Width = 7
-            Height = 16
-            ExplicitWidth = 7
-            ExplicitHeight = 16
-          end
-          inherited lblRow: TLabel
-            Width = 25
-            Height = 16
-            ExplicitWidth = 25
-            ExplicitHeight = 16
-          end
-          inherited lblCol: TLabel
-            Width = 43
-            Height = 16
-            ExplicitWidth = 43
-            ExplicitHeight = 16
-          end
           inherited edFormula: TLabeledEdit
             EditLabel.Width = 51
-            EditLabel.Height = 16
             EditLabel.Caption = 'Formula '
             EditLabel.ExplicitLeft = 0
             EditLabel.ExplicitTop = -19
             EditLabel.ExplicitWidth = 51
-            EditLabel.ExplicitHeight = 16
-          end
-          inherited comboSfrObjects: TComboBox
-            Height = 24
-            ExplicitHeight = 24
           end
           inherited comboPositionChoice: TComboBox
-            Height = 24
             ExplicitHeight = 24
           end
         end
@@ -644,6 +586,10 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
     object tabReturnFlowLocation: TTabSheet
       Caption = 'Return Flow'#13#10'Location'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline frameFormulaGridReturnFlow: TframeFarmDiversion
         Left = 0
         Top = 0
@@ -660,10 +606,8 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
           ExplicitWidth = 482
           inherited lbNumber: TLabel
             Width = 99
-            Height = 16
             Caption = 'Number of times '
             ExplicitWidth = 99
-            ExplicitHeight = 16
           end
           inherited sbAdd: TSpeedButton
             Left = 359
@@ -680,16 +624,11 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
           inherited lblLocationMethod: TLabel
             Left = 217
             Top = 6
-            Width = 94
-            Height = 16
             ExplicitLeft = 217
             ExplicitTop = 6
-            ExplicitWidth = 94
-            ExplicitHeight = 16
           end
           inherited comboMethod: TComboBox
             Left = 276
-            Height = 24
             ExplicitLeft = 276
             ExplicitHeight = 24
           end
@@ -710,63 +649,14 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
         inherited pnlTop: TPanel
           Width = 482
           ExplicitWidth = 482
-          inherited lblSfrObjects: TLabel
-            Width = 37
-            Height = 16
-            ExplicitWidth = 37
-            ExplicitHeight = 16
-          end
-          inherited lblPositionChoice: TLabel
-            Width = 84
-            Height = 16
-            ExplicitWidth = 84
-            ExplicitHeight = 16
-          end
-          inherited lblVertexNumber: TLabel
-            Width = 37
-            Height = 16
-            ExplicitWidth = 37
-            ExplicitHeight = 16
-          end
-          inherited lblX: TLabel
-            Width = 8
-            Height = 16
-            ExplicitWidth = 8
-            ExplicitHeight = 16
-          end
-          inherited lblY: TLabel
-            Width = 7
-            Height = 16
-            ExplicitWidth = 7
-            ExplicitHeight = 16
-          end
-          inherited lblRow: TLabel
-            Width = 25
-            Height = 16
-            ExplicitWidth = 25
-            ExplicitHeight = 16
-          end
-          inherited lblCol: TLabel
-            Width = 43
-            Height = 16
-            ExplicitWidth = 43
-            ExplicitHeight = 16
-          end
           inherited edFormula: TLabeledEdit
             EditLabel.Width = 51
-            EditLabel.Height = 16
             EditLabel.Caption = 'Formula '
             EditLabel.ExplicitLeft = 0
             EditLabel.ExplicitTop = -19
             EditLabel.ExplicitWidth = 51
-            EditLabel.ExplicitHeight = 16
-          end
-          inherited comboSfrObjects: TComboBox
-            Height = 24
-            ExplicitHeight = 24
           end
           inherited comboPositionChoice: TComboBox
-            Height = 24
             ExplicitHeight = 24
           end
         end
@@ -775,6 +665,10 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
     object tabNonRoutedDelivery: TTabSheet
       Caption = 'Non-Routed'#13#10'Delivery'
       ImageIndex = 4
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline frameDelivery: TframeDeliveryGrid
         Left = 0
         Top = 0
@@ -825,10 +719,6 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
             Caption = 'Number of delivery types '
             ExplicitWidth = 64
             ExplicitHeight = 48
-          end
-          inherited seNumberOfDeliveryTypes: TJvSpinEdit
-            Height = 24
-            ExplicitHeight = 24
           end
         end
         inherited Grid: TRbwDataGrid4
@@ -888,24 +778,12 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
         inherited pnlTop: TPanel
           Width = 482
           ExplicitWidth = 482
-          inherited lblHowUsed: TLabel
-            Width = 56
-            Height = 16
-            ExplicitWidth = 56
-            ExplicitHeight = 16
-          end
           inherited edFormula: TLabeledEdit
             EditLabel.Width = 51
-            EditLabel.Height = 16
             EditLabel.Caption = 'Formula '
             EditLabel.ExplicitLeft = 128
             EditLabel.ExplicitTop = 11
             EditLabel.ExplicitWidth = 51
-            EditLabel.ExplicitHeight = 16
-          end
-          inherited comboHowUsed: TComboBox
-            Height = 24
-            ExplicitHeight = 24
           end
         end
       end
@@ -913,6 +791,10 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
     object tabWaterRights: TTabSheet
       Caption = 'Water'#13#10'Rights'
       ImageIndex = 5
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline frameFormulaGridWaterRights: TframeFormulaGrid
         Left = 0
         Top = 0
@@ -929,10 +811,8 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
           ExplicitWidth = 482
           inherited lbNumber: TLabel
             Width = 99
-            Height = 16
             Caption = 'Number of times '
             ExplicitWidth = 99
-            ExplicitHeight = 16
           end
           inherited sbAdd: TSpeedButton
             Left = 359
@@ -1036,11 +916,8 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
           ExplicitWidth = 482
           inherited edFormula: TLabeledEdit
             EditLabel.Width = 51
-            EditLabel.Height = 16
             EditLabel.Caption = 'Formula '
-            EditLabel.ExplicitTop = -19
             EditLabel.ExplicitWidth = 51
-            EditLabel.ExplicitHeight = 16
             OnChange = frameFormulaGridWaterRightsedFormulaChange
           end
         end

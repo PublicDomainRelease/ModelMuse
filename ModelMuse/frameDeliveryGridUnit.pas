@@ -30,15 +30,15 @@ type
       var CanSelect: Boolean);
   private
     FChanged: boolean;
-    FChanging: Boolean;
     FOnChange: TNotifyEvent;
-    procedure DoChange;
 {$IFDEF FMP}
+    FChanging: Boolean;
     procedure ClearGrid(Grid: TRbwDataGrid4);
     property Changing: Boolean read FChanging write FChanging;
     procedure CheckValidCell(Sender: TObject; ACol, ARow: Integer; var ValidCell: Boolean);
     procedure GetValidHowUsed(ColIndex, RowIndex: Integer; var ValidCell: Boolean);
 {$ENDIF}
+    procedure DoChange;
     { Private declarations }
   public
     property DataChanged: Boolean read FChanged;

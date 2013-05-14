@@ -26,15 +26,15 @@ inherited frameFarmDiversion: TframeFarmDiversion
     object lblLocationMethod: TLabel [4]
       Left = 136
       Top = 9
-      Width = 79
-      Height = 13
+      Width = 94
+      Height = 16
       Caption = 'Location method'
     end
     object comboMethod: TComboBox
       Left = 236
       Top = 6
       Width = 77
-      Height = 21
+      Height = 24
       Style = csDropDownList
       ItemIndex = 0
       TabOrder = 1
@@ -177,56 +177,56 @@ inherited frameFarmDiversion: TframeFarmDiversion
     object lblSfrObjects: TLabel [0]
       Left = 40
       Top = 5
-      Width = 32
-      Height = 13
+      Width = 37
+      Height = 16
       Caption = 'Object'
       Enabled = False
     end
     object lblPositionChoice: TLabel [1]
       Left = 79
       Top = 5
-      Width = 70
-      Height = 13
+      Width = 84
+      Height = 16
       Caption = 'Position choice'
       Enabled = False
     end
     object lblVertexNumber: TLabel [2]
       Left = 118
       Top = 5
-      Width = 32
-      Height = 13
+      Width = 37
+      Height = 16
       Caption = 'Vertex'
       Enabled = False
     end
     object lblX: TLabel [3]
       Left = 151
       Top = 5
-      Width = 6
-      Height = 13
+      Width = 8
+      Height = 16
       Caption = 'X'
       Enabled = False
     end
     object lblY: TLabel [4]
       Left = 175
       Top = 5
-      Width = 6
-      Height = 13
+      Width = 7
+      Height = 16
       Caption = 'Y'
       Enabled = False
     end
     object lblRow: TLabel [5]
       Left = 236
       Top = 5
-      Width = 21
-      Height = 13
+      Width = 25
+      Height = 16
       Caption = 'Row'
       Enabled = False
     end
     object lblCol: TLabel [6]
       Left = 293
       Top = 5
-      Width = 35
-      Height = 13
+      Width = 43
+      Height = 16
       Caption = 'Column'
       Enabled = False
     end
@@ -236,7 +236,6 @@ inherited frameFarmDiversion: TframeFarmDiversion
       Width = 49
       EditLabel.ExplicitLeft = 8
       EditLabel.ExplicitTop = 8
-      EditLabel.ExplicitWidth = 61
       Visible = False
       ExplicitLeft = 8
       ExplicitTop = 27
@@ -246,7 +245,7 @@ inherited frameFarmDiversion: TframeFarmDiversion
       Left = 40
       Top = 27
       Width = 65
-      Height = 21
+      Height = 24
       Style = csDropDownList
       Enabled = False
       TabOrder = 1
@@ -256,7 +255,7 @@ inherited frameFarmDiversion: TframeFarmDiversion
       Left = 80
       Top = 27
       Width = 65
-      Height = 21
+      Height = 24
       Style = csDropDownList
       Enabled = False
       TabOrder = 2

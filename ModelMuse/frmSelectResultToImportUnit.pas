@@ -205,6 +205,7 @@ type
       AFileName: string);
     procedure UpdateOldComments(OldComments: TStringList;
       ADataArray: TDataArray; OldComment: string);
+    procedure AdjustSwiNames(var NewName: string);
   public
     function SelectFiles: boolean;
     { Public declarations }
@@ -680,6 +681,26 @@ begin
   end;
 end;
 
+procedure TfrmSelectResultToImport.AdjustSwiNames(var NewName: string);
+begin
+  if NewName = 'Swiaddtoch' then
+  begin
+    NewName := 'SwiAddToCH';
+  end
+  else if NewName = 'Swiaddtoflf' then
+  begin
+    NewName := 'SwiAddToFLF';
+  end
+  else if NewName = 'Swiaddtofrf' then
+  begin
+    NewName := 'SwiAddToFRF';
+  end
+  else if NewName = 'Swiaddtofff' then
+  begin
+    NewName := 'SwiAddToFFF';
+  end;
+end;
+
 procedure TfrmSelectResultToImport.UpdateOldComments(OldComments: TStringList;
   ADataArray: TDataArray; OldComment: string);
 var
@@ -963,6 +984,7 @@ var
   Parent3DArray: TDataArray;
 begin
   NewName := TitleCase(Description);
+  AdjustSwiNames(NewName);
   NewName := NewName + '_P' + PaddedIntToStr(KPER, FMaxPeriod) +
     '_S' + PaddedIntToStr(KSTP, FMaxStep);
   if FResultFormat = mfMt3dConc then
@@ -1815,6 +1837,9 @@ begin
     FilterDescriptions.Add(StrHUFFlowFiles);
     FileExtensions.Add(StrHufflow);
 
+    FilterDescriptions.Add('SWI Zeta Files');
+    FileExtensions.Add(strZeta);
+
     FilterDescriptions.Add(StrMT3DMSConcentration);
     FileExtensions.Add(StrMt3dConcFile);
 
@@ -2026,6 +2051,7 @@ var
     Description := Trim(Description);
     Assert(Length(Description) > 0);
     Description := TitleCase(Description);
+    AdjustSwiNames(Description);
     if FResultFormat in [mrHufAscii, mrHufBinary, mrHufFlux] then
     begin
       HGU := AModel.HydrogeologicUnits[ILAY-1];
@@ -2707,7 +2733,8 @@ begin
   Precision := mpSingle;
   Extension := ExtractFileExt(AFileName);
   if (SameText(Extension, StrBdn))
-    or (SameText(Extension, StrBhd)) then
+    or (SameText(Extension, StrBhd))
+    then
   begin
     FResultFormat := mrBinary;
   end
@@ -2716,7 +2743,8 @@ begin
   begin
     FResultFormat := mrAscii;
   end
-  else if (SameText(Extension, StrCbcExt)) then
+  else if (SameText(Extension, StrCbcExt))
+    or (SameText(Extension, StrZeta)) then
   begin
     FResultFormat := mrFlux;
   end

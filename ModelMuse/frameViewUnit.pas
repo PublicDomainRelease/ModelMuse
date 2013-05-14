@@ -360,6 +360,7 @@ type
     procedure GetMeshColLayer(APoint: TPoint2D; out NodeCol, NodeLayer,
       ElCol, ElLayer: integer);
     procedure DrawVectors;
+    procedure DrawCrossSection;
     { Private declarations }
   protected
     // @name is used to indicate that a change has been made to the grid
@@ -576,7 +577,7 @@ uses GR32_Polygons, frmGoPhastUnit, CursorsFoiledAgain, Math, RbwParser,
   InteractiveTools, frmSetSpacingUnit, frmSubdivideUnit, BigCanvasMethods,
   frmRulerOptionsUnit, PhastModelUnit, frmGridValueUnit, EdgeDisplayUnit,
   CustomModflowWriterUnit, frmProgressUnit, SutraMeshUnit, frmDisplayDataUnit,
-  frmCustomGoPhastUnit, VectorDisplayUnit;
+  frmCustomGoPhastUnit, VectorDisplayUnit, Generics.Collections;
 
 resourcestring
   StrTheSImageCanNo = 'The %s  image can not be shown at this magnification.' +
@@ -1357,6 +1358,22 @@ begin
   end;
 end;
 
+procedure TframeView.DrawCrossSection;
+var
+  ChildIndex: Integer;
+begin
+  frmGoPhast.PhastModel.CrossSection.Draw(FBitMap32, ViewDirection);
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel.
+        CrossSection.Draw(FBitMap32, ViewDirection);
+    end;
+  end;
+
+end;
+
 procedure TframeView.DrawGridAndScreenObjects;
 var
   BitmapIndex: integer;
@@ -1482,6 +1499,7 @@ begin
         and (frmGoPhast.PhastModel.Endpoints.PointsV6.Count = 0)
         and (frmGoPhast.PhastModel.TimeSeries.Series.Count = 0)
         and (frmGoPhast.PhastModel.TimeSeries.SeriesV6.Count = 0)
+        and (frmGoPhast.PhastModel.CrossSection.DataArrays.Count = 0)
         then
       begin
         GridChanged := False;
@@ -1504,6 +1522,7 @@ begin
         DrawPathLines;
         DrawTimeSeries;
         DrawEndPoints;
+        DrawCrossSection;
       end;
 
       if frmGoPhast.ModelSelection = msSutra22 then

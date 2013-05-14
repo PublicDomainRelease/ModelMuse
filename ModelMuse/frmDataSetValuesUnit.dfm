@@ -6,7 +6,7 @@ inherited frmDataSetValues: TfrmDataSetValues
   ClientWidth = 548
   ExplicitWidth = 566
   ExplicitHeight = 349
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object Panel1: TPanel
     Left = 0
@@ -81,8 +81,8 @@ inherited frmDataSetValues: TfrmDataSetValues
       Height = 26
       Tree.Left = 0
       Tree.Top = 0
-      Tree.Width = 304
-      Tree.Height = 202
+      Tree.Width = 302
+      Tree.Height = 195
       Tree.Align = alClient
       Tree.Header.AutoSizeIndex = 0
       Tree.Header.Font.Charset = DEFAULT_CHARSET
@@ -92,6 +92,7 @@ inherited frmDataSetValues: TfrmDataSetValues
       Tree.Header.Font.Style = []
       Tree.Header.MainColumn = -1
       Tree.TabOrder = 0
+      Tree.TreeOptions.SelectionOptions = [toFullRowSelect]
       Tree.OnChange = treecomboDataSetsDropDownTreeChange
       Tree.OnGetText = treecomboDataSetsDropDownTreeGetText
       Tree.OnGetNodeDataSize = treecomboDataSetsDropDownTreeGetNodeDataSize

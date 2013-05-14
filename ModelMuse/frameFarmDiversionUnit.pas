@@ -49,13 +49,13 @@ type
       var CanSelect: Boolean);
   private
     FChanged: boolean;
-    FChanging: Boolean;
     FOnChange: TNotifyEvent;
-    procedure DoChange;
-    procedure ClearGrid(Grid: TRbwDataGrid4);
 {$IFDEF FMP}
+    FChanging: Boolean;
     property Changing: Boolean read FChanging write FChanging;
 {$ENDIF}
+    procedure DoChange;
+    procedure ClearGrid(Grid: TRbwDataGrid4);
     { Private declarations }
   public
     property DataChanged: Boolean read FChanged;

@@ -55,10 +55,27 @@
     </table></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">Simulation of vertically integrated variable-density groundwater flow using the seawater intrusion (SWI2) Package is activated by including a record in the MODFLOW name file using the file type (Ftype) “SWI2” to indicate that relevant calculations are to be made in the model and to specify the related input data file. The NAM file should also be modified to include the appropriate information for saving interface (ZETA) elevations, SWI2 cell-by-cell budget data, and (or) SWI2 observation well data, if necessary.</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The SWI2 file contains solver variables, data values for the different zones, algorithm parameters, the initial positions of the surfaces, the type of sources and sinks, and ZETA observation locations. In the body of the report, the number of surfaces are defined as being equal to the number of zones plus one. This number includes overlying and underlying surfaces corresponding to the layer top and bottom. In the input and output described here, however, only active ZETA surfaces are read and written. Active surfaces include only those surfaces between zones, and do not include the surfaces corresponding to the layer top and bottom. Thus, the number of active surfaces is equal to the number of zones minus one. Optional variables are indicated in [brackets].</text></para>
-    <para styleclass="Normal"><table styleclass="Default" rowcount="19" colcount="2" style="cell-padding:2px; cell-spacing:2px; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color;">
+    <para styleclass="Normal"><table styleclass="Default" rowcount="20" colcount="2" style="cell-padding:2px; cell-spacing:2px; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color;">
       <tr style="vertical-align:top">
         <td colspan="2">
           <para styleclass="Normal"><text styleclass="Normal" translate="true">FOR EACH SIMULATION</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><text styleclass="New Materials" translate="true">Data Set 0</text></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><text styleclass="New Materials" translate="true">[#Text]</text></para>
+          <para styleclass="Normal"><text styleclass="New Materials" translate="true">Item 0 is optional—“#” must be in column 1. Item 0 can be repeated multiple times.</text></para>
+          <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="New Materials"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="New Materials"><caption translate="true"><![CDATA[Text]]></caption></toggle></para>
+          <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Normal"><text styleclass="New Materials" translate="true">Text—is a character variable (199 characters) that starts in column 2. Any characters can be included in Text. The “#” character must be in column 1. Except for the name file, lines beginning with # are restricted to these first lines of the file. Text is printed when the file is read.</text></para>
+              </td>
+            </tr>
+          </table></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -85,7 +102,7 @@
                     <td>
                       <para styleclass="Normal"><anchor id="ISTRAT" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Flag indicating density distribution.</text></para>
                       <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
-                        <li styleclass="Normal"><text styleclass="Normal" translate="true">0 – density varies linear between surfaces.</text></li>
+                        <li styleclass="Normal"><text styleclass="Normal" translate="true">0 – density varies linearly between surfaces.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">1 – density is constant between surfaces.</text></li>
                       </list>
                     </td>
@@ -128,7 +145,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Flag and a unit number for OBS output</text></para>
+                      <para styleclass="Normal"><anchor id="ISWIOBS" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Flag and a unit number for OBS output</text></para>
                       <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISWIOBS &gt; 0, unit number for ASCII OBS</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISWIOBS = 0, OBS will not be recorded.</text></li>
@@ -434,7 +451,7 @@
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">Initial elevations of the active surfaces.</text></para>
+                <para styleclass="Normal"><anchor id="ZETA" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Initial elevations of the active surfaces.</text></para>
               </td>
             </tr>
           </table></para>
@@ -455,7 +472,7 @@
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">Effective porosity</text></para>
+                <para styleclass="Normal"><anchor id="SSZ" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Effective porosity</text></para>
               </td>
             </tr>
           </table></para>
@@ -476,7 +493,7 @@
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">Source type of any external sources or sinks, specified with any outside package (i.e. </text><link displaytype="text" defaultstyle="true" type="topiclink" href="WEL" styleclass="Normal" translate="true">WEL</link><text styleclass="Normal" translate="true"> Package, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" styleclass="Normal" translate="true">RCH</link><text styleclass="Normal" translate="true"> Package, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="GHB" styleclass="Normal" translate="true">GHB</link><text styleclass="Normal" translate="true"> Package). There are three options:</text></para>
+                <para styleclass="Normal"><anchor id="ISOURCE" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Source type of any external sources or sinks, specified with any outside package (i.e. </text><link displaytype="text" defaultstyle="true" type="topiclink" href="WEL" styleclass="Normal" translate="true">WEL</link><text styleclass="Normal" translate="true"> Package, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" styleclass="Normal" translate="true">RCH</link><text styleclass="Normal" translate="true"> Package, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="GHB" styleclass="Normal" translate="true">GHB</link><text styleclass="Normal" translate="true"> Package). There are three options:</text></para>
                 <list id="21" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISOURCE &gt; 0 – Sources and sinks have the same fluid density as the zone ISOURCE. If such a zone is not present in the cell, sources and sinks have the same fluid density as the active zone at the top of the aquifer.</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISOURCE = 0 – Sources and sinks have the same fluid density as the active zone at the top of the aquifer.</text></li>
@@ -511,7 +528,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">is a string of 1 to 12 nonblank characters used to identify the observation. The identifier need not be unique; however, identification of observations in the output files is facilitated if each observation is given a unique OBSNAM.</text></para>
+                      <para styleclass="Normal"><anchor id="OBSNAM" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">is a string of 1 to 12 nonblank characters used to identify the observation. The identifier need not be unique; however, identification of observations in the output files is facilitated if each observation is given a unique OBSNAM.</text></para>
                     </td>
                   </tr>
                 </table></para>

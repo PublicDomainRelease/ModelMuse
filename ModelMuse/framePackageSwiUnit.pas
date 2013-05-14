@@ -69,10 +69,13 @@ type
     procedure cbAdaptiveClick(Sender: TObject);
     procedure comboSolverChange(Sender: TObject);
     procedure rcSelectionControllerEnabledChange(Sender: TObject);
+    procedure comboPCGPrecondMethChange(Sender: TObject);
   private
     procedure InitializeGrid;
     procedure EnableAdaptiveControls;
     procedure EnableSolverControls;
+    procedure EnableEigenValue;
+    procedure EnableRelax;
     { Private declarations }
   public
     procedure GetData(Package: TModflowPackageSelection); override;
@@ -84,6 +87,15 @@ var
   framePackageSWI: TframePackageSWI;
 
 implementation
+
+resourcestring
+  StrDimensionlessDensit = 'Dimensionless Density';
+  StrSurface = 'Surface';
+  StrLayerTop = 'Layer Top';
+  StrLayerBottom = 'Layer Bottom';
+  StrSurface1 = 'Surface %d';
+  StrZone = 'Zone';
+  StrZone1 = 'Zone %d';
 
 {$R *.dfm}
 
@@ -99,6 +111,13 @@ procedure TframePackageSWI.comboDensityChoiceChange(Sender: TObject);
 begin
   inherited;
   InitializeGrid;
+end;
+
+procedure TframePackageSWI.comboPCGPrecondMethChange(Sender: TObject);
+begin
+  inherited;
+  EnableEigenValue;
+  EnableRelax
 end;
 
 procedure TframePackageSWI.comboSolverChange(Sender: TObject);
@@ -152,6 +171,9 @@ begin
   finally
     rdgDensity.EndUpdate
   end;
+  InitializeGrid;
+  EnableAdaptiveControls;
+  EnableSolverControls;
 end;
 
 procedure TframePackageSWI.InitializeGrid;
@@ -161,27 +183,27 @@ var
 begin
   rdgDensity.BeginUpdate;
   try
-    rdgDensity.Cells[Ord(dcDensity), 0] := 'Density';
+    rdgDensity.Cells[Ord(dcDensity), 0] := StrDimensionlessDensit;
     NSURF := seNumberOfSurfaces.AsInteger;
     case TDensityChoice(comboDensityChoice.ItemIndex) of
       dcLinear:
         begin
-          rdgDensity.Cells[Ord(dcNumber), 0] := 'Surface';
+          rdgDensity.Cells[Ord(dcNumber), 0] := StrSurface;
           rdgDensity.RowCount := NSURF + 3;
-          rdgDensity.Cells[Ord(dcNumber), 1] := 'Layer Top';
-          rdgDensity.Cells[Ord(dcNumber), rdgDensity.RowCount - 1] := 'Layer Bottom';
+          rdgDensity.Cells[Ord(dcNumber), 1] := StrLayerTop;
+          rdgDensity.Cells[Ord(dcNumber), rdgDensity.RowCount - 1] := StrLayerBottom;
           for RowIndex := 2 to rdgDensity.RowCount - 2 do
           begin
-            rdgDensity.Cells[Ord(dcNumber), RowIndex] := 'Surface ' + IntToStr(RowIndex-1);
+            rdgDensity.Cells[Ord(dcNumber), RowIndex] := Format(StrSurface1,[RowIndex-1]);
           end;
         end;
       dcZoned:
         begin
-          rdgDensity.Cells[Ord(dcNumber), 0] := 'Zone';
+          rdgDensity.Cells[Ord(dcNumber), 0] := StrZone;
           rdgDensity.RowCount := NSURF + 2;
           for RowIndex := 1 to rdgDensity.RowCount - 1 do
           begin
-            rdgDensity.Cells[Ord(dcNumber), RowIndex] := 'Zone ' + IntToStr(RowIndex);
+            rdgDensity.Cells[Ord(dcNumber), RowIndex] := Format(StrZone1, [RowIndex]);
           end;
         end;
       else
@@ -253,6 +275,18 @@ begin
   end;
 end;
 
+procedure TframePackageSWI.EnableRelax;
+begin
+  rdeRelax.Enabled := rcSelectionController.Enabled
+    and (comboSolver.ItemIndex = 1) and (comboPCGPrecondMeth.ItemIndex = 0);
+end;
+
+procedure TframePackageSWI.EnableEigenValue;
+begin
+  comboEigenValue.Enabled := rcSelectionController.Enabled
+    and (comboSolver.ItemIndex = 1) and (comboPCGPrecondMeth.ItemIndex = 1);
+end;
+
 procedure TframePackageSWI.EnableSolverControls;
 begin
   seMaxIterOuter.Enabled := rcSelectionController.Enabled and (comboSolver.ItemIndex = 1);
@@ -260,10 +294,10 @@ begin
   comboPCGPrecondMeth.Enabled := seMaxIterOuter.Enabled;
   rdeMaxZetaChange.Enabled := seMaxIterOuter.Enabled;
   rdeMaxRes.Enabled := seMaxIterOuter.Enabled;
-  rdeRelax.Enabled := seMaxIterOuter.Enabled;
-  comboEigenValue.Enabled := seMaxIterOuter.Enabled;
   rdeDamp.Enabled := seMaxIterOuter.Enabled;
   rdeDampT.Enabled := seMaxIterOuter.Enabled;
+  EnableRelax;
+  EnableEigenValue;
 end;
 
 procedure TframePackageSWI.EnableAdaptiveControls;

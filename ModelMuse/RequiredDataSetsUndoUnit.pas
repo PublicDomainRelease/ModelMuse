@@ -18,7 +18,7 @@ type
   // the new @link(TDataArray).
   //
   // @name is called by @link(UpdatePackageLayers).
-    procedure UpdateDataArray(Model: TCustomModel; Index: integer);
+//    procedure UpdateDataArray(Model: TCustomModel; Index: integer);
     // @name checks if all the data sets for the selected packages
     // exist and creates them if they do not.
     procedure UpdatePackageLayers;
@@ -113,6 +113,7 @@ begin
     FNewSteadyModflowParameterDataSets;
 end;
 
+(*
 procedure TCustomCreateRequiredDataSetsUndo.UpdateDataArray(Model: TCustomModel; Index: integer);
 var
   DataArray: TDataArray;
@@ -128,9 +129,6 @@ var
   ChildIndex: Integer;
   ChildModel: TChildModel;
 begin
-  { TODO : Find a way to extract common code from
-TPhastModel.CreateModflowDataSets and
-TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
   DataArrayManager := Model.DataArrayManager;
 
   DataSetName := DataArrayManager.FDataArrayCreationRecords[Index].Name;
@@ -151,7 +149,7 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
     DataArray.Name := DataSetName;
     DataArray.Lock := Lock;
   end
-  else if ArrayNeeded(self)
+  else if ArrayNeeded(DataArray)
     or (Assigned(CreateDataSet) and CreateDataSet(self)) then
   begin
     DataArray := DataArrayManager.CreateNewDataArray(
@@ -192,18 +190,29 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
     end;
   end;
 end;
+*)
 
 procedure TCustomCreateRequiredDataSetsUndo.UpdatePackageLayers;
 var
   Model: TPhastModel;
-  Index: Integer;
+//  Index: Integer;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   Model:= frmGoPhast.PhastModel;
 
-  for Index := 0 to Length(Model.DataArrayManager.FDataArrayCreationRecords) - 1 do
+  Model.DataArrayManager.CreateInitialDataSets;
+  for ChildIndex := 0 to Model.ChildModels.Count - 1 do
   begin
-    UpdateDataArray(Model, Index);
+    ChildModel := Model.ChildModels[ChildIndex].ChildModel;
+    ChildModel.DataArrayManager.CreateInitialDataSets;
   end;
+
+
+//  for Index := 0 to Length(Model.DataArrayManager.FDataArrayCreationRecords) - 1 do
+//  begin
+//    UpdateDataArray(Model, Index);
+//  end;
 
   UpdateFrmDisplayData;
 //  UpdateFrmContourData;

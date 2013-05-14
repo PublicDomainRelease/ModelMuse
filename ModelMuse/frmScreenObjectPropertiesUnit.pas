@@ -1740,7 +1740,9 @@ type
     procedure StoreWellBoundary;
     procedure StoreFarmWell;
     procedure GetWellBoundary(ScreenObjectList: TList);
+{$IFDEF FMP}
     procedure GetFarmWell(ScreenObjectList: TList);
+{$ENDIF}
     procedure GetRivBoundary(ScreenObjectList: TList);
     procedure StoreRivBoundary;
     procedure GetDrnBoundary(ScreenObjectList: TList);
@@ -4457,15 +4459,18 @@ procedure TfrmScreenObjectProperties.tvDataSetsChange(Sender: TObject;
   Node: TTreeNode);
 begin
   inherited;
-  UpdateCurrentEdit;
-  if (tvDataSets.Selected <> nil) and (tvDataSets.Selected.Data <> nil) then
+  if IsLoaded then
   begin
-    lblDataSetFormula.Caption := Format(StrFormulaForSDat,
-      [tvDataSets.Selected.Text]);
-  end
-  else
-  begin
-    lblDataSetFormula.Caption := StrFormula;
+    UpdateCurrentEdit;
+    if (tvDataSets.Selected <> nil) and (tvDataSets.Selected.Data <> nil) then
+    begin
+      lblDataSetFormula.Caption := Format(StrFormulaForSDat,
+        [tvDataSets.Selected.Text]);
+    end
+    else
+    begin
+      lblDataSetFormula.Caption := StrFormula;
+    end;
   end;
 end;
 
@@ -5321,7 +5326,9 @@ end;
 procedure TfrmScreenObjectProperties.SetFrameData;
 var
   DataSetIndex: Integer;
+{$IFDEF FMP}
   FarmEdit: TScreenObjectDataEdit;
+{$ENDIF}
   PipeIndex: Integer;
   AnEdit: TScreenObjectEditItem;
   Pipes: TCfpPipeBoundary;
@@ -7112,6 +7119,10 @@ var
   InterpValue: TInterpValuesItem;
   ChemDataSets: TList;
 begin
+  if not IsLoaded then
+  begin
+    Exit;
+  end;
   FUpdatingCurrentEdit := True;
   try
     reDataSetComment.Lines.Clear;
@@ -12380,18 +12391,12 @@ begin
   GetModflowBoundary(Frame, Parameter, ScreenObjectList, FWEL_Node);
 end;
 
-procedure TfrmScreenObjectProperties.GetFarmWell(ScreenObjectList: TList);
 {$IFDEF FMP}
+procedure TfrmScreenObjectProperties.GetFarmWell(ScreenObjectList: TList);
 var
   Frame: TframeScreenObjectCondParam;
   Parameter: TParameterType;
-//  ScreenObjectIndex: Integer;
-//  AScreenObject: TScreenObject;
-//  Boundary: TFmpWellBoundary;
-//  FoundFirst: Boolean;
-{$ENDIF}
 begin
-{$IFDEF FMP}
   if not frmGoPhast.PhastModel.FarmProcessIsSelected then
   begin
     Exit;
@@ -12400,33 +12405,8 @@ begin
   Parameter := ptQMAX;
   GetFormulaInterpretation(Frame, Parameter, ScreenObjectList);
   GetModflowBoundary(Frame, Parameter, ScreenObjectList, FFarmWell_Node);
-
-//  FoundFirst := False;
-//  for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
-//  begin
-//    AScreenObject := ScreenObjectList[ScreenObjectIndex];
-//    Boundary := AScreenObject.ModflowFmpWellBoundary;
-//    if (Boundary <> nil) and Boundary.Used then
-//    begin
-//      if FoundFirst then
-//      begin
-//        if frameFarmWell.seFarmID.AsInteger <> StrToInt(Boundary.FarmId) then
-//        begin
-//          frameFarmWell.seFarmID.AsInteger := 0;
-//          break;
-//        end;
-//      end
-//      else
-//      begin
-//        frameFarmWell.seFarmID.AsInteger := StrToInt(Boundary.FarmId);
-//        FoundFirst := True;
-//      end;
-//    end;
-//  end;
-
-//  seFarmID
-{$ENDIF}
 end;
+{$ENDIF}
 
 procedure TfrmScreenObjectProperties.GetRivBoundary(ScreenObjectList: TList);
 var

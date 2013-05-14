@@ -7,7 +7,7 @@
       <para style="margin-bottom:10px; line-height:2.0;"><text styleclass="Heading1" translate="true">Data Sets Required by MODFLOW</text></para>
     </header>
     <para styleclass="Table Caption"><text styleclass="Table Caption" translate="true">Table 8. Data Sets required by MODFLOW</text></para>
-    <para styleclass="Normal" style="text-align:center;"><table id="ModflowDataSets_srt_" rowcount="56" colcount="5" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Normal" style="text-align:center;"><table id="ModflowDataSets_srt_" rowcount="60" colcount="5" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <thead style="vertical-align:top">
         <td>
           <para styleclass="Table Header"><anchor id="_sortable_MODFLOW_DataSets_cicons-graphic_" styleclass="Table Header"></anchor><text styleclass="Table Header" translate="true">Data Set</text></para>
@@ -961,10 +961,78 @@
       </tr>
       <tr style="vertical-align:top">
         <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Active_Surface_Elevation[i]</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">The Active_Surface_Elevation[i] is the initial elevation of a ZETA surface in the SWI2 package.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWI2_Seawater_Intrusion_Packag" styleclass="Table Cell" translate="true">SWI2</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWI2_Seawater_Intrusion_Pack" anchor="ZETA" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">ZETA</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When SWI2 is used</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">EffectivePorosity</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Effective porosity</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWI2_Seawater_Intrusion_Packag" styleclass="Table Cell" translate="true">SWI2</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWI2_Seawater_Intrusion_Pack" anchor="SSZ" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">SSZ</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When SWI2 is used</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="height:18px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">FluidSourceDensityZone</text></para>
+        </td>
+        <td style="height:18px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">FluidSourceDensityZone identifies the zone in the SWI2 package that is the source of sink of fluid.</text></para>
+        </td>
+        <td style="height:18px;">
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWI2_Seawater_Intrusion_Packag" styleclass="Table Cell" translate="true">SWI2</link></para>
+        </td>
+        <td style="height:18px;">
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWI2_Seawater_Intrusion_Pack" anchor="ISOURCE" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">ISOURCE</link></para>
+        </td>
+        <td style="height:18px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When SWI2 is used</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">SWI_Observation_Name</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Any cell with a value other than &quot;&quot; will be an observation cell in the SWI2 package.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWI2_Seawater_Intrusion_Packag" styleclass="Table Cell" translate="true">SWI2</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWI2_Seawater_Intrusion_Pack" anchor="OBSNAM" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">OBSNAM</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When SWI2 is used and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWI2_Seawater_Intrusion_Packag" anchor="ISWIOBS" styleclass="Table Cell" translate="true">ISWIOBS</link><text styleclass="Table Cell" translate="true"> is not zero.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
           <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Farm_ID</text></para>
         </td>
         <td>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">Specifies the spatial distribution of farms. Values are set automatically by the ID specified for each </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Crop_Efficiencies" styleclass="Normal" translate="true">farm</link><text styleclass="Normal" translate="true">.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Specifies the spatial distribution of farms. Values are set automatically by the ID specified for each </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Crop_Efficiencies" styleclass="Table Cell" translate="true">farm</link><text styleclass="Table Cell" translate="true">.</text></para>
         </td>
         <td>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">FMP</link></para>
@@ -981,7 +1049,7 @@
           <para styleclass="Table Cell"><anchor id="Soil_ID" styleclass="Table Cell"></anchor><text styleclass="Table Cell" translate="true">Soil_ID</text></para>
         </td>
         <td>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">Specifies the spatial distribution of soils.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Specifies the spatial distribution of soils.</text></para>
         </td>
         <td>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">FMP</link></para>

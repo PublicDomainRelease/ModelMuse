@@ -4,7 +4,6 @@ inherited frmDisplayData: TfrmDisplayData
   Caption = 'Data Visualization'
   ClientHeight = 542
   ClientWidth = 784
-  ExplicitTop = -59
   ExplicitWidth = 802
   ExplicitHeight = 587
   PixelsPerInch = 120
@@ -22,7 +21,7 @@ inherited frmDisplayData: TfrmDisplayData
     Top = 0
     Width = 578
     Height = 501
-    ActivePage = jvspHeadObsResults
+    ActivePage = jvspCrossSection
     PropagateEnable = False
     Align = alClient
     OnChange = pglstMainChange
@@ -220,7 +219,6 @@ inherited frmDisplayData: TfrmDisplayData
         inherited comboTimeToPlot: TJvComboBox
           Top = 215
           Height = 26
-          ItemHeight = 18
           ExplicitTop = 215
           ExplicitHeight = 26
         end
@@ -256,14 +254,13 @@ inherited frmDisplayData: TfrmDisplayData
         inherited pgcHeadObs: TPageControl
           Width = 578
           Height = 436
-          ActivePage = frameHeadObservationResults.tabControls
           ExplicitWidth = 578
           ExplicitHeight = 436
           inherited tabControls: TTabSheet
             ExplicitLeft = 4
             ExplicitTop = 29
-            ExplicitWidth = 520
-            ExplicitHeight = 285
+            ExplicitWidth = 570
+            ExplicitHeight = 403
             inherited lblNegativeColor: TLabel
               Width = 190
               Height = 18
@@ -317,6 +314,18 @@ inherited frmDisplayData: TfrmDisplayData
                 ExplicitWidth = 122
                 ExplicitHeight = 18
               end
+              inherited lblMinLayer: TLabel
+                Width = 100
+                Height = 18
+                ExplicitWidth = 100
+                ExplicitHeight = 18
+              end
+              inherited lblMaxLayer: TLabel
+                Width = 104
+                Height = 18
+                ExplicitWidth = 104
+                ExplicitHeight = 18
+              end
               inherited framelmtMaximumTime: TframeDisplayLimit
                 inherited comboBoolLimit: TComboBox
                   Height = 26
@@ -341,6 +350,18 @@ inherited frmDisplayData: TfrmDisplayData
                   ExplicitHeight = 26
                 end
               end
+              inherited framelmtMinLayer: TframeDisplayLimit
+                inherited comboBoolLimit: TComboBox
+                  Height = 26
+                  ExplicitHeight = 26
+                end
+              end
+              inherited framelmtMaxLayer: TframeDisplayLimit
+                inherited comboBoolLimit: TComboBox
+                  Height = 26
+                  ExplicitHeight = 26
+                end
+              end
             end
             inherited spinSymbolSize: TJvSpinEdit
               Height = 26
@@ -350,13 +371,29 @@ inherited frmDisplayData: TfrmDisplayData
           inherited tabValues: TTabSheet
             ExplicitLeft = 4
             ExplicitTop = 29
-            ExplicitWidth = 570
-            ExplicitHeight = 403
+            ExplicitWidth = 520
+            ExplicitHeight = 343
             inherited rdgHeadObs: TRbwDataGrid4
-              Width = 570
-              Height = 403
-              ExplicitWidth = 570
-              ExplicitHeight = 403
+              Height = 343
+              ExplicitHeight = 343
+            end
+          end
+          inherited tabLegend: TTabSheet
+            ExplicitLeft = 4
+            ExplicitTop = 29
+            ExplicitWidth = 520
+            ExplicitHeight = 343
+            inherited lblMax: TLabel
+              Width = 44
+              Height = 18
+              ExplicitWidth = 44
+              ExplicitHeight = 18
+            end
+            inherited lblHalfMax: TLabel
+              Width = 71
+              Height = 18
+              ExplicitWidth = 71
+              ExplicitHeight = 18
             end
           end
         end
@@ -478,6 +515,10 @@ inherited frmDisplayData: TfrmDisplayData
             inherited comboTimeToPlot: TComboBox
               Height = 26
               ExplicitHeight = 26
+            end
+            inherited udTimeToPlot: TJvUpDown
+              Width = 17
+              ExplicitWidth = 17
             end
             inherited comboColorScheme: TComboBox
               Left = 2
@@ -769,8 +810,10 @@ inherited frmDisplayData: TfrmDisplayData
             end
             inherited udDataSets: TJvUpDown
               Left = 406
+              Width = 16
               Height = 26
               ExplicitLeft = 406
+              ExplicitWidth = 16
               ExplicitHeight = 26
             end
             inherited rgUpdateLimitChoice: TRadioGroup
@@ -783,7 +826,7 @@ inherited frmDisplayData: TfrmDisplayData
               Width = 398
               Height = 26
               Anchors = [akLeft, akTop, akRight]
-              ExplicitWidth = 418
+              ExplicitWidth = 414
               ExplicitHeight = 26
             end
             inherited reComment: TRichEdit
@@ -803,14 +846,15 @@ inherited frmDisplayData: TfrmDisplayData
             end
             inherited udTime: TJvUpDown
               Left = 514
+              Width = 17
               Height = 26
               ExplicitLeft = 514
+              ExplicitWidth = 17
               ExplicitHeight = 26
             end
             inherited comboTime3D: TJvComboBox
               Left = 429
               Height = 26
-              ItemHeight = 18
               ExplicitLeft = 429
               ExplicitHeight = 26
             end
@@ -1061,9 +1105,11 @@ inherited frmDisplayData: TfrmDisplayData
             inherited udDataSets: TJvUpDown
               Left = 296
               Top = 28
+              Width = 17
               TabOrder = 3
               ExplicitLeft = 296
               ExplicitTop = 28
+              ExplicitWidth = 17
             end
             inherited rgUpdateLimitChoice: TRadioGroup
               Top = 235
@@ -1345,8 +1391,10 @@ inherited frmDisplayData: TfrmDisplayData
         end
         inherited udVectors: TJvUpDown
           Left = 546
+          Width = 16
           Height = 26
           ExplicitLeft = 546
+          ExplicitWidth = 16
           ExplicitHeight = 26
         end
         inherited seMinSpacing2D: TJvSpinEdit
@@ -1425,7 +1473,6 @@ inherited frmDisplayData: TfrmDisplayData
         inherited comboTimeToPlot: TJvComboBox
           Top = 215
           Height = 26
-          ItemHeight = 18
           ExplicitTop = 215
           ExplicitHeight = 26
         end
@@ -1438,6 +1485,76 @@ inherited frmDisplayData: TfrmDisplayData
           Top = 66
           ExplicitLeft = 242
           ExplicitTop = 66
+        end
+      end
+    end
+    object jvspCrossSection: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 578
+      Height = 501
+      HelpType = htKeyword
+      HelpKeyword = 'Cross_Sections_Pane'
+      Caption = 'jvspCrossSection'
+      inline frameDrawCrossSection: TframeDrawCrossSection
+        Left = 0
+        Top = 0
+        Width = 578
+        Height = 501
+        Align = alClient
+        TabOrder = 0
+        ExplicitWidth = 578
+        ExplicitHeight = 501
+        inherited btnAddDataSet: TSpeedButton
+          Left = 273
+          ExplicitLeft = 273
+        end
+        inherited btnRemoveDataSet: TSpeedButton
+          Left = 273
+          ExplicitLeft = 273
+        end
+        inherited vstAvailableDataSets: TVirtualStringTree
+          Width = 264
+          Height = 495
+          ExplicitWidth = 264
+          ExplicitHeight = 495
+        end
+        inherited pnlUsed: TPanel
+          Left = 371
+          Height = 501
+          ExplicitLeft = 371
+          ExplicitHeight = 501
+          inherited spl1: TSplitter
+            Top = 367
+            ExplicitTop = 318
+          end
+          inherited pnlTop: TPanel
+            Height = 367
+            ExplicitHeight = 367
+            inherited lblDataSets: TLabel
+              Width = 113
+              Height = 18
+              ExplicitWidth = 113
+              ExplicitHeight = 18
+            end
+            inherited lstSelectedDataSets: TListBox
+              Height = 334
+              ExplicitHeight = 334
+            end
+          end
+          inherited pnlBottom: TPanel
+            Top = 372
+            ExplicitTop = 372
+            inherited lblLayers: TLabel
+              Width = 93
+              Height = 18
+              ExplicitWidth = 93
+              ExplicitHeight = 18
+            end
+            inherited clbLayers: TJvCheckListBox
+              ItemHeight = 18
+            end
+          end
         end
       end
     end

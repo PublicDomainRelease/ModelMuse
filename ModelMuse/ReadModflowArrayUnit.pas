@@ -160,6 +160,8 @@ function CheckBudgetPrecision(AFile: TFileStream; out HufFormat: boolean): TModf
 
 implementation
 
+
+
 resourcestring
   StrUnableToReadFile = 'Unable to read file. Check that the file is an unstructured, non-formatted file. In MODFLOW-2005, this is determined in OPENSPEC.inc';
 
@@ -403,7 +405,12 @@ var
                 for ColIndex := 0 to NCOL - 1 do
                 begin
                   AFile.Read(AValue, SizeOf(AValue));
-                  AnArray[LayerIndex, RowIndex, ColIndex] := AValue;
+                  try
+                    AnArray[LayerIndex, RowIndex, ColIndex] := AValue;
+                  except
+                    result := False;
+                    Exit;
+                  end;
                 end;
               end;
             end;
@@ -538,7 +545,12 @@ var
                 for ColIndex := 0 to NCOL - 1 do
                 begin
                   AFile.Read(AValue, SizeOf(AValue));
-                  AnArray[LayerIndex, RowIndex, ColIndex] := AValue;
+                  try
+                    AnArray[LayerIndex, RowIndex, ColIndex] := AValue;
+                  except
+                    result := false;
+                    Exit;
+                  end;
                 end;
               end;
             end;
@@ -612,42 +624,37 @@ begin
       else if (FirstDescription = '   CONSTANT HEAD')
         and (SecondDescription = 'FLOW FRONT FACE ') then
       begin
-        if (result <> mpDouble) then
-        begin
-          raise EPrecisionReadError.Create(StrUnableToReadFile);
-        end;
+        result := mpDouble;
       end
       else if (FirstDescription = '   CONSTANT HEAD')
         and (SecondDescription = 'FLOW LOWER FACE ') then
       begin
-        if (result <> mpDouble) then
-        begin
-          raise EPrecisionReadError.Create(StrUnableToReadFile);
-        end;
+        result := mpDouble;
       end
       else if (FirstDescription = 'FLOW RIGHT FACE ')
         and (SecondDescription = 'FLOW FRONT FACE ') then
       begin
-        if (result <> mpDouble) then
-        begin
-          raise EPrecisionReadError.Create(StrUnableToReadFile);
-        end;
+        result := mpDouble;
       end
       else if (FirstDescription = 'FLOW RIGHT FACE ')
         and (SecondDescription = 'FLOW LOWER FACE ') then
       begin
-        if (result <> mpDouble) then
-        begin
-          raise EPrecisionReadError.Create(StrUnableToReadFile);
-        end;
+        result := mpDouble;
       end
       else if (FirstDescription = 'FLOW FRONT FACE ')
         and (SecondDescription = 'FLOW LOWER FACE ') then
       begin
-        if (result <> mpDouble) then
-        begin
-          raise EPrecisionReadError.Create(StrUnableToReadFile);
-        end;
+        result := mpDouble;
+      end
+      else if (FirstDescription = '      ZETASRF  1')
+        and (SecondDescription = '      ZETASRF  1') then
+      begin
+        result := mpDouble;
+      end
+      else if (FirstDescription = '      ZETASRF  1')
+        and (SecondDescription = '      ZETASRF  2') then
+      begin
+        result := mpDouble;
       end
       else
       begin
@@ -712,6 +719,22 @@ begin
       end
       else if (FirstDescription = 'FLOW FRONT FACE ')
         and (SecondDescription = 'FLOW LOWER FACE ') then
+      begin
+        if (result <> mpSingle) then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
+      end
+      else if (FirstDescription = '      ZETASRF  1')
+        and (SecondDescription = '      ZETASRF  1') then
+      begin
+        if (result <> mpSingle) then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
+      end
+      else if (FirstDescription = '      ZETASRF  1')
+        and (SecondDescription = '      ZETASRF  2') then
       begin
         if (result <> mpSingle) then
         begin

@@ -1643,6 +1643,7 @@ type
     function MfCfpUpToDate: boolean;
     procedure AdjustSutraBoundaries;
     function GetHelpFormat: THelpFormat;
+    procedure CrossSectionChanged(Sender: TObject);
     { Private declarations }
   protected
     // @name is used to specify the format of the files that
@@ -2009,7 +2010,9 @@ var
   MfNwtDate: TDateTime;
   Modpath6Date: TDateTime;
   MfLgr2Date: TDateTime;
+{$IFDEF FMP}
   MfFmpDate: TDateTime;
+{$ENDIF}
   MfCfpDate: TDateTime;
 
 const
@@ -3934,6 +3937,7 @@ begin
   PhastModel.OnScreenObjectUnSelected := ScreenObjectSelectionChange;
   PhastModel.OnCheckScreenObject := CheckScreenObject;
   PhastModel.On3DViewChanged := Invalidate3DView;
+  PhastModel.OnCrossSectionChanged := CrossSectionChanged;
 
   PhastModel.OnModelSelectionChange := ModelSelectionChange;
   PhastModel.OnScreenObjectsChanged := ScreenObjectsChanged;
@@ -3946,6 +3950,12 @@ begin
   PhastModel.Name := 'PhastModel';
   PhastModel.UpToDate := True;
 
+end;
+
+procedure TfrmGoPhast.CrossSectionChanged(Sender: TObject);
+begin
+  InvalidateViewOfModel;
+  InvalidateAllViews;
 end;
 
 procedure TfrmGoPhast.miDataSetstoCSVClick(Sender: TObject);
@@ -11749,7 +11759,9 @@ initialization
   MfNwtDate := EncodeDate(2013,9,26);
   Modpath6Date := EncodeDate(2012,8,28);
   MfLgr2Date := EncodeDate(2013, 9, 19);
+{$IFDEF FMP}
   MfFmpDate := EncodeDate(2010, 1, 14);
+{$ENDIF}
   MfCfpDate := EncodeDate(2011, 2, 23);
 
   {$IFDEF Win64}

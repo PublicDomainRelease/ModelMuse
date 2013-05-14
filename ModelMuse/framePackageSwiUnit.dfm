@@ -17,41 +17,40 @@ inherited framePackageSWI: TframePackageSWI
     Top = 103
     Width = 445
     Height = 376
-    ActivePage = tabDensity
+    ActivePage = tabSolver
     Align = alBottom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 1
-    ExplicitTop = 95
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 8
+      ExplicitLeft = -60
       object lblNumberOfSurfaces: TLabel
         Left = 139
         Top = 6
-        Width = 131
-        Height = 26
+        Width = 157
+        Height = 32
         Caption = 'Number of surfaces (NSRF)'#13#10
       end
       object lblDensityChoice: TLabel
         Left = 256
         Top = 33
-        Width = 134
-        Height = 13
+        Width = 159
+        Height = 16
         Caption = 'Density treatment (ISTRAT)'
       end
       object lblObservations: TLabel
         Left = 163
         Top = 85
-        Width = 119
-        Height = 13
+        Width = 140
+        Height = 16
         Caption = 'Observations (ISWIOBS)'
       end
       object lblToeslope: TLabel
         AlignWithMargins = True
         Left = 93
         Top = 114
-        Width = 189
-        Height = 13
+        Width = 230
+        Height = 16
         Margins.Top = 6
         Caption = 'Maximum slope of toe cells (TOESLOPE)'
       end
@@ -59,8 +58,8 @@ inherited framePackageSWI: TframePackageSWI
         AlignWithMargins = True
         Left = 93
         Top = 146
-        Width = 181
-        Height = 13
+        Width = 221
+        Height = 16
         Margins.Top = 6
         Caption = 'Maximum slope of tip cells (TIPSLOPE)'
       end
@@ -68,8 +67,8 @@ inherited framePackageSWI: TframePackageSWI
         AlignWithMargins = True
         Left = 93
         Top = 178
-        Width = 285
-        Height = 13
+        Width = 337
+        Height = 16
         Margins.Top = 6
         Caption = 'Fraction of threshold used to move the tip and toe (ALPHA)'
       end
@@ -77,16 +76,16 @@ inherited framePackageSWI: TframePackageSWI
         AlignWithMargins = True
         Left = 92
         Top = 210
-        Width = 242
-        Height = 13
+        Width = 287
+        Height = 16
         Margins.Top = 6
         Caption = 'Fraction of threshold used to move the toe (BETA)'
       end
       object lblMaxAdaptiveSteps: TLabel
         Left = 139
         Top = 253
-        Width = 199
-        Height = 26
+        Width = 276
+        Height = 48
         Caption = 
           'Maximum number of SWI2 time steps per MODFLOW time step (NADPTMX' +
           ') '
@@ -95,8 +94,8 @@ inherited framePackageSWI: TframePackageSWI
       object lblMinAdaptiveSteps: TLabel
         Left = 139
         Top = 285
-        Width = 195
-        Height = 26
+        Width = 276
+        Height = 48
         Caption = 
           'Minimum number of SWI2 time steps per MODFLOW time step (NADPTMN' +
           ') '
@@ -106,8 +105,8 @@ inherited framePackageSWI: TframePackageSWI
         AlignWithMargins = True
         Left = 92
         Top = 315
-        Width = 316
-        Height = 26
+        Width = 301
+        Height = 48
         Margins.Top = 6
         Caption = 
           'Factor controlling number of SWI2 time steps per MODFLOW time st' +
@@ -118,7 +117,7 @@ inherited framePackageSWI: TframePackageSWI
         Left = 12
         Top = 82
         Width = 145
-        Height = 23
+        Height = 26
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
         Color = clBtnFace
@@ -126,31 +125,31 @@ inherited framePackageSWI: TframePackageSWI
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 17
-        ItemIndex = 1
+        ItemHeight = 20
+        ItemIndex = -1
         TabOrder = 3
         Items = <
           item
             Brush.Style = bsClear
             Indent = 0
-            Text = 'No observations'
+            Text = 'No observations (0)'
           end
           item
             Brush.Style = bsClear
             Indent = 0
-            Text = 'ASCII file for observations'
+            Text = 'ASCII file for observations >0'
           end
           item
             Brush.Style = bsClear
             Indent = 0
-            Text = 'Binary file for observations'
+            Text = 'Binary file for observations <0'
           end>
       end
       object seNumberOfSurfaces: TJvSpinEdit
         Left = 12
         Top = 3
         Width = 121
-        Height = 21
+        Height = 24
         MaxValue = 2147483647.000000000000000000
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
@@ -171,7 +170,7 @@ inherited framePackageSWI: TframePackageSWI
         Left = 12
         Top = 30
         Width = 238
-        Height = 23
+        Height = 26
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
         Color = clBtnFace
@@ -179,7 +178,7 @@ inherited framePackageSWI: TframePackageSWI
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 17
+        ItemHeight = 20
         ItemIndex = 0
         TabOrder = 1
         OnChange = comboDensityChoiceChange
@@ -299,7 +298,7 @@ inherited framePackageSWI: TframePackageSWI
         Left = 12
         Top = 258
         Width = 121
-        Height = 21
+        Height = 24
         MaxValue = 2147483647.000000000000000000
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
@@ -308,9 +307,9 @@ inherited framePackageSWI: TframePackageSWI
       end
       object seMinAdaptiveSteps: TJvSpinEdit
         Left = 12
-        Top = 285
+        Top = 287
         Width = 121
-        Height = 21
+        Height = 24
         MaxValue = 2147483647.000000000000000000
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
@@ -320,7 +319,7 @@ inherited framePackageSWI: TframePackageSWI
       object rdeAdaptiveFactor: TRbwDataEntry
         AlignWithMargins = True
         Left = 12
-        Top = 312
+        Top = 319
         Width = 74
         Height = 22
         Hint = 
@@ -343,162 +342,159 @@ inherited framePackageSWI: TframePackageSWI
     object tabSolver: TTabSheet
       Caption = 'Solver'
       ImageIndex = 1
-      ExplicitHeight = 353
       object lblSolver: TLabel
         Left = 163
         Top = 6
-        Width = 63
-        Height = 13
-        Caption = 'Solver choice'
+        Width = 144
+        Height = 16
+        Caption = 'Solver choice (NSOLVER)'
       end
       object lblPrintoutInterval: TLabel
         Left = 139
         Top = 32
-        Width = 124
-        Height = 13
+        Width = 146
+        Height = 16
         Caption = 'Printout interval (IPRSOL)'
       end
       object lblPCGPrintControl: TLabel
         AlignWithMargins = True
-        Left = 12
-        Top = 63
-        Width = 128
-        Height = 13
+        Left = 304
+        Top = 65
+        Width = 149
+        Height = 16
         Margins.Top = 7
-        Caption = 'Printing control (MUTPCG):'
+        Caption = 'Printing control (MUTPCG)'
       end
       object lblMaxIterOuter: TLabel
         Left = 139
-        Top = 112
-        Width = 221
-        Height = 13
+        Top = 92
+        Width = 268
+        Height = 16
         Caption = 'Maximum number of outer iterations (MXITER)'
       end
       object lblMaxIterInner: TLabel
         Left = 139
-        Top = 139
-        Width = 211
-        Height = 13
+        Top = 119
+        Width = 256
+        Height = 16
         Caption = 'Maximum number of inner iterations (ITER1)'
       end
       object lblPCGMethod: TLabel
         AlignWithMargins = True
-        Left = 12
-        Top = 162
-        Width = 202
-        Height = 13
+        Left = 272
+        Top = 149
+        Width = 235
+        Height = 16
         Margins.Top = 7
-        Caption = 'Matrix preconditioning method (NPCOND):'
+        Caption = 'Matrix preconditioning method (NPCOND)'
       end
       object lblMaxZetaChange: TLabel
         AlignWithMargins = True
-        Left = 92
-        Top = 188
-        Width = 174
-        Height = 13
+        Left = 139
+        Top = 179
+        Width = 201
+        Height = 16
         Margins.Top = 6
-        Caption = 'Max. abs. change in zeta (ZCLOSE):'
+        Caption = 'Max. abs. change in zeta (ZCLOSE)'
       end
       object lblMaxRes: TLabel
         AlignWithMargins = True
-        Left = 92
-        Top = 216
-        Width = 142
-        Height = 13
+        Left = 139
+        Top = 207
+        Width = 164
+        Height = 16
         Margins.Top = 6
-        Caption = 'Max. abs. residual (RCLOSE):'
+        Caption = 'Max. abs. residual (RCLOSE)'
       end
       object lblRelax: TLabel
         AlignWithMargins = True
-        Left = 92
-        Top = 244
-        Width = 150
-        Height = 13
+        Left = 139
+        Top = 235
+        Width = 174
+        Height = 16
         Margins.Top = 6
-        Caption = 'Relaxation parameter (RELAX):'
+        Caption = 'Relaxation parameter (RELAX)'
       end
       object lblEigenValue: TLabel
         AlignWithMargins = True
-        Left = 12
-        Top = 273
-        Width = 223
-        Height = 13
+        Left = 272
+        Top = 263
+        Width = 258
+        Height = 16
         Margins.Top = 7
-        Caption = 'Upper bound of the max. eigenvalue (NBPOL):'
+        Caption = 'Upper bound of the max. eigenvalue (NBPOL)'
       end
       object lblDamp: TLabel
         AlignWithMargins = True
-        Left = 92
+        Left = 139
         Top = 295
-        Width = 116
-        Height = 13
+        Width = 134
+        Height = 16
         Margins.Top = 6
-        Caption = 'Damping factor (DAMP):'
+        Caption = 'Damping factor (DAMP)'
       end
       object lblDampT: TLabel
         AlignWithMargins = True
-        Left = 92
+        Left = 139
         Top = 323
-        Width = 189
-        Height = 13
+        Width = 222
+        Height = 16
         Margins.Top = 6
-        Caption = 'Transient damping factor (DAMPPCGT):'
+        Caption = 'Transient damping factor (DAMPPCGT)'
       end
       object comboSolver: TJvImageComboBox
-        Left = 12
+        Left = 3
         Top = 3
-        Width = 145
-        Height = 23
+        Width = 154
+        Height = 26
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
         Color = clBtnFace
-        DroppedWidth = 145
+        DroppedWidth = 154
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 17
-        ItemIndex = 0
+        ItemHeight = 20
+        ItemIndex = -1
         TabOrder = 0
         OnChange = comboSolverChange
         Items = <
           item
             Brush.Style = bsClear
             Indent = 0
-            Text = 'DE4'
+            Text = 'DE4 (1)'
           end
           item
             Brush.Style = bsClear
             Indent = 0
-            Text = 'PCG'
+            Text = 'PCG (2)'
           end>
       end
       object sePrintoutInterval: TJvSpinEdit
-        Left = 12
+        Left = 3
         Top = 32
-        Width = 121
-        Height = 21
+        Width = 130
+        Height = 24
         MaxValue = 2147483647.000000000000000000
-        MinValue = 1.000000000000000000
         Value = 1.000000000000000000
         Enabled = False
         TabOrder = 1
       end
       object comboPCGPrint: TJvImageComboBox
         AlignWithMargins = True
-        Left = 12
-        Top = 82
-        Width = 254
-        Height = 21
+        Left = 3
+        Top = 62
+        Width = 295
+        Height = 24
         Hint = 'MUTPCG controls the information that is to be printed.'
         HelpContext = 990
         Style = csDropDownList
         ButtonStyle = fsLighter
         Color = clBtnFace
-        DroppedWidth = 265
+        DroppedWidth = 295
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 13
         ItemIndex = -1
         TabOrder = 2
         Items = <
@@ -524,10 +520,10 @@ inherited framePackageSWI: TframePackageSWI
           end>
       end
       object seMaxIterOuter: TJvSpinEdit
-        Left = 12
-        Top = 109
-        Width = 121
-        Height = 21
+        Left = 3
+        Top = 89
+        Width = 130
+        Height = 24
         MaxValue = 2147483647.000000000000000000
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
@@ -535,10 +531,10 @@ inherited framePackageSWI: TframePackageSWI
         TabOrder = 3
       end
       object seMaxIterInner: TJvSpinEdit
-        Left = 12
-        Top = 136
-        Width = 121
-        Height = 21
+        Left = 3
+        Top = 116
+        Width = 130
+        Height = 24
         MaxValue = 2147483647.000000000000000000
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
@@ -547,10 +543,10 @@ inherited framePackageSWI: TframePackageSWI
       end
       object comboPCGPrecondMeth: TJvImageComboBox
         AlignWithMargins = True
-        Left = 196
-        Top = 158
-        Width = 254
-        Height = 21
+        Left = 3
+        Top = 146
+        Width = 263
+        Height = 24
         Hint = 
           'NPCOND = 2 is rarely used because it is generally slower than NP' +
           'COND = 1.'
@@ -562,9 +558,9 @@ inherited framePackageSWI: TframePackageSWI
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 13
         ItemIndex = -1
         TabOrder = 5
+        OnChange = comboPCGPrecondMethChange
         Items = <
           item
             Brush.Style = bsClear
@@ -579,9 +575,9 @@ inherited framePackageSWI: TframePackageSWI
       end
       object rdeMaxZetaChange: TRbwDataEntry
         AlignWithMargins = True
-        Left = 12
-        Top = 185
-        Width = 74
+        Left = 3
+        Top = 176
+        Width = 130
         Height = 22
         Hint = 
           'HCLOSE is one of two convergence criteria in PCG2.  When the max' +
@@ -601,9 +597,9 @@ inherited framePackageSWI: TframePackageSWI
       end
       object rdeMaxRes: TRbwDataEntry
         AlignWithMargins = True
-        Left = 12
-        Top = 213
-        Width = 73
+        Left = 3
+        Top = 204
+        Width = 130
         Height = 22
         Hint = 
           'RCLOSE is one of two convergence criteria in PCG2.  When the max' +
@@ -622,9 +618,9 @@ inherited framePackageSWI: TframePackageSWI
       end
       object rdeRelax: TRbwDataEntry
         AlignWithMargins = True
-        Left = 12
-        Top = 241
-        Width = 74
+        Left = 3
+        Top = 232
+        Width = 130
         Height = 22
         Hint = 
           'The relaxation input value is usually set to 1.  However, if you' +
@@ -644,10 +640,10 @@ inherited framePackageSWI: TframePackageSWI
       end
       object comboEigenValue: TJvImageComboBox
         AlignWithMargins = True
-        Left = 180
-        Top = 265
-        Width = 254
-        Height = 21
+        Left = 3
+        Top = 260
+        Width = 263
+        Height = 24
         Hint = 
           'In many cases you can speed up execution time slightly by settin' +
           'g NBPOL=2.  The estimated value is usually close to 2 and the nu' +
@@ -661,7 +657,6 @@ inherited framePackageSWI: TframePackageSWI
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 13
         ItemIndex = -1
         TabOrder = 9
         Items = <
@@ -678,9 +673,9 @@ inherited framePackageSWI: TframePackageSWI
       end
       object rdeDamp: TRbwDataEntry
         AlignWithMargins = True
-        Left = 12
+        Left = 3
         Top = 292
-        Width = 74
+        Width = 130
         Height = 22
         Hint = 'Damping factor for reducing oscillation.'
         HelpContext = 1000
@@ -696,9 +691,9 @@ inherited framePackageSWI: TframePackageSWI
       end
       object rdeDampT: TRbwDataEntry
         AlignWithMargins = True
-        Left = 12
+        Left = 3
         Top = 320
-        Width = 73
+        Width = 130
         Height = 22
         Hint = 'Damping factor for reducing oscillation.'
         HelpContext = 1000
@@ -714,15 +709,13 @@ inherited framePackageSWI: TframePackageSWI
       end
     end
     object tabDensity: TTabSheet
-      Caption = 'Density'
+      Caption = 'Dimensionless Density'
       ImageIndex = 2
-      ExplicitLeft = 8
-      ExplicitHeight = 215
       object rdgDensity: TRbwDataGrid4
         Left = 0
         Top = 0
         Width = 437
-        Height = 348
+        Height = 345
         Align = alClient
         ColCount = 2
         Enabled = False
@@ -785,10 +778,6 @@ inherited framePackageSWI: TframePackageSWI
             AutoAdjustColWidths = True
           end>
         WordWrapRowCaptions = False
-        ExplicitLeft = 168
-        ExplicitTop = 72
-        ExplicitWidth = 320
-        ExplicitHeight = 120
       end
     end
   end

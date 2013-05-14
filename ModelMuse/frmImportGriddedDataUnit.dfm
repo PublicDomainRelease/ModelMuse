@@ -7,10 +7,9 @@ inherited frmImportGriddedData: TfrmImportGriddedData
   Constraints.MinHeight = 432
   Constraints.MinWidth = 444
   OnResize = FormResize
-  ExplicitTop = -59
-  ExplicitWidth = 444
-  ExplicitHeight = 482
-  PixelsPerInch = 96
+  ExplicitWidth = 454
+  ExplicitHeight = 493
+  PixelsPerInch = 120
   TextHeight = 18
   object jvplCellGrid: TJvPageList
     Left = 0
@@ -163,13 +162,13 @@ inherited frmImportGriddedData: TfrmImportGriddedData
           BevelOuter = bvNone
           ColumnCollection = <
             item
-              Value = 33.333333333333340000
+              Value = 33.333333333333330000
             end
             item
-              Value = 33.333333333333340000
+              Value = 33.333333333333330000
             end
             item
-              Value = 33.333333333333340000
+              Value = 33.333333333333330000
             end>
           ControlCollection = <
             item
@@ -196,7 +195,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             135
             32)
           object sbAddRow: TSpeedButton
-            Left = 11
+            Left = 10
             Top = 5
             Width = 23
             Height = 22
@@ -214,10 +213,11 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             ParentShowHint = False
             ShowHint = True
             OnClick = sbAddRowClick
+            ExplicitLeft = 11
             ExplicitTop = 6
           end
           object sbInsertRow: TSpeedButton
-            Left = 56
+            Left = 54
             Top = 5
             Width = 23
             Height = 22
@@ -235,11 +235,10 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             ParentShowHint = False
             ShowHint = True
             OnClick = sbInsertRowClick
-            ExplicitLeft = 54
             ExplicitTop = 6
           end
           object sbDeleteRow: TSpeedButton
-            Left = 101
+            Left = 100
             Top = 5
             Width = 23
             Height = 22
@@ -447,8 +446,8 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Height = 26
       Tree.Left = 0
       Tree.Top = 0
-      Tree.Width = 304
-      Tree.Height = 202
+      Tree.Width = 302
+      Tree.Height = 195
       Tree.Align = alClient
       Tree.Header.AutoSizeIndex = 0
       Tree.Header.DefaultHeight = 17
@@ -460,6 +459,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Tree.Header.Height = 17
       Tree.Header.MainColumn = -1
       Tree.TabOrder = 0
+      Tree.TreeOptions.SelectionOptions = [toFullRowSelect]
       Tree.OnChange = combotreeDataSetsDropDownTreeChange
       Tree.OnGetText = combotreeDataSetsDropDownTreeGetText
       Tree.OnGetNodeDataSize = combotreeDataSetsDropDownTreeGetNodeDataSize

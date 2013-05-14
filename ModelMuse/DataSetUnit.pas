@@ -915,22 +915,24 @@ type
     property ContourInterval: TRealStorage read FContourInterval write SetContourInterval;
   end;
 
-  TDataArrayList = class(TObject)
-  private
-    FList: TList;
-    function GetDataArray(Index: integer): TDataArray;
-    function GetCount: integer;
-    procedure SetOwnsDataArrays(const Value: boolean);
-    function GetOwnsDataArrays: boolean;
-    property OwnsDataArrays: boolean read GetOwnsDataArrays write SetOwnsDataArrays;
-  public
-    constructor Create;
-    Destructor Destroy; override;
-    function Add(DataArray: TDataArray): integer;
-    property Count: integer read GetCount;
-    property DataArrays[Index: integer]: TDataArray read GetDataArray; default;
-    function Extract(DataArray: TDataArray): TDataArray;
-  end;
+
+  TDataArrayList = TObjectList<TDataArray>;
+//  TDataArrayList = class(TObject)
+//  private
+//    FList: TList;
+//    function GetDataArray(Index: integer): TDataArray;
+//    function GetCount: integer;
+//    procedure SetOwnsDataArrays(const Value: boolean);
+//    function GetOwnsDataArrays: boolean;
+//    property OwnsDataArrays: boolean read GetOwnsDataArrays write SetOwnsDataArrays;
+//  public
+//    constructor Create;
+//    Destructor Destroy; override;
+//    function Add(DataArray: TDataArray): integer;
+//    property Count: integer read GetCount;
+//    property DataArrays[Index: integer]: TDataArray read GetDataArray; default;
+//    function Extract(DataArray: TDataArray): TDataArray;
+//  end;
 
   TTempDataArrayStorage = class(TObject)
   private
@@ -7785,47 +7787,47 @@ end;
 
 { TDataArrayList }
 
-function TDataArrayList.Add(DataArray: TDataArray): integer;
-begin
-  result := FList.Add(DataArray);
-end;
-
-constructor TDataArrayList.Create;
-begin
-  inherited;
-  FList := TObjectList.Create;
-end;
-
-destructor TDataArrayList.Destroy;
-begin
-  FList.Free;
-  inherited;
-end;
-
-function TDataArrayList.Extract(DataArray: TDataArray): TDataArray;
-begin
-  result := FList.Extract(DataArray);
-end;
-
-function TDataArrayList.GetCount: integer;
-begin
-  result := FList.Count;
-end;
-
-function TDataArrayList.GetDataArray(Index: integer): TDataArray;
-begin
-  result := FList[Index];
-end;
-
-function TDataArrayList.GetOwnsDataArrays: boolean;
-begin
-  result := TObjectList(FList).OwnsObjects;
-end;
-
-procedure TDataArrayList.SetOwnsDataArrays(const Value: boolean);
-begin
-  TObjectList(FList).OwnsObjects := Value;
-end;
+//function TDataArrayList.Add(DataArray: TDataArray): integer;
+//begin
+//  result := FList.Add(DataArray);
+//end;
+//
+//constructor TDataArrayList.Create;
+//begin
+//  inherited;
+//  FList := TObjectList.Create;
+//end;
+//
+//destructor TDataArrayList.Destroy;
+//begin
+//  FList.Free;
+//  inherited;
+//end;
+//
+//function TDataArrayList.Extract(DataArray: TDataArray): TDataArray;
+//begin
+//  result := FList.Extract(DataArray);
+//end;
+//
+//function TDataArrayList.GetCount: integer;
+//begin
+//  result := FList.Count;
+//end;
+//
+//function TDataArrayList.GetDataArray(Index: integer): TDataArray;
+//begin
+//  result := FList[Index];
+//end;
+//
+//function TDataArrayList.GetOwnsDataArrays: boolean;
+//begin
+//  result := TObjectList(FList).OwnsObjects;
+//end;
+//
+//procedure TDataArrayList.SetOwnsDataArrays(const Value: boolean);
+//begin
+//  TObjectList(FList).OwnsObjects := Value;
+//end;
 
 { TTempDataArrayStorage }
 
@@ -7860,7 +7862,7 @@ begin
     FDataArrayList.Add(TDataArrayList.Create);
   end;
   result := FDataArrayList[Index];
-  result.OwnsDataArrays := OwnsDataArrays;
+  result.OwnsObjects := OwnsDataArrays;
 end;
 
 procedure TTempDataArrayStorage.SetOwnsDataArrays(const Value: boolean);
@@ -7872,7 +7874,7 @@ begin
   for Index := 0 to FDataArrayList.Count - 1 do
   begin
     List := FDataArrayList[Index];
-    List.OwnsDataArrays := FOwnsDataArrays;
+    List.OwnsObjects := FOwnsDataArrays;
   end;
 end;
 

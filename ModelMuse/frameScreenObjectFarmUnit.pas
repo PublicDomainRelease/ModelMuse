@@ -62,9 +62,9 @@ type
     FChangedCosts: boolean;
     FChangedWaterRights: boolean;
     FOnChange: TNotifyEvent;
-    FChanging: Boolean;
     FChangedID: Boolean;
 {$IFDEF FMP}
+    FChanging: Boolean;
     procedure InitializeControls;
     procedure GetCropEffForFirstFarm(FarmItem: TScreenObjectEditItem);
     procedure GetCostsForFirstFarm(FarmItem: TScreenObjectEditItem);

@@ -823,6 +823,10 @@ begin
       ACustomColorScheme := CustomColorSchemes.Add;
       ContourValues := Contours.ContourValues;
       ContourColors := Contours.ContourColors;
+      if Length(ContourValues) <> Length(ContourColors) then
+      begin
+        Exit;
+      end;
       Assert(Length(ContourValues) = Length(ContourColors));
       if Length(ContourValues) > 0  then
       begin
