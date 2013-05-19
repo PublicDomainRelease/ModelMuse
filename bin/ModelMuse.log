@@ -1,0 +1,28 @@
+	Thread ID 3728	0	 (i)  Log subsystem started in elapsed time mode.
+	Thread ID 3728	0	 (i)  Logging [debug info (D), info (i), notices (M), warnings (W), errors (Er), fatal errors (!!)]
+	Thread ID 3728	0	 (i)  Buffered mode: False
+	Thread ID 3728	0	 (M)  Service thread started
+	Thread ID 3728	421	 (i)  Temporary rendering context created
+	Thread ID 3728	421	 (M)  Getting OpenGL entry points and extension
+	Thread ID 3728	421	 (M)  
+	Thread ID 3728	421	 (i)  OpenGL rendering context information:
+	Thread ID 3728	421	 (i)  Renderer     : Quadro NVS 295/PCIe/SSE2
+	Thread ID 3728	421	 (i)  Vendor       : NVIDIA Corporation
+	Thread ID 3728	421	 (i)  Version      : 3.3.0
+	Thread ID 3728	421	 (i)  GLSL version : 3.30 NVIDIA via Cg compiler
+	Thread ID 3728	421	 (M)  
+	Thread ID 3728	437	 (M)  Getting OpenGL entry points and extension
+	Thread ID 3728	437	 (i)  Backward compatible core PBuffer context successfully created
+	Thread ID 3728	437	 (M)  Service context successfuly initialized
+	Thread ID 6688	5023	 (i)  Temporary rendering context created
+	Thread ID 6688	5023	 (M)  Getting OpenGL entry points and extension
+	Thread ID 6688	5023	 (i)  Temporary rendering context destroyed
+	Thread ID 6688	5023	 (M)  Getting OpenGL entry points and extension
+	Thread ID 6688	5054	 (i)  Temporary rendering context created
+	Thread ID 6688	5054	 (M)  Getting OpenGL entry points and extension
+	Thread ID 6688	5054	 (i)  Temporary rendering context destroyed
+	Thread ID 6688	5054	 (M)  Getting OpenGL entry points and extension
+	Thread ID 3728	11560	 (M)  Service thread finished
+	Thread ID 6688	11575	 (D)  Service thread destroyed
+	Thread ID 6688	11575	 (i)  Logged fatal_errors: 0, errors: 0, warnings: 0, notices: 11, info: 14, debug: 1
+	Thread ID 6688	11575	 (i)  Log session shutdown

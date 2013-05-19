@@ -1,4 +1,4 @@
-ModelMuse – Version 3.2.0.0
+ModelMuse – Version 3.2.1.0
 
 NOTE: Any use of trade, product or firm names is for descriptive purposes 
       only and does not imply endorsement by the U.S. Government.
@@ -29,11 +29,11 @@ Either version may be used for installing ModelMuse.  Both contain
 the same version of ModelMuse for use on personal computers:
 
 For 32 or 64-bit operating systems:
-         ModelMuseSetup32_3_2.exe
-         ModelMuse32_3_2.zip
+         ModelMuseSetup32_3_2_1.exe
+         ModelMuse32_3_2_1.zip
 For 64-bit operating systems:
-         ModelMuseSetup64_3_2.exe
-         ModelMuse64_3_2.zip
+         ModelMuseSetup64_3_2_1.exe
+         ModelMuse64_3_2_1.zip
 
 Both distribution files contain:
 
@@ -43,22 +43,22 @@ Both distribution files contain:
           Example models
           Supplementary materials
 
-The file ModelMuseSource3_2.zip contains the source code for ModelMuse, 
+The file ModelMuseSource3_2_1.zip contains the source code for ModelMuse, 
          ModelMonitor, and MF2005_Importer.exe.
 
 B. INSTALLING
 
 The distribution file is an installer.  Execution of the distribution 
 file will install ModelMuse in a directory chosen by the user. By default,
-ModelMuse will be installed in C:\Program Files\USGS\ModelMuse3_2 or
-C:\Program Files (x86)\USGS\ModelMuse3_2. If 
+ModelMuse will be installed in C:\Program Files\USGS\ModelMuse3_2_1 or
+C:\Program Files (x86)\USGS\ModelMuse3_2_1. If 
 the new version of ModelMuse is installed over an older version, the 
 program may be installed in the same directory as the older version of the 
 program. The installer will associate files with the extensions .gpt, 
 .gpb, and .mmZlib with ModelMuse.  The following directory structure will 
 be created in the installation directory:
 
-   |--ModelMuse3_2
+   |--ModelMuse3_2_1
    |  |--bin          ; ModelMuse, ModelMonitor, and MF2005_Importer 
    |  |                   executables.
    |  |--doc          ; Documentation file
@@ -69,7 +69,7 @@ ModelMuse will also create a subdirectory of the "My Documents" directory named
    |  |                   documentation or the ModelMuse help.
    |  |--examples     ; Sample models.
 
-Included in directory ModelMuse3_2\doc is the report on ModelMuse as a 
+Included in directory ModelMuse3_2_1\doc is the report on ModelMuse as a 
 Portable Document Format (PDF) file. The PDF file is readable and 
 printable on various computer platforms using Acrobat Reader from Adobe.
 The Acrobat Reader is freely available from the following World Wide Web

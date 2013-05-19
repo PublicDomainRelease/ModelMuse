@@ -53,6 +53,10 @@ resourcestring
   StrErrorInSPackage = 'Error in %s package input. In the first stress perio' +
   'd, you can not reuse data from a previous stress period.';
   StrRecharge = 'Recharge';
+  StrObservationsWithIn = 'Observations with invalid reference stress period' +
+  's have been skipped.';
+  StrObservationName = 'Observation Name: "%0:s"; Reference Stress Period: %' +
+  '1:d';
 
 var
   DummyInteger: integer;
@@ -3449,6 +3453,10 @@ begin
     Importer.Free;
     frmGoPhast.PhastModel.ImportingModel := False;
     frmGoPhast.CanDraw := True;
+  end;
+  if frmErrorsAndWarnings.HasMessages then
+  begin
+    frmErrorsAndWarnings.Show;
   end;
 end;
 
@@ -14066,6 +14074,8 @@ begin
   FHobPackage.IsSelected := True;
   frmGoPhast.EnableManageHeadObservations;
 
+  frmErrorsAndWarnings.RemoveWarningGroup(FModel, StrObservationsWithIn);
+
   FHobPackage.Comments := FComments;
   FHobPackage.DryHead := HOBDRY;
   FHeadObservations.ArrayLength := FCurrentObsIndex+1;
@@ -14137,11 +14147,19 @@ begin
     for ValueIndex := 0 to Obs.FObsTimes.ArrayLength - 1 do
     begin
       ObsTime := Obs.FObsTimes[ValueIndex];
-      ObsItem := HeadObservations.Values.Add as THobItem;
-      ObsItem.Head := ObsTime.HeadObservation;
-      ObsItem.Time := FModel.ModflowStressPeriods[
-        ObsTime.RefStressPeriod-1].StartTime
-        + ObsTime.TimeOffset;
+      if ObsTime.RefStressPeriod-1 < FModel.ModflowStressPeriods.Count then
+      begin
+        ObsItem := HeadObservations.Values.Add as THobItem;
+        ObsItem.Head := ObsTime.HeadObservation;
+        ObsItem.Time := FModel.ModflowStressPeriods[
+          ObsTime.RefStressPeriod-1].StartTime
+          + ObsTime.TimeOffset;
+      end
+      else
+      begin
+        frmErrorsAndWarnings.AddWarning(FModel, StrObservationsWithIn,
+          Format(StrObservationName, [ObsTime.Name, ObsTime.RefStressPeriod]));
+      end;
     end;
     if Obs.FObsTimes.ArrayLength > 1 then
     begin

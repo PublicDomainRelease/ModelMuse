@@ -2545,7 +2545,7 @@ that affects the model output should also have a comment. }
     // @name updates @link(TDataArray.ParameterUsed TDataArray.ParameterUsed)
     // and @link(TDataArray.ParameterFormula TDataArray.ParameterFormula)
     // for the @link(TDataArray)s related to the LPF parameters.
-    procedure UpdateDataArrayParameterUsed;
+    procedure UpdateDataArrayParameterUsed; virtual;
     // @name calls TScreenObject.@link(TScreenObject.Invalidate)
     // for every @link(TScreenObject) in @link(ScreenObjects).
     procedure InvalidateScreenObjects;
@@ -3798,6 +3798,7 @@ that affects the model output should also have a comment. }
     function Mt3dmsReactionRateDisolvedUsed(Sender: TObject): boolean;
     function Mt3dmsReactionRateSorbedUsed(Sender: TObject): boolean;
     function CombinedLayerSimulated(ALayer: Integer): boolean;
+    procedure UpdateDataArrayParameterUsed; override;
   published
     // The following properties are obsolete.
 
@@ -6401,7 +6402,6 @@ const
   //         opening the Object Properties dialog box.
   //       Bug fix: Fixed using objects on the front or side views to define
   //         pipes in MODFLOW-CFP.
-
   //    '3.1.1.1' Bug fix: In the Manage Head Observations dialog box, the
   //         Statistic was set incorrectly.
   //       Bug fix: Fixed bug in import of 1 layer model that used parameters
@@ -6413,9 +6413,14 @@ const
   //         contouring data.
   //       Change: Whenever a new version of ModelMuse is used, it will attempt
   //         to also use the newest version of ModelMonitor.
+  //    '3.2.0.0' Enhancement: Added support for SWI2 package.
+  //    '3.2.0.1' Bug fix: In MODFLOW-LGR and MODFLOW-LGR2 models, the display
+  //         of data set values for child models when those values should be
+  //         set using parameters has been fixed.
+  //    '3.2.1.0' No additional changes.
 
 const
-  IModelVersion = '3.1.1.1';
+  IModelVersion = '3.2.1.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -9969,6 +9974,19 @@ begin
         DataArray.OnDataSetUsed := ParameterDataSetUsed;
       end;
     end;
+  end;
+end;
+
+procedure TPhastModel.UpdateDataArrayParameterUsed;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  inherited;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    ChildModel.UpdateDataArrayParameterUsed;
   end;
 end;
 
