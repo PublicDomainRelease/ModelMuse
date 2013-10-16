@@ -102,6 +102,8 @@ type
     procedure InitializeEndpointGrid;
     property SelectedVirtNode: PVirtualNode read FSelectedVirtNode;
     procedure UpdatedSelectedObject;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure UpdateScreenObjectInfo(const Column, Row, Layer: Integer;
       Location: TPoint2D; Model: TBaseModel);
     procedure UpdateSelectedData(Layer, Row, Column: integer);
@@ -688,7 +690,7 @@ var
   end;
   procedure AssignHigherElevLabel(const ExtraText: string);
   var
-    Indicies: array[0..2] of Integer;
+    Indices: array[0..2] of Integer;
     VarIndex: Integer;
     MaxCount: Integer;
     VarLabel: string;
@@ -707,9 +709,9 @@ var
       end
       else
       begin
-        Indicies[0] := Layer;
-        Indicies[1] := Row;
-        Indicies[2] := Column;
+        Indices[0] := Layer;
+        Indices[1] := Row;
+        Indices[2] := Column;
         GetDirectionVariables(VarIndex, MaxCount, VarLabel);
 //        VarIndex := -1;
 //        MaxCount := 0;
@@ -778,13 +780,13 @@ var
         FoundValue := False;
         for LayRowColIndex := 0 to MaxCount do
         begin
-          Indicies[VarIndex] := LayRowColIndex;
+          Indices[VarIndex] := LayRowColIndex;
           if FSelectedScreenObject.
-            IsHigher3DElevationAssigned(Indicies[2], Indicies[1],
-            Indicies[0], LocalModel) then
+            IsHigher3DElevationAssigned(Indices[2], Indices[1],
+            Indices[0], LocalModel) then
           begin
             Value := FSelectedScreenObject.
-              Higher3DElevations[LocalModel][Indicies[0], Indicies[1], Indicies[2]];
+              Higher3DElevations[LocalModel][Indices[0], Indices[1], Indices[2]];
             lblHigher3rdDimensionCoordinate.Caption := Format(Str0s1s2gOn,
               [ExtraText, DirectionText, Value, VarLabel, LayRowColIndex+1]);
             FoundValue := True;
@@ -805,7 +807,7 @@ var
   end;
   procedure AssignLowerElevLabel(const ExtraText: string);
   var
-    Indicies: array[0..2] of Integer;
+    Indices: array[0..2] of Integer;
     VarIndex: Integer;
     MaxCount: Integer;
     VarLabel: string;
@@ -824,9 +826,9 @@ var
       end
       else
       begin
-        Indicies[0] := Layer;
-        Indicies[1] := Row;
-        Indicies[2] := Column;
+        Indices[0] := Layer;
+        Indices[1] := Row;
+        Indices[2] := Column;
 
         GetDirectionVariables(VarIndex, MaxCount, VarLabel);
 //        Grid := frmGoPhast.Grid;
@@ -860,13 +862,13 @@ var
         FoundValue := False;
         for LayRowColIndex := 0 to MaxCount do
         begin
-          Indicies[VarIndex] := LayRowColIndex;
+          Indices[VarIndex] := LayRowColIndex;
           if FSelectedScreenObject.
-            IsLower3DElevationAssigned(Indicies[2], Indicies[1],
-            Indicies[0], LocalModel) then
+            IsLower3DElevationAssigned(Indices[2], Indices[1],
+            Indices[0], LocalModel) then
           begin
             Value := FSelectedScreenObject.
-              Lower3DElevations[LocalModel][Indicies[0], Indicies[1], Indicies[2]];
+              Lower3DElevations[LocalModel][Indices[0], Indices[1], Indices[2]];
             lblLower3rdDimensionCoordinate.Caption := Format(Str0s1s2gOn,
               [ExtraText, DirectionText, Value, VarLabel, LayRowColIndex+1]);
             FoundValue := True;

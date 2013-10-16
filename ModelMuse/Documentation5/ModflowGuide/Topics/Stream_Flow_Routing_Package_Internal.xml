@@ -214,16 +214,16 @@
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">STRM(22,*) - Chnge-UZ-Stor. (This variable is used by the Gage package.)</text></para>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">STRM(23,*) - Vol.-UZ-Stor.(This variable is used by the Gage package.)</text></para>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">STRM(24,*) - Exfiltrated flow into the stream reach (This variable is set by the UZF package.)</text></para>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">STRM(25,*) - a variable related to routing flow downstream</text></para>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">STRM(26,*) - a variable related to routing flow downstream</text></para>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">STRM(27,*) - a variable related to routing flow downstream</text></para>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">STRM(28,*) - a variable related to routing flow downstream</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">STRM(25,*) - a variable related to outflow from the stream reach</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">STRM(26,*) - a variable related to inflow into the stream reach.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">STRM(27,*) - a variable related to outflow from the stream reach</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">STRM(28,*) - a variable related to inflow into the stream reach.</text></para>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">STRM(29,*) - a variable related to storage when routing flow downstream</text></para>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">STRM(30,*) - a variable related to routing flow downstream</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">STRM(30,*) - a variable related to storage when routing flow downstream</text></para>
                     </td>
                   </tr>
                 </table></para>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">SFRQ(5,NSTRM)</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">SFRQ(5,NSTRM) - Stores data that is written to an output file by the GAG package.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">HWDTH(NSTRM,NUMTIM) - width of stream for sub time steps</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">HWTPRM(NSTRM,NUMTIM) - wetted perimeter of stream for sub time steps</text></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[QSTAGE(MAXPTS,NSS + nparseg)]]></caption></toggle></para>

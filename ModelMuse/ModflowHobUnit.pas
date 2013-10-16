@@ -205,6 +205,8 @@ type
     procedure SetObservationName(Value: string);
     procedure SetLayerFractions(const Value: TMultiHeadCollection);
     procedure SetPurpose(const Value: TObservationPurpose);
+  protected
+    function BoundaryObserverPrefix: string; override;
   public
     // @name creates an instance of @classname.
     Constructor Create(Model: TBaseModel; ScreenObject: TObject);
@@ -1122,6 +1124,12 @@ begin
   begin
     inherited;
   end;
+end;
+
+function TCustomLocationObsBoundary.BoundaryObserverPrefix: string;
+begin
+  Result := '';
+  Assert(False);
 end;
 
 constructor TCustomLocationObsBoundary.Create(Model: TBaseModel;

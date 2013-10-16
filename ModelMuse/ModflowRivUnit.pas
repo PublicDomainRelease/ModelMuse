@@ -110,7 +110,7 @@ type
     procedure InvalidateRiverBottomData(Sender: TObject);
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
+    procedure AssignListCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
       BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
@@ -501,7 +501,7 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
-    UpdataRequiredData(DataSets, Variables, ACell, AModel);
+    UpdateRequiredListData(DataSets, Variables, ACell, AModel);
 
     Expression.Evaluate;
     with RivStorage.RivArray[Index] do
@@ -529,7 +529,7 @@ begin
   end;
 end;
 
-procedure TRivCollection.AssignCellLocation(
+procedure TRivCollection.AssignListCellLocation(
   BoundaryStorage: TCustomBoundaryStorage; ACellList: TObject);
 var
   RivStorage: TRivStorage;

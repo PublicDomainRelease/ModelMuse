@@ -2,22 +2,22 @@ inherited frmLinkStreams: TfrmLinkStreams
   HelpType = htKeyword
   HelpKeyword = 'Link_Streams_Dialog_Box'
   Caption = 'Link Streams'
-  ClientHeight = 262
+  ClientHeight = 308
   ClientWidth = 246
-  ExplicitWidth = 262
-  ExplicitHeight = 300
-  PixelsPerInch = 96
+  ExplicitWidth = 264
+  ExplicitHeight = 353
+  PixelsPerInch = 120
   TextHeight = 18
   object lblTolerance: TLabel
     Left = 7
-    Top = 152
+    Top = 192
     Width = 97
     Height = 18
     Caption = 'Link tolerance'
   end
   object rgWhatToLink: TRadioGroup
-    Left = 7
-    Top = 81
+    Left = 8
+    Top = 121
     Width = 231
     Height = 65
     Caption = 'What to link'
@@ -25,14 +25,14 @@ inherited frmLinkStreams: TfrmLinkStreams
     Items.Strings = (
       'All streams'
       'Selected streams')
-    TabOrder = 0
+    TabOrder = 1
   end
   object rdeTolerance: TRbwDataEntry
     Left = 7
-    Top = 172
+    Top = 212
     Width = 231
     Height = 22
-    TabOrder = 1
+    TabOrder = 2
     Text = '0'
     DataType = dtReal
     Max = 1.000000000000000000
@@ -41,17 +41,17 @@ inherited frmLinkStreams: TfrmLinkStreams
   end
   object cbKeepExistingLinkages: TCheckBox
     Left = 7
-    Top = 200
+    Top = 240
     Width = 177
     Height = 17
     Caption = 'Keep existing linkages'
     Checked = True
     State = cbChecked
-    TabOrder = 2
+    TabOrder = 3
   end
   object btnApply: TBitBtn
     Left = 86
-    Top = 223
+    Top = 263
     Width = 73
     Height = 31
     Caption = '&Apply'
@@ -74,38 +74,40 @@ inherited frmLinkStreams: TfrmLinkStreams
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    TabOrder = 3
+    TabOrder = 5
     OnClick = btnApplyClick
   end
   object btnClose: TBitBtn
     Left = 165
-    Top = 223
+    Top = 263
     Width = 73
     Height = 31
     Kind = bkClose
     NumGlyphs = 2
-    TabOrder = 4
+    TabOrder = 6
   end
   object btnHelp: TBitBtn
     Left = 7
-    Top = 223
+    Top = 263
     Width = 73
     Height = 31
     Kind = bkHelp
     NumGlyphs = 2
-    TabOrder = 5
+    TabOrder = 4
     OnClick = btnHelpClick
   end
   object rgStreamtype: TRadioGroup
     Left = 8
     Top = 8
     Width = 233
-    Height = 67
+    Height = 107
     Caption = 'Stream type'
     ItemIndex = 0
     Items.Strings = (
       'SFR'
-      'STR')
-    TabOrder = 6
+      'STR'
+      'SWR')
+    TabOrder = 0
+    OnClick = rgStreamtypeClick
   end
 end

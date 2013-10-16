@@ -86,7 +86,7 @@ type
   public
     // If Source is a @classname, @name copies the contents
     // of @classname from the source.
-    constructor Create(Model: TBaseModel);
+    constructor Create(InvalidateModelEvent: TNotifyEvent);
     // @name provides read and write access to the @link(TFluxObservation)s
     // stored in @classname.
     property Items[Index: integer]: TFluxObservation read GetItems
@@ -145,6 +145,10 @@ type
 
   // @name is a collection of @link(TObservationFactor)s.
   TObservationFactors = class(TPhastCollection)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   private
     // See @link(Items).
     function GetItems(Index: integer): TObservationFactor;
@@ -171,6 +175,9 @@ type
     function IndexOfScreenObject(ScreenObject: TObject): integer;
     // @name adds a @link(TObservationFactor) to @link(Items).
     function Add: TObservationFactor;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
   end;
 
   TFluxObsType = (fotHead, fotRiver, fotDrain, fotGHB, fotSTR);
@@ -246,6 +253,10 @@ type
   end;
 
   TCustomFluxObservationGroups = class(TPhastCollection)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   private
     // See @link(Items).
     function GetItems(Index: integer): TCustomFluxObservationGroup;
@@ -265,10 +276,18 @@ type
     procedure Remove(Item: TCustomFluxObservationGroup);
     // If Source is a @classname, @name copies the contents of Source.
     procedure Assign(Source: TPersistent); override;
+    constructor Create(ItemClass: TCollectionItemClass; Model: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
   end;
 
   // @name is a collection of @link(TFluxObservationGroup)s.
   TFluxObservationGroups = class(TCustomFluxObservationGroups)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   private
     FFluxObservationType: TFluxObsType;
     // See @link(Items).
@@ -288,6 +307,9 @@ type
     // @name calls @link(TFluxObservationGroup.CheckObservationTimes)
     // for each @link(TFluxObservationGroup) in @link(Items).
     procedure CheckObservationTimes(ErrorRoots, ErrorMessages: TStringList);
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
   end;
 
 implementation
@@ -423,8 +445,8 @@ end;
 constructor TFluxObservationGroup.Create(Collection: TCollection);
 begin
   inherited;
-  FObservationTimes := TFluxObservations.Create(
-    (Collection as TPhastCollection).Model);
+  FObservationTimes := TFluxObservations.Create(OnInvalidateModel);
+//    (Collection as TCustomFluxObservationGroups).Model);
 end;
 
 destructor TFluxObservationGroup.Destroy;
@@ -483,9 +505,20 @@ begin
   result := inherited Add as TFluxObservation;
 end;
 
-constructor TFluxObservations.Create(Model: TBaseModel);
+constructor TFluxObservations.Create(InvalidateModelEvent: TNotifyEvent);
+//var
+//  InvalidateModelEvent: TNotifyEvent;
 begin
-  inherited Create(TFluxObservation, Model);
+//  FModel := Model;
+//  if Model = nil then
+//  begin
+//    InvalidateModelEvent := nil;
+//  end
+//  else
+//  begin
+//    InvalidateModelEvent := Model.Invalidate;
+//  end;
+  inherited Create(TFluxObservation, InvalidateModelEvent);
 end;
 
 function TFluxObservations.GetItems(Index: integer): TFluxObservation;
@@ -507,7 +540,18 @@ begin
 end;
 
 constructor TFluxObservationGroups.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
   inherited Create(TFluxObservationGroup, Model);
 end;
 
@@ -579,7 +623,7 @@ end;
 
 procedure TObservationFactor.Loaded;
 begin
-  ScreenObject := ((Collection as TPhastCollection).Model as TCustomModel).
+  ScreenObject := ((Collection as TObservationFactors).Model as TCustomModel).
     GetScreenObjectByName(ObjectName);
 //  Assert(ScreenObject <> nil);
 end;
@@ -651,8 +695,19 @@ begin
 end;
 
 constructor TObservationFactors.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
-  inherited Create(TObservationFactor, Model);
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(TObservationFactor, InvalidateModelEvent);
 end;
 
 procedure TObservationFactors.EliminatedDeletedScreenObjects;
@@ -822,7 +877,7 @@ constructor TCustomFluxObservationGroup.Create(Collection: TCollection);
 begin
   inherited;
   FObservationFactors:= TObservationFactors.Create(
-    (Collection as TPhastCollection).Model);
+    (Collection as TCustomFluxObservationGroups).Model);
 end;
 
 destructor TCustomFluxObservationGroup.Destroy;
@@ -895,6 +950,23 @@ procedure TCustomFluxObservationGroups.SetItems(Index: integer;
   const Value: TCustomFluxObservationGroup);
 begin
   inherited Items[Index] := Value;
+end;
+
+constructor TCustomFluxObservationGroups.Create(ItemClass: TCollectionItemClass;
+  Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
+begin
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(ItemClass, InvalidateModelEvent);
 end;
 
 procedure TCustomFluxObservationGroups.EliminatedDeletedScreenObjects;

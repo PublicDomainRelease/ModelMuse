@@ -160,7 +160,7 @@ type
     procedure FixItems;
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
+    procedure AssignListCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
       BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
@@ -1025,7 +1025,7 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
-    UpdataRequiredData(DataSets, Variables, ACell, AModel);
+    UpdateRequiredListData(DataSets, Variables, ACell, AModel);
     // 2. update locations
     Expression.Evaluate;
     with StrStorage.StrArray[Index] do
@@ -1078,7 +1078,7 @@ begin
   end;
 end;
 
-procedure TStrCollection.AssignCellLocation(
+procedure TStrCollection.AssignListCellLocation(
   BoundaryStorage: TCustomBoundaryStorage; ACellList: TObject);
 var
   StrStorage: TStrStorage;
@@ -1836,9 +1836,9 @@ begin
   begin
     InvalidateModel;
     FSegmentNumber := Value;
-    if FModel <> nil then
+    if ParentModel <> nil then
     begin
-      (FModel as TCustomModel).ModflowPackages.StrPackage.
+      (ParentModel as TCustomModel).ModflowPackages.StrPackage.
         MfStrSegmentNumber.Invalidate;
     end;
   end;

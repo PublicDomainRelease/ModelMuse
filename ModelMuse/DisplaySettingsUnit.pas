@@ -5,7 +5,8 @@ interface
 uses
   Types, Classes, Graphics, GoPhastTypes, LegendUnit, AbstractGridUnit,
   PathlineReader, SysUtils, EdgeDisplayUnit, DataSetUnit,
-  Generics.Collections, Generics.Defaults, SutraMeshUnit, VectorDisplayUnit;
+  Generics.Collections, Generics.Defaults, SutraMeshUnit, VectorDisplayUnit,
+  SwrReachObjectUnit;
 
 type
   TTextDisplay = class(TGoPhastPersistent)
@@ -28,7 +29,7 @@ type
   public
     procedure Assign(Source: TPersistent); override;
     procedure AssignTo(Dest: TPersistent); override;
-    Constructor Create(Model: TBaseModel);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
     Destructor Destroy; override;
     property Rect: TRect read FRect write SetRect;
   published
@@ -54,7 +55,8 @@ type
   end;
 
   TTextCollection = class(TPhastCollection)
-    constructor Create(Model: TBaseModel);
+  public
+    constructor Create(InvalidateModelEvent: TNotifyEvent);
   end;
 
   TCustomDisplaySettings= class(TGoPhastPersistent)
@@ -71,7 +73,7 @@ type
     procedure SetContourAlgorithm(const Value: TContourAlg);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TBaseModel);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
     destructor Destroy; override;
   published
     property DataSetName: string read FDataSetName write SetDataSetName;
@@ -87,7 +89,7 @@ type
     procedure SetContours(const Value: TContours);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TBaseModel);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
     destructor Destroy; override;
   published
     property Contours: TContours read FContours write SetContours;
@@ -149,6 +151,32 @@ type
     property LakeObject: TObject read FLakeObject write SetLakeObject;
   end;
 
+  TSwrReachPlot = class(TObject)
+  private
+    FNeighbors: TList<Integer>;
+    FLayer: Integer;
+    FScreenObject: TObject;
+    FRow: Integer;
+    FReach: Integer;
+    FColumn: Integer;
+    FVisible: Boolean;
+    function GetNeighborCount: Integer;
+    function GetNeighbors(Index: Integer): integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    property Layer: Integer read FLayer;
+    property Row: Integer read FRow;
+    property Column: Integer read FColumn;
+    property ScreenObject: TObject read FScreenObject;
+    property Reach: Integer read FReach;
+    property Visible: Boolean read FVisible;
+    property Neighbors[Index: Integer]: integer read GetNeighbors;
+    property NeighborCount: Integer read GetNeighborCount;
+    procedure Assign(ReachObject: TReachObject);
+
+  end;
+
   TSfrStreamPlotComparer = class(TComparer<TSfrStreamPlot>)
     function Compare(const Left, Right: TSfrStreamPlot): Integer; override;
   end;
@@ -167,6 +195,16 @@ type
     procedure Sort;
   end;
 
+  TSwrReachPlotComparer = class(TComparer<TSwrReachPlot>)
+    function Compare(const Left, Right: TSwrReachPlot): Integer; override;
+  end;
+
+  TSwrReachPlotList= class(TObjectList<TSwrReachPlot>)
+  private
+    procedure Sort;
+  end;
+
+
   TSfrStreamLinkPlot = class(TGoPhastPersistent)
   private
     FPlotStreamConnections: boolean;
@@ -177,6 +215,9 @@ type
     FTimeToPlot: TDateTime;
     FPlotUnconnected: Boolean;
     FUnconnectedColor: TColor;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
     procedure SetDiversionColor(const Value: TColor);
     procedure SetPlotDiversions(const Value: boolean);
     procedure SetPlotStreamConnections(const Value: boolean);
@@ -189,6 +230,8 @@ type
     procedure GetObjectsToPlot(SfrStreamList: TSfrStreamPlotList;
       LakeList: TLakePlotList); overload;
     procedure GetObjectsToPlot(StrStreamList: TSfrStreamPlotList); overload;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
     Constructor Create(Model: TBaseModel);
     procedure Assign(Source: TPersistent); override;
   published
@@ -207,6 +250,50 @@ type
     property StreamsToPlot: TStreamsToPlot read FStreamsToPlot
       write SetStreamsToPlot;
     property TimeToPlot: TDateTime read FTimeToPlot write SetTimeToPlot;
+  end;
+
+  TSwrReachConnectionsPlot = class(TGoPhastPersistent)
+  private
+    FPlotUnconnected: boolean;
+    FConnectedColor: TColor;
+    FUnconnectedColor: TColor;
+    FPlotReachConnections: boolean;
+    FReachList: TSwrReachPlotList;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
+    FReachesToPlot: TStreamsToPlot;
+    FPlotStructures: boolean;
+    FStructureColor: TColor;
+    procedure SetConnectedColor(const Value: TColor);
+    procedure SetPlotReachConnections(const Value: boolean);
+    procedure SetPlotUnconnected(const Value: boolean);
+    procedure SetUnconnectedColor(const Value: TColor);
+    procedure SetReachesToPlot(const Value: TStreamsToPlot);
+    procedure SetPlotStructures(const Value: boolean);
+    procedure SetStructureColor(const Value: TColor);
+  public
+    Constructor Create(Model: TBaseModel);
+    destructor Destroy; override;
+    procedure Assign(Source: TPersistent); override;
+    procedure UpdateReaches(SwrWriterObject: TObject);
+    procedure UpdateReachVisibility;
+    property ReachList: TSwrReachPlotList read FReachList;
+  published
+    property PlotReachConnections: boolean read FPlotReachConnections
+      write SetPlotReachConnections default True;
+    property PlotUnconnected: boolean read FPlotUnconnected
+      write SetPlotUnconnected default True;
+    property PlotStructures: boolean read FPlotStructures
+      write SetPlotStructures default True;
+    property ConnectedColor: TColor read FConnectedColor
+      write SetConnectedColor default clBlue;
+    property UnconnectedColor: TColor read FUnconnectedColor
+      write SetUnconnectedColor default clRed;
+    property StructureColor: TColor read FStructureColor write SetStructureColor
+      default clGreen;
+    property ReachesToPlot: TStreamsToPlot read FReachesToPlot
+      write SetReachesToPlot;
   end;
 
   TSutraSettings = class(TGoPhastPersistent)
@@ -319,8 +406,13 @@ type
     procedure SetCrossSectionColors(const Value: TIntegerCollection);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    function Model: TBaseModel;
   published
     property ViewToDisplay: TViewDirection read FViewToDisplay
       write SetViewToDisplay;
@@ -390,9 +482,16 @@ type
     contour the grid and the magnification.
   }
   TDisplaySettingsCollection = class(TPhastCollection)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   public
     constructor Create(Model: TBaseModel);
     function GetItemByName(const AName: string): TDisplaySettingsItem;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
   end;
 
 
@@ -400,7 +499,8 @@ implementation
 
 uses
   DrawTextUnit, RbwRuler, ScreenObjectUnit, PhastModelUnit, ModflowSfrUnit,
-  ModflowSfrParamIcalcUnit, ModflowLakUnit, ModflowStrUnit;
+  ModflowSfrParamIcalcUnit, ModflowLakUnit, ModflowStrUnit,
+  ModflowSwrWriterUnit;
 
 { TTextDisplay }
 
@@ -449,7 +549,7 @@ begin
   end;
 end;
 
-constructor TTextDisplay.Create(Model: TBaseModel);
+constructor TTextDisplay.Create(InvalidateModelEvent: TNotifyEvent);
 begin
   inherited;
   FFont := TFont.Create;
@@ -560,7 +660,7 @@ end;
 constructor TTextItem.Create(Collection: TCollection);
 begin
   inherited;
-  FTextDisplay:= TTextDisplay.Create(Model);
+  FTextDisplay:= TTextDisplay.Create(OnInvalidateModel);
 end;
 
 destructor TTextItem.Destroy;
@@ -576,9 +676,9 @@ end;
 
 { TTextCollection }
 
-constructor TTextCollection.Create(Model: TBaseModel);
+constructor TTextCollection.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(TTextItem, Model);
+  inherited Create(TTextItem, InvalidateModelEvent);
 end;
 
 { TDisplaySettingsItem }
@@ -633,16 +733,16 @@ end;
 constructor TDisplaySettingsItem.Create(Collection: TCollection);
 begin
   inherited;
-  FTitle:= TTextDisplay.Create(Model);
-  FAdditionalText := TTextCollection.Create(Model);
-  FColorDisplaySettings := TColorDisplaySettings.Create(Model);
-  FContourDisplaySettings := TContourDisplaySettings.Create(Model);
+  FTitle:= TTextDisplay.Create(OnInvalidateModel);
+  FAdditionalText := TTextCollection.Create(OnInvalidateModel);
+  FColorDisplaySettings := TColorDisplaySettings.Create(OnInvalidateModel);
+  FContourDisplaySettings := TContourDisplaySettings.Create(OnInvalidateModel);
   FModpathPathLineSettings := TPathLineSettings.Create;
   FModpathEndPointSettings := TEndPointSettings.Create;
   FModpathTimeSeriesSettings := TTimeSeriesSettings.Create;
   FEdgeDisplaySettings := TEdgeDisplaySettings.Create;
-  FHorizontalRuler := TRulerSettings.Create(Model);
-  FVerticaRuler := TRulerSettings.Create(Model);
+  FHorizontalRuler := TRulerSettings.Create(OnInvalidateModel);
+  FVerticaRuler := TRulerSettings.Create(OnInvalidateModel);
   FVisibleObjects := TStringList.Create;
   FContourFont := TFont.Create;
   FContourFont.OnChange := OnChangeEventHandler;
@@ -681,6 +781,11 @@ begin
   FAdditionalText.Free;
   FTitle.Free;
   inherited;
+end;
+
+function TDisplaySettingsItem.Model: TBaseModel;
+begin
+  result := (Collection as TDisplaySettingsCollection).Model;
 end;
 
 procedure TDisplaySettingsItem.OnChangeEventHandler(Sender: TObject);
@@ -1009,8 +1114,19 @@ end;
 { TDisplaySettingsCollection }
 
 constructor TDisplaySettingsCollection.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
-  inherited Create(TDisplaySettingsItem, Model);
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(TDisplaySettingsItem, InvalidateModelEvent);
 end;
 
 function TDisplaySettingsCollection.GetItemByName(
@@ -1052,10 +1168,10 @@ begin
   end;
 end;
 
-constructor TCustomDisplaySettings.Create(Model: TBaseModel);
+constructor TCustomDisplaySettings.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited;
-  FLegend := TLegend.Create(FModel);
+  inherited Create(InvalidateModelEvent);
+  FLegend := TLegend.Create(InvalidateModelEvent);
   FLimits:= TColoringLimits.Create;
 end;
 
@@ -1090,7 +1206,7 @@ begin
   begin
     if FLegend = nil then
     begin
-      FLegend := TLegend.Create(FModel);
+      FLegend := TLegend.Create(OnInvalidateModel);
     end;
     FLegend.Assign(Value);
   end;
@@ -1117,7 +1233,7 @@ begin
   inherited;
 end;
 
-constructor TContourDisplaySettings.Create(Model: TBaseModel);
+constructor TContourDisplaySettings.Create(InvalidateModelEvent: TNotifyEvent);
 begin
   inherited;
   FContours := TContours.Create;
@@ -1251,8 +1367,19 @@ begin
 end;
 
 constructor TSfrStreamLinkPlot.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
-  inherited;
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(InvalidateModelEvent);
   FStreamColor := clBlue;
   FDiversionColor := clLime;
   FUnconnectedColor := clRed;
@@ -1432,6 +1559,7 @@ begin
   if FStreamsToPlot <> Value then
   begin
     FStreamsToPlot := Value;
+    InvalidateModel;
   end;
 end;
 
@@ -1460,6 +1588,212 @@ procedure TSfrStreamPlot.SetStreamObject(const Value: TObject);
 begin
   Assert(Value is TScreenObject);
   FStreamObject := Value;
+end;
+
+{ TSwrReachConnectionsPlot }
+
+procedure TSwrReachConnectionsPlot.Assign(Source: TPersistent);
+var
+  SourceReachConn: TSwrReachConnectionsPlot;
+begin
+  if Source is TSwrReachConnectionsPlot then
+  begin
+    SourceReachConn := TSwrReachConnectionsPlot(Source);
+    PlotReachConnections := SourceReachConn.PlotReachConnections;
+    PlotUnconnected := SourceReachConn.PlotUnconnected;
+    PlotStructures := SourceReachConn.PlotStructures;
+    ConnectedColor := SourceReachConn.ConnectedColor;
+    UnconnectedColor := SourceReachConn.UnconnectedColor;
+    StructureColor := SourceReachConn.StructureColor;
+    ReachesToPlot := SourceReachConn.ReachesToPlot;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+constructor TSwrReachConnectionsPlot.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
+begin
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(InvalidateModelEvent);
+  FConnectedColor := clBlue;
+  FUnconnectedColor := clRed;
+  FStructureColor := clGreen;
+  FPlotReachConnections := True;
+  FPlotUnconnected := True;
+  FPlotStructures := True;
+  FReachList := TSwrReachPlotList.Create;
+end;
+
+destructor TSwrReachConnectionsPlot.Destroy;
+begin
+  FReachList.Free;
+  inherited;
+end;
+
+procedure TSwrReachConnectionsPlot.UpdateReaches(SwrWriterObject: TObject);
+var
+  LocalModel: TPhastModel;
+  ReachIndex: Integer;
+  AReach: TReachObject;
+  ReachPlotObject: TSwrReachPlot;
+  SwrWriter: TModflowSwrWriter;
+begin
+  FReachList.Clear;
+  if ReachesToPlot <> stpNone then
+  begin
+    LocalModel := FModel as TPhastModel;
+    if not LocalModel.SwrIsSelected then
+    begin
+      Exit;
+    end;
+    SwrWriter := SwrWriterObject as TModflowSwrWriter;
+    for ReachIndex := 0 to SwrWriter.ReachCount - 1 do
+    begin
+      AReach := SwrWriter.Reaches[ReachIndex];
+      ReachPlotObject := TSwrReachPlot.Create;
+      ReachPlotObject.Assign(AReach);
+      FReachList.Add(ReachPlotObject);
+    end;
+    FReachList.Sort;
+  end;
+end;
+
+procedure TSwrReachConnectionsPlot.UpdateReachVisibility;
+var
+  index: Integer;
+  AReach: TSwrReachPlot;
+begin
+  for index := 0 to ReachList.Count - 1 do
+  begin
+    AReach := ReachList[index];
+    case ReachesToPlot of
+      stpNone: AReach.FVisible := False;
+      stpAll: AReach.FVisible := True;
+      stpVisible: AReach.FVisible := (AReach.ScreenObject as TScreenObject).Visible;
+      stpSelected: AReach.FVisible := (AReach.ScreenObject as TScreenObject).Selected;
+    end;
+  end;
+end;
+
+procedure TSwrReachConnectionsPlot.SetConnectedColor(const Value: TColor);
+begin
+  SetColorProperty(FConnectedColor, Value);
+end;
+
+procedure TSwrReachConnectionsPlot.SetPlotReachConnections(
+  const Value: boolean);
+begin
+  SetBooleanProperty(FPlotReachConnections, Value);
+end;
+
+procedure TSwrReachConnectionsPlot.SetPlotStructures(const Value: boolean);
+begin
+  SetBooleanProperty(FPlotStructures, Value);
+end;
+
+procedure TSwrReachConnectionsPlot.SetPlotUnconnected(const Value: boolean);
+begin
+  SetBooleanProperty(FPlotUnconnected, Value);
+end;
+
+procedure TSwrReachConnectionsPlot.SetReachesToPlot(
+  const Value: TStreamsToPlot);
+  procedure UpdateAvailableReaches;
+  begin
+    if (FReachesToPlot  = stpNone) then
+    begin
+
+    end;
+  end;
+begin
+  if FReachesToPlot <> Value then
+  begin
+    UpdateAvailableReaches;
+    FReachesToPlot := Value;
+    UpdateAvailableReaches;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrReachConnectionsPlot.SetStructureColor(const Value: TColor);
+begin
+  SetColorProperty(FStructureColor, Value);
+end;
+
+procedure TSwrReachConnectionsPlot.SetUnconnectedColor(const Value: TColor);
+begin
+  SetColorProperty(FUnconnectedColor, Value);
+end;
+
+{ TSwrReachPlotComparer }
+
+function TSwrReachPlotComparer.Compare(const Left,
+  Right: TSwrReachPlot): Integer;
+begin
+  result := Left.Reach - Right.Reach;
+end;
+
+{ TSwrReachPlotList }
+
+procedure TSwrReachPlotList.Sort;
+var
+  Comparer: IComparer<TSwrReachPlot>;
+begin
+  Comparer:= TSwrReachPlotComparer.Create;
+  inherited Sort(Comparer);
+end;
+
+{ TSwrReachPlot }
+
+procedure TSwrReachPlot.Assign(ReachObject: TReachObject);
+var
+  NeighborIndex: Integer;
+  Neighbor: TReachObject;
+begin
+  FLayer := ReachObject.FReachData.Cell.Layer;
+  FRow := ReachObject.FReachData.Cell.Row;
+  FColumn := ReachObject.FReachData.Cell.Column;
+  FReach := ReachObject.FReachData.Reach;
+  FScreenObject := ReachObject.FReachData.ScreenObject;
+  FNeighbors.Capacity := ReachObject.Neighbors.Count;
+  for NeighborIndex := 0 to ReachObject.Neighbors.Count - 1 do
+  begin
+    Neighbor := ReachObject.Neighbors[NeighborIndex];
+    FNeighbors.Add(Neighbor.FReachData.Reach);
+  end;
+end;
+
+constructor TSwrReachPlot.Create;
+begin
+  FNeighbors := TList<Integer>.Create;
+end;
+
+destructor TSwrReachPlot.Destroy;
+begin
+  FNeighbors.Free;
+  inherited;
+end;
+
+function TSwrReachPlot.GetNeighborCount: Integer;
+begin
+  result := FNeighbors.Count;
+end;
+
+function TSwrReachPlot.GetNeighbors(Index: Integer): integer;
+begin
+  Result := FNeighbors[Index];
 end;
 
 end.

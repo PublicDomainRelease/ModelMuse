@@ -92,6 +92,7 @@ type
     function ValuesByName(AName: string): TValueArrayStorage;
     function ValueItemByName(AName: string): TValueArrayItem;
     property ErrorRestoringData: Boolean read FErrorRestoringData;
+    function Add: TValueArrayItem;
   end;
 
 implementation
@@ -714,6 +715,11 @@ begin
 end;
 
 { TValueCollection }
+
+function TValueCollection.Add: TValueArrayItem;
+begin
+  result := inherited Add as TValueArrayItem;
+end;
 
 procedure TValueCollection.CacheData;
 var

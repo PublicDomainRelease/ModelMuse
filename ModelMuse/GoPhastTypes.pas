@@ -247,6 +247,8 @@ type
 
   TDisplayChoice = (dcColor, dcContour, dcNone);
 
+  TSwrSpecificationMethod = (smObject, smArray);
+
   TBaseModel = class;
 
   TGenericIntegerList = TList<integer>;
@@ -254,18 +256,30 @@ type
 
   // @abstract(@name invalidates the model when it is changed.)
   TPhastCollection = class(TCollection)
-  protected
-    FModel: TBaseModel;
+  strict private
+    FOnInvalidateModel: TNotifyEvent;
+  private
+    function GetFirst: TCollectionItem;
+    function GetLast: TCollectionItem;
+    function GetCount: Integer;
+    procedure SetCount(const Value: Integer);
+    property OnInvalidateModel: TNotifyEvent read FOnInvalidateModel;
   public
     procedure InvalidateModel;
-    property Model: TBaseModel read FModel;
     // @name invalidates the model.
     procedure Notify(Item: TCollectionItem; Action: Classes.TCollectionNotification);
       override;
-    constructor Create(ItemClass: TCollectionItemClass; Model: TBaseModel);
+    constructor Create(ItemClass: TCollectionItemClass; InvalidateModelEvent: TNotifyEvent);
+    property First: TCollectionItem read GetFirst;
+    property Last: TCollectionItem read GetLast;
+    property Count: Integer read GetCount write SetCount;
   end;
 
   TPhastCollectionItem = class(TCollectionItem)
+  strict private
+    function GetOnInvalidateModel: TNotifyEvent;
+  strict Protected
+    property OnInvalidateModel: TNotifyEvent read GetOnInvalidateModel;
   protected
     procedure SetRealProperty(var AField: double; const NewValue: double);
     procedure SetBooleanProperty(var AField: boolean; const NewValue: boolean);
@@ -275,7 +289,6 @@ type
     procedure EndUpdate; virtual;
   public
     procedure InvalidateModel;
-    function Model: TBaseModel;
   end;
 
   TIntegerItem = class(TPhastCollectionItem)
@@ -298,7 +311,7 @@ type
     procedure SetItems(Index: Integer; const Value: TIntegerItem);
     procedure SetInitialValue(const Value: integer);
   public
-    constructor Create(Model: TBaseModel);
+    constructor Create(InvalidateModelEvent: TNotifyEvent);
     function IsSame(IntegerCollection: TIntegerCollection): Boolean;
     property  Items[Index: Integer]: TIntegerItem read GetItems
       write SetItems; default;
@@ -333,8 +346,8 @@ type
     procedure SetItems(Index: Integer; const Value: TRealItem);
     procedure SetInitialValue(const Value: Real);
   public
-    constructor Create(Model: TBaseModel); overload;
-    constructor Create(Model: TBaseModel; Values: TOneDRealArray); overload;
+    constructor Create(InvalidateModelEvent: TNotifyEvent); overload;
+    constructor Create(InvalidateModelEvent: TNotifyEvent; Values: TOneDRealArray); overload;
     function IsSame(RealCollection: TRealCollection): Boolean;
     property  Items[Index: Integer]: TRealItem read GetItems
       write SetItems; default;
@@ -382,8 +395,9 @@ type
   end;
 
   TGoPhastPersistent = class(TPersistent)
+  strict private
+    FOnInvalidateModel: TNotifyEvent;
   protected
-    FModel: TBaseModel;
     procedure OnChangeEventHander(Sender: TObject); virtual;
     procedure InvalidateModel; virtual;
     procedure SetBooleanProperty(var AField: boolean; const NewValue: boolean);
@@ -395,8 +409,8 @@ type
     procedure SetColorProperty(var AField: TColor; const NewValue: TColor);
     procedure SetDataTimeProperty(var AField: TDateTime; const NewValue: TDateTime);
   public
-    property Model: TBaseModel read FModel;
-    Constructor Create(Model: TBaseModel);
+    property OnInvalidateModel: TNotifyEvent read FOnInvalidateModel;
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
   end;
 
   TBaseModel = class abstract(TComponent)
@@ -412,7 +426,7 @@ type
   public
     // Call @name to indicate that the model has changed in some important
     // respect.  The user will be prompted to save the model when closing.
-    procedure Invalidate; virtual;
+    procedure Invalidate(Sender: TObject); virtual;
 
     // @name indicates whether or not the model needs to be saved to file.
     // See @link(Invalidate).
@@ -591,7 +605,6 @@ resourcestring
   StrEndingHead = 'Ending head';
   StrElevation = 'Elevation';
   StrMaxPumpingRate = 'Max pumping rate (QMAX)';
-//  StrMaxPumpingRateMultipl = 'Max pumping rate multiplier (QMAXfact)';
   StrPumpOnlyIfCropRequiresWater = 'Pump only if irrigation required in cell';
   StrFarmID =  'FarmID';
 
@@ -611,6 +624,8 @@ resourcestring
   StrParentModel = 'Parent model';
   StrYouNeedToSelectA = 'You need to select a row in the grid before clickin' +
   'g the Insert button.';
+
+  StrObject0sLayerError = 'Object: %0:s, Layer: %1:d, Row: %2:d, Column: %3:d, Error: %4:s';
 
 const
   // On Linux, @name is used to control the access permissions of files.
@@ -682,17 +697,32 @@ end;
 { TPhastCollection }
 
 constructor TPhastCollection.Create(ItemClass: TCollectionItemClass;
-  Model: TBaseModel);
+  InvalidateModelEvent: TNotifyEvent);
 begin
-  FModel := Model;
+  FOnInvalidateModel := InvalidateModelEvent;
   inherited Create(ItemClass);
+end;
+
+function TPhastCollection.GetCount: Integer;
+begin
+  result := inherited Count;
+end;
+
+function TPhastCollection.GetFirst: TCollectionItem;
+begin
+  result := Items[0];
+end;
+
+function TPhastCollection.GetLast: TCollectionItem;
+begin
+  Result := Items[Count-1];
 end;
 
 procedure TPhastCollection.InvalidateModel;
 begin
-  if Model <> nil then
+  if Assigned(FOnInvalidateModel) then
   begin
-    Model.Invalidate;
+    FOnInvalidateModel(self);
   end;
 end;
 
@@ -703,6 +733,24 @@ begin
 {$IFNDEF Testing}
   InvalidateModel;
 {$ENDIF}
+end;
+
+procedure TPhastCollection.SetCount(const Value: Integer);
+var
+  ExistingCount: integer;
+begin
+  Assert(Value >= 0);
+  ExistingCount := inherited Count;
+  while ExistingCount < Value do
+  begin
+    Add;
+    Inc(ExistingCount);
+  end;
+  while ExistingCount > Value do
+  begin
+    Last.Free;
+    Dec(ExistingCount);
+  end;
 end;
 
 { TRealStorage }
@@ -764,18 +812,27 @@ end;
 
 { TGoPhastPersistent }
 
-constructor TGoPhastPersistent.Create(Model: TBaseModel);
+constructor TGoPhastPersistent.Create(InvalidateModelEvent: TNotifyEvent);
 begin
   inherited Create;
-  Assert((Model = nil) or (Model is TCustomModel));
-  FModel := Model;
+//  Assert((Model = nil) or (Model is TCustomModel));
+//  FModel := Model;
+//  if FModel = nil then
+//  begin
+//    FOnInvalidateModel := nil;
+//  end
+//  else
+//  begin
+//    FOnInvalidateModel := FModel.Invalidate;
+//  end;
+  FOnInvalidateModel := InvalidateModelEvent;
 end;
 
 procedure TGoPhastPersistent.InvalidateModel;
 begin
-  if FModel <> nil then
+  if Assigned(FOnInvalidateModel) then
   begin
-    FModel.Invalidate;
+    FOnInvalidateModel(self);
   end;
 end;
 
@@ -946,6 +1003,11 @@ begin
   // do nothing;
 end;
 
+function TPhastCollectionItem.GetOnInvalidateModel: TNotifyEvent;
+begin
+  Result := (Collection as TPhastCollection).OnInvalidateModel;
+end;
+
 procedure TPhastCollectionItem.InvalidateModel;
 var
   PhastCollection: TPhastCollection;
@@ -1021,18 +1083,6 @@ begin
     Start := 1;
   end;
   result := Copy(Source, Start, LengthToCopy);
-end;
-
-function TPhastCollectionItem.Model: TBaseModel;
-begin
-  if Collection = nil then
-  begin
-    result := nil;
-  end
-  else
-  begin
-    result := (Collection as TPhastCollection).Model;
-  end;
 end;
 
 procedure TPhastCollectionItem.SetBooleanProperty(var AField: boolean;
@@ -1115,7 +1165,7 @@ begin
   FUpToDate := Value;
 end;
 
-procedure TBaseModel.Invalidate;
+procedure TBaseModel.Invalidate(Sender: TObject);
 begin
   UpToDate := False;
 end;
@@ -1243,16 +1293,16 @@ begin
   result.FValue := InitialValue;
 end;
 
-constructor TRealCollection.Create(Model: TBaseModel);
+constructor TRealCollection.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(TRealItem, Model);
+  inherited Create(TRealItem, InvalidateModelEvent);
 end;
 
-constructor TRealCollection.Create(Model: TBaseModel; Values: TOneDRealArray);
+constructor TRealCollection.Create(InvalidateModelEvent: TNotifyEvent; Values: TOneDRealArray);
 var
   index: Integer;
 begin
-  Create(Model);
+  Create(InvalidateModelEvent);
   Capacity := Length(Values);
   for index := 0 to Length(Values) - 1 do
   begin
@@ -1393,9 +1443,9 @@ begin
   result.FValue := InitialValue;
 end;
 
-constructor TIntegerCollection.Create(Model: TBaseModel);
+constructor TIntegerCollection.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(TIntegerItem, Model);
+  inherited Create(TIntegerItem, InvalidateModelEvent);
 end;
 
 function TIntegerCollection.GetItems(Index: Integer): TIntegerItem;

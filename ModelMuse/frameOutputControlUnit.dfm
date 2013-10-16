@@ -14,7 +14,7 @@ object frameOutputControl: TframeOutputControl
   object lblOutputType: TLabel
     Left = 16
     Top = 8
-    Width = 94
+    Width = 93
     Height = 18
     Caption = 'lblOutputType'
   end
@@ -40,15 +40,15 @@ object frameOutputControl: TframeOutputControl
     Caption = 'External file format'
   end
   object lblResult: TLabel
-    Left = 191
+    Left = 207
     Top = 132
     Width = 43
     Height = 18
     Caption = 'Result'
   end
   object lblDot: TLabel
-    Left = 158
-    Top = 207
+    Left = 174
+    Top = 132
     Width = 5
     Height = 13
     Caption = '.'
@@ -82,15 +82,14 @@ object frameOutputControl: TframeOutputControl
     ButtonKind = bkClassic
     MinValue = 1.000000000000000000
     Value = 1.000000000000000000
-    TabOrder = 0
+    TabOrder = 10
   end
   object adeD: TRbwDataEntry
-    Left = 168
+    Left = 184
     Top = 129
     Width = 17
     Height = 27
-    ItemHeight = 18
-    TabOrder = 1
+    TabOrder = 5
     Text = '5'
     OnChange = adeDChange
     DataType = dtInteger
@@ -100,12 +99,11 @@ object frameOutputControl: TframeOutputControl
     ChangeDisabledColor = True
   end
   object adeW: TRbwDataEntry
-    Left = 116
+    Left = 132
     Top = 129
     Width = 37
     Height = 27
-    ItemHeight = 18
-    TabOrder = 2
+    TabOrder = 4
     Text = '13'
     OnChange = adeWChange
     DataType = dtInteger
@@ -117,16 +115,16 @@ object frameOutputControl: TframeOutputControl
   object comboP: TJvImageComboBox
     Left = 16
     Top = 129
-    Width = 44
+    Width = 60
     Height = 28
     Style = csOwnerDrawVariable
     ButtonStyle = fsLighter
-    DroppedWidth = 44
+    DroppedWidth = 60
     ImageHeight = 0
     ImageWidth = 0
     ItemHeight = 22
     ItemIndex = 1
-    TabOrder = 3
+    TabOrder = 2
     OnChange = comboPChange
     Items = <
       item
@@ -140,7 +138,7 @@ object frameOutputControl: TframeOutputControl
       end>
   end
   object comboREdit: TJvImageComboBox
-    Left = 66
+    Left = 82
     Top = 129
     Width = 44
     Height = 28
@@ -151,7 +149,7 @@ object frameOutputControl: TframeOutputControl
     ImageWidth = 0
     ItemHeight = 22
     ItemIndex = 2
-    TabOrder = 4
+    TabOrder = 3
     OnChange = comboREditChange
     Items = <
       item
@@ -197,7 +195,7 @@ object frameOutputControl: TframeOutputControl
     ImageWidth = 0
     ItemHeight = 22
     ItemIndex = 0
-    TabOrder = 5
+    TabOrder = 9
     OnChange = comboFrequencyChange
     Items = <
       item
@@ -219,7 +217,7 @@ object frameOutputControl: TframeOutputControl
     Caption = 'Save in external file'
     Checked = True
     State = cbChecked
-    TabOrder = 6
+    TabOrder = 0
     OnClick = cbSaveExternalClick
   end
   object cbPrintListing: TCheckBox
@@ -228,7 +226,7 @@ object frameOutputControl: TframeOutputControl
     Width = 169
     Height = 17
     Caption = 'Print in listing file'
-    TabOrder = 7
+    TabOrder = 6
     OnClick = cbPrintListingClick
   end
   object comboPrintStyle: TJvImageComboBox
@@ -245,7 +243,7 @@ object frameOutputControl: TframeOutputControl
     ImageWidth = 0
     ItemHeight = 22
     ItemIndex = 0
-    TabOrder = 8
+    TabOrder = 7
     Items = <
       item
         Brush.Style = bsClear
@@ -272,7 +270,7 @@ object frameOutputControl: TframeOutputControl
     ImageWidth = 0
     ItemHeight = 22
     ItemIndex = 0
-    TabOrder = 9
+    TabOrder = 8
     Items = <
       item
         Brush.Style = bsClear
@@ -377,7 +375,7 @@ object frameOutputControl: TframeOutputControl
     ImageWidth = 0
     ItemHeight = 22
     ItemIndex = 0
-    TabOrder = 10
+    TabOrder = 1
     OnChange = comboSaveTypeChange
     Items = <
       item

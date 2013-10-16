@@ -11,36 +11,6 @@ uses
   JvNetscapeSplitter, JvExStdCtrls, JvCombobox, JvListComb, ArgusDataEntry;
 
 type
-//  TFarmRows = (
-//    // When to read
-//    frRootingDepth, frConsumptiveUse, frPrecipitation,
-//    frFractionOfInefficiencyLoses,
-//
-//    // Water Policy
-//    frEfficiencyGroundwaterFunction,
-//    frEfficiencyReset, frDeficiencyPolicy, frWaterCostCoefficients,
-//
-//    // Crop Consumptive-use
-//    frCropConsumptiveConcept, frCropConsumptiveLinkage,
-//
-//    // surface water
-//    frSurfaceWaterAllotment, frSurfaceWaterClosure,
-//
-//    // print
-//    frSaveWellFlowRates, frSaveNetRecharge, frSupplyAndDemand,
-//    frFarmBudgetPrintFlags, frFarmBudgetPrintHowMuch,
-//    frPrintRouting, frAcerageOptimizationPrintChoice,
-//    frAcerageOptimizationPrintLocation, frDiversionBudgetLocation,
-//
-//    // surface water
-//    frFullyRoutedDelivery, frFullyRoutedReturn,
-//
-//    // Aux and options
-//    frCropIrrigationRequirement, frRecompute);
-//
-//  TWhenToReadRows = (wtrRootingDepth, wtrConsumptiveUse, wtrPrecipitation,
-//    wtrFractionOfInefficiencyLoses);
-
   TframePkgFarm = class(TframePackage)
     rgAssignmentMethod: TRadioGroup;
     frameCropConsumptiveUse: TframeRadioGrid;
@@ -204,40 +174,21 @@ begin
   FarmProcess := Package as TFarmProcess;
 
   // When to Read
-//  rrdgOptions.ItemIndex[1, Ord(frRootingDepth)] := Ord(FarmProcess.RootingDepth);
-//  rrdgOptions.ItemIndex[1, Ord(frConsumptiveUse)] := Ord(FarmProcess.ConsumptiveUse);
-//  rrdgOptions.ItemIndex[1, Ord(frPrecipitation)] := Ord(FarmProcess.Precipitation);
-//  rrdgOptions.ItemIndex[1, Ord(frFractionOfInefficiencyLoses)] := Ord(FarmProcess.FractionOfInefficiencyLosses);
-
   comboRootingDepth.ItemIndex := Ord(FarmProcess.RootingDepth);
   comboConsumptiveUse.ItemIndex := Ord(FarmProcess.ConsumptiveUse);
   comboPrecipitation.ItemIndex := Ord(FarmProcess.Precipitation);
   comboInefficiencyLosses.ItemIndex := Ord(FarmProcess.FractionOfInefficiencyLosses);
 
   // Water Policy
-//  rrdgOptions.ItemIndex[1, Ord(frEfficiencyGroundwaterFunction)] := Ord(FarmProcess.EfficiencyGroundwaterFunction);
-//  rrdgOptions.ItemIndex[1, Ord(frEfficiencyReset)] := Ord(FarmProcess.EfficiencyReset);
-//  rrdgOptions.ItemIndex[1, Ord(frDeficiencyPolicy)] := Ord(FarmProcess.DeficiencyPolicy);
-//  rrdgOptions.ItemIndex[1, Ord(frWaterCostCoefficients)] := Ord(FarmProcess.WaterCostCoefficients);
-
   frameEfficiencyBehavior.ColItemIndex := Ord(FarmProcess.EfficiencyGroundwaterFunction)+1;
   frameEfficiencyBehavior.RowItemIndex := Ord(FarmProcess.EfficiencyReset) + 1;
   comboDeficiency.ItemIndex := Ord(FarmProcess.DeficiencyPolicy);
-//  comboWaterCosts.ItemIndex := Ord(FarmProcess.WaterCostCoefficients);
 
   // Crop Consumptive-Use
-//  rrdgOptions.ItemIndex[1, Ord(frCropConsumptiveConcept)] := Ord(FarmProcess.CropConsumptiveConcept);
-//  rrdgOptions.ItemIndex[1, Ord(frCropConsumptiveLinkage)] := Ord(FarmProcess.CropConsumptiveLinkage);
-
   frameCropConsumptiveUse.ColItemIndex := Ord(FarmProcess.CropConsumptiveConcept)+1;
   frameCropConsumptiveUse.RowItemIndex := Ord(FarmProcess.CropConsumptiveLinkage)+1;
 
   // Surface-Water Flags
-//  rrdgOptions.ItemIndex[1, Ord(frFullyRoutedDelivery)] := Ord(FarmProcess.RoutedDelivery);
-//  rrdgOptions.ItemIndex[1, Ord(frFullyRoutedReturn)] := Ord(FarmProcess.RoutedReturn);
-//  rrdgOptions.ItemIndex[1, Ord(frSurfaceWaterAllotment)] := Ord(FarmProcess.SurfaceWaterAllotment);
-//  rrdgOptions.Cells[1, Ord(frSurfaceWaterClosure)] := FloatToStr(FarmProcess.SurfaceWaterClosure);
-
   comboRoutedDelivery.ItemIndex := Ord(FarmProcess.RoutedDelivery);
   comboRoutedReturnFlow.ItemIndex := Ord(FarmProcess.RoutedReturn);
   comboAllotment.ItemIndex := Ord(FarmProcess.SurfaceWaterAllotment);
@@ -245,12 +196,6 @@ begin
 
 
   // Mandatory Print flags
-//  rrdgOptions.ItemIndex[1, Ord(frSaveWellFlowRates)] := Ord(FarmProcess.SaveWellFlowRates);
-//  rrdgOptions.ItemIndex[1, Ord(frSaveNetRecharge)] := Ord(FarmProcess.SaveNetRecharge);
-//  rrdgOptions.ItemIndex[1, Ord(frSupplyAndDemand)] := Ord(FarmProcess.SupplyAndDemand);
-//  rrdgOptions.ItemIndex[1, Ord(frFarmBudgetPrintFlags)] := Ord(FarmProcess.FarmBudgetPrintFlags);
-//  rrdgOptions.ItemIndex[1, Ord(frFarmBudgetPrintHowMuch)] := Ord(FarmProcess.FarmBudgetPrintHowMuch);
-
   comboSaveWellFlowRates.ItemIndex := Ord(FarmProcess.SaveWellFlowRates);
   comboSaveRecharge.ItemIndex := Ord(FarmProcess.SaveNetRecharge);
   comboSupplyAndDemand.ItemIndex := Ord(FarmProcess.SupplyAndDemand);
@@ -258,12 +203,6 @@ begin
   frameFarmBudgetPrintFlag.RowItemIndex := Ord(FarmProcess.FarmBudgetPrintHowMuch)+1;
 
   // Optional Print Flags
-//  rrdgOptions.ItemIndex[1, Ord(frPrintRouting)] := Ord(FarmProcess.PrintRouting);
-//  rrdgOptions.ItemIndex[1, Ord(frAcerageOptimizationPrintChoice)] := Ord(FarmProcess.AcerageOptimizationPrintChoice);
-//  rrdgOptions.ItemIndex[1, Ord(frAcerageOptimizationPrintLocation)] := Ord(FarmProcess.AcerageOptimizationPrintLocation);
-//  rrdgOptions.ItemIndex[1, Ord(frDiversionBudgetLocation)] := Ord(FarmProcess.DiversionBudgetLocation);
-
-//  comboPrintRouting.ItemIndex := Ord(FarmProcess.PrintRouting);
   frameRoutingInformationPrintFlag.ColItemIndex := Ord(FarmProcess.PrintRouting)+1;
   frameRoutingInformationPrintFlag.RowItemIndex := Ord(FarmProcess.PrintRoutingFrequency)+1;
 
@@ -272,8 +211,6 @@ begin
   frameAcreageOptimizationPrintSettings.RowItemIndex := Ord(FarmProcess.AcerageOptimizationPrintChoice) + 1;
 
   // Auxilliary and Options
-//  rrdgOptions.ItemIndex[1, Ord(frCropIrrigationRequirement)] := Ord(FarmProcess.CropIrrigationRequirement);
-//  rrdgOptions.ItemIndex[1, Ord(frRecompute)] := Ord(FarmProcess.RecomputeOption);
 
   comboCropIrrigationRequirement.ItemIndex := Ord(FarmProcess.CropIrrigationRequirement);
   comboRecomputeFlows.ItemIndex := Ord(FarmProcess.RecomputeOption);
@@ -389,11 +326,6 @@ begin
   FarmProcess := Package as TFarmProcess;
 
   // When to Read
-//  FarmProcess.RootingDepth := TRootingDepth(rrdgOptions.ItemIndex[1, Ord(frRootingDepth)]);
-//  FarmProcess.ConsumptiveUse := TConsumptiveUse(rrdgOptions.ItemIndex[1, Ord(frConsumptiveUse)]);
-//  FarmProcess.Precipitation := TPrecipitation(rrdgOptions.ItemIndex[1, Ord(frPrecipitation)]);
-//  FarmProcess.FractionOfInefficiencyLosses := TFractionOfInefficiencyLosses(rrdgOptions.ItemIndex[1, Ord(frFractionOfInefficiencyLoses)]);
-
   FarmProcess.RootingDepth := TRootingDepth(comboRootingDepth.ItemIndex);
   FarmProcess.ConsumptiveUse := TConsumptiveUse(comboConsumptiveUse.ItemIndex);
   FarmProcess.Precipitation := TPrecipitation(comboPrecipitation.ItemIndex);
@@ -401,41 +333,22 @@ begin
     TFractionOfInefficiencyLosses(comboInefficiencyLosses.ItemIndex);
 
   // Water Policy
-//  FarmProcess.EfficiencyGroundwaterFunction := TEfficiencyGroundwaterFunction(rrdgOptions.ItemIndex[1, Ord(frEfficiencyGroundwaterFunction)]);
-//  FarmProcess.EfficiencyReset := TEfficiencyReset(rrdgOptions.ItemIndex[1, Ord(frEfficiencyReset)]);
-//  FarmProcess.DeficiencyPolicy := TDeficiencyPolicy(rrdgOptions.ItemIndex[1, Ord(frDeficiencyPolicy)]);
-//  FarmProcess.WaterCostCoefficients := TWaterCostCoefficients(rrdgOptions.ItemIndex[1, Ord(frWaterCostCoefficients)]);
 
   FarmProcess.EfficiencyGroundwaterFunction := TEfficiencyGroundwaterFunction(frameEfficiencyBehavior.ColItemIndex-1);
   FarmProcess.EfficiencyReset := TEfficiencyReset(frameEfficiencyBehavior.RowItemIndex-1);
   FarmProcess.DeficiencyPolicy := TDeficiencyPolicy(comboDeficiency.ItemIndex);
-//  FarmProcess.WaterCostCoefficients := TWaterCostCoefficients(comboWaterCosts.ItemIndex);
 
   // Crop Consumptive-Use
-//  FarmProcess.CropConsumptiveConcept := TCropConsumptiveConcept(rrdgOptions.ItemIndex[1, Ord(frCropConsumptiveConcept)]);
-//  FarmProcess.CropConsumptiveLinkage := TCropConsumptiveLinkage(rrdgOptions.ItemIndex[1, Ord(frCropConsumptiveLinkage)]);
-
   FarmProcess.CropConsumptiveConcept := TCropConsumptiveConcept(frameCropConsumptiveUse.ColItemIndex-1);
   FarmProcess.CropConsumptiveLinkage := TCropConsumptiveLinkage(frameCropConsumptiveUse.RowItemIndex-1);
 
   // Surface-Water Flags
-//  FarmProcess.RoutedDelivery := TRoutedDelivery(rrdgOptions.ItemIndex[1, Ord(frFullyRoutedDelivery)]);
-//  FarmProcess.RoutedReturn := TRoutedReturn(rrdgOptions.ItemIndex[1, Ord(frFullyRoutedReturn)]);
-//  FarmProcess.SurfaceWaterAllotment := TSurfaceWaterAllotment(rrdgOptions.ItemIndex[1, Ord(frSurfaceWaterAllotment)]);
-//  FarmProcess.SurfaceWaterClosure := FortranStrToFloat(rrdgOptions.Cells[1, Ord(frSurfaceWaterClosure)]);
-
   FarmProcess.RoutedDelivery := TRoutedDelivery(comboRoutedDelivery.ItemIndex);
   FarmProcess.RoutedReturn := TRoutedReturn(comboRoutedReturnFlow.ItemIndex);
   FarmProcess.SurfaceWaterAllotment := TSurfaceWaterAllotment(comboAllotment.ItemIndex);
   FarmProcess.SurfaceWaterClosure := rdeDiversionCriterion.RealValue;
 
   // Mandatory Print flags
-//  FarmProcess.SaveWellFlowRates := TSaveWellFlowRates(rrdgOptions.ItemIndex[1, Ord(frSaveWellFlowRates)]);
-//  FarmProcess.SaveNetRecharge := TSaveNetRecharge(rrdgOptions.ItemIndex[1, Ord(frSaveNetRecharge)]);
-//  FarmProcess.SupplyAndDemand := TSupplyAndDemand(rrdgOptions.ItemIndex[1, Ord(frSupplyAndDemand)]);
-//  FarmProcess.FarmBudgetPrintFlags := TFarmBudgetPrintFlags(rrdgOptions.ItemIndex[1, Ord(frFarmBudgetPrintFlags)]);
-//  FarmProcess.FarmBudgetPrintHowMuch := TFarmBudgetPrintHowMuch(rrdgOptions.ItemIndex[1, Ord(frFarmBudgetPrintHowMuch)]);
-
   FarmProcess.SaveWellFlowRates := TSaveWellFlowRates(comboSaveWellFlowRates.ItemIndex);
   FarmProcess.SaveNetRecharge := TSaveNetRecharge(comboSaveRecharge.ItemIndex);
   FarmProcess.SupplyAndDemand := TSupplyAndDemand(comboSupplyAndDemand.ItemIndex);
@@ -443,12 +356,6 @@ begin
   FarmProcess.FarmBudgetPrintHowMuch := TFarmBudgetPrintHowMuch(frameFarmBudgetPrintFlag.RowItemIndex-1);
 
   // Optional Print Flags
-//  FarmProcess.PrintRouting := TPrintRouting(rrdgOptions.ItemIndex[1, Ord(frPrintRouting)]);
-//  FarmProcess.AcerageOptimizationPrintChoice := TAcerageOptimizationPrintChoice(rrdgOptions.ItemIndex[1, Ord(frAcerageOptimizationPrintChoice)]);
-//  FarmProcess.AcerageOptimizationPrintLocation := TAcerageOptimizationPrintLocation(rrdgOptions.ItemIndex[1, Ord(frAcerageOptimizationPrintLocation)]);
-//  FarmProcess.DiversionBudgetLocation := TDiversionBudgetLocation(rrdgOptions.ItemIndex[1, Ord(frDiversionBudgetLocation)]);
-
-//  FarmProcess.PrintRouting := TPrintRouting(comboPrintRouting.ItemIndex);
   FarmProcess.PrintRouting := TPrintRouting(frameRoutingInformationPrintFlag.ColItemIndex-1);
   FarmProcess.PrintRoutingFrequency := TPrintRoutingFrequency(frameRoutingInformationPrintFlag.RowItemIndex-1);
 
@@ -457,10 +364,7 @@ begin
   FarmProcess.AcerageOptimizationPrintLocation := TAcerageOptimizationPrintLocation(frameAcreageOptimizationPrintSettings.ColItemIndex-1);
   FarmProcess.AcerageOptimizationPrintChoice := TAcerageOptimizationPrintChoice(frameAcreageOptimizationPrintSettings.RowItemIndex-1);
 
-
   // Auxilliary and Options
-//  FarmProcess.CropIrrigationRequirement := TCropIrrigationRequirement(rrdgOptions.ItemIndex[1, Ord(frCropIrrigationRequirement)]);
-//  FarmProcess.RecomputeOption := TRecomputeOption(rrdgOptions.ItemIndex[1, Ord(frRecompute)]);
 
   FarmProcess.CropIrrigationRequirement := TCropIrrigationRequirement(comboCropIrrigationRequirement.ItemIndex);
   FarmProcess.RecomputeOption := TRecomputeOption(comboRecomputeFlows.ItemIndex);

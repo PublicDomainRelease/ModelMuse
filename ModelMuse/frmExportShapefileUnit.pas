@@ -431,7 +431,14 @@ begin
 
     FShapeDataBase := TXBase.Create(nil);
     try
-      InitializeDataBase(FShapeFileName, FShapeDataBase, FFields);
+      try
+        InitializeDataBase(FShapeFileName, FShapeDataBase, FFields);
+      except on E: EFOpenError do
+        begin
+          MessageDlg(E.Message, mtError, [mbOK], 0);
+          Exit;
+        end;
+      end;
 
       FShapeType := GetShapeType;
       if FShapeType  in [stPolygon, stPoint] then
@@ -491,7 +498,14 @@ begin
 
     FShapeDataBase := TXBase.Create(nil);
     try
-      InitializeDataBase(FShapeFileName, FShapeDataBase, FFields);
+      try
+        InitializeDataBase(FShapeFileName, FShapeDataBase, FFields);
+      except on E: EFOpenError do
+        begin
+          MessageDlg(E.Message, mtError, [mbOK], 0);
+          Exit;
+        end;
+      end;
       FShapeType := GetShapeType;
       if FShapeType  in [stPolygon, stPoint] then
       begin
@@ -580,7 +594,14 @@ begin
     EdgeDisplay.UpdateData;
     ShapeDataBase := TXBase.Create(nil);
     try
-      InitializeDataBase(ShapeFileName, ShapeDataBase, Fields);
+      try
+        InitializeDataBase(ShapeFileName, ShapeDataBase, Fields);
+      except on E: EFOpenError do
+        begin
+          MessageDlg(E.Message, mtError, [mbOK], 0);
+          Exit;
+        end;
+      end;
 
       ShapeType := stPolyLine;
       case rgHfbDimensions.ItemIndex of

@@ -230,9 +230,9 @@ begin
                 begin
                   TableRowRestoreSubscription(self, Subject, UsedVariables[VariableIndex]);
                 end
-                else if RestoreEvent = Addr(RestoreModflowSteadyBoundarySubscription) then
+                else if RestoreEvent = Addr(RestoreScreenObjectPropertySubscription) then
                 begin
-                  RestoreModflowSteadyBoundarySubscription(self, Subject, UsedVariables[VariableIndex]);
+                  RestoreScreenObjectPropertySubscription(self, Subject, UsedVariables[VariableIndex]);
                 end
                 else if RestoreEvent = Addr(Mt3dmsStringValueRestoreSubscription) then
                 begin
@@ -393,9 +393,9 @@ begin
                     begin
                       TableRowRemoveSubscription(self, Subject, OldSubscriptions[VariableIndex]);
                     end
-                    else if PRemoveEvent = Addr(RemoveModflowSteadyBoundarySubscription) then
+                    else if PRemoveEvent = Addr(RemoveScreenObjectPropertySubscription) then
                     begin
-                      RemoveModflowSteadyBoundarySubscription(self, Subject, OldSubscriptions[VariableIndex]);
+                      RemoveScreenObjectPropertySubscription(self, Subject, OldSubscriptions[VariableIndex]);
                     end
                     else if PRemoveEvent = Addr(GlobalDummyHandleSubscription) then
                     begin
@@ -498,9 +498,9 @@ begin
               begin
                 TableRowRestoreSubscription(self, Subject, FNewSubscriptions[VariableIndex]);
               end
-              else if RestoreEvent = Addr(RestoreModflowSteadyBoundarySubscription) then
+              else if RestoreEvent = Addr(RestoreScreenObjectPropertySubscription) then
               begin
-                RestoreModflowSteadyBoundarySubscription(self, Subject, FNewSubscriptions[VariableIndex]);
+                RestoreScreenObjectPropertySubscription(self, Subject, FNewSubscriptions[VariableIndex]);
               end
               else if RestoreEvent = Addr(Mt3dmsStringValueRestoreSubscription) then
               begin

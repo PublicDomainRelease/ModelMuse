@@ -68,7 +68,7 @@ type
     function GetItem(Index: integer): TMt3dmsTimeItem;
     procedure SetItem(Index: integer; const Value: TMt3dmsTimeItem);
   public
-    constructor Create(Model: TBaseModel);
+    constructor Create(InvalidateModelEvent: TNotifyEvent);
     procedure Assign(Source: TPersistent); override;
     property Items[Index: integer]: TMt3dmsTimeItem read
       GetItem write SetItem; default;
@@ -100,9 +100,8 @@ type
   private
     function GetItem(Index: integer): TOuptputTimeItem;
     procedure SetItem(Index: integer; const Value: TOuptputTimeItem);
-  published
   public
-    constructor Create(Model: TBaseModel);
+    constructor Create(InvalidateModelEvent: TNotifyEvent);
     procedure Assign(Source: TPersistent); override;
     property Items[Index: integer]: TOuptputTimeItem read
       GetItem write SetItem; default;
@@ -300,9 +299,9 @@ begin
   end;
 end;
 
-constructor TMt3dmsTimeCollection.Create(Model: TBaseModel);
+constructor TMt3dmsTimeCollection.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(TMt3dmsTimeItem, Model);
+  inherited Create(TMt3dmsTimeItem, InvalidateModelEvent);
 end;
 
 function TMt3dmsTimeCollection.GetItem(Index: integer): TMt3dmsTimeItem;
@@ -326,7 +325,7 @@ begin
   for Index := 0 to Count - 1 do
   begin
     result := Items[Index];
-    if result.EndTime < ATime then
+    if (result.EndTime > ATime) and (result.StartTime <= ATime) then
     begin
       Exit;
     end;
@@ -420,9 +419,9 @@ begin
   end;
 end;
 
-constructor TMt3dmsOutputTimeCollection.Create(Model: TBaseModel);
+constructor TMt3dmsOutputTimeCollection.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(TOuptputTimeItem, Model);
+  inherited Create(TOuptputTimeItem, InvalidateModelEvent);
 end;
 
 function TMt3dmsOutputTimeCollection.GetItem(

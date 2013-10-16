@@ -12,7 +12,6 @@ type
     Cell: TCellLocation;
     MaxPumpingRate: double;
     FarmID: Integer;
-//    FarmWellID: integer;
     PumpOnlyIfCropRequiresWater:  Boolean;
     StartingTime: double;
     EndingTime: double;
@@ -99,7 +98,7 @@ type
     procedure InvalidatePumpOnlyIfCropRequiresWaterData(Sender: TObject);
     procedure InvalidateFarmIdData(Sender: TObject);
   protected
-    function OkDataTypes(BoundaryIndex: Integer): TRbwDataTypes; override;
+    function OkListDataTypes(BoundaryIndex: Integer): TRbwDataTypes; override;
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     function AdjustedFormula(FormulaIndex, ItemIndex: integer): string; override;
     procedure AddSpecificBoundary(AModel: TBaseModel); override;
@@ -115,7 +114,7 @@ type
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
     procedure InvalidateModel; override;
-    procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
+    procedure AssignListCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
       BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
@@ -159,7 +158,6 @@ type
     function GetSection: integer; override;
     procedure RecordStrings(Strings: TStringList); override;
   public
-//    property FarmWellId: Integer read FValues.FarmWellId write FValues.FarmWellId;
     property MaxPumpingRate: double read GetMaxPumpingRate;
     property MaxPumpingRateAnnotation: string read GetMaxPumpingRateAnnotation;
     property PumpOnlyIfCropRequiresWater: boolean read GetPumpOnlyIfCropRequiresWater;
@@ -171,13 +169,6 @@ type
   end;
 
   TFmpWellBoundary = class(TSpecificModflowBoundary)
-  private
-//    FFarmId: TFormulaObject;
-//    FFarmIdObserver: TObserver;
-//    function GetFarmId: string;
-//    procedure SetFarmId(Value: string);
-//    procedure UpdateFormulaDependencies(OldFormula: string; var
-//      NewFormula: string; Observer: TObserver; Compiler: TRbwParser);
   protected
     // @name fills ValueTimeList with a series of TObjectLists - one for
     // each stress period.  Each such TObjectList is filled with
@@ -206,15 +197,7 @@ type
     // Those represent parameter boundary conditions.
     procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
       AModel: TBaseModel); override;
-    // ultimately make this virtual;
-    procedure GetCellListValues(ValueTimeList: TList; ParamList: TStringList;
-      AModel: TBaseModel);
     procedure InvalidateDisplay; override;
-//    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
-//    destructor Destroy; override;
-//    procedure Assign(Source: TPersistent);override;
-  published
-//    property FarmId: string read GetFarmId write SetFarmId;
   end;
 
 const
@@ -677,7 +660,7 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
-    UpdataRequiredData(DataSets, Variables, ACell, AModel);
+    UpdateRequiredListData(DataSets, Variables, ACell, AModel);
 
     Expression.Evaluate;
     with FmpWellStorage.FmpWellArray[Index] do
@@ -705,7 +688,7 @@ begin
   end;
 end;
 
-procedure TFmpWellCollection.AssignCellLocation(
+procedure TFmpWellCollection.AssignListCellLocation(
   BoundaryStorage: TCustomBoundaryStorage; ACellList: TObject);
 var
   FmpWellStorage: TFmpWellStorage;
@@ -820,7 +803,7 @@ begin
   result := TFmpWellItem;
 end;
 
-function TFmpWellCollection.OkDataTypes(BoundaryIndex: Integer): TRbwDataTypes;
+function TFmpWellCollection.OkListDataTypes(BoundaryIndex: Integer): TRbwDataTypes;
 begin
   case BoundaryIndex of
     FmpWellMaxPumpingRatePosition:
@@ -1048,16 +1031,6 @@ end;
 
 { TMfFmpWellBoundary }
 
-//procedure TFmpWellBoundary.Assign(Source: TPersistent);
-//begin
-//  if Source is TFmpWellBoundary then
-//  begin
-//    FarmId := TFmpWellBoundary(Source).FarmId;
-//  end;
-//  inherited;
-//
-//end;
-
 procedure TFmpWellBoundary.AssignCells(
   BoundaryStorage: TCustomBoundaryStorage; ValueTimeList: TList;
   AModel: TBaseModel);
@@ -1118,50 +1091,6 @@ begin
   result := TFmpWellCollection;
 end;
 
-procedure TFmpWellBoundary.GetCellListValues(ValueTimeList: TList;
-  ParamList: TStringList; AModel: TBaseModel);
-var
-  ValueIndex: Integer;
-  BoundaryStorage: TFmpWellStorage;
-  ParamIndex: Integer;
-  Param: TModflowParamItem;
-  Times: TList;
-  Position: integer;
-  ParamName: string;
-begin
-  EvaluateListBoundaries(AModel);
-  for ValueIndex := 0 to Values.Count - 1 do
-  begin
-    if ValueIndex < Values.BoundaryCount[AModel] then
-    begin
-      BoundaryStorage := Values.Boundaries[ValueIndex, AModel] as TFmpWellStorage;
-      AssignCells(BoundaryStorage, ValueTimeList, AModel);
-    end;
-  end;
-  for ParamIndex := 0 to Parameters.Count - 1 do
-  begin
-    Param := Parameters[ParamIndex];
-    ParamName := Param.Param.ParamName;
-    Position := ParamList.IndexOf(ParamName);
-    if Position < 0 then
-    begin
-      Times := TObjectList.Create;
-      ParamList.AddObject(ParamName, Times);
-    end
-    else
-    begin
-      Times := ParamList.Objects[Position] as TList;
-    end;
-    for ValueIndex := 0 to Param.Param.Count - 1 do
-    begin
-      if ValueIndex < Param.Param.BoundaryCount[AModel] then
-      begin
-        BoundaryStorage := Param.Param.Boundaries[ValueIndex, AModel] as TFmpWellStorage;
-        AssignCells(BoundaryStorage, Times, AModel);
-      end;
-    end;
-  end;
-end;
 
 procedure TFmpWellBoundary.GetCellValues(ValueTimeList: TList;
   ParamList: TStringList; AModel: TBaseModel);
@@ -1174,7 +1103,6 @@ var
   Position: integer;
   ParamName: string;
 begin
-//  EvaluateArrayBoundaries;
   EvaluateListBoundaries(AModel);
   for ValueIndex := 0 to Values.Count - 1 do
   begin

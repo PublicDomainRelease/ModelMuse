@@ -15,6 +15,10 @@ object frameCustomColor: TframeCustomColor
     TabOrder = 0
     object tabSelection: TTabSheet
       Caption = 'Selection'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         562
         397)
@@ -243,6 +247,10 @@ object frameCustomColor: TframeCustomColor
     object tabFilters: TTabSheet
       Caption = 'Filters'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         562
         397)
@@ -302,7 +310,6 @@ object frameCustomColor: TframeCustomColor
           Left = 89
           TabOrder = 1
           ExplicitLeft = 89
-          ExplicitHeight = 24
         end
       end
       inline frameCheck3DMin: TframeDisplayLimit
@@ -319,9 +326,6 @@ object frameCustomColor: TframeCustomColor
         inherited rdeLimit: TRbwDataEntry
           Height = 28
           ExplicitHeight = 28
-        end
-        inherited comboBoolLimit: TComboBox
-          ExplicitHeight = 24
         end
       end
       object cbActiveOnly: TCheckBox
@@ -406,6 +410,10 @@ object frameCustomColor: TframeCustomColor
       Caption = 'Legend'
       ImageIndex = 2
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object imLegend: TImage
         Left = 218
         Top = 0

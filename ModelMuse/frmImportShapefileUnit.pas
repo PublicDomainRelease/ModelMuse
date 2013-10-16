@@ -827,6 +827,9 @@ resourcestring
   StrConcentrationsd = 'Concentration_%s%d';
   StrYouMustChangeThe = 'You must change the number of Z-formulas to zero if' +
   ' you want the imported shapes to affect the layer definition data sets.';
+  StrThereWasAnErrorP = 'There was an error processing the database file tha' +
+  't is part of the Shapefile. The error was "%s" If you can not solve this' +
+  'problem yourself, you may contact the ModelMuse developer.';
 
 {$R *.dfm}
 
@@ -1147,6 +1150,11 @@ begin
             for DSIndex := 0 to DataArrayManager.DataSetCount - 1 do
             begin
               DataArray := DataArrayManager.DataSets[DSIndex];
+              if not DataArray.Visible then
+              begin
+                Continue;
+              end;
+
               if DataArray.DataType in [rdtDouble, rdtInteger] then
               begin
                 FRealFieldGlobalsAndDataSetsNames.Add(DataArray.Name)
@@ -6527,508 +6535,345 @@ var
   LowElevFormula: string;
   TestCompiler: TRbwParser;
 begin
-  FInvalidParameterNames := TStringList.Create;
   try
-    FInvalidParameterNames.Sorted := True;
-    FInvalidParameterNames.Duplicates := dupIgnore;
-    frmGoPhast.ChangingSelection := True;
-    CombinedObjects := comboJoinObjects.Enabled
-      and (comboJoinObjects.ItemIndex = 1);
-    GlobalDecompileType := dcValue;
-    InvalidObjectNumbers := TIntegerList.Create;
-    InvalidFormulaNumbers := nil;
-    MultiValueList := TList.Create;
-    NewDataSets:= TList.Create;
-    NewProperties := TObjectList.Create;
-    OldProperties := TObjectList.Create;
+    FInvalidParameterNames := TStringList.Create;
     try
-      CentralMeridian := 0;
-      CentralMeridianDegrees := 0;
-      if cbCoordinateConversion.Checked then
-      begin
-        CentralMeridianDegrees := seZoneNumber.Value * 6 - 183;
-        CentralMeridian := CentralMeridianDegrees / 180 * Pi;
-      end;
-
-      EvalAt := TEvaluatedAt(rgEvaluatedAt.ItemIndex);
-      frmGoPhast.CanDraw := False;
+      FInvalidParameterNames.Sorted := True;
+      FInvalidParameterNames.Duplicates := dupIgnore;
+      frmGoPhast.ChangingSelection := True;
+      CombinedObjects := comboJoinObjects.Enabled
+        and (comboJoinObjects.ItemIndex = 1);
+      GlobalDecompileType := dcValue;
+      InvalidObjectNumbers := TIntegerList.Create;
+      InvalidFormulaNumbers := nil;
+      MultiValueList := TList.Create;
+      NewDataSets:= TList.Create;
+      NewProperties := TObjectList.Create;
+      OldProperties := TObjectList.Create;
       try
-        if not CheckDataSets then
+        CentralMeridian := 0;
+        CentralMeridianDegrees := 0;
+        if cbCoordinateConversion.Checked then
         begin
-          ModalResult := mrNone;
-          Exit;
+          CentralMeridianDegrees := seZoneNumber.Value * 6 - 183;
+          CentralMeridian := CentralMeridianDegrees / 180 * Pi;
         end;
-        MakeNewDataSets(NewDataSets);
-        ChangeInterpolators(NewProperties, OldProperties);
 
-        Variables := TList.Create;
-        DataSets := TList.Create;
-        FieldNames := TStringList.Create;
-        RealFieldNames := TStringList.Create;
+        EvalAt := TEvaluatedAt(rgEvaluatedAt.ItemIndex);
+        frmGoPhast.CanDraw := False;
         try
-          RealFieldNames.CaseSensitive := False;
-          rpShapeCompiler.ClearVariables;
-          rpShapeCompiler.ClearExpressions;
-          CreateVariables(rpShapeCompiler);
-          CreateDataSetVariables(rpShapeCompiler,
-            TEValuatedAt(rgEvaluatedAt.ItemIndex));
-          frmGoPhast.PhastModel.RegisterGlobalVariables(rpShapeCompiler);
-          for DataSetIndex := 1 to dgFields.RowCount - 1 do
+          if not CheckDataSets then
           begin
-            DataSetName := dgFields.Cells[Ord(fgcDataSet), DataSetIndex];
-            if dgFields.Checked[Ord(fgcImport), DataSetIndex] then
-            begin
-              DataSet := frmGoPhast.PhastModel.DataArrayManager.
-                GetDataSetByName(DataSetName);
-              Assert(DataSet <> nil);
-              DataSets.Add(DataSet);
-            end
-            else
-            begin
-              DataSets.Add(nil);
-            end;
-            FieldName := dgFields.Cells[Ord(fgcAttributes), DataSetIndex];
-            if FieldName <> '' then
-            begin
-              RealFieldNames.Add(FieldName);
-              FieldName := FieldToVarName(FieldName);
-              FieldNames.Add(FieldName);
-              Variable := rpShapeCompiler.Variables[rpShapeCompiler.
-                IndexOfVariable(FieldName)] as TCustomVariable;
-              Variables.Add(Variable);
-            end;
+            ModalResult := mrNone;
+            Exit;
           end;
-          AFormula := edImportCriterion.Text;
-          GlobalDecompileType := dcNormal;
+          MakeNewDataSets(NewDataSets);
+          ChangeInterpolators(NewProperties, OldProperties);
+
+          Variables := TList.Create;
+          DataSets := TList.Create;
+          FieldNames := TStringList.Create;
+          RealFieldNames := TStringList.Create;
           try
-            rpShapeCompiler.Compile(AFormula);
-          finally
-            GlobalDecompileType := dcValue;
-          end;
-          ImportCriterionExpression := rpShapeCompiler.CurrentExpression;
-          Assert(ImportCriterionExpression.ResultType = rdtBoolean);
-
-          ElevFormula := '';
-          HighElevFormula := '';
-          LowElevFormula := '';
-          case rgElevationCount.ItemIndex of
-            0:
-              begin
-                ZExpression := nil;
-                HighZExpression := nil;
-                LowZExpression := nil;
-              end;
-            1:
-              begin
-                AFormula := edZ.Text;
-                GlobalDecompileType := dcNormal;
-                try
-                  rpShapeCompiler.Compile(AFormula);
-                finally
-                  GlobalDecompileType := dcValue;
-                end;
-                ZExpression := rpShapeCompiler.CurrentExpression;
-                Assert(ZExpression.ResultType in [rdtDouble, rdtInteger, rdtString]);
-                ElevFormula := AFormula;
-                if (RealFieldNames.IndexOf(AFormula) < 0) or (ZExpression.ResultType = rdtString) then
-                begin
-                  if frmGoPhast.PhastModel.GetObserverByName(ElevFormula)
-                    <> nil then
-                  begin
-                    ZExpression := nil;
-                  end
-                  else
-                  begin
-                    TestCompiler := frmGoPhast.PhastModel.GetCompiler(dsoTop,
-                      TEvaluatedAt(rgEvaluatedAt.ItemIndex));
-                    try
-                      TestCompiler.Compile(AFormula);
-                      ZExpression := nil;
-                    except on E: ERbwParserError do
-                      // do nothing
-                    end;
-                  end;
-                end;
-
-
-                HighZExpression := nil;
-                LowZExpression := nil;
-              end;
-            2:
-              begin
-                ZExpression := nil;
-
-                AFormula := edHighZ.Text;
-                GlobalDecompileType := dcNormal;
-                try
-                  rpShapeCompiler.Compile(AFormula);
-                finally
-                  GlobalDecompileType := dcValue;
-                end;
-                HighZExpression := rpShapeCompiler.CurrentExpression;
-
-                Assert(HighZExpression.ResultType in [rdtDouble, rdtInteger, rdtString]);
-                HighElevFormula := AFormula;
-                if (RealFieldNames.IndexOf(HighElevFormula) < 0) or (HighZExpression.ResultType = rdtString) then
-                begin
-                  if frmGoPhast.PhastModel.GetObserverByName(HighElevFormula)
-                    <> nil then
-                  begin
-                    HighZExpression := nil;
-                  end
-                  else
-                  begin
-                    TestCompiler := frmGoPhast.PhastModel.GetCompiler(dsoTop,
-                      TEvaluatedAt(rgEvaluatedAt.ItemIndex));
-                    try
-                      TestCompiler.Compile(AFormula);
-                      HighZExpression := nil;
-                    except on E: ERbwParserError do
-                      // do nothing
-                    end;
-                  end;
-                end;
-
-               AFormula := edLowZ.Text;
-                GlobalDecompileType := dcNormal;
-                try
-                  rpShapeCompiler.Compile(AFormula);
-                finally
-                  GlobalDecompileType := dcValue;
-                end;
-                LowZExpression := rpShapeCompiler.CurrentExpression;
-                Assert(LowZExpression.ResultType in [rdtDouble, rdtInteger, rdtString]);
-                LowElevFormula := AFormula;
-                if (RealFieldNames.IndexOf(LowElevFormula) < 0) or (LowZExpression.ResultType = rdtString) then
-                begin
-                  if frmGoPhast.PhastModel.GetObserverByName(LowElevFormula)
-                    <> nil then
-                  begin
-                    LowZExpression := nil;
-                  end
-                  else
-                  begin
-                    TestCompiler := frmGoPhast.PhastModel.GetCompiler(dsoTop,
-                      TEvaluatedAt(rgEvaluatedAt.ItemIndex));
-                    try
-                      TestCompiler.Compile(AFormula);
-                      LowZExpression := nil;
-                    except on E: ERbwParserError do
-                      // do nothing
-                    end;
-                  end;
-                end;
-              end;
-            else
-              begin
-                ZExpression := nil;
-                HighZExpression := nil;
-                LowZExpression := nil;
-                Assert(False);
-              end;
-          end;
-
-          Root := TScreenObject.ValidName(
-            ExtractFileRoot(OpenDialogShape.FileName)+ '_');
-
-          if cbImportGrid.Enabled and cbImportGrid.Checked then
-          begin
-            ImportGrid(FieldNames);
-          end;
-
-          if cbImportObjects.Checked then
-          begin
-            frmProgressMM.Caption := StrCreatingObjects;
-            frmProgressMM.pbProgress.Max := FGeometryFile.Count;
-            frmProgressMM.pbProgress.Position := 0;
-            frmProgressMM.ProgressLabelCaption := Format(Str0OutOfD,
-              [frmProgressMM.pbProgress.Max]);
-            frmProgressMM.Prefix := StrShape;
-            frmProgressMM.PopupParent := self;
-            frmProgressMM.Show;
-
-            if FDataBaseFileName <> '' then
+            RealFieldNames.CaseSensitive := False;
+            rpShapeCompiler.ClearVariables;
+            rpShapeCompiler.ClearExpressions;
+            CreateVariables(rpShapeCompiler);
+            CreateDataSetVariables(rpShapeCompiler,
+              TEValuatedAt(rgEvaluatedAt.ItemIndex));
+            frmGoPhast.PhastModel.RegisterGlobalVariables(rpShapeCompiler);
+            for DataSetIndex := 1 to dgFields.RowCount - 1 do
             begin
-              xbShapeDataBase.GotoBOF;
+              DataSetName := dgFields.Cells[Ord(fgcDataSet), DataSetIndex];
+              if dgFields.Checked[Ord(fgcImport), DataSetIndex] then
+              begin
+                DataSet := frmGoPhast.PhastModel.DataArrayManager.
+                  GetDataSetByName(DataSetName);
+                Assert(DataSet <> nil);
+                DataSets.Add(DataSet);
+              end
+              else
+              begin
+                DataSets.Add(nil);
+              end;
+              FieldName := dgFields.Cells[Ord(fgcAttributes), DataSetIndex];
+              if FieldName <> '' then
+              begin
+                RealFieldNames.Add(FieldName);
+                FieldName := FieldToVarName(FieldName);
+                FieldNames.Add(FieldName);
+                Variable := rpShapeCompiler.Variables[rpShapeCompiler.
+                  IndexOfVariable(FieldName)] as TCustomVariable;
+                Variables.Add(Variable);
+              end;
             end;
-            frmGoPhast.PhastModel.BeginScreenObjectUpdate;
-            ScreenObjectList := TList.Create;
+            AFormula := edImportCriterion.Text;
+            GlobalDecompileType := dcNormal;
             try
-              ExistingObjectCount :=
-                frmGoPhast.PhastModel.
-                NumberOfLargestScreenObjectsStartingWith(Root);
+              rpShapeCompiler.Compile(AFormula);
+            finally
+              GlobalDecompileType := dcValue;
+            end;
+            ImportCriterionExpression := rpShapeCompiler.CurrentExpression;
+            Assert(ImportCriterionExpression.ResultType = rdtBoolean);
 
-              Undo := TUndoImportShapefile.Create;
-              try
-                if CombinedObjects then
+            ElevFormula := '';
+            HighElevFormula := '';
+            LowElevFormula := '';
+            case rgElevationCount.ItemIndex of
+              0:
                 begin
-                  ScreenObjectList.Capacity := 1;
-                end
-                else
-                begin
-                  ScreenObjectList.Capacity := FGeometryFile.Count;
+                  ZExpression := nil;
+                  HighZExpression := nil;
+                  LowZExpression := nil;
                 end;
-                AScreenObject := nil;
-                DeleteCount := 0;
-                AddCount := 0;
-                for Index := 0 to FGeometryFile.Count - 1 do
+              1:
                 begin
-                  ShapeObject := FGeometryFile[Index];
-                  FNumPointsInCurrentShape := ShapeObject.FNumPoints;
-                  if not CombinedObjects or (Index = 0) then
-                  begin
-                    AScreenObject := TScreenObject.CreateWithViewDirection(
-                      frmGoPhast.PhastModel, vdTop,
-                      UndoCreateScreenObject, False);
-                    AScreenObject.ElevationCount :=
-                      TElevationCount(rgElevationCount.ItemIndex);
-                    if CombinedObjects then
-                    begin
-                      case AScreenObject.ElevationCount of
-                        ecZero: ; // do nothing
-                        ecOne:
-                          begin
-                            if ZExpression = nil then
-                            begin
-                              AScreenObject.ElevationFormula := ElevFormula;
-                            end
-                            else
-                            begin
-                              AScreenObject.ElevationFormula :=
-                                rsObjectImportedValuesR
-                                + '("' + StrImportedElevations + '")';
-                            end;
-                          end;
-                        ecTwo:
-                          begin
-                            if HighZExpression = nil then
-                            begin
-                              AScreenObject.HigherElevationFormula :=
-                                HighElevFormula
-                            end
-                            else
-                            begin
-                              AScreenObject.HigherElevationFormula :=
-                                rsObjectImportedValuesR
-                                + '("' + StrImportedHigherElev + '")';
-                            end;
-                            if LowZExpression = nil then
-                            begin
-                              AScreenObject.LowerElevationFormula
-                                := LowElevFormula;
-                            end
-                            else
-                            begin
-                              AScreenObject.LowerElevationFormula :=
-                                rsObjectImportedValuesR
-                                + '("' + StrImportedLowerEleva + '")';
-                            end;
-                          end;
-                        else Assert(False);
-                      end;
-                    end;
-
-                    Inc(ExistingObjectCount);
-                    AScreenObject.Name := Root + IntToStr(ExistingObjectCount);
-                    AScreenObject.SetValuesOfEnclosedCells :=
-                      cbEnclosedCells.Enabled and cbEnclosedCells.Checked;
-                    AScreenObject.SetValuesOfIntersectedCells :=
-                      cbIntersectedCells.Checked;
-                    AScreenObject.SetValuesByInterpolation :=
-                      cbInterpolation.Checked;
-                    AScreenObject.EvaluatedAt := EvalAt;
-                    AScreenObject.Selected := comboVisibility.ItemIndex = 0;
-                    AScreenObject.Visible := comboVisibility.ItemIndex <= 1;
-                    if CombinedObjects then
-                    begin
-                      for DataSetIndex := 0 to DataSets.Count - 1 do
-                      begin
-                        DataSet := DataSets[DataSetIndex];
-                        if DataSet = nil then
-                        begin
-                          MultiValueList.Add(nil);
-                        end
-                        else
-                        begin
-                          Item := AScreenObject.
-                            ImportedValues.Add as TValueArrayItem;
-                          Item.Name := DataSet.Name;
-                          Item.Values.DataType := DataSet.DataType;
-                          Item.Values.Count := FGeometryFile.Count;
-                          MultiValueList.Add(Item.Values);
-                        end;
-                      end;
-                    end;
-                  end;
+                  AFormula := edZ.Text;
+                  GlobalDecompileType := dcNormal;
                   try
-                    AScreenObject.Invalidate;
-
-                    if FDataBaseFileName = '' then
+                    rpShapeCompiler.Compile(AFormula);
+                  finally
+                    GlobalDecompileType := dcValue;
+                  end;
+                  ZExpression := rpShapeCompiler.CurrentExpression;
+                  Assert(ZExpression.ResultType in [rdtDouble, rdtInteger, rdtString]);
+                  ElevFormula := AFormula;
+                  if (RealFieldNames.IndexOf(AFormula) < 0) or (ZExpression.ResultType = rdtString) then
+                  begin
+                    if frmGoPhast.PhastModel.GetObserverByName(ElevFormula)
+                      <> nil then
                     begin
-                      if CombinedObjects then
-                      begin
-                        if ScreenObjectList.Count = 0 then
-                        begin
-                          ScreenObjectList.Add(AScreenObject);
-                        end;
-                      end
-                      else
-                      begin
-                        ScreenObjectList.Add(AScreenObject);
-                      end;
+                      ZExpression := nil;
                     end
                     else
                     begin
-                      Assert(DataSets.Count = Variables.Count);
-                      Assert(DataSets.Count = FieldNames.Count);
+                      TestCompiler := frmGoPhast.PhastModel.GetCompiler(dsoTop,
+                        TEvaluatedAt(rgEvaluatedAt.ItemIndex));
+                      try
+                        TestCompiler.Compile(AFormula);
+                        ZExpression := nil;
+                      except on E: ERbwParserError do
+                        // do nothing
+                      end;
+                    end;
+                  end;
 
-                      for DataSetIndex := 0 to DataSets.Count - 1 do
+
+                  HighZExpression := nil;
+                  LowZExpression := nil;
+                end;
+              2:
+                begin
+                  ZExpression := nil;
+
+                  AFormula := edHighZ.Text;
+                  GlobalDecompileType := dcNormal;
+                  try
+                    rpShapeCompiler.Compile(AFormula);
+                  finally
+                    GlobalDecompileType := dcValue;
+                  end;
+                  HighZExpression := rpShapeCompiler.CurrentExpression;
+
+                  Assert(HighZExpression.ResultType in [rdtDouble, rdtInteger, rdtString]);
+                  HighElevFormula := AFormula;
+                  if (RealFieldNames.IndexOf(HighElevFormula) < 0) or (HighZExpression.ResultType = rdtString) then
+                  begin
+                    if frmGoPhast.PhastModel.GetObserverByName(HighElevFormula)
+                      <> nil then
+                    begin
+                      HighZExpression := nil;
+                    end
+                    else
+                    begin
+                      TestCompiler := frmGoPhast.PhastModel.GetCompiler(dsoTop,
+                        TEvaluatedAt(rgEvaluatedAt.ItemIndex));
+                      try
+                        TestCompiler.Compile(AFormula);
+                        HighZExpression := nil;
+                      except on E: ERbwParserError do
+                        // do nothing
+                      end;
+                    end;
+                  end;
+
+                  AFormula := edLowZ.Text;
+                  GlobalDecompileType := dcNormal;
+                  try
+                    rpShapeCompiler.Compile(AFormula);
+                  finally
+                    GlobalDecompileType := dcValue;
+                  end;
+                  LowZExpression := rpShapeCompiler.CurrentExpression;
+                  Assert(LowZExpression.ResultType in [rdtDouble, rdtInteger, rdtString]);
+                  LowElevFormula := AFormula;
+                  if (RealFieldNames.IndexOf(LowElevFormula) < 0) or (LowZExpression.ResultType = rdtString) then
+                  begin
+                    if frmGoPhast.PhastModel.GetObserverByName(LowElevFormula)
+                      <> nil then
+                    begin
+                      LowZExpression := nil;
+                    end
+                    else
+                    begin
+                      TestCompiler := frmGoPhast.PhastModel.GetCompiler(dsoTop,
+                        TEvaluatedAt(rgEvaluatedAt.ItemIndex));
+                      try
+                        TestCompiler.Compile(AFormula);
+                        LowZExpression := nil;
+                      except on E: ERbwParserError do
+                        // do nothing
+                      end;
+                    end;
+                  end;
+                end;
+              else
+                begin
+                  ZExpression := nil;
+                  HighZExpression := nil;
+                  LowZExpression := nil;
+                  Assert(False);
+                end;
+            end;
+
+            Root := TScreenObject.ValidName(
+              ExtractFileRoot(OpenDialogShape.FileName)+ '_');
+
+            if cbImportGrid.Enabled and cbImportGrid.Checked then
+            begin
+              ImportGrid(FieldNames);
+            end;
+
+            if cbImportObjects.Checked then
+            begin
+              frmProgressMM.Caption := StrCreatingObjects;
+              frmProgressMM.pbProgress.Max := FGeometryFile.Count;
+              frmProgressMM.pbProgress.Position := 0;
+              frmProgressMM.ProgressLabelCaption := Format(Str0OutOfD,
+                [frmProgressMM.pbProgress.Max]);
+              frmProgressMM.Prefix := StrShape;
+              frmProgressMM.PopupParent := self;
+              frmProgressMM.Show;
+
+              if FDataBaseFileName <> '' then
+              begin
+                xbShapeDataBase.GotoBOF;
+              end;
+              frmGoPhast.PhastModel.BeginScreenObjectUpdate;
+              ScreenObjectList := TList.Create;
+              try
+                ExistingObjectCount :=
+                  frmGoPhast.PhastModel.
+                  NumberOfLargestScreenObjectsStartingWith(Root);
+
+                Undo := TUndoImportShapefile.Create;
+                try
+                  if CombinedObjects then
+                  begin
+                    ScreenObjectList.Capacity := 1;
+                  end
+                  else
+                  begin
+                    ScreenObjectList.Capacity := FGeometryFile.Count;
+                  end;
+                  AScreenObject := nil;
+                  DeleteCount := 0;
+                  AddCount := 0;
+                  for Index := 0 to FGeometryFile.Count - 1 do
+                  begin
+                    ShapeObject := FGeometryFile[Index];
+                    FNumPointsInCurrentShape := ShapeObject.FNumPoints;
+                    if not CombinedObjects or (Index = 0) then
+                    begin
+                      AScreenObject := TScreenObject.CreateWithViewDirection(
+                        frmGoPhast.PhastModel, vdTop,
+                        UndoCreateScreenObject, False);
+                      AScreenObject.ElevationCount :=
+                        TElevationCount(rgElevationCount.ItemIndex);
+                      if CombinedObjects then
                       begin
-                        DataSet := DataSets[DataSetIndex];
-                        if not CombinedObjects or (Index = 0) then
-                        begin
-                          if DataSet <> nil then
-                          begin
-                            Position := AScreenObject.AddDataSet(DataSet);
-                            Assert(Position >= 0);
-                          end
-                          else
-                          begin
-                            Position := -1;
-                          end;
-                        end
-                        else
-                        begin
-                          Position := AScreenObject.IndexOfDataSet(DataSet);
-                        end;
-
-                        Variable := Variables[DataSetIndex];
-                        ValueList := nil;
-                        if CombinedObjects then
-                        begin
-                          ValueList := MultiValueList[DataSetIndex];
-                        end;
-                        case Variable.ResultType of
-                          rdtDouble:
+                        case AScreenObject.ElevationCount of
+                          ecZero: ; // do nothing
+                          ecOne:
                             begin
-                              RealVariable := Variables[DataSetIndex];
-                              RealVariable.Value :=
-                                xbShapeDataBase.GetFieldNum(AnsiString(
-                                RealFieldNames[DataSetIndex]));
-                              if DataSet <> nil then
+                              if ZExpression = nil then
                               begin
-                                if CombinedObjects then
-                                begin
-                                  ValueList.RealValues[Index-DeleteCount+AddCount]
-                                    := RealVariable.Value;
-                                end
-                                else
-                                begin
-                                  AScreenObject.DataSetFormulas[Position]
-                                    := FortranFloatToStr(RealVariable.Value);
-                                end;
-                              end;
-                            end;
-                          rdtInteger:
-                            begin
-                              IntVariable := Variables[DataSetIndex];
-                              IntVariable.Value :=
-                                xbShapeDataBase.GetFieldInt(AnsiString(
-                                RealFieldNames[DataSetIndex]));
-                              if DataSet <> nil then
-                              begin
-                                if CombinedObjects then
-                                begin
-                                  if DataSet.DataType = rdtDouble then
-                                  begin
-                                    ValueList.RealValues[Index-DeleteCount+AddCount]
-                                      := IntVariable.Value;
-                                  end
-                                  else
-                                  begin
-                                    ValueList.IntValues[Index-DeleteCount+AddCount]
-                                      := IntVariable.Value;
-                                  end;
-                                end
-                                else
-                                begin
-                                  AScreenObject.DataSetFormulas[Position]
-                                    := IntToStr(IntVariable.Value);
-                                end;
-                              end;
-                            end;
-                          rdtBoolean:
-                            begin
-                              BooleanVariable := Variables[DataSetIndex];
-                              Value :=
-                                xbShapeDataBase.GetFieldStr(AnsiString(
-                                RealFieldNames[DataSetIndex]));
-                              if (Value = 'Y') or (Value = 'y')
-                                or (Value = 'T') or (Value = 't') then
-                              begin
-                                BooleanVariable.Value := True;
-                                if DataSet <> nil then
-                                begin
-                                  if CombinedObjects then
-                                  begin
-                                    ValueList.BooleanValues[
-                                      Index-DeleteCount+AddCount] := True;
-                                  end
-                                  else
-                                  begin
-                                    AScreenObject.DataSetFormulas[
-                                      Position] := 'True';
-                                  end;
-                                end;
+                                AScreenObject.ElevationFormula := ElevFormula;
                               end
                               else
                               begin
-                                BooleanVariable.Value := False;
-                                if DataSet <> nil then
-                                begin
-                                  if CombinedObjects then
-                                  begin
-                                    ValueList.BooleanValues[
-                                      Index-DeleteCount+AddCount] := False;
-                                  end
-                                  else
-                                  begin
-                                    AScreenObject.DataSetFormulas[Position]
-                                      := 'False';
-                                  end;
-                                end;
+                                AScreenObject.ElevationFormula :=
+                                  rsObjectImportedValuesR
+                                  + '("' + StrImportedElevations + '")';
                               end;
                             end;
-                          rdtString:
+                          ecTwo:
                             begin
-                              StringVariable := Variables[DataSetIndex];
-                              StringFormula := xbShapeDataBase.GetFieldStr(
-                                AnsiString(RealFieldNames[DataSetIndex]));
-                              StringFormula := StringReplace(StringFormula,
-                                '"', '''', [rfReplaceAll]);
-                              StringVariable.Value := Trim(StringFormula);
-                              if DataSet <> nil then
+                              if HighZExpression = nil then
                               begin
-                                if CombinedObjects then
-                                begin
-                                  ValueList.StringValues[Index-DeleteCount+AddCount]
-                                    := StringVariable.Value;
-                                end
-                                else
-                                begin
-                                  AScreenObject.DataSetFormulas[Position] := '"'
-                                    + StringVariable.Value + '"';
-                                end;
+                                AScreenObject.HigherElevationFormula :=
+                                  HighElevFormula
+                              end
+                              else
+                              begin
+                                AScreenObject.HigherElevationFormula :=
+                                  rsObjectImportedValuesR
+                                  + '("' + StrImportedHigherElev + '")';
+                              end;
+                              if LowZExpression = nil then
+                              begin
+                                AScreenObject.LowerElevationFormula
+                                  := LowElevFormula;
+                              end
+                              else
+                              begin
+                                AScreenObject.LowerElevationFormula :=
+                                  rsObjectImportedValuesR
+                                  + '("' + StrImportedLowerEleva + '")';
                               end;
                             end;
-                        else
-                          Assert(False);
+                          else Assert(False);
                         end;
                       end;
-                      ImportCriterionExpression.Evaluate;
-                      if ImportCriterionExpression.BooleanResult then
+
+                      Inc(ExistingObjectCount);
+                      AScreenObject.Name := Root + IntToStr(ExistingObjectCount);
+                      AScreenObject.SetValuesOfEnclosedCells :=
+                        cbEnclosedCells.Enabled and cbEnclosedCells.Checked;
+                      AScreenObject.SetValuesOfIntersectedCells :=
+                        cbIntersectedCells.Checked;
+                      AScreenObject.SetValuesByInterpolation :=
+                        cbInterpolation.Checked;
+                      AScreenObject.EvaluatedAt := EvalAt;
+                      AScreenObject.Selected := comboVisibility.ItemIndex = 0;
+                      AScreenObject.Visible := comboVisibility.ItemIndex <= 1;
+                      if CombinedObjects then
                       begin
-                        AssignBoundary(AScreenObject);
+                        for DataSetIndex := 0 to DataSets.Count - 1 do
+                        begin
+                          DataSet := DataSets[DataSetIndex];
+                          if DataSet = nil then
+                          begin
+                            MultiValueList.Add(nil);
+                          end
+                          else
+                          begin
+                            Item := AScreenObject.
+                              ImportedValues.Add as TValueArrayItem;
+                            Item.Name := DataSet.Name;
+                            Item.Values.DataType := DataSet.DataType;
+                            Item.Values.Count := FGeometryFile.Count;
+                            MultiValueList.Add(Item.Values);
+                          end;
+                        end;
+                      end;
+                    end;
+                    try
+                      AScreenObject.Invalidate;
+
+                      if FDataBaseFileName = '' then
+                      begin
                         if CombinedObjects then
                         begin
                           if ScreenObjectList.Count = 0 then
@@ -7043,432 +6888,602 @@ begin
                       end
                       else
                       begin
-                        if CombinedObjects then
+                        Assert(DataSets.Count = Variables.Count);
+                        Assert(DataSets.Count = FieldNames.Count);
+
+                        for DataSetIndex := 0 to DataSets.Count - 1 do
                         begin
-                          Inc(DeleteCount);
+                          DataSet := DataSets[DataSetIndex];
+                          if not CombinedObjects or (Index = 0) then
+                          begin
+                            if DataSet <> nil then
+                            begin
+                              Position := AScreenObject.AddDataSet(DataSet);
+                              Assert(Position >= 0);
+                            end
+                            else
+                            begin
+                              Position := -1;
+                            end;
+                          end
+                          else
+                          begin
+                            Position := AScreenObject.IndexOfDataSet(DataSet);
+                          end;
+
+                          Variable := Variables[DataSetIndex];
+                          ValueList := nil;
+                          if CombinedObjects then
+                          begin
+                            ValueList := MultiValueList[DataSetIndex];
+                          end;
+                          case Variable.ResultType of
+                            rdtDouble:
+                              begin
+                                RealVariable := Variables[DataSetIndex];
+                                RealVariable.Value :=
+                                  xbShapeDataBase.GetFieldNum(AnsiString(
+                                  RealFieldNames[DataSetIndex]));
+                                if DataSet <> nil then
+                                begin
+                                  if CombinedObjects then
+                                  begin
+                                    ValueList.RealValues[Index-DeleteCount+AddCount]
+                                      := RealVariable.Value;
+                                  end
+                                  else
+                                  begin
+                                    AScreenObject.DataSetFormulas[Position]
+                                      := FortranFloatToStr(RealVariable.Value);
+                                  end;
+                                end;
+                              end;
+                            rdtInteger:
+                              begin
+                                IntVariable := Variables[DataSetIndex];
+                                IntVariable.Value :=
+                                  xbShapeDataBase.GetFieldInt(AnsiString(
+                                  RealFieldNames[DataSetIndex]));
+                                if DataSet <> nil then
+                                begin
+                                  if CombinedObjects then
+                                  begin
+                                    if DataSet.DataType = rdtDouble then
+                                    begin
+                                      ValueList.RealValues[Index-DeleteCount+AddCount]
+                                        := IntVariable.Value;
+                                    end
+                                    else
+                                    begin
+                                      ValueList.IntValues[Index-DeleteCount+AddCount]
+                                        := IntVariable.Value;
+                                    end;
+                                  end
+                                  else
+                                  begin
+                                    AScreenObject.DataSetFormulas[Position]
+                                      := IntToStr(IntVariable.Value);
+                                  end;
+                                end;
+                              end;
+                            rdtBoolean:
+                              begin
+                                BooleanVariable := Variables[DataSetIndex];
+                                Value :=
+                                  xbShapeDataBase.GetFieldStr(AnsiString(
+                                  RealFieldNames[DataSetIndex]));
+                                if (Value = 'Y') or (Value = 'y')
+                                  or (Value = 'T') or (Value = 't') then
+                                begin
+                                  BooleanVariable.Value := True;
+                                  if DataSet <> nil then
+                                  begin
+                                    if CombinedObjects then
+                                    begin
+                                      ValueList.BooleanValues[
+                                        Index-DeleteCount+AddCount] := True;
+                                    end
+                                    else
+                                    begin
+                                      AScreenObject.DataSetFormulas[
+                                        Position] := 'True';
+                                    end;
+                                  end;
+                                end
+                                else
+                                begin
+                                  BooleanVariable.Value := False;
+                                  if DataSet <> nil then
+                                  begin
+                                    if CombinedObjects then
+                                    begin
+                                      ValueList.BooleanValues[
+                                        Index-DeleteCount+AddCount] := False;
+                                    end
+                                    else
+                                    begin
+                                      AScreenObject.DataSetFormulas[Position]
+                                        := 'False';
+                                    end;
+                                  end;
+                                end;
+                              end;
+                            rdtString:
+                              begin
+                                StringVariable := Variables[DataSetIndex];
+                                StringFormula := xbShapeDataBase.GetFieldStr(
+                                  AnsiString(RealFieldNames[DataSetIndex]));
+                                StringFormula := StringReplace(StringFormula,
+                                  '"', '''', [rfReplaceAll]);
+                                StringVariable.Value := Trim(StringFormula);
+                                if DataSet <> nil then
+                                begin
+                                  if CombinedObjects then
+                                  begin
+                                    ValueList.StringValues[Index-DeleteCount+AddCount]
+                                      := StringVariable.Value;
+                                  end
+                                  else
+                                  begin
+                                    AScreenObject.DataSetFormulas[Position] := '"'
+                                      + StringVariable.Value + '"';
+                                  end;
+                                end;
+                              end;
+                          else
+                            Assert(False);
+                          end;
+                        end;
+                        ImportCriterionExpression.Evaluate;
+                        if ImportCriterionExpression.BooleanResult then
+                        begin
+                          AssignBoundary(AScreenObject);
+                          if CombinedObjects then
+                          begin
+                            if ScreenObjectList.Count = 0 then
+                            begin
+                              ScreenObjectList.Add(AScreenObject);
+                            end;
+                          end
+                          else
+                          begin
+                            ScreenObjectList.Add(AScreenObject);
+                          end;
                         end
                         else
                         begin
-                          AScreenObject.Free;
+                          if CombinedObjects then
+                          begin
+                            Inc(DeleteCount);
+                          end
+                          else
+                          begin
+                            AScreenObject.Free;
+                          end;
+                          xbShapeDataBase.GotoNext;
+                          frmProgressMM.StepIt;
+                          Application.ProcessMessages;
+                          Continue;
                         end;
-                        xbShapeDataBase.GotoNext;
-                        frmProgressMM.StepIt;
-                        Application.ProcessMessages;
-                        Continue;
                       end;
-                    end;
 
-                    case AScreenObject.ElevationCount of
-                      ecZero: ; // do nothing
-                      ecOne:
-                        begin
-                          if ZExpression = nil then
+                      case AScreenObject.ElevationCount of
+                        ecZero: ; // do nothing
+                        ecOne:
                           begin
-                            AScreenObject.ElevationFormula := ElevFormula;
-                          end
-                          else
-                          begin
-                            ZExpression.Evaluate;
-                            if CombinedObjects then
+                            if ZExpression = nil then
                             begin
-                              AScreenObject.ImportedSectionElevations.Add
-                                (ZExpression.DoubleResult);
+                              AScreenObject.ElevationFormula := ElevFormula;
                             end
                             else
                             begin
-                              AFormula := ZExpression.Decompile;
-                              if ZExpression.ResultType = rdtString then
+                              ZExpression.Evaluate;
+                              if CombinedObjects then
                               begin
-                                AFormula := Copy(AFormula, 2, Length(AFormula)-2);
+                                AScreenObject.ImportedSectionElevations.Add
+                                  (ZExpression.DoubleResult);
+                              end
+                              else
+                              begin
+                                AFormula := ZExpression.Decompile;
+                                if ZExpression.ResultType = rdtString then
+                                begin
+                                  AFormula := Copy(AFormula, 2, Length(AFormula)-2);
+                                end;
+                                AScreenObject.ElevationFormula
+                                  := AFormula;
                               end;
-                              AScreenObject.ElevationFormula
-                                := AFormula;
                             end;
                           end;
-                        end;
-                      ecTwo:
-                        begin
-                          if HighZExpression = nil then
+                        ecTwo:
                           begin
-                            AScreenObject.HigherElevationFormula
-                                := HighElevFormula;
-                          end
-                          else
-                          begin
-                            HighZExpression.Evaluate;
-                            if CombinedObjects then
+                            if HighZExpression = nil then
                             begin
-                              AScreenObject.ImportedHigherSectionElevations.Add
-                                (HighZExpression.DoubleResult);
-                            end
-                            else
-                            begin
-                              AFormula := HighZExpression.Decompile;
-                              if HighZExpression.ResultType = rdtString then
-                              begin
-                                AFormula := Copy(AFormula, 2, Length(AFormula)-2);
-                              end;
                               AScreenObject.HigherElevationFormula
-                                := AFormula;
-                            end;
-                          end;
-                          if LowZExpression = nil then
-                          begin
-                            AScreenObject.LowerElevationFormula
-                                := LowElevFormula;
-                          end
-                          else
-                          begin
-                            LowZExpression.Evaluate;
-                            if CombinedObjects then
-                            begin
-                              AScreenObject.ImportedLowerSectionElevations.Add
-                                (LowZExpression.DoubleResult);
+                                  := HighElevFormula;
                             end
                             else
                             begin
-                              AFormula := LowZExpression.Decompile;
-                              if LowZExpression.ResultType = rdtString then
+                              HighZExpression.Evaluate;
+                              if CombinedObjects then
                               begin
-                                AFormula := Copy(AFormula, 2, Length(AFormula)-2);
+                                AScreenObject.ImportedHigherSectionElevations.Add
+                                  (HighZExpression.DoubleResult);
+                              end
+                              else
+                              begin
+                                AFormula := HighZExpression.Decompile;
+                                if HighZExpression.ResultType = rdtString then
+                                begin
+                                  AFormula := Copy(AFormula, 2, Length(AFormula)-2);
+                                end;
+                                AScreenObject.HigherElevationFormula
+                                  := AFormula;
                               end;
+                            end;
+                            if LowZExpression = nil then
+                            begin
                               AScreenObject.LowerElevationFormula
-                                := AFormula;
+                                  := LowElevFormula;
+                            end
+                            else
+                            begin
+                              LowZExpression.Evaluate;
+                              if CombinedObjects then
+                              begin
+                                AScreenObject.ImportedLowerSectionElevations.Add
+                                  (LowZExpression.DoubleResult);
+                              end
+                              else
+                              begin
+                                AFormula := LowZExpression.Decompile;
+                                if LowZExpression.ResultType = rdtString then
+                                begin
+                                  AFormula := Copy(AFormula, 2, Length(AFormula)-2);
+                                end;
+                                AScreenObject.LowerElevationFormula
+                                  := AFormula;
+                              end;
                             end;
                           end;
+                        else Assert(False)
+                      end;
+
+
+                      if CombinedObjects then
+                      begin
+                        if Index = 0 then
+                        begin
+                          AScreenObject.Capacity := ShapeObject.FNumPoints;
+                        end
+                        else
+                        begin
+                          AScreenObject.Capacity := AScreenObject.Capacity
+                            + ShapeObject.FNumPoints;
                         end;
-                      else Assert(False)
-                    end;
-
-
-                    if CombinedObjects then
-                    begin
-                      if Index = 0 then
+                      end
+                      else
                       begin
                         AScreenObject.Capacity := ShapeObject.FNumPoints;
-                      end
-                      else
-                      begin
-                        AScreenObject.Capacity := AScreenObject.Capacity
-                          + ShapeObject.FNumPoints;
                       end;
-                    end
-                    else
-                    begin
-                      AScreenObject.Capacity := ShapeObject.FNumPoints;
-                    end;
-                    SectionIndex := 0;
-                    NextStart := -1;
-                    if (SectionIndex < Length(ShapeObject.FParts)) then
-                    begin
-                      NextStart := ShapeObject.FParts[SectionIndex];
-                    end;
-                    AScreenObject.BeginUpdate;
-                    try
-                    PriorPoint.x := 0;
-                    PriorPoint.y := 0;
-                    for PointIndex := 0 to ShapeObject.FNumPoints - 1 do
-                    begin
-                      NewSection := (PointIndex = NextStart) or (PointIndex = 0);
-                      if PointIndex = NextStart then
+                      SectionIndex := 0;
+                      NextStart := -1;
+                      if (SectionIndex < Length(ShapeObject.FParts)) then
                       begin
-                        Inc(SectionIndex);
-                        if (SectionIndex < Length(ShapeObject.FParts)) then
-                        begin
-                          NextStart := ShapeObject.FParts[SectionIndex];
-                        end;
+                        NextStart := ShapeObject.FParts[SectionIndex];
                       end;
-                      ShapePoint := ShapeObject.FPoints[PointIndex];
-                      if cbCoordinateConversion.Checked then
+                      AScreenObject.BeginUpdate;
+                      try
+                      PriorPoint.x := 0;
+                      PriorPoint.y := 0;
+                      for PointIndex := 0 to ShapeObject.FNumPoints - 1 do
                       begin
-                        X := ShapePoint.X;
-                        Y := ShapePoint.Y;
-                        if X > CentralMeridianDegrees + 180 then
+                        NewSection := (PointIndex = NextStart) or (PointIndex = 0);
+                        if PointIndex = NextStart then
                         begin
-                          X := X - 360;
-                        end
-                        else if X < CentralMeridianDegrees - 180 then
-                        begin
-                          X := X + 360;
-                        end;
-
-                        ConvertToUTM(Y / 180 * Pi, X / 180 * Pi,
-                          CentralMeridian, X, Y);
-                        PointRecord.X := X;
-                        PointRecord.Y := Y;
-                        if NewSection or (PriorPoint.x <> PointRecord.x)
-                          or (PriorPoint.y <> PointRecord.y) then
-                        begin
-                          AScreenObject.AddPoint(PointRecord, NewSection);
-                        end;
-                        PriorPoint := PointRecord;
-                      end
-                      else
-                      begin
-                        PointRecord := ConvertPoint(ShapePoint);
-                        if NewSection or (PriorPoint.x <> PointRecord.x)
-                          or (PriorPoint.y <> PointRecord.y) then
-                        begin
-                          AScreenObject.AddPoint(PointRecord, NewSection);
-                        end;
-                        PriorPoint := PointRecord;
-                      end;
-                      if CombinedObjects and NewSection and (PointIndex > 0) then
-                      begin
-                        Inc(AddCount);
-                        for ValueIndex := 0 to MultiValueList.Count - 1 do
-                        begin
-                          ValueList := MultiValueList[ValueIndex];
-                          ValueList.Count := ValueList.Count + 1;
-                          case ValueList.DataType of
-                            rdtDouble: ValueList.
-                              RealValues[Index-DeleteCount+AddCount]
-                              := ValueList.
-                              RealValues[Index-DeleteCount+AddCount-1];
-                            rdtInteger:  ValueList.
-                              IntValues[Index-DeleteCount+AddCount]
-                              := ValueList.
-                              IntValues[Index-DeleteCount+AddCount-1];
-                            rdtBoolean:  ValueList.
-                              BooleanValues[Index-DeleteCount+AddCount]
-                              := ValueList.
-                              BooleanValues[Index-DeleteCount+AddCount-1];
-                            rdtString:  ValueList.
-                              StringValues[Index-DeleteCount+AddCount]
-                              := ValueList.
-                              StringValues[Index-DeleteCount+AddCount-1];
-                            else Assert(False);
+                          Inc(SectionIndex);
+                          if (SectionIndex < Length(ShapeObject.FParts)) then
+                          begin
+                            NextStart := ShapeObject.FParts[SectionIndex];
                           end;
                         end;
+                        ShapePoint := ShapeObject.FPoints[PointIndex];
+                        if cbCoordinateConversion.Checked then
+                        begin
+                          X := ShapePoint.X;
+                          Y := ShapePoint.Y;
+                          if X > CentralMeridianDegrees + 180 then
+                          begin
+                            X := X - 360;
+                          end
+                          else if X < CentralMeridianDegrees - 180 then
+                          begin
+                            X := X + 360;
+                          end;
+
+                          ConvertToUTM(Y / 180 * Pi, X / 180 * Pi,
+                            CentralMeridian, X, Y);
+                          PointRecord.X := X;
+                          PointRecord.Y := Y;
+                          if NewSection or (PriorPoint.x <> PointRecord.x)
+                            or (PriorPoint.y <> PointRecord.y) then
+                          begin
+                            AScreenObject.AddPoint(PointRecord, NewSection);
+                          end;
+                          PriorPoint := PointRecord;
+                        end
+                        else
+                        begin
+                          PointRecord := ConvertPoint(ShapePoint);
+                          if NewSection or (PriorPoint.x <> PointRecord.x)
+                            or (PriorPoint.y <> PointRecord.y) then
+                          begin
+                            AScreenObject.AddPoint(PointRecord, NewSection);
+                          end;
+                          PriorPoint := PointRecord;
+                        end;
+                        if CombinedObjects and NewSection and (PointIndex > 0) then
+                        begin
+                          Inc(AddCount);
+                          for ValueIndex := 0 to MultiValueList.Count - 1 do
+                          begin
+                            ValueList := MultiValueList[ValueIndex];
+                            ValueList.Count := ValueList.Count + 1;
+                            case ValueList.DataType of
+                              rdtDouble: ValueList.
+                                RealValues[Index-DeleteCount+AddCount]
+                                := ValueList.
+                                RealValues[Index-DeleteCount+AddCount-1];
+                              rdtInteger:  ValueList.
+                                IntValues[Index-DeleteCount+AddCount]
+                                := ValueList.
+                                IntValues[Index-DeleteCount+AddCount-1];
+                              rdtBoolean:  ValueList.
+                                BooleanValues[Index-DeleteCount+AddCount]
+                                := ValueList.
+                                BooleanValues[Index-DeleteCount+AddCount-1];
+                              rdtString:  ValueList.
+                                StringValues[Index-DeleteCount+AddCount]
+                                := ValueList.
+                                StringValues[Index-DeleteCount+AddCount-1];
+                              else Assert(False);
+                            end;
+                          end;
+                        end;
+                        if (PointIndex mod 100) = 99 then
+                        begin
+                          frmProgressMM.ProgressLabelCaption := Format(
+                            StrObject0dOutOf,
+                            [Index+1, frmProgressMM.pbProgress.Max,
+                            PointIndex + 1, ShapeObject.FNumPoints]);
+                          Application.ProcessMessages;
+                        end;
                       end;
-                      if (PointIndex mod 100) = 99 then
+                      finally
+                        AScreenObject.EndUpdate;
+                      end;
+                    except
+                      on E: EScreenObjectError do
                       begin
-                        frmProgressMM.ProgressLabelCaption := Format(
-                          StrObject0dOutOf,
-                          [Index+1, frmProgressMM.pbProgress.Max,
-                          PointIndex + 1, ShapeObject.FNumPoints]);
+                        ScreenObjectList.Remove(AScreenObject);
+                        AScreenObject.Free;
+                        InvalidObjectNumbers.Add(Index+1);
+                        if CombinedObjects then
+                        begin
+                          break
+                        end;
+                      end;
+                      on E: ERbwParserError do
+                      begin
+                        ScreenObjectList.Remove(AScreenObject);
+                        AScreenObject.Free;
+                        if InvalidFormulaNumbers = nil then
+                        begin
+                          InvalidFormulaNumbers := TIntegerList.Create;
+                        end;
+                        InvalidFormulaNumbers.Add(Index+1);
+                        if CombinedObjects then
+                        begin
+                          break
+                        end;
+                      end;
+                    end;
+                    if FDataBaseFileName <> '' then
+                    begin
+                      xbShapeDataBase.GotoNext;
+                    end;
+                    frmProgressMM.StepIt;
+                    Application.ProcessMessages;
+
+                  end;
+                  if CombinedObjects then
+                  begin
+                    Assert(ScreenObjectList.Count <= 1);
+                    for ValueIndex := 0 to MultiValueList.Count - 1 do
+                    begin
+                      ValueList := MultiValueList[ValueIndex];
+                      if ValueList <> nil then
+                      begin
+                        ValueList.Count := FGeometryFile.Count
+                          - DeleteCount + AddCount;
+                        ValueList.CacheData;
+                      end;
+                    end;
+
+                    frmProgressMM.Caption := StrAssigningFormulas;
+                    frmProgressMM.pbProgress.Position := 0;
+
+                    if ScreenObjectList.Count = 1 then
+                    begin
+                      AScreenObject := ScreenObjectList[0];
+
+                      frmProgressMM.pbProgress.Max := DataSets.Count;
+                      frmProgressMM.ProgressLabelCaption := Format(Str0OutOf0d,
+                        [frmProgressMM.pbProgress.Max]);
+                      frmProgressMM.Prefix := StrFormula;
+                      frmProgressMM.PopupParent := self;
+                      frmProgressMM.Show;
+                      Application.ProcessMessages;
+
+                      for DataSetIndex := 0 to DataSets.Count - 1 do
+                      begin
+                        DataSet := DataSets[DataSetIndex];
+                        if DataSet = nil then
+                        begin
+                          frmProgressMM.pbProgress.Max :=
+                            frmProgressMM.pbProgress.Max -1;
+                        end;
+                      end;
+
+                      for DataSetIndex := 0 to DataSets.Count - 1 do
+                      begin
+                        DataSet := DataSets[DataSetIndex];
+                        if DataSet = nil then
+                        begin
+                          Continue;
+                        end;
+                        Position := AScreenObject.IndexOfDataSet(DataSet);
+                        Assert(Position >= 0);
+                        case DataSet.DataType of
+                          rdtDouble: Formula := rsObjectImportedValuesR
+                            + '("' + DataSet.Name + '")';
+                          rdtInteger: Formula := rsObjectImportedValuesI
+                            + '("' + DataSet.Name + '")';
+                          rdtBoolean: Formula := rsObjectImportedValuesB
+                            + '("' + DataSet.Name + '")';
+                          rdtString: Formula := rsObjectImportedValuesT
+                            + '("' + DataSet.Name + '")';
+                          else Assert(False);
+                        end;
+                        AScreenObject.DataSetFormulas[Position] := Formula;
+                        frmProgressMM.StepIt;
                         Application.ProcessMessages;
                       end;
                     end;
+                  end;
+                  if ScreenObjectList.Count > 0 then
+                  begin
+                    Undo.StoreNewScreenObjects(ScreenObjectList);
+                    Undo.StoreNewDataSets(NewDataSets);
+                    Undo.StoreChangedDataSetProperties(OldProperties,
+                      NewProperties);
+                    frmGoPhast.UndoStack.Submit(Undo);
+                    frmGoPhast.PhastModel.AddFileToArchive(FGeometryFileName);
+                    frmGoPhast.PhastModel.AddFileToArchive(FIndexFileName);
+                    frmGoPhast.PhastModel.AddFileToArchive(FDataBaseFileName);
+                    OptionalExtensions := TStringList.Create;
+                    try
+                      OptionalExtensions.Add('.apr');
+                      OptionalExtensions.Add('.sbn');
+                      OptionalExtensions.Add('.sbx');
+                      OptionalExtensions.Add('.fbn');
+                      OptionalExtensions.Add('.fbx');
+                      OptionalExtensions.Add('.ain');
+                      OptionalExtensions.Add('.aih');
+                      OptionalExtensions.Add('.ixs');
+                      OptionalExtensions.Add('.mxs');
+                      OptionalExtensions.Add('.prj');
+                      OptionalExtensions.Add('.atx');
+                      OptionalExtensions.Add('.xml');
+                      for Index := 0 to OptionalExtensions.Count - 1 do
+                      begin
+                        OptionalFileName := ChangeFileExt(FGeometryFileName,
+                          OptionalExtensions[Index]);
+                        if FileExists(OptionalFileName) then
+                        begin
+                          frmGoPhast.PhastModel.AddFileToArchive(OptionalFileName);
+                        end;
+                      end;
                     finally
-                      AScreenObject.EndUpdate;
+                      OptionalExtensions.Free;
                     end;
-                  except
-                    on E: EScreenObjectError do
-                    begin
-                      ScreenObjectList.Remove(AScreenObject);
-                      AScreenObject.Free;
-                      InvalidObjectNumbers.Add(Index+1);
-                      if CombinedObjects then
-                      begin
-                        break
-                      end;
-                    end;
-                    on E: ERbwParserError do
-                    begin
-                      ScreenObjectList.Remove(AScreenObject);
-                      AScreenObject.Free;
-                      if InvalidFormulaNumbers = nil then
-                      begin
-                        InvalidFormulaNumbers := TIntegerList.Create;
-                      end;
-                      InvalidFormulaNumbers.Add(Index+1);
-                      if CombinedObjects then
-                      begin
-                        break
-                      end;
-                    end;
-                  end;
-                  if FDataBaseFileName <> '' then
+                  end
+                  else
                   begin
-                    xbShapeDataBase.GotoNext;
+                    Undo.Free;
                   end;
-                  frmProgressMM.StepIt;
-                  Application.ProcessMessages;
-
-                end;
-                if CombinedObjects then
-                begin
-                  Assert(ScreenObjectList.Count <= 1);
-                  for ValueIndex := 0 to MultiValueList.Count - 1 do
+                except on E: Exception do
                   begin
-                    ValueList := MultiValueList[ValueIndex];
-                    if ValueList <> nil then
-                    begin
-                      ValueList.Count := FGeometryFile.Count
-                        - DeleteCount + AddCount;
-                      ValueList.CacheData;
-                    end;
-                  end;
-
-                  frmProgressMM.Caption := StrAssigningFormulas;
-                  frmProgressMM.pbProgress.Position := 0;
-
-                  if ScreenObjectList.Count = 1 then
-                  begin
-                    AScreenObject := ScreenObjectList[0];
-
-                    frmProgressMM.pbProgress.Max := DataSets.Count;
-                    frmProgressMM.ProgressLabelCaption := Format(Str0OutOf0d,
-                      [frmProgressMM.pbProgress.Max]);
-                    frmProgressMM.Prefix := StrFormula;
-                    frmProgressMM.PopupParent := self;
-                    frmProgressMM.Show;
-                    Application.ProcessMessages;
-
-                    for DataSetIndex := 0 to DataSets.Count - 1 do
-                    begin
-                      DataSet := DataSets[DataSetIndex];
-                      if DataSet = nil then
-                      begin
-                        frmProgressMM.pbProgress.Max :=
-                          frmProgressMM.pbProgress.Max -1;
-                      end;
-                    end;
-
-                    for DataSetIndex := 0 to DataSets.Count - 1 do
-                    begin
-                      DataSet := DataSets[DataSetIndex];
-                      if DataSet = nil then
-                      begin
-                        Continue;
-                      end;
-                      Position := AScreenObject.IndexOfDataSet(DataSet);
-                      Assert(Position >= 0);
-                      case DataSet.DataType of
-                        rdtDouble: Formula := rsObjectImportedValuesR
-                          + '("' + DataSet.Name + '")';
-                        rdtInteger: Formula := rsObjectImportedValuesI
-                          + '("' + DataSet.Name + '")';
-                        rdtBoolean: Formula := rsObjectImportedValuesB
-                          + '("' + DataSet.Name + '")';
-                        rdtString: Formula := rsObjectImportedValuesT
-                          + '("' + DataSet.Name + '")';
-                        else Assert(False);
-                      end;
-                      AScreenObject.DataSetFormulas[Position] := Formula;
-                      frmProgressMM.StepIt;
-                      Application.ProcessMessages;
-                    end;
+                    MessageDlg(E.Message, mtError, [mbOK], 0);
+                    Undo.Free;
                   end;
                 end;
-                if ScreenObjectList.Count > 0 then
-                begin
-                  Undo.StoreNewScreenObjects(ScreenObjectList);
-                  Undo.StoreNewDataSets(NewDataSets);
-                  Undo.StoreChangedDataSetProperties(OldProperties,
-                    NewProperties);
-                  frmGoPhast.UndoStack.Submit(Undo);
-                  frmGoPhast.PhastModel.AddFileToArchive(FGeometryFileName);
-                  frmGoPhast.PhastModel.AddFileToArchive(FIndexFileName);
-                  frmGoPhast.PhastModel.AddFileToArchive(FDataBaseFileName);
-                  OptionalExtensions := TStringList.Create;
-                  try
-                    OptionalExtensions.Add('.apr');
-                    OptionalExtensions.Add('.sbn');
-                    OptionalExtensions.Add('.sbx');
-                    OptionalExtensions.Add('.fbn');
-                    OptionalExtensions.Add('.fbx');
-                    OptionalExtensions.Add('.ain');
-                    OptionalExtensions.Add('.aih');
-                    OptionalExtensions.Add('.ixs');
-                    OptionalExtensions.Add('.mxs');
-                    OptionalExtensions.Add('.prj');
-                    OptionalExtensions.Add('.atx');
-                    OptionalExtensions.Add('.xml');
-                    for Index := 0 to OptionalExtensions.Count - 1 do
-                    begin
-                      OptionalFileName := ChangeFileExt(FGeometryFileName,
-                        OptionalExtensions[Index]);
-                      if FileExists(OptionalFileName) then
-                      begin
-                        frmGoPhast.PhastModel.AddFileToArchive(OptionalFileName);
-                      end;
-                    end;
-                  finally
-                    OptionalExtensions.Free;
-                  end;
-                end
-                else
-                begin
-                  Undo.Free;
-                end;
-              except on E: Exception do
-                begin
-                  MessageDlg(E.Message, mtError, [mbOK], 0);
-                  Undo.Free;
-                end;
+              finally
+                ScreenObjectList.Free;
+                frmGoPhast.PhastModel.EndScreenObjectUpdate;
               end;
-            finally
-              ScreenObjectList.Free;
-              frmGoPhast.PhastModel.EndScreenObjectUpdate;
             end;
+          finally
+            Variables.Free;
+            DataSets.Free;
+            FieldNames.Free;
+            RealFieldNames.Free;
+            frmProgressMM.Hide;
           end;
         finally
-          Variables.Free;
-          DataSets.Free;
-          FieldNames.Free;
-          RealFieldNames.Free;
-          frmProgressMM.Hide;
+          frmGoPhast.CanDraw := True;
+          if InvalidObjectNumbers.Count > 0 then
+          begin
+            Beep;
+            if MessageDlg(Format(StrDObjectsWereInva, [InvalidObjectNumbers.Count]),
+              mtWarning, [mbYes, mbNo], 0)= mrYes then
+            begin
+              ErrorString := '';
+              for Index := 0 to InvalidObjectNumbers.Count -1 do
+              begin
+                ErrorString := ErrorString
+                  + IntToStr(InvalidObjectNumbers[Index]) + ', ';
+              end;
+              SetLength(ErrorString, Length(ErrorString) -2);
+
+              MessageDlg(ErrorString, mtInformation, [mbOK], 0);
+            end;
+          end;
+          if InvalidFormulaNumbers <> nil then
+          begin
+            Beep;
+            if MessageDlg(Format(StrDObjectsHadAttri, [InvalidFormulaNumbers.Count]),
+              mtWarning, [mbYes, mbNo], 0)= mrYes then
+            begin
+              ErrorString := '';
+              for Index := 0 to InvalidFormulaNumbers.Count -1 do
+              begin
+                ErrorString := ErrorString
+                  + IntToStr(InvalidFormulaNumbers[Index]) + ', ';
+              end;
+              SetLength(ErrorString, Length(ErrorString) -2);
+
+              MessageDlg(ErrorString, mtInformation, [mbOK], 0);
+            end;
+          end;
         end;
       finally
-        frmGoPhast.CanDraw := True;
-        if InvalidObjectNumbers.Count > 0 then
-        begin
-          Beep;
-          if MessageDlg(Format(StrDObjectsWereInva, [InvalidObjectNumbers.Count]),
-            mtWarning, [mbYes, mbNo], 0)= mrYes then
-          begin
-            ErrorString := '';
-            for Index := 0 to InvalidObjectNumbers.Count -1 do
-            begin
-              ErrorString := ErrorString
-                + IntToStr(InvalidObjectNumbers[Index]) + ', ';
-            end;
-            SetLength(ErrorString, Length(ErrorString) -2);
-
-            MessageDlg(ErrorString, mtInformation, [mbOK], 0);
-          end;
-        end;
-        if InvalidFormulaNumbers <> nil then
-        begin
-          Beep;
-          if MessageDlg(Format(StrDObjectsHadAttri, [InvalidFormulaNumbers.Count]),
-            mtWarning, [mbYes, mbNo], 0)= mrYes then
-          begin
-            ErrorString := '';
-            for Index := 0 to InvalidFormulaNumbers.Count -1 do
-            begin
-              ErrorString := ErrorString
-                + IntToStr(InvalidFormulaNumbers[Index]) + ', ';
-            end;
-            SetLength(ErrorString, Length(ErrorString) -2);
-
-            MessageDlg(ErrorString, mtInformation, [mbOK], 0);
-          end;
-        end;
+        InvalidObjectNumbers.Free;
+        InvalidFormulaNumbers.Free;
+        MultiValueList.Free;
+        NewDataSets.Free;
+        NewProperties.Free;
+        OldProperties.Free;
+        GlobalDecompileType := dcNormal;
+        frmGoPhast.ChangingSelection := False;
+      end;
+      for InvalidParametersIndex := 0 to FInvalidParameterNames.Count - 1 do
+      begin
+        frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrWarningRoot,
+          FInvalidParameterNames[InvalidParametersIndex]);
+      end;
+      if FInvalidParameterNames.Count > 0 then
+      begin
+        frmErrorsAndWarnings.ShowAfterDelay;
       end;
     finally
-      InvalidObjectNumbers.Free;
-      InvalidFormulaNumbers.Free;
-      MultiValueList.Free;
-      NewDataSets.Free;
-      NewProperties.Free;
-      OldProperties.Free;
-      GlobalDecompileType := dcNormal;
-      frmGoPhast.ChangingSelection := False;
+      FInvalidParameterNames.Free;
     end;
-    for InvalidParametersIndex := 0 to FInvalidParameterNames.Count - 1 do
+  except on E: EXBaseException do
     begin
-      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrWarningRoot,
-        FInvalidParameterNames[InvalidParametersIndex]);
+      Beep;
+      MessageDlg(Format(StrThereWasAnErrorP, [E.Message]), mtError, [mbOK], 0);
     end;
-    if FInvalidParameterNames.Count > 0 then
-    begin
-      frmErrorsAndWarnings.ShowAfterDelay;
-    end;
-  finally
-    FInvalidParameterNames.Free;
   end;
 end;
 

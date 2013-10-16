@@ -2,44 +2,48 @@ object frameHeadObservationResults: TframeHeadObservationResults
   Left = 0
   Top = 0
   Width = 528
-  Height = 441
+  Height = 468
   TabOrder = 0
   object pgcHeadObs: TPageControl
     Left = 0
     Top = 0
     Width = 528
-    Height = 376
-    ActivePage = tabControls
+    Height = 432
+    ActivePage = tabGraph
     Align = alClient
     TabOrder = 0
     object tabControls: TTabSheet
       Caption = 'Controls'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblNegativeColor: TLabel
         Left = 3
-        Top = 274
-        Width = 157
-        Height = 16
-        Caption = 'Color for negative residuals'
+        Top = 279
+        Width = 132
+        Height = 26
+        Caption = 'Color for negative residuals'#13#10'(Simulated head too high)'
       end
       object lblColorPositive: TLabel
         Left = 255
-        Top = 274
-        Width = 152
-        Height = 16
-        Caption = 'Color for positive residuals'
+        Top = 279
+        Width = 127
+        Height = 26
+        Caption = 'Color for positive residuals'#13#10'(Simulated head too low)'
       end
       object lblMaxSymbolSize: TLabel
         Left = 130
-        Top = 323
-        Width = 171
-        Height = 16
+        Top = 341
+        Width = 139
+        Height = 13
         Caption = 'Maximum symbol size (pixels)'
       end
       object lblHeadObsResults: TLabel
         Left = 3
         Top = 3
-        Width = 56
-        Height = 16
+        Width = 45
+        Height = 13
         Caption = 'File name'
       end
       object flnmedHeadObsResults: TJvFilenameEdit
@@ -61,43 +65,43 @@ object frameHeadObservationResults: TframeHeadObservationResults
         object lblMaximumTime: TLabel
           Left = 252
           Top = 86
-          Width = 84
-          Height = 16
+          Width = 67
+          Height = 13
           Caption = 'Maximum time'
         end
         object lblMaxResidual: TLabel
           Left = 252
           Top = 24
-          Width = 104
-          Height = 16
+          Width = 84
+          Height = 13
           Caption = 'Maximum residual'
         end
         object lblMinimumTime: TLabel
           Left = 3
           Top = 86
-          Width = 81
-          Height = 16
+          Width = 63
+          Height = 13
           Caption = 'Minimum time'
         end
         object lblMinResidual: TLabel
           Left = 3
           Top = 24
-          Width = 101
-          Height = 16
+          Width = 80
+          Height = 13
           Caption = 'Minimum residual'
         end
         object lblMinLayer: TLabel
           Left = 3
           Top = 138
-          Width = 84
-          Height = 16
+          Width = 67
+          Height = 13
           Caption = 'Minimum layer'
         end
         object lblMaxLayer: TLabel
           Left = 252
           Top = 138
-          Width = 87
-          Height = 16
+          Width = 71
+          Height = 13
           Caption = 'Maximum layer'
         end
         inline framelmtMaximumTime: TframeDisplayLimit
@@ -116,7 +120,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             ExplicitHeight = 23
           end
           inherited comboBoolLimit: TComboBox
-            ExplicitHeight = 24
+            ExplicitHeight = 21
           end
         end
         inline framelmtMaxResidual: TframeDisplayLimit
@@ -135,7 +139,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             ExplicitHeight = 23
           end
           inherited comboBoolLimit: TComboBox
-            ExplicitHeight = 24
+            ExplicitHeight = 21
           end
         end
         inline framelmtMinimumTime: TframeDisplayLimit
@@ -154,7 +158,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             ExplicitHeight = 23
           end
           inherited comboBoolLimit: TComboBox
-            ExplicitHeight = 24
+            ExplicitHeight = 21
           end
         end
         inline framelmtMinResidual: TframeDisplayLimit
@@ -173,7 +177,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             ExplicitHeight = 23
           end
           inherited comboBoolLimit: TComboBox
-            ExplicitHeight = 24
+            ExplicitHeight = 21
           end
         end
         inline framelmtMinLayer: TframeDisplayLimit
@@ -188,7 +192,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
           ExplicitLeft = 3
           ExplicitTop = 160
           inherited comboBoolLimit: TComboBox
-            ExplicitHeight = 24
+            ExplicitHeight = 21
           end
         end
         inline framelmtMaxLayer: TframeDisplayLimit
@@ -203,13 +207,13 @@ object frameHeadObservationResults: TframeHeadObservationResults
           ExplicitLeft = 252
           ExplicitTop = 160
           inherited comboBoolLimit: TComboBox
-            ExplicitHeight = 24
+            ExplicitHeight = 21
           end
         end
       end
       object clrbtnNegative: TJvColorButton
         Left = 3
-        Top = 295
+        Top = 311
         Width = 92
         OtherCaption = '&Other...'
         Options = []
@@ -218,7 +222,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
       end
       object clrbtnPositive: TJvColorButton
         Left = 255
-        Top = 295
+        Top = 311
         Width = 92
         OtherCaption = '&Other...'
         Options = []
@@ -227,7 +231,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
       end
       object spinSymbolSize: TJvSpinEdit
         Left = 3
-        Top = 320
+        Top = 338
         Width = 121
         Height = 24
         MaxValue = 2147483647.000000000000000000
@@ -248,11 +252,15 @@ object frameHeadObservationResults: TframeHeadObservationResults
     object tabValues: TTabSheet
       Caption = 'Values (read only)'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgHeadObs: TRbwDataGrid4
         Left = 0
         Top = 0
         Width = 520
-        Height = 345
+        Height = 339
         Align = alClient
         ColCount = 8
         FixedCols = 0
@@ -453,11 +461,54 @@ object frameHeadObservationResults: TframeHeadObservationResults
             AutoAdjustColWidths = True
           end>
         WordWrapRowCaptions = False
+        ExplicitHeight = 336
+      end
+      object pnlValueControls: TPanel
+        Left = 0
+        Top = 339
+        Width = 520
+        Height = 65
+        Align = alBottom
+        ParentBackground = False
+        TabOrder = 1
+        ExplicitTop = 336
+        object btnCopy: TButton
+          Left = 111
+          Top = 32
+          Width = 107
+          Height = 25
+          Caption = 'Copy to clipboard'
+          TabOrder = 2
+          OnClick = btnCopyClick
+        end
+        object btnHightlightObjects: TButton
+          Left = 4
+          Top = 6
+          Width = 101
+          Height = 51
+          Caption = 'Highlight selected objects'
+          TabOrder = 0
+          WordWrap = True
+          OnClick = btnHightlightObjectsClick
+        end
+        object btnRestore: TButton
+          Left = 111
+          Top = 6
+          Width = 107
+          Height = 25
+          Caption = 'Original order'
+          TabOrder = 1
+          OnClick = btnRestoreClick
+        end
       end
     end
     object tabLegend: TTabSheet
       Caption = 'Legend'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object shpMax: TShape
         Left = 3
         Top = 3
@@ -475,62 +526,96 @@ object frameHeadObservationResults: TframeHeadObservationResults
       object lblMax: TLabel
         Left = 56
         Top = 9
-        Width = 36
-        Height = 16
+        Width = 30
+        Height = 13
         Caption = 'lblMax'
       end
       object lblHalfMax: TLabel
         Left = 56
         Top = 41
-        Width = 58
-        Height = 16
+        Width = 49
+        Height = 13
         Caption = 'lblHalfMax'
+      end
+    end
+    object tabGraph: TTabSheet
+      Caption = 'Graph'
+      ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+      object pbHeadObs: TPaintBox
+        Left = 0
+        Top = 0
+        Width = 520
+        Height = 320
+        Align = alClient
+        OnMouseDown = pbHeadObsMouseDown
+        OnMouseMove = pbHeadObsMouseMove
+        OnMouseUp = pbHeadObsMouseUp
+        OnPaint = pbHeadObsPaint
+        ExplicitHeight = 233
+      end
+      object pnlGraphControls: TPanel
+        Left = 0
+        Top = 320
+        Width = 520
+        Height = 81
+        Align = alBottom
+        ParentBackground = False
+        TabOrder = 0
+        object lblGraphInstructions: TLabel
+          Left = 255
+          Top = 6
+          Width = 141
+          Height = 13
+          Caption = 'Click on a point to highlight it.'
+          WordWrap = True
+        end
+        object rgGraphType: TRadioGroup
+          Left = 4
+          Top = 0
+          Width = 245
+          Height = 73
+          Caption = 'Graph type'
+          ItemIndex = 0
+          Items.Strings = (
+            'Simulated vs. Observed'
+            'Residual vs. Observed')
+          TabOrder = 0
+          OnClick = rgGraphTypeClick
+        end
       end
     end
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 376
+    Top = 432
     Width = 528
-    Height = 65
+    Height = 36
     Align = alBottom
     TabOrder = 1
+    object lblRMS: TLabel
+      Left = 194
+      Top = 9
+      Width = 151
+      Height = 13
+      Caption = 'Root Mean Square Residual = ?'
+    end
     object comboModels: TComboBox
-      Left = 231
+      Left = 8
       Top = 6
       Width = 180
       Height = 24
       Style = csDropDownList
-      TabOrder = 2
+      TabOrder = 0
       OnChange = comboModelsChange
     end
-    object btnHightlightObjects: TButton
-      Left = 4
-      Top = 6
-      Width = 101
-      Height = 51
-      Caption = 'Highlight selected objects'
-      TabOrder = 0
-      WordWrap = True
-      OnClick = btnHightlightObjectsClick
-    end
-    object btnRestore: TButton
-      Left = 111
-      Top = 6
-      Width = 107
-      Height = 25
-      Caption = 'Original order'
-      TabOrder = 1
-      OnClick = btnRestoreClick
-    end
-    object btnCopy: TButton
-      Left = 111
-      Top = 32
-      Width = 107
-      Height = 25
-      Caption = 'Copy to clipboard'
-      TabOrder = 3
-      OnClick = btnCopyClick
-    end
+  end
+  object qtreeHeadObs: TRbwQuadTree
+    MaxPoints = 100
+    Left = 280
+    Top = 16
   end
 end

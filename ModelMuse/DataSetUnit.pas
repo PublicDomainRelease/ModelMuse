@@ -38,7 +38,7 @@ type
     btMfChd, btMfEts, btMfEt, btMfRch, btMfSfr, btMfStr, btMfUzf, btMfObs,
     btMfMnw, btMt3dSsm, btMfHfb, btSutraSpecifiedPressure, btSutraSpecifiedHead,
     btSutraSpecConcTemp, btSutraFluidFlux, btMassEnergyFlux, btMfFhb, btCFP,
-    btMfFarm);
+    btMfFarm, btSWR);
 
   TBoundaryTypes = set of TBoundaryType;
 
@@ -533,6 +533,7 @@ type
     FDimensionsChanged: boolean;
     // See @link(IsUniform).
     FIsUniform: TIsUniform;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name is the @link(TPhastModel) that owns the @classname.
     FModel: TBaseModel;
     // @name is @true if the @classname has been cleared.
@@ -838,6 +839,8 @@ type
     property Hash: longint read GetHash;
     function IdenticalDataArrayContents(ADataArray: TDataArray): boolean;
     procedure AssignProperties(Source: TDataArray); virtual;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property Model: TBaseModel read FModel;
     property UseLgrEdgeCells: TLgrCellTreatment read FUseLgrEdgeCells write FUseLgrEdgeCells;
     property DisplayName: string read GetDisplayName write SetDisplayName;
@@ -917,35 +920,27 @@ type
 
 
   TDataArrayList = TObjectList<TDataArray>;
-//  TDataArrayList = class(TObject)
-//  private
-//    FList: TList;
-//    function GetDataArray(Index: integer): TDataArray;
-//    function GetCount: integer;
-//    procedure SetOwnsDataArrays(const Value: boolean);
-//    function GetOwnsDataArrays: boolean;
-//    property OwnsDataArrays: boolean read GetOwnsDataArrays write SetOwnsDataArrays;
-//  public
-//    constructor Create;
-//    Destructor Destroy; override;
-//    function Add(DataArray: TDataArray): integer;
-//    property Count: integer read GetCount;
-//    property DataArrays[Index: integer]: TDataArray read GetDataArray; default;
-//    function Extract(DataArray: TDataArray): TDataArray;
-//  end;
 
   TTempDataArrayStorage = class(TObject)
   private
     FModelList: TList;
     FDataArrayList: TList;
     FOwnsDataArrays: boolean;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetDataArray(Model: TBaseModel; Index: integer): TDataArray;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetDataArrayList(Model: TBaseModel): TDataArrayList;
     procedure SetOwnsDataArrays(const Value: boolean);
   public
     constructor Create;
     destructor Destroy; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property DataArrayList[Model: TBaseModel]: TDataArrayList read GetDataArrayList;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property DataArray[Model: TBaseModel; Index: integer]: TDataArray read GetDataArray;
     property OwnsDataArrays: boolean read FOwnsDataArrays write SetOwnsDataArrays;
   end;
@@ -987,6 +982,8 @@ type
     // See @link(OnInitialize).
     FOnInitialize: TInitializeDataSetInterpolator;
   protected
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FModel: TBaseModel;
     // @name fills ListOfScreenObjects with all the @link(TScreenObject)s
     // that should be used to assign values to cells with
@@ -1038,7 +1035,6 @@ type
     // can be used with.
     class function ValidReturnTypes: TRbwDataTypes; virtual; abstract;
     class Function ValidOrientations: TDataSetOrientations; virtual;
-//    function HasData: boolean; virtual; abstract;
   published
     // @name can be used to respond to a change in the interpolator.
     property OnEdit: TNotifyEvent read FOnEdit write FOnEdit;
@@ -1286,6 +1282,8 @@ type
     procedure SetMin(const Value: double);
     function GetBoundaryType: TBoundaryType;
   protected
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property Model: TBaseModel read FModel;
     // See @link(UpToDate).
     function GetUpToDate: boolean; virtual;
@@ -1314,7 +1312,7 @@ type
     // @name is the number of @link(TDataArray)s stored in
     // the @classname.
     property Count: integer read GetCount;
-
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname.
     constructor Create(AModel: TBaseModel);
     // @name destroys the current instance of @classname.
@@ -1507,6 +1505,7 @@ resourcestring
   StrSetViaDefaultForm = 'set via default formula: %s';
   StrTheFormulaForThe = 'The formula for the "%0:s" data set is invalid beca' +
   'use the data set or global variable "%1:s" does not exist.';
+  StrMODFLOWSWR = 'MODFLOW SWR';
 
 { TDataArray }
 
@@ -3236,7 +3235,11 @@ var
   LocalModel: TCustomModel;
 begin
   if (frmGoPhast.PhastModel <> nil)
-    and (csDestroying in frmGoPhast.PhastModel.ComponentState) then Exit;
+    and (csDestroying in frmGoPhast.PhastModel.ComponentState) then
+  begin
+    inherited;
+    Exit;
+  end;
 
   FIsUniform := iuUnknown;
   frmGoPhast.InvalidateModel;
@@ -3874,6 +3877,10 @@ end;
 procedure TDataArray.SetTwoDInterpolatorClass(const Value: string);
 begin
   FreeAndNil(FTwoDInterpolator);
+  if Value = '' then
+  begin
+    Exit;
+  end;
   try
     FTwoDInterpolator := TInterpolatorClass(GetClass(Value)).Create(self);
     FTwoDInterpolator.SetSubComponent(True);
@@ -6726,6 +6733,19 @@ begin
   begin
     Result := btCFP;
   end
+  else if (Name = StrSWR_Rain)
+    or (Name = StrSWR_Evap)
+    or (Name = StrSWR_LatInflow)
+    or (Name = StrSWR_Stage)
+    or (Name = StrSWR_DirectRunoffReach)
+    or (Name = StrSWR_DirectRunoffValue)
+    or (Name = StrSWR_Vertical_Offset)
+    or (Name = StrSWR_BoundaryType)
+    or (Name = StrSWR_GeometryNumber)
+    then
+  begin
+    Result := btSWR;
+  end
   else
   begin
     result := btUndefined;
@@ -6857,6 +6877,10 @@ begin
         begin
           result := StrMODFLOW_CFP;
         end;
+      btSWR:
+        begin
+          Result := StrMODFLOWSWR;
+        end
       else
         Assert(False);
     end;
@@ -6949,6 +6973,7 @@ begin
   FTimes := TRealList.Create;
   FTimes.Sorted := True;
   FData := TObjectList.Create;
+  FOrientation := dso3D;
   if FModel <> nil then
   begin
     Invalidate
@@ -7343,7 +7368,7 @@ var
   MemStream: TMemoryStream;
   DecompressionStream: TDecompressionStream;
   Size: Int64;
-  Data: array of Byte;
+//  Data: array of Byte;
   StoredLayerCount: integer;
   StoredRowCount: integer;
   StoredColumnCount: integer;
@@ -7358,9 +7383,10 @@ begin
     SetDimensions(False);
 
     Stream.Read(Size, SizeOf(Size));
-    SetLength(Data, Size);
-    Stream.ReadBuffer(Data[0], Size);
-    MemStream.WriteBuffer(Data[0], Size);
+//    SetLength(Data, Size);
+//    Stream.ReadBuffer(Data[0], Size);
+//    MemStream.WriteBuffer(Data[0], Size);
+    MemStream.CopyFrom(Stream, Size);
     MemStream.Position := 0;
 
     DecompressionStream := TDecompressionStream.Create(MemStream);
@@ -7396,7 +7422,7 @@ procedure TDataArray.WriteCompressedData(Stream: TStream);
 var
   MemStream: TMemoryStream;
   Size: Int64;
-  Data: array of Byte;
+//  Data: array of Byte;
 begin
   Assert(UpToDate);
   Assert(IsUniform <> iuTrue);
@@ -7412,9 +7438,10 @@ begin
     ExtractAFile(FTempFileName, MemStream);
     Size := MemStream.Size;
     Stream.Write(Size, SizeOf(Size));
-    SetLength(Data, Size);
-    MemStream.ReadBuffer(Data[0], Size);
-    Stream.WriteBuffer(Data[0], Size);
+    Stream.CopyFrom(MemStream, MemStream.Size)
+//    SetLength(Data, Size);
+//    MemStream.ReadBuffer(Data[0], Size);
+//    Stream.WriteBuffer(Data[0], Size);
   finally
     MemStream.Free;
   end;
@@ -7675,9 +7702,9 @@ begin
       begin
         IsBoundary := True;
         DI := ScreenObject.IndexOfBoundaryDataSet(DataSet);
-        Assert(DI >= 0);
       end;
-      ResetScreenObjectFunction(DI, ScreenObject, Compiler, DataSet.DataType, E.Message, IsBoundary);
+      ResetScreenObjectFunction(DI, ScreenObject, Compiler, DataSet.DataType,
+        E.Message, IsBoundary, Expression.Decompile);
       Expression := Compiler.CurrentExpression;
       Expression.Evaluate;
     end;
@@ -7784,50 +7811,6 @@ begin
     OnChange(self);
   end;
 end;
-
-{ TDataArrayList }
-
-//function TDataArrayList.Add(DataArray: TDataArray): integer;
-//begin
-//  result := FList.Add(DataArray);
-//end;
-//
-//constructor TDataArrayList.Create;
-//begin
-//  inherited;
-//  FList := TObjectList.Create;
-//end;
-//
-//destructor TDataArrayList.Destroy;
-//begin
-//  FList.Free;
-//  inherited;
-//end;
-//
-//function TDataArrayList.Extract(DataArray: TDataArray): TDataArray;
-//begin
-//  result := FList.Extract(DataArray);
-//end;
-//
-//function TDataArrayList.GetCount: integer;
-//begin
-//  result := FList.Count;
-//end;
-//
-//function TDataArrayList.GetDataArray(Index: integer): TDataArray;
-//begin
-//  result := FList[Index];
-//end;
-//
-//function TDataArrayList.GetOwnsDataArrays: boolean;
-//begin
-//  result := TObjectList(FList).OwnsObjects;
-//end;
-//
-//procedure TDataArrayList.SetOwnsDataArrays(const Value: boolean);
-//begin
-//  TObjectList(FList).OwnsObjects := Value;
-//end;
 
 { TTempDataArrayStorage }
 

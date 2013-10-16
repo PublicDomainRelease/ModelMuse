@@ -11,6 +11,7 @@
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><anchor id="CID" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Crop type identity</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">If, for ILGR &gt; 0 and IGRID &gt; 1, CID = P, then the child model’s crop-type identity array is derived automatically from the parent crop-type identity. In this case, crop-type related data lists (see below, Items 11–15, 25–29) are skipped and need not to be specified.</text></para>
         </td>
       </tr>
     </table></para>

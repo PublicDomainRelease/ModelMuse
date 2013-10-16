@@ -124,6 +124,10 @@ type
   end;
 
   TCustomDiscretization = class(TGoPhastPersistent)
+  strict private
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    FModel: TBaseModel;
   protected
     function ValueOK(DataSet: TDataArray;
       const Layer, Row, Col: integer): boolean;
@@ -140,10 +144,16 @@ type
       var MinMaxInitialized: boolean; var MinMax: TMinMax;
       StringValues: TStringList); virtual; abstract;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    property Model: TBaseModel read FModel;
     function OkLocation(const DataSet: TDataArray;
       const Layer, Row, Col: integer): boolean; virtual;
     procedure GetMinMax(var MinMax: TMinMax; DataSet: TDataArray;
       StringValues: TStringList); virtual; abstract;
+   { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+   //
+    Constructor Create(Model: TBaseModel);
   end;
   { TODO : ThreeDDataSet, TPhastModel.ThreeDTimeList, and
 TPhastModel.ThreeDDisplayTime are all related.  Maybe they should be
@@ -649,6 +659,8 @@ side views of the model.}
     procedure SetTopDataSet(const Value: TDataArray); virtual;
     // See @link(FrontDataSet).
     procedure SetFrontDataSet(const Value: TDataArray); virtual;
+    { TODO -cRefactor : Consider replacing ChildModel with an interface. }
+    //
     function GetChildDataArray(const Value: TDataArray;
       ChildModel: TBaseModel): TDataArray;
   public
@@ -716,6 +728,7 @@ side views of the model.}
       write SetColumnWidth;
     // @name represents an array of column widths.
     property ColWidths: TOneDRealArray read GetColWidths;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates a grid with 0 rows, columns and layers.
     constructor Create(Model: TBaseModel);
     // @name deletes the column boundary at the position AColumn.
@@ -1788,7 +1801,7 @@ begin
 
     end;
   end;
-  LocalModel := FModel as TCustomModel;
+  LocalModel := Model as TCustomModel;
   if LocalModel.EdgeDisplay <> nil then
   begin
     LocalModel.EdgeDisplay.Draw(SelectedLayer, BitMap);
@@ -3175,9 +3188,9 @@ var
   ChildIndex: Integer;
 begin
   FGridLineDrawingChoice := Value;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
     begin
 //      LocalModel.ChildModels[ChildIndex].ChildModel.
@@ -3369,9 +3382,9 @@ begin
   end;
 
   FNeedToRecalculateTopCellColors := False;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     if LocalModel.LgrUsed then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
@@ -3866,9 +3879,9 @@ var
   ChildModel: TChildModel;
 begin
   FOnSelectedColumnChange := Value;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
     begin
       ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
@@ -3884,9 +3897,9 @@ var
   ChildModel: TChildModel;
 begin
   FOnSelectedLayerChange := Value;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
     begin
       ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
@@ -3902,9 +3915,9 @@ var
   ChildModel: TChildModel;
 begin
   FOnSelectedRowChange := Value;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
     begin
       ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
@@ -4248,7 +4261,7 @@ var
   LayerCount, RowCount, ColCount: integer;
 begin
   Assert(DataSet <> nil);
-  Assert(FModel = DataSet.Model);
+  Assert(Model = DataSet.Model);
   DataSet.Initialize;
   GetCounts(DataSet, LayerCount, RowCount, ColCount);
   if (LayerCount = 0) or (RowCount = 0) or (ColCount = 0) then
@@ -4285,13 +4298,13 @@ var
   LocalDataArray: TDataArray;
   LayerCount, RowCount, ColCount: Integer;
 begin
-  if FModel is TChildModel then
+  if Model is TChildModel then
   begin
-    LocalPhastModel := TChildModel(FModel).ParentModel as TPhastModel;
+    LocalPhastModel := TChildModel(Model).ParentModel as TPhastModel;
   end
   else
   begin
-    LocalPhastModel := FModel as TPhastModel;
+    LocalPhastModel := Model as TPhastModel;
   end;
   if LocalPhastModel.LgrUsed then
   begin
@@ -4379,9 +4392,9 @@ end;
 
 procedure TCustomModelGrid.InvalidateScreenObjects;
 begin
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    TPhastModel(FModel).InvalidateScreenObjects;
+    TPhastModel(Model).InvalidateScreenObjects;
   end;
 end;
 
@@ -4865,9 +4878,9 @@ begin
   end;
 
   FNeedToRecalculateFrontCellColors := False;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     if LocalModel.LgrUsed then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
@@ -4940,9 +4953,9 @@ begin
   end;
 
   FNeedToRecalculateSideCellColors := False;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     if LocalModel.LgrUsed then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
@@ -5561,7 +5574,7 @@ begin
     if DataSet = nil then
       Exit;
 
-    Assert(FModel = DataSet.Model);
+    Assert(Model = DataSet.Model);
     DataSet.Initialize;
     GetCounts(DataSet, LayerCount, RowCount, ColCount);
     if (LayerCount = 0) or (RowCount = 0) or (ColCount = 0) then
@@ -6201,9 +6214,9 @@ begin
   finally
     StringValues.Free;
   end;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalPhastModel := TPhastModel(FModel);
+    LocalPhastModel := TPhastModel(Model);
     if LocalPhastModel.LgrUsed then
     begin
       for ChildIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
@@ -6247,7 +6260,7 @@ begin
   result := True;
   if DataSet.Limits.ActiveOnly then
   begin
-    ActiveDataSet := (FModel as TCustomModel).DataArrayManager.GetDataSetByName(rsActive);
+    ActiveDataSet := (Model as TCustomModel).DataArrayManager.GetDataSetByName(rsActive);
     if ActiveDataSet <> nil then
     begin
       result := False;
@@ -7434,9 +7447,9 @@ begin
   FRecordedFrontGrid := False;
   FRecordedTopGrid := False;
 
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    TPhastModel(FModel).InvalidateMapping;
+    TPhastModel(Model).InvalidateMapping;
   end;
 
   if frmGoPhast.frame3DView.glWidModelView <> nil then
@@ -8161,7 +8174,7 @@ begin
       Contourer := TMultipleContourCreator.Create;
       try
         Contourer.DataSet := TopContourDataSet;
-        LocalModel := FModel as TCustomModel;
+        LocalModel := Model as TCustomModel;
         Contourer.ActiveDataSet :=
           LocalModel.DataArrayManager.GetDataSetByName(rsActive);
         Contourer.BitMap := BitMap;
@@ -8487,6 +8500,20 @@ function TCustomDiscretization.ValueOK(DataSet: TDataArray;
   const Layer, Row, Col: integer): boolean;
 begin
   result := DataSet.ColorGridValueOK(Layer, Row, Col);
+end;
+
+constructor TCustomDiscretization.Create(Model: TBaseModel);
+begin
+  if Model = nil then
+  begin
+    inherited Create(nil);
+  end
+  else
+  begin
+    inherited Create(Model.Invalidate);
+  end;
+  Assert((Model = nil) or (Model is TCustomModel));
+  FModel := Model;
 end;
 
 procedure TCustomDiscretization.InitializeMinMax(const Layer, Row, Col: integer;

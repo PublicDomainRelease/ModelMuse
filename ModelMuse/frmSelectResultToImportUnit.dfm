@@ -3,22 +3,21 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
   HelpKeyword = 'Select_Results_to_Import_Dialog_Box'
   Caption = ' Select Model Results to Import'
   ClientHeight = 462
-  ClientWidth = 512
-  ExplicitWidth = 530
+  ClientWidth = 647
+  ExplicitWidth = 665
   ExplicitHeight = 507
   PixelsPerInch = 120
   TextHeight = 18
-  object Label1: TLabel
+  object lblColorGrid: TLabel
     Left = 8
     Top = 355
-    Width = 142
+    Width = 231
     Height = 18
     Anchors = [akLeft, akBottom]
-    Caption = 'Color or contour grid'
-    ExplicitTop = 220
+    Caption = 'Data used to color or contour grid'
   end
   object btnHelp: TBitBtn
-    Left = 220
+    Left = 355
     Top = 407
     Width = 91
     Height = 47
@@ -29,7 +28,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     OnClick = btnHelpClick
   end
   object btnOK: TBitBtn
-    Left = 317
+    Left = 452
     Top = 407
     Width = 91
     Height = 47
@@ -41,7 +40,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     OnClick = btnOKClick
   end
   object btnCancel: TBitBtn
-    Left = 414
+    Left = 549
     Top = 407
     Width = 91
     Height = 47
@@ -53,7 +52,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
   object comboColorGrid: TComboBox
     Left = 8
     Top = 375
-    Width = 496
+    Width = 631
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akRight, akBottom]
@@ -84,7 +83,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
   object rgDisplayChoice: TRadioGroup
     Left = 8
     Top = 307
-    Width = 496
+    Width = 631
     Height = 42
     Anchors = [akLeft, akRight, akBottom]
     Caption = 'Display choice'
@@ -96,11 +95,11 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
       'Neither')
     TabOrder = 1
   end
-  object Panel1: TPanel
+  object pnlSelections: TPanel
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 506
+    Width = 641
     Height = 299
     Align = alTop
     Anchors = [akLeft, akTop, akRight, akBottom]
@@ -109,7 +108,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     object splitData: TSplitter
       Left = 0
       Top = 125
-      Width = 506
+      Width = 641
       Height = 5
       Cursor = crVSplit
       Align = alTop
@@ -117,10 +116,18 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
       ExplicitTop = 105
       ExplicitWidth = 510
     end
+    object splMultiSelect: TSplitter
+      Left = 363
+      Top = 130
+      Width = 5
+      Height = 169
+      Align = alRight
+      ExplicitLeft = 318
+    end
     object rdgModels: TRbwDataGrid4
       Left = 0
       Top = 0
-      Width = 506
+      Width = 641
       Height = 125
       Align = alTop
       ColCount = 3
@@ -218,7 +225,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     object clData: TJvCheckListBox
       Left = 0
       Top = 130
-      Width = 506
+      Width = 363
       Height = 169
       OnClickCheck = clDataClickCheck
       Align = alClient
@@ -226,6 +233,51 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
       ItemHeight = 18
       ParentDoubleBuffered = False
       TabOrder = 1
+    end
+    object pnlMultiSelect: TPanel
+      Left = 368
+      Top = 130
+      Width = 273
+      Height = 169
+      Align = alRight
+      BevelOuter = bvNone
+      TabOrder = 2
+      object spl1: TSplitter
+        Left = 0
+        Top = 97
+        Width = 273
+        Height = 5
+        Cursor = crVSplit
+        Align = alTop
+        ExplicitTop = 81
+        ExplicitWidth = 185
+      end
+      object clTime: TJvxCheckListBox
+        Left = 0
+        Top = 102
+        Width = 273
+        Height = 67
+        Align = alClient
+        ItemHeight = 18
+        TabOrder = 1
+        OnStateChange = clTimeStateChange
+        ExplicitLeft = 1
+        ExplicitTop = 101
+        InternalVersion = 202
+      end
+      object clDescription: TJvxCheckListBox
+        Left = 0
+        Top = 0
+        Width = 273
+        Height = 97
+        Align = alTop
+        ItemHeight = 18
+        TabOrder = 0
+        OnStateChange = clDescriptionStateChange
+        ExplicitLeft = 1
+        ExplicitTop = -1
+        InternalVersion = 202
+      end
     end
   end
   object odSelectFiles: TJvOpenDialog

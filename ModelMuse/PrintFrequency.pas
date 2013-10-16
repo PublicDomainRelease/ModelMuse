@@ -380,7 +380,7 @@ type
     // whose @link(TPrintFrequencyItem.Time) is greater than or equal to Time.
     function PriorTimeIndex(const Time: double): integer;
     // @name creates an instance of @classname.
-    constructor Create(Model: TBaseModel);
+    constructor Create(InvalidateModelEvent: TNotifyEvent);
     // @name returns the first @link(TPrintFrequencyItem)
     // whose @link(TPrintFrequencyItem.Time) is greater than or equal to Time.
     function RetrieveByTime(const Time: double): TPrintFrequencyItem;
@@ -1184,9 +1184,9 @@ begin
   inherited;
 end;
 
-constructor TPrintFrequencyCollection.Create(Model: TBaseModel);
+constructor TPrintFrequencyCollection.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(TPrintFrequencyItem, Model);
+  inherited Create(TPrintFrequencyItem, InvalidateModelEvent);
 end;
 
 function TPrintFrequencyCollection.PriorTimeIndex(

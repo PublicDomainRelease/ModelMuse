@@ -349,6 +349,11 @@ begin
       for Index := 0 to DataArrayManager.DataSetCount - 1 do
       begin
         DataSet := DataArrayManager.DataSets[Index];
+        if not DataSet.Visible then
+        begin
+          Continue;
+        end;
+
         ClassificationObject := TDataSetClassification.Create(DataSet);
         DataSetList.Add(ClassificationObject);
         FStoredClassifications.Add(ClassificationObject);

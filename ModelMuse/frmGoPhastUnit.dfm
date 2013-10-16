@@ -20,12 +20,12 @@ inherited frmGoPhast: TfrmGoPhast
   OnResize = FormResize
   ExplicitWidth = 776
   ExplicitHeight = 566
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   object splitHoriz: TJvNetscapeSplitter
     Left = 0
-    Top = 350
-    Width = 758
+    Top = 337
+    Width = 760
     Height = 10
     Cursor = crVSplit
     Hint = 'Click and drag to resize the windows.'
@@ -41,16 +41,16 @@ inherited frmGoPhast: TfrmGoPhast
   object pnlTop: TPanel
     Left = 0
     Top = 100
-    Width = 758
-    Height = 250
+    Width = 760
+    Height = 237
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 1
     object splitVertTop: TJvNetscapeSplitter
-      Left = 519
+      Left = 521
       Top = 0
-      Height = 250
+      Height = 237
       Hint = 'Click and drag to resize the windows.'
       Align = alRight
       MinSize = 1
@@ -65,22 +65,22 @@ inherited frmGoPhast: TfrmGoPhast
     inline frameTopView: TframeView
       Left = 0
       Top = 0
-      Width = 519
-      Height = 250
+      Width = 521
+      Height = 237
       HorzScrollBar.Range = 36
       VertScrollBar.Range = 40
       Align = alClient
       TabOrder = 0
       TabStop = True
-      ExplicitWidth = 519
-      ExplicitHeight = 250
+      ExplicitWidth = 521
+      ExplicitHeight = 237
       inherited rulVertical: TRbwRuler
-        Height = 196
+        Height = 183
         ExplicitTop = 39
         ExplicitHeight = 173
       end
       inherited Panel1: TPanel
-        Width = 519
+        Width = 521
         ExplicitWidth = 521
         inherited rulHorizontal: TRbwRuler
           Width = 472
@@ -88,8 +88,8 @@ inherited frmGoPhast: TfrmGoPhast
         end
       end
       inherited ZoomBox: TQRbwZoomBox2
-        Width = 470
-        Height = 196
+        Width = 472
+        Height = 183
         Image32.Left = 1
         Image32.Top = 1
         Image32.Width = 470
@@ -108,21 +108,21 @@ inherited frmGoPhast: TfrmGoPhast
       end
     end
     inline frameSideView: TframeView
-      Left = 529
+      Left = 531
       Top = 0
       Width = 229
-      Height = 250
+      Height = 237
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alRight
       TabOrder = 1
       TabStop = True
-      ExplicitLeft = 529
+      ExplicitLeft = 531
       ExplicitWidth = 229
-      ExplicitHeight = 250
+      ExplicitHeight = 237
       inherited rulVertical: TRbwRuler
         Left = 180
-        Height = 196
+        Height = 183
         Align = alRight
         RulerPosition = rpRight
         ExplicitLeft = 194
@@ -156,7 +156,7 @@ inherited frmGoPhast: TfrmGoPhast
       inherited ZoomBox: TQRbwZoomBox2
         Left = 0
         Width = 180
-        Height = 196
+        Height = 183
         ExaggerationDirection = edHorizontal
         HorizontalDirection = hdLeft
         Image32.Left = 1
@@ -180,8 +180,8 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 360
-    Width = 758
+    Top = 347
+    Width = 760
     Height = 133
     Align = alBottom
     BevelOuter = bvNone
@@ -192,7 +192,7 @@ inherited frmGoPhast: TfrmGoPhast
     TabOrder = 2
     OnMouseMove = pnlLowerRightMouseMove
     object splitVertBottom: TJvNetscapeSplitter
-      Left = 519
+      Left = 521
       Top = 0
       Height = 133
       Hint = 'Click and drag to resize the windows.'
@@ -208,14 +208,14 @@ inherited frmGoPhast: TfrmGoPhast
     inline frameFrontView: TframeView
       Left = 0
       Top = 0
-      Width = 519
+      Width = 521
       Height = 133
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alClient
       TabOrder = 0
       TabStop = True
-      ExplicitWidth = 519
+      ExplicitWidth = 521
       ExplicitHeight = 133
       inherited rulVertical: TRbwRuler
         Top = 0
@@ -225,7 +225,7 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited Panel1: TPanel
         Top = 79
-        Width = 519
+        Width = 521
         Align = alBottom
         TabOrder = 1
         ExplicitTop = 79
@@ -250,7 +250,7 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited ZoomBox: TQRbwZoomBox2
         Top = 0
-        Width = 470
+        Width = 472
         Height = 79
         TabOrder = 0
         Image32.Left = 1
@@ -268,7 +268,7 @@ inherited frmGoPhast: TfrmGoPhast
       end
     end
     inline frame3DView: Tframe3DView
-      Left = 529
+      Left = 531
       Top = 0
       Width = 229
       Height = 133
@@ -291,8 +291,8 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object sbMain: TStatusBar
     Left = 0
-    Top = 493
-    Width = 758
+    Top = 480
+    Width = 760
     Height = 28
     Hint = 'Drag with the mouse to resize status bar panels'
     Panels = <
@@ -314,13 +314,11 @@ inherited frmGoPhast: TfrmGoPhast
     OnMouseMove = sbMainMouseMove
     OnMouseUp = sbMainMouseUp
     OnDrawPanel = sbMainDrawPanel
-    ExplicitTop = 480
-    ExplicitWidth = 760
   end
   object cbControlBar: TControlBar
     Left = 0
     Top = 0
-    Width = 758
+    Width = 760
     Height = 100
     Align = alTop
     AutoSize = True
@@ -329,7 +327,6 @@ inherited frmGoPhast: TfrmGoPhast
     ShowHint = True
     TabOrder = 0
     OnMouseMove = pnlLowerRightMouseMove
-    ExplicitWidth = 760
     object tbarEdit: TToolBar
       Left = 185
       Top = 2
@@ -1134,6 +1131,9 @@ inherited frmGoPhast: TfrmGoPhast
           Hint = 'Import gridded data a new objects'
           OnClick = miGriddedDataClick
         end
+        object miImportGriddedDataFiles: TMenuItem
+          Action = acImportGriddedDataFiles
+        end
         object miASCII_RasterFile: TMenuItem
           Caption = 'ASCII Raster File(s)...'
           HelpContext = 3594
@@ -1156,6 +1156,9 @@ inherited frmGoPhast: TfrmGoPhast
         end
         object miImportModelMate: TMenuItem
           Action = acImportModelMate
+        end
+        object miImportSutraMesh: TMenuItem
+          Action = acImportSutraMesh
         end
       end
       object miExport: TMenuItem
@@ -1250,7 +1253,7 @@ inherited frmGoPhast: TfrmGoPhast
         end
       end
       object miFilesToArchive: TMenuItem
-        Caption = 'Files To Archive...'
+        Caption = 'Files to Archive...'
         HelpContext = 1610
         Hint = 'Specify which files are saved in an archive'
         OnClick = miFilesToArchiveClick
@@ -1935,7 +1938,7 @@ inherited frmGoPhast: TfrmGoPhast
         end
       end
       object miChildModels: TMenuItem
-        Caption = 'Child Models'
+        Caption = 'Child Models...'
         GroupIndex = 1
         HelpContext = 3598
         OnClick = miChildModelsClick
@@ -1955,6 +1958,26 @@ inherited frmGoPhast: TfrmGoPhast
       object miFarmAllotment: TMenuItem
         Action = acFarmAllotment
         GroupIndex = 1
+      end
+      object miSWR: TMenuItem
+        Caption = 'SWR Dialog Boxes'
+        GroupIndex = 1
+        object miSWR_ReachGeometry: TMenuItem
+          Action = acSWR_ReachGeometry
+          GroupIndex = 1
+        end
+        object miSwrStructures: TMenuItem
+          Action = acSwrStructures
+          GroupIndex = 1
+        end
+        object miSWR_Tabfiles: TMenuItem
+          Action = acSWR_Tabfiles
+          GroupIndex = 1
+        end
+        object miSwrObservations: TMenuItem
+          Action = acSwrObservations
+          GroupIndex = 1
+        end
       end
       object N8: TMenuItem
         Caption = '-'
@@ -3048,22 +3071,22 @@ inherited frmGoPhast: TfrmGoPhast
     end
     object acFarmCrops: TAction
       Category = 'Model'
-      Caption = 'Farm Crops'
+      Caption = 'Farm Crops...'
       OnExecute = acFarmCropsExecute
     end
     object acFarmSoils: TAction
       Category = 'Model'
-      Caption = 'Farm Soils'
+      Caption = 'Farm Soils...'
       OnExecute = acFarmSoilsExecute
     end
     object acFarmClimate: TAction
       Category = 'Model'
-      Caption = 'Farm Climate'
+      Caption = 'Farm Climate...'
       OnExecute = acFarmClimateExecute
     end
     object acFarmAllotment: TAction
       Category = 'Model'
-      Caption = 'Farm Allotment'
+      Caption = 'Farm Allotment...'
       OnExecute = acFarmAllotmentExecute
     end
     object acModflowCfpActive: TAction
@@ -3085,12 +3108,43 @@ inherited frmGoPhast: TfrmGoPhast
       Caption = 'Head Observations to Shapefile'
       OnExecute = acHeadObsToShapefileExecute
     end
+    object acSWR_Tabfiles: TAction
+      Category = 'Model'
+      Caption = 'Tab Files...'
+      OnExecute = acSWR_TabfilesExecute
+    end
+    object acSWR_ReachGeometry: TAction
+      Category = 'Model'
+      Caption = 'Reach Geometry...'
+      OnExecute = acSWR_ReachGeometryExecute
+    end
+    object acSwrStructures: TAction
+      Category = 'Model'
+      Caption = 'Structures...'
+      OnExecute = acSwrStructuresExecute
+    end
+    object acSwrObservations: TAction
+      Category = 'Model'
+      Caption = 'Observations...'
+      OnExecute = acSwrObservationsExecute
+    end
+    object acImportGriddedDataFiles: TAction
+      Category = 'File'
+      Caption = 'Gridded Data Files...'
+      OnExecute = acImportGriddedDataFilesExecute
+    end
+    object acImportSutraMesh: TAction
+      Category = 'File'
+      Caption = 'Sutra Mesh'
+      Enabled = False
+      OnExecute = acImportSutraMeshExecute
+    end
   end
   object ilDisabledImageList: TImageList
     Left = 104
     Top = 128
     Bitmap = {
-      494C010148004A00580310001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010148004D00080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003001000001002000000000000030
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -5734,7 +5788,7 @@ inherited frmGoPhast: TfrmGoPhast
     Left = 176
     Top = 80
     Bitmap = {
-      494C01016000D001C80310001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010160006500080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000009001000001002000000000000090
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -9170,5 +9224,16 @@ inherited frmGoPhast: TfrmGoPhast
     Title = 'Export Head Observations'
     Left = 416
     Top = 240
+  end
+  object dlgOpenImportSutraMesh: TOpenDialog
+    Filter = 'Argus ONE quadrilateral mesh (*.exp)|*.exp|All files (*.*)|*.*'
+    Left = 448
+    Top = 64
+  end
+  object tmrImportErrors: TTimer
+    Enabled = False
+    OnTimer = tmrImportErrorsTimer
+    Left = 616
+    Top = 80
   end
 end

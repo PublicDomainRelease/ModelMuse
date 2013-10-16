@@ -56,12 +56,12 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/usgspubs/ofr/ofr200092" target="_blank" styleclass="Citation" translate="true">Harbaugh, A.W., Banta, E.R., Hill, M.C., and McDonald, M.G., 2000, MODFLOW-2000, the U.S. Geological Survey modular ground-water model -- User guide to modularization concepts and the Ground-Water Flow Process: U.S. Geological Survey Open-File Report 00-92, 121 p.</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="Time-varying-parameters.pdf" styleclass="Normal" translate="true">Time-varying-parameters.pdf</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="release.txt" styleclass="Normal" translate="true">release.txt</link></li>
           </list>
-          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="modpath.txt" styleclass="Normal" translate="true">modpath.txt</link></li>
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/publication/tm6A37" target="_blank" styleclass="Citation" translate="true">Niswonger, R.G., Panday, Sorab, and Ibaraki, Motomu, 2011, MODFLOW-NWT, A Newton formulation for MODFLOW-2005: U.S. Geological Survey Techniques and Methods 6-A37, 44 p.</link></li>
           </list>
@@ -72,7 +72,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Related Packages</text></para>
         </td>
         <td>
-          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The </text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" styleclass="Normal" translate="true">Recharge</link><text styleclass="Normal" translate="true"> package is used to simulate a specified flux distributed over the top of the model and specified in units of length/time. &#160;Within MODFLOW, these rates are multiplied by the horizontal area of the cells to which they are applied to calculate the volumetric flux rates.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The </text><link displaytype="text" defaultstyle="true" type="topiclink" href="FHB" styleclass="Normal" translate="true">Flow and Head Boundary</link><text styleclass="Normal" translate="true"> package can be used to simulate a specified flux to particular cells specified in units of length</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">3</text><text styleclass="Normal" translate="true">/time and varying as a function of time within stress periods.</text></li>
           </list>
@@ -83,26 +83,26 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
-          <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
           </list>
-          <list id="29" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
-            <li styleclass="Normal"><text styleclass="Normal" translate="true">MF2005-FMP2</text></li>
+          <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-OWHM</text></li>
           </list>
         </td>
       </tr>
     </table></para>
     <para styleclass="Heading1"><text styleclass="Heading1" translate="true">Input Instructions</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">Input to the Well (WEL) Package is read from the file that has type &quot;WEL&quot; in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">name</link><text styleclass="Normal" translate="true"> file. Optional variables are shown in brackets. All variables are free format if the option “FREE” is specified in the Basic Package input file; otherwise, the non-optional variables have 10-character fields and the optional variables are free format.</text></para>
-    <para styleclass="Normal"><table rowcount="13" colcount="2" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Normal"><table rowcount="17" colcount="2" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td colspan="2">
           <para styleclass="Normal"><text styleclass="Normal" translate="true">FOR EACH SIMULATION</text></para>
@@ -160,6 +160,38 @@
       </tr>
       <tr style="vertical-align:top">
         <td>
+          <para styleclass="Heading2_atoc_"><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/><text styleclass="Heading2_atoc_" translate="true">Data Set 1a-1</text><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Heading2_atoc_" translate="true"> (MODFLOW-OWHM only)</text><conditional-text type="END"/><conditional-text type="END"/></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><snippet src="Tabfile1"/></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Heading2_atoc_"><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/><text styleclass="Heading2_atoc_" translate="true">Data Set 1a-2</text><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Heading2_atoc_" translate="true"> (MODFLOW-OWHM only)</text><conditional-text type="END"/><conditional-text type="END"/></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><snippet src="Tabfile2"/></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Heading2_atoc_"><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/><text styleclass="Heading2_atoc_" translate="true">Data Set 1a-3</text><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Heading2_atoc_" translate="true"> (MODFLOW-OWHM only)</text><conditional-text type="END"/><conditional-text type="END"/></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><snippet src="Tabfile3"/></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Heading2_atoc_"><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/><text styleclass="Heading2_atoc_" translate="true">Data Set 1a-4</text><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Heading2_atoc_" translate="true"> (MODFLOW-OWHM only)</text><conditional-text type="END"/><conditional-text type="END"/></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><snippet src="Tabfile6"/></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
           <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 2a</text></para>
         </td>
         <td>
@@ -181,7 +213,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="IWELCB" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">IWELCB—is a flag and a unit number.</text></para>
-                      <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="17" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IWELCB &gt; 0, it is the unit number to which cell-by-cell flow terms will be written when &quot;SAVE BUDGET&quot; or a non-zero value for </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" anchor="ICBCFL" styleclass="Normal" translate="true">ICBCFL</link><text styleclass="Normal" translate="true"> is specified in </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" styleclass="Normal" translate="true">Output Control</link><text styleclass="Normal" translate="true">.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IWELCB = 0, cell-by-cell flow terms will not be written.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IWELCB &lt; 0, well recharge for each well will be written to the listing file when &quot;SAVE BUDGET&quot; or a non-zero value for </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" anchor="ICBCFL" styleclass="Normal" translate="true">ICBCFL</link><text styleclass="Normal" translate="true"> is specified in </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" styleclass="Normal" translate="true">Output Control</link><text styleclass="Normal" translate="true">.</text></li>
@@ -194,11 +226,11 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">Option—is an optional list of character values.</text></para>
-                      <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="18" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">“</text><text styleclass="Keywords" translate="true">AUXILIARY</text><text styleclass="Normal" translate="true"> abc” or “</text><text styleclass="Keywords" translate="true">AUX</text><text styleclass="Normal" translate="true"> abc”—defines an auxiliary variable, named &quot;abc&quot;, which will be read for each well as part of Items 4 and 6. Up to 20 variables can be specified, each of which must be preceded by &quot;AUXILIARY&quot; or &quot;AUX.&quot; These variables will not be used by the Ground-Water Flow Process, but they will be available for use by other processes. The auxiliary variable values will be read after the Q variable.</text></li>
                       </list>
                       <para styleclass="Normal"><snippet src="Uses_of_Auxiliary_Parameters"/></para>
-                      <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="18" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000"/><text styleclass="Normal" translate="true">“</text><text styleclass="Keywords" translate="true">CBCALLOCATE</text><text styleclass="Normal" translate="true">” or “</text><text styleclass="Keywords" translate="true">CBC</text><text styleclass="Normal" translate="true">”—indicates that memory should be allocated to store cell-by-cell flow for each well in order to make these flows available for use in other packages. (This option is &#160;only available in MODFLOW-2000.)</text></li>
                         <li styleclass="Normal"><conditional-text type="END"/><text styleclass="Normal" translate="true">“</text><text styleclass="Keywords" translate="true">NOPRINT</text><text styleclass="Normal" translate="true">”—suppresses the printing of cell lists.</text></li>
                       </list>
@@ -403,7 +435,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="ITMP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">ITMP—is a flag and a counter.</text></para>
-                      <list id="17" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="19" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ITMP &lt; 0, non-parameter well data from the last stress period will be reused.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ITMP </text><text styleclass="Normal" style="font-family:Symbol;" translate="true">³</text><text styleclass="Normal" translate="true"> 0, ITMP will be the number of non-parameter wells read for the current stress period.</text></li>
                       </list>

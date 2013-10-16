@@ -58,21 +58,29 @@ begin
   
     NameFile := TStringList.Create;
     try
-      AFileName := ExtractFileName(ChangeFileExt(FileName, '.mplst'));
+      AFileName := ChangeFileExt(FileName, '.mplst');
+      Model.AddFileToArchive(AFileName);
+      AFileName := ExtractFileName(AFileName);
       NameFile.Add('LIST 11 ' + AFileName);
 
-      AFileName := ExtractFileName(ChangeFileExt(FileName,
-        TModpathMainFileWriter.Extension));
+      AFileName := ChangeFileExt(FileName,
+        TModpathMainFileWriter.Extension);
+      Model.AddFileToArchive(AFileName);
+      AFileName := ExtractFileName(AFileName);
       NameFile.Add('MAIN 12 ' + AFileName);
 
-      AFileName := ExtractFileName(ChangeFileExt(FileName,
-        TModflowDiscretizationWriter.Extension));
+      AFileName := ChangeFileExt(FileName,
+        TModflowDiscretizationWriter.Extension);
+      Model.AddFileToArchive(AFileName);
+      AFileName := ExtractFileName(AFileName);
       NameFile.Add('DIS 13 ' + AFileName);
       CheckFileExists(AFileName);
 
       if Model.ModflowStressPeriods.TransientModel then
       begin
-        AFileName := ExtractFileName(ChangeFileExt(FileName, '.cbf'));
+        AFileName := ChangeFileExt(FileName, '.cbf');
+        Model.AddFileToArchive(AFileName);
+        AFileName := ExtractFileName(AFileName);
         NameFile.Add('CBF 14 ' + AFileName);
         // The response file will direct MODPATH to generated
         // the CBF file if it doesn't exist.
@@ -81,12 +89,14 @@ begin
 
       if Options.Binary then
       begin
-        AFileName := ExtractFileName(ChangeFileExt(FileName, '.end_bin'));
+        AFileName := ChangeFileExt(FileName, '.end_bin');
       end
       else
       begin
-        AFileName := ExtractFileName(ChangeFileExt(FileName, '.end'));
+        AFileName := ChangeFileExt(FileName, '.end');
       end;
+      Model.AddFileToArchive(AFileName);
+      AFileName := ExtractFileName(AFileName);
       NameFile.Add('ENDPOINT 15 ' + AFileName);
       case Options.OutputMode of
         mopEndpoints:
@@ -97,24 +107,28 @@ begin
           begin
             if Options.Binary then
             begin
-              AFileName := ExtractFileName(ChangeFileExt(FileName, '.path_bin'));
+              AFileName := ChangeFileExt(FileName, '.path_bin');
             end
             else
             begin
-              AFileName := ExtractFileName(ChangeFileExt(FileName, '.path'));
+              AFileName := ChangeFileExt(FileName, '.path');
             end;
+            Model.AddFileToArchive(AFileName);
+            AFileName := ExtractFileName(AFileName);
             NameFile.Add('PATHLINE 16 ' + AFileName);
           end;
         mopTimeSeries:
           begin
             if Options.Binary then
             begin
-              AFileName := ExtractFileName(ChangeFileExt(FileName, '.ts_bin'));
+              AFileName := ChangeFileExt(FileName, '.ts_bin');
             end
             else
             begin
-              AFileName := ExtractFileName(ChangeFileExt(FileName, '.ts'));
+              AFileName := ChangeFileExt(FileName, '.ts');
             end;
+            Model.AddFileToArchive(AFileName);
+            AFileName := ExtractFileName(AFileName);
             NameFile.Add('TIME-SERIES 17 ' + AFileName);
           end;
         else Assert(False);
@@ -122,15 +136,21 @@ begin
 
       if Options.ShouldCreateTimeFile then
       begin
-        AFileName := ExtractFileName(ChangeFileExt(FileName, '.tim'));
+        AFileName := ChangeFileExt(FileName, '.tim');
+        Model.AddFileToArchive(AFileName);
+        AFileName := ExtractFileName(AFileName);
         NameFile.Add('TIME 18 ' + AFileName);
       end;
 
-      AFileName := ExtractFileName(ChangeFileExt(FileName,
-        TModpathStartingLocationsWriter.Extension));
+      AFileName := ChangeFileExt(FileName,
+        TModpathStartingLocationsWriter.Extension);
+      Model.AddFileToArchive(AFileName);
+      AFileName := ExtractFileName(AFileName);
       NameFile.Add('LOCATIONS 19 ' + AFileName);
 
-      AFileName := ExtractFileName(ChangeFileExt(FileName, StrCbcExt));
+      AFileName := ChangeFileExt(FileName, StrCbcExt);
+      Model.AddFileToArchive(AFileName);
+      AFileName := ExtractFileName(AFileName);
       NameFile.Add('BUDGET 20 ' + AFileName);
       CheckFileExists(AFileName);
 
@@ -139,13 +159,17 @@ begin
         case Model.ModflowOutputControl.HeadOC.OutputFileType of
           oftText:
             begin
-              AFileName := ExtractFileName(ChangeFileExt(FileName, StrFhd));
+              AFileName := ChangeFileExt(FileName, StrFhd);
+              Model.AddFileToArchive(AFileName);
+              AFileName := ExtractFileName(AFileName);
               NameFile.Add('HEAD 21 ' + AFileName);
               CheckFileExists(AFileName);
             end;
           oftBinary:
             begin
-              AFileName := ExtractFileName(ChangeFileExt(FileName, StrBhd));
+              AFileName := ChangeFileExt(FileName, StrBhd);
+              Model.AddFileToArchive(AFileName);
+              AFileName := ExtractFileName(AFileName);
               NameFile.Add('HEAD(BINARY) 22 ' + AFileName);
               CheckFileExists(AFileName);
             end;
@@ -158,13 +182,17 @@ begin
         case Model.ModflowOutputControl.DrawdownOC.OutputFileType of
           oftText:
             begin
-              AFileName := ExtractFileName(ChangeFileExt(FileName, StrFdn));
+              AFileName := ChangeFileExt(FileName, StrFdn);
+              Model.AddFileToArchive(AFileName);
+              AFileName := ExtractFileName(AFileName);
               NameFile.Add('DRAWDOWN 23 ' + AFileName);
               CheckFileExists(AFileName);
             end;
           oftBinary:
             begin
-              AFileName := ExtractFileName(ChangeFileExt(FileName, StrBdn));
+              AFileName := ChangeFileExt(FileName, StrBdn);
+              Model.AddFileToArchive(AFileName);
+              AFileName := ExtractFileName(AFileName);
               NameFile.Add('DRAWDOWN(BINARY) 24 ' + AFileName);
               CheckFileExists(AFileName);
             end;

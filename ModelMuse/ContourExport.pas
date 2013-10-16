@@ -41,6 +41,8 @@ type
   public
     procedure CreateShapes(ValueList: TValueArrayStorage; DataArray: TDataArray;
       FileName: string);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
   end;

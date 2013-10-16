@@ -708,10 +708,10 @@ Type
     // @name holds all the @link(TNode)s in the mesh.
     FNodes: TNodeObjectList;
     // @name holds the @link(IElement)s in the mesh. It is filled in
-    // @link(RenumberNodes)
+    // @link(RenumberNodesAndElements)
     FElementList: TIElementList;
     // @name holds the @link(INode)s in the mesh. It is filled in
-    // @link(RenumberNodes)
+    // @link(RenumberNodesAndElements)
     FNodeList: TINodeList;
     // @name owns all the @link(TNodeInBoundary)s.
     FBoundaryNodes: TNodeInBoundaryObjectList;
@@ -976,8 +976,8 @@ Type
 
   TDirection = (dForward, dBackward);
 
-  // @name is used in @link(TQuadMeshCreator.MergeOpenNodeBoundaries)
-  // and @link(TQuadMeshCreator.MergeOpenWithClosedBoundaries) together
+  // @name is used in
+  // @link(TQuadMeshCreator.MergeOpenWithClosedBoundaries) together
   // with @link(TAngleComparer) to ensure that open @Link(TBoundary)s are
   // merged in the correct order around an intersection point.
   TAngleCompareItem = class(TObject)
@@ -995,8 +995,8 @@ Type
 
   TAngleList = TObjectList<TAngleCompareItem>;
 
-  // @name is used in @link(TQuadMeshCreator.MergeOpenNodeBoundaries)
-  // and @link(TQuadMeshCreator.MergeOpenWithClosedBoundaries) together
+  // @name is used in
+  // @link(TQuadMeshCreator.MergeOpenWithClosedBoundaries) together
   // with @link(TAngleCompareItem) to ensure that open @Link(TBoundary)s are
   // merged in the correct order around an intersection point.
   TNodeConnection = class(TObject)
@@ -4510,7 +4510,8 @@ begin
     if LowestCost = nil then
     }
     begin
-      // The last point is a duplicate of the first point
+      // Go to Count-2 instead of Count-1 because
+      // the last point is a duplicate of the first point
       for OuterNodeIndex := 0 to Count-2 do
       begin
         Node1 := Items[OuterNodeIndex];
@@ -7123,6 +7124,9 @@ var
   ABoundary: TBoundary;
   Iterations: integer;
 begin
+{$IFDEF DEBUG}
+//  OutputDebugString('SAMPLING ON');
+{$ENDIF}
   Initialize;
   BreakClosedBoundariesThatIntersectOuterBoundary;
   IntersectBoundaries;
@@ -7202,6 +7206,9 @@ begin
   FixFinalTriangularElements;
 
   RenumberNodesAndElements;
+{$IFDEF DEBUG}
+//  OutputDebugString('SAMPLING OFF');
+{$ENDIF}
 end;
 
 procedure TQuadMeshCreator.GenerateSegments;

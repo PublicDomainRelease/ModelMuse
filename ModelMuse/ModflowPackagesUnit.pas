@@ -7,6 +7,8 @@ Uses Classes, ModflowPackageSelectionUnit, GoPhastTypes;
 type
   TModflowPackages = class(TPersistent)
   private
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FModel: TBaseModel;
     FChdBoundary: TChdPackage;
     FLpfPackage: TLpfSelection;
@@ -56,6 +58,10 @@ type
     FFarmProcess: TFarmProcess;
     FConduitFlowProcess: TConduitFlowProcess;
     FSwiPackage: TSwiPackage;
+    FSwrPackage: TSwrPackage;
+  {$IFDEF MNW1}
+    FMnw1Package: TMnw1Package;
+  {$ENDIF}
     procedure SetChdBoundary(const Value: TChdPackage);
     procedure SetLpfPackage(const Value: TLpfSelection);
     procedure SetPcgPackage(const Value: TPcgSelection);
@@ -104,10 +110,18 @@ type
     procedure SetFarmProcess(const Value: TFarmProcess);
     procedure SetConduitFlowProcess(const Value: TConduitFlowProcess);
     procedure SetSwiPackage(const Value: TSwiPackage);
+    procedure SetSwrPackage(const Value: TSwrPackage);
+  {$IFDEF MNW1}
+    procedure SetMnw1Package(const Value: TMnw1Package);
+  {$ENDIF}
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property Model: TBaseModel read FModel;
     procedure Reset;
     // @name is used to set the progress bar limits when exporting
@@ -201,6 +215,10 @@ type
     property ConduitFlowProcess: TConduitFlowProcess read FConduitFlowProcess
       write SetConduitFlowProcess;
     property SwiPackage: TSwiPackage read FSwiPackage write SetSwiPackage;
+    property SwrPackage: TSwrPackage read FSwrPackage write SetSwrPackage;
+  {$IFDEF MNW1}
+    property Mnw1Package: TMnw1Package read FMnw1Package write SetMnw1Package;
+  {$ENDIF}
     // Assign, Create, Destroy, SelectedModflowPackageCount
     // and Reset must be updated each time a new package is added.
   end;
@@ -218,6 +236,7 @@ resourcestring
   StrObservations = 'Observations';
   StrPostProcessors = 'Post processors';
   StrSubsidence = 'Subsidence';
+  StrSurfaceWaterRoutin = 'Surface-Water Routing';
 
   function BC_SpecHead: string;
   function BC_SpecifiedFlux: string;
@@ -280,6 +299,8 @@ resourcestring
   StrCFPConduitFlowPr = 'CFP: Conduit Flow Process';
   StrConduitFlowProcess = 'Conduit Flow Process';
   StrSWI2SeawaterIntru = 'SWI2: Seawater Intrusion Package';
+  StrSurfaceWaterRoutin2 = 'SWR: Surface-Water Routing Process';
+  StrMNW1MultiNodeWel = 'MNW1: Multi-Node Well Package';
 
 { TModflowPackages }
 
@@ -338,6 +359,10 @@ begin
     FarmProcess := SourcePackages.FarmProcess;
     ConduitFlowProcess := SourcePackages.ConduitFlowProcess;
     SwiPackage := SourcePackages.SwiPackage;
+    SwrPackage := SourcePackages.SwrPackage;
+  {$IFDEF MNW1}
+    Mnw1Package := SourcePackages.Mnw1Package;
+  {$ENDIF}
   end
   else
   begin
@@ -579,10 +604,22 @@ begin
   FSwiPackage.Classification := StrFlow;
   FSwiPackage.SelectionType := stCheckBox;
 
+  FSwrPackage := TSwrPackage.Create(Model);
+  FSwrPackage.PackageIdentifier := StrSurfaceWaterRoutin2;
+  FSwrPackage.Classification := StrSurfaceWaterRoutin;
+  FSwrPackage.SelectionType := stCheckBox;
+
+{$IFDEF MNW1}
+  FMnw1Package := TMnw1Package.Create(Model);
+  FSwrPackage.PackageIdentifier := StrMNW1MultiNodeWel;
+  FSwrPackage.Classification := BC_HeadDependentFlux;
+  FSwrPackage.SelectionType := stCheckBox;
+{$ENDIF}
 end;
 
 destructor TModflowPackages.Destroy;
 begin
+  FSwrPackage.Free;
   FSwiPackage.Free;
   FConduitFlowProcess.Free;
   FFarmProcess.Free;
@@ -631,6 +668,9 @@ begin
   FPcgPackage.Free;
   FModPath.Free;
   FMnw2Package.Free;
+{$IFDEF MNW1}
+  FMnw1Package.Free;
+{$ENDIF}
   inherited;
 end;
 
@@ -683,6 +723,10 @@ begin
   FarmProcess.InitializeVariables;
   ConduitFlowProcess.InitializeVariables;
   SwiPackage.InitializeVariables;
+  SwrPackage.InitializeVariables;
+{$IFDEF MNW1}
+  Mnw1Package.InitializeVariables;
+{$ENDIF}
 end;
 
 function TModflowPackages.SelectedModflowPackageCount: integer;
@@ -869,6 +913,19 @@ begin
     Inc(Result);
   end;
 
+  if SwrPackage.IsSelected
+    and (Model.ModelSelection = msModflowNWT) then
+  begin
+    Inc(Result);
+  end;
+
+{$IFDEF MNW1}
+  if Mnw1Package.IsSelected then
+  begin
+    Inc(Result);
+  end;
+{$ENDIF}
+
   // Don't count Modpath or ZoneBudget
   // because they are exported seperately from MODFLOW.
 //  if ZoneBudget.IsSelected then
@@ -987,6 +1044,13 @@ procedure TModflowPackages.SetLpfPackage(const Value: TLpfSelection);
 begin
   FLpfPackage.Assign(Value);
 end;
+
+{$IFDEF MNW1}
+procedure TModflowPackages.SetMnw1Package(const Value: TMnw1Package);
+begin
+  FMnw1Package.Assign(Value);
+end;
+{$ENDIF}
 
 procedure TModflowPackages.SetMnw2Package(const Value: TMultinodeWellSelection);
 begin
@@ -1111,6 +1175,11 @@ end;
 procedure TModflowPackages.SetSwiPackage(const Value: TSwiPackage);
 begin
   FSwiPackage.Assign(Value);
+end;
+
+procedure TModflowPackages.SetSwrPackage(const Value: TSwrPackage);
+begin
+  FSwrPackage.Assign(Value);
 end;
 
 procedure TModflowPackages.SetSwtPackage(const Value: TSwtPackageSelection);

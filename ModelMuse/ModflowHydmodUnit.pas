@@ -47,6 +47,8 @@ type
     function GetSubLayerGroup: string;
     function GetSubNoDelayBed: string;
     procedure SetSubPreconsolidationHead(const Value: boolean);
+  protected
+    function BoundaryObserverPrefix: string; override;
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel; ScreenObject: TObject);
@@ -119,6 +121,12 @@ begin
   begin
     inherited;
   end;
+end;
+
+function THydmodData.BoundaryObserverPrefix: string;
+begin
+  result := '';
+  Assert(False);
 end;
 
 constructor THydmodData.Create(Model: TBaseModel; ScreenObject: TObject);

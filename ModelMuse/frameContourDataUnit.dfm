@@ -5,10 +5,13 @@ inherited frameContourData: TframeContourData
     Height = 399
     ExplicitHeight = 399
     inherited tabSelection: TTabSheet
-      ExplicitHeight = 368
+      ExplicitLeft = 4
+      ExplicitTop = 24
+      ExplicitWidth = 562
+      ExplicitHeight = 371
       DesignSize = (
         562
-        368)
+        371)
       inherited lblColorScheme: TLabel
         Top = 253
         Anchors = [akLeft, akRight, akBottom]
@@ -32,27 +35,30 @@ inherited frameContourData: TframeContourData
       object lblAlgorithm: TLabel [6]
         Left = 456
         Top = 304
-        Width = 42
-        Height = 16
+        Width = 36
+        Height = 13
         Caption = 'Method'
       end
       object lblContourInterval: TLabel [7]
         Left = 444
         Top = 60
-        Width = 92
-        Height = 16
+        Width = 80
+        Height = 13
         Caption = 'Contour Interval'
       end
       inherited comboColorScheme: TComboBox
         Top = 222
         TabOrder = 10
         ExplicitTop = 222
+        ExplicitHeight = 21
       end
       inherited seCycles: TJvSpinEdit
         Top = 267
+        Height = 21
         Anchors = [akLeft, akRight, akBottom]
         TabOrder = 11
         ExplicitTop = 267
+        ExplicitHeight = 21
       end
       inherited jsColorExponent: TJvxSlider
         Top = 324
@@ -60,8 +66,10 @@ inherited frameContourData: TframeContourData
       end
       inherited seColorExponent: TJvSpinEdit
         Top = 335
+        Height = 21
         TabOrder = 13
         ExplicitTop = 335
+        ExplicitHeight = 21
       end
       inherited cbLogTransform: TCheckBox
         Top = 339
@@ -72,22 +80,26 @@ inherited frameContourData: TframeContourData
       inherited udDataSets: TJvUpDown
         Left = 319
         Top = 23
+        Width = 17
         TabOrder = 2
         ExplicitLeft = 319
         ExplicitTop = 23
+        ExplicitWidth = 17
       end
       inherited rgUpdateLimitChoice: TRadioGroup
         Top = 143
-        TabOrder = 6
+        TabOrder = 7
         ExplicitTop = 143
       end
       inherited virttreecomboDataSets: TRbwStringTreeCombo
         Top = 20
         Width = 305
+        Height = 21
         Tree.OnGetNodeDataSize = virttreecomboDataSetsTreeGetNodeDataSize
         TabOrder = 1
         ExplicitTop = 20
         ExplicitWidth = 305
+        ExplicitHeight = 21
       end
       inherited reComment: TRichEdit
         Width = 551
@@ -97,7 +109,11 @@ inherited frameContourData: TframeContourData
         ExplicitHeight = 56
       end
       inherited btnColorSchemes: TButton
-        TabOrder = 8
+        Left = 319
+        Top = 131
+        TabOrder = 6
+        ExplicitLeft = 319
+        ExplicitTop = 131
       end
       object btnEditContours: TButton
         Left = 443
@@ -131,12 +147,12 @@ inherited frameContourData: TframeContourData
       end
       object cbLabelContours: TCheckBox
         Left = 319
-        Top = 143
+        Top = 168
         Width = 177
         Height = 17
         Anchors = [akLeft, akRight, akBottom]
         Caption = 'Label contours'
-        TabOrder = 7
+        TabOrder = 8
         OnClick = cbLabelContoursClick
       end
       object btnContourFont: TButton
@@ -154,7 +170,7 @@ inherited frameContourData: TframeContourData
         Left = 384
         Top = 335
         Width = 145
-        Height = 24
+        Height = 21
         Style = csDropDownList
         ItemIndex = 0
         TabOrder = 14
@@ -177,10 +193,13 @@ inherited frameContourData: TframeContourData
       end
     end
     inherited tabFilters: TTabSheet
-      ExplicitHeight = 368
+      ExplicitLeft = 4
+      ExplicitTop = 24
+      ExplicitWidth = 562
+      ExplicitHeight = 371
       DesignSize = (
         562
-        368)
+        371)
       inherited lblNumberOfValuesToIgnore: TLabel
         Top = 341
         ExplicitTop = 441
@@ -191,28 +210,38 @@ inherited frameContourData: TframeContourData
       end
       inherited seNumberOfValuesToIgnore: TJvSpinEdit
         Top = 338
+        Height = 21
         ExplicitTop = 338
+        ExplicitHeight = 21
       end
     end
     inherited tabLegend: TTabSheet
-      ExplicitHeight = 368
+      ExplicitLeft = 4
+      ExplicitTop = 24
+      ExplicitWidth = 562
+      ExplicitHeight = 371
       inherited imLegend: TImage
-        Height = 368
+        Height = 371
         ExplicitHeight = 471
       end
       inherited pnlLegend: TPanel
-        Height = 368
-        ExplicitHeight = 368
+        Height = 371
+        ExplicitHeight = 371
         DesignSize = (
           218
-          368)
+          371)
         inherited lblColorLegendRows: TLabel
           Top = 310
           ExplicitTop = 410
         end
+        inherited comboMethod: TComboBox
+          ExplicitHeight = 21
+        end
         inherited seLegendRows: TJvSpinEdit
           Top = 331
+          Height = 21
           ExplicitTop = 331
+          ExplicitHeight = 21
         end
         inherited rdgLegend: TRbwDataGrid4
           Height = 245

@@ -200,7 +200,7 @@ type
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer;
         AModel: TBaseModel); override;
     procedure InvalidateModel; override;
-    procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
+    procedure AssignListCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
       BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
@@ -277,9 +277,6 @@ type
     procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
       AModel: TBaseModel); override;
     procedure BoundaryAssignCells(AModel: TBaseModel; ValueTimeList: TList);
-    // ultimately make this virtual;
-    procedure GetCellListValues(ValueTimeList: TList; ParamList: TStringList;
-      AModel: TBaseModel);
     procedure InvalidateDisplay; override;
     procedure InsertNewSpecies(SpeciesIndex: integer; const Name: string);
     procedure RenameSpecies(const OldSpeciesName, NewSpeciesName: string);
@@ -584,7 +581,7 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
-    UpdataRequiredData(DataSets, Variables, ACell, AModel);
+    UpdateRequiredListData(DataSets, Variables, ACell, AModel);
     // 2. update locations
     Expression.Evaluate;
     with ConcStorage.Mt3dmsConcArray[Index] do
@@ -595,7 +592,7 @@ begin
   end;
 end;
 
-procedure TMt3dmsConcCollection.AssignCellLocation(
+procedure TMt3dmsConcCollection.AssignListCellLocation(
   BoundaryStorage: TCustomBoundaryStorage; ACellList: TObject);
 var
   ConcStorage: TMt3dmsConcStorage;
@@ -1331,31 +1328,10 @@ begin
   Concentrations.DeleteSpecies(SpeciesIndex);
 end;
 
-procedure TMt3dmsConcBoundary.GetCellListValues(ValueTimeList: TList;
-  ParamList: TStringList; AModel: TBaseModel);
-var
-  ValueIndex: Integer;
-  BoundaryStorage: TMt3dmsConcStorage;
-begin
-  EvaluateListBoundaries(AModel);
-  for ValueIndex := 0 to Values.Count - 1 do
-  begin
-    if ValueIndex < Values.BoundaryCount[AModel] then
-    begin
-      BoundaryStorage := Values.Boundaries[ValueIndex, AModel]
-        as TMt3dmsConcStorage;
-      AssignCells(BoundaryStorage, ValueTimeList, AModel);
-    end;
-  end;
-end;
-
 procedure TMt3dmsConcBoundary.GetCellValues(ValueTimeList: TList;
   ParamList: TStringList; AModel: TBaseModel);
-//var
 begin
-//  EvaluateArrayBoundaries;
   EvaluateListBoundaries(AModel);
-//  BoundaryAssignCells(AModel, ValueTimeList);
 end;
 
 procedure TMt3dmsConcBoundary.InsertNewSpecies(SpeciesIndex: integer;

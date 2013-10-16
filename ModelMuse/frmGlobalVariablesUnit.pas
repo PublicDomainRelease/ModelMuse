@@ -39,6 +39,7 @@ type
     procedure btnSaveGlobalVariablesClick(Sender: TObject);
     procedure rdgGlobalVariablesMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FInitializingRow: Boolean;
     FNewGlobals: TGlobalVariables;
@@ -71,6 +72,9 @@ type
     procedure DoCommand; override;
     procedure Undo; override;
   end;
+
+var
+  frmGlobalVariables: TfrmGlobalVariables = nil;
 
 implementation
 
@@ -157,10 +161,13 @@ var
   GlobalVariable: TGlobalVariable;
 begin
   inherited;
-  GlobalVariable := rdgGlobalVariables.Objects[Ord(gvName), ARow] as TGlobalVariable;
-  if (GlobalVariable <> nil) and (GlobalVariable.Locked) then
+  if (ACol >= 0) and (ARow >= rdgGlobalVariables.FixedRows) then
   begin
-    CanSelect := False;
+    GlobalVariable := rdgGlobalVariables.Objects[Ord(gvName), ARow] as TGlobalVariable;
+    if (GlobalVariable <> nil) and (GlobalVariable.Locked) then
+    begin
+      CanSelect := False;
+    end;
   end;
 //  CanSelect := seGlobalVariableCount.AsInteger >= 1;
 end;
@@ -564,6 +571,14 @@ begin
   end;
 end;
 
+procedure TfrmGlobalVariables.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+begin
+  inherited;
+  Release;
+  frmGlobalVariables := nil;
+end;
+
 procedure TfrmGlobalVariables.FormCreate(Sender: TObject);
 begin
   inherited;
@@ -800,5 +815,10 @@ begin
     frmGoPhast.PhastModel.UpdateFormulas(OldNames, NewNames);
   end;
 end;
+
+initialization
+
+finalization
+  FreeAndNil(frmGlobalVariables);
 
 end.

@@ -2107,6 +2107,10 @@ begin
   for Index := 0 to DataArrayManager.DataSetCount - 1 do
   begin
     DataArray := DataArrayManager.DataSets[Index];
+    if not DataArray.Visible then
+    begin
+      Continue;
+    end;
     if DataArray.EvaluatedAt = eaBlocks then
     begin
       case DataArray.DataType of

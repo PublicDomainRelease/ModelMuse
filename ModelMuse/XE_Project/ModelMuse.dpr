@@ -517,7 +517,39 @@ uses
   ModflowCfpRechargeUnit in '..\ModflowCfpRechargeUnit.pas',
   framePackageSwiUnit in '..\framePackageSwiUnit.pas' {framePackageSWI: TFrame},
   ModflowSwiWriterUnit in '..\ModflowSwiWriterUnit.pas',
-  frameDrawCrossSectionUnit in '..\frameDrawCrossSectionUnit.pas' {frameDrawCrossSection: TFrame};
+  frameDrawCrossSectionUnit in '..\frameDrawCrossSectionUnit.pas' {frameDrawCrossSection: TFrame},
+  framePackageSwrUnit in '..\framePackageSwrUnit.pas' {framePackageSwr: TFrame},
+  frmSwrTabfilesUnit in '..\frmSwrTabfilesUnit.pas' {frmSwrTabfiles},
+  ModflowSwrTabfilesUnit in '..\ModflowSwrTabfilesUnit.pas',
+  frmSelectSwrObjectsUnit in '..\frmSelectSwrObjectsUnit.pas' {frmSelectSwrObjects},
+  ModflowSwrReachGeometryUnit in '..\ModflowSwrReachGeometryUnit.pas',
+  frmSwrReachGeometryUnit in '..\frmSwrReachGeometryUnit.pas' {frmSwrReachGeometry},
+  ModflowSwrStructureUnit in '..\ModflowSwrStructureUnit.pas',
+  frmSwrStructuresUnit in '..\frmSwrStructuresUnit.pas' {frmSwrStructures},
+  ModflowSwrUnit in '..\ModflowSwrUnit.pas',
+  ModflowSwrWriterUnit in '..\ModflowSwrWriterUnit.pas',
+  frameScreenObjectSwrUnit in '..\frameScreenObjectSwrUnit.pas' {frameScreenObjectSwr: TFrame},
+  ModflowSwrDirectRunoffUnit in '..\ModflowSwrDirectRunoffUnit.pas',
+  ModflowSwrReachUnit in '..\ModflowSwrReachUnit.pas',
+  frameScreenObjectSwrReachUnit in '..\frameScreenObjectSwrReachUnit.pas' {frameScreenObjectSwrReach: TFrame},
+  frmSwrVertexNumbersUnit in '..\frmSwrVertexNumbersUnit.pas' {frmSwrVertexNumbers},
+  ModflowSwrObsUnit in '..\ModflowSwrObsUnit.pas',
+  frmSwrObservationsUnit in '..\frmSwrObservationsUnit.pas' {frmSwrObservations},
+  frmImportMultipleGriddedDataFilesUnit in '..\frmImportMultipleGriddedDataFilesUnit.pas' {frmImportMultipleGriddedDataFiles},
+  ImportQuadMesh in '..\ImportQuadMesh.pas',
+  VisPoly in '..\VisPoly.pas',
+  ObjectLabelUnit in '..\ObjectLabelUnit.pas',
+  ReadSutraBoundaryOutputFilesUnit in '..\ReadSutraBoundaryOutputFilesUnit.pas',
+  frameSwrReachConnectionsUnit in '..\frameSwrReachConnectionsUnit.pas' {frameSwrReachConnections: TFrame},
+  SwrReachObjectUnit in '..\SwrReachObjectUnit.pas',
+  frameReachGeomGridUnit in '..\frameReachGeomGridUnit.pas' {frameReachGeomGrid: TFrame},
+  frameStructureGridUnit in '..\frameStructureGridUnit.pas' {frameStructureGrid: TFrame},
+  framePlotGridUnit in '..\framePlotGridUnit.pas' {framePlotGrid: TFrame},
+  ReadSwrOutputUnit in '..\ReadSwrOutputUnit.pas',
+  frameSwrObsDisplayUnit in '..\frameSwrObsDisplayUnit.pas' {frameSwrObsDisplay: TFrame},
+  frmConsoleLinesUnit in '..\frmConsoleLinesUnit.pas' {frmConsoleLines},
+  ModflowMnw1Unit in '..\ModflowMnw1Unit.pas',
+  ModflowMnwWriter in '..\ModflowMnwWriter.pas';
 
 {$R *.res}
 
@@ -533,6 +565,11 @@ begin
   Application.CreateForm(TfrmProgressMM, frmProgressMM);
   //  Application.CreateForm(TfrmSelectedObjects, frmSelectedObjects);
   Application.CreateForm(TfrmColors, frmColors);
+  if frmErrorsAndWarnings.HasMessages then
+  begin
+    frmErrorsAndWarnings.Show;
+    frmErrorsAndWarnings.BringToFront;
+  end;
   Application.Run;
 end.
 

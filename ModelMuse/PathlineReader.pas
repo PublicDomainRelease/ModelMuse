@@ -305,6 +305,8 @@ type
     FTopQuadTree: TRbwQuadTree;
     FFrontQuadTree: TRbwQuadTree;
     FSideQuadTree: TRbwQuadTree;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FModel: TBaseModel;
     FModpathVersion: TPathlineVersion;
     FReferenceTimeV6: double;
@@ -334,6 +336,8 @@ type
     class property PathlineGLIndex: TGLuint read GetPathlineGLIndex;
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure ReadFile;
@@ -633,6 +637,8 @@ type
     FTopQuadTree: TRbwQuadTree;
     FFrontQuadTree: TRbwQuadTree;
     FSideQuadTree: TRbwQuadTree;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FModel: TBaseModel;
     FPointsV6: TEndPointsV6;
     FModpathVersion: TPathlineVersion;
@@ -663,6 +669,8 @@ type
     class property EndPointGLIndex: TGLuint read GetEndPointGLIndex;
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure Draw(Orientation: TDataSetOrientation; const BitMap: TBitmap32);
@@ -926,6 +934,8 @@ type
     FTimeSeriesGLIndex: array of TGLuint;
     FRecordedTimeSeries: array of Boolean;
     FRealList: TRealList;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FModel: TBaseModel;
     FMaxParticleGroup: Integer;
     FMinParticleGroup: Integer;
@@ -952,6 +962,8 @@ type
     procedure SetMinParticleGroup(const Value: Integer);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure ReadFile;

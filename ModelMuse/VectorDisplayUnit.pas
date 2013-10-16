@@ -12,6 +12,8 @@ type
   TScaleType = (st2D, st3D);
 
   TCustomVectors = class(TGoPhastPersistent)
+  strict private
+    FModel: TBaseModel;
   private
     FStoredScale: TRealStorage;
     FColor: TColor;
@@ -23,6 +25,7 @@ type
     FMinimumSeparation2D: Integer;
     FStoredMinSeparationVertical3D: TRealStorage;
     FStoredMinSeparationHorizontal3D: TRealStorage;
+    FLogScaled: boolean;
     procedure SetStoredScale(const Value: TRealStorage);
     function GetScale: Double;
     procedure SetScale(const Value: Double);
@@ -40,6 +43,7 @@ type
     function GetMinSeparationVertical3D: double;
     procedure SetMinSeparationHorizontal3D(const Value: double);
     procedure SetMinSeparationVertical3D(const Value: double);
+    procedure SetLogScaled(const Value: boolean);
   protected
     FOrigins: TLayerPoints;
     FValues: TLayerPoints;
@@ -58,6 +62,11 @@ type
     procedure OnChangeEventHander(Sender: TObject); override;
     procedure RecordVectors3D;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    property Model: TBaseModel read FModel;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
@@ -88,10 +97,12 @@ type
     property StoredMinSeparationVertical3D: TRealStorage
       read FStoredMinSeparationVertical3D
       write SetStoredMinSeparationVertical3D;
+    property LogScaled: boolean read FLogScaled write SetLogScaled;
   end;
 
   TVelocityVectors = class(TCustomVectors)
   private
+    FModel: TBaseModel;
     FZVelocityName: string;
     FXVelocityName: string;
     FYVelocityName: string;
@@ -118,6 +129,7 @@ type
 
   TPredefinedVectors = class(TCustomVectors)
   private
+    FModel: TBaseModel;
     FVectorType: TPredefinedVectorType;
     FVectorDirection: TPredefinedVectorDirection;
     procedure SetVectorType(const Value: TPredefinedVectorType);
@@ -148,12 +160,19 @@ type
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
     function IsValid: boolean;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    function Model: TBaseModel;
   published
     property Vectors: TVelocityVectors read FVectors write SetVectors;
     property Description: string read FDescription write SetDescription;
   end;
 
   TVectorCollection = class(TPhastCollection)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   public
     constructor Create(Model: TBaseModel);
   private
@@ -164,6 +183,9 @@ type
     procedure CheckDataSets;
     procedure EndUpdate; override;
     procedure SetItemByName(const ADescription: string);
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
   published
     property SelectedItem: Integer read FSelectedItem write SetSelectedItem
       stored True;
@@ -262,7 +284,7 @@ begin
     MinimumSeparation2D := SourceVectors.MinimumSeparation2D;
     MinSeparationHorizontal3D := SourceVectors.MinSeparationHorizontal3D;
     MinSeparationVertical3D := SourceVectors.MinSeparationVertical3D;
-
+    LogScaled := SourceVectors.LogScaled
   end
   else
   begin
@@ -280,7 +302,16 @@ end;
 
 constructor TCustomVectors.Create(Model: TBaseModel);
 begin
-  inherited;
+  if Model = nil then
+  begin
+    inherited Create(nil);
+  end
+  else
+  begin
+    inherited Create(Model.Invalidate);
+  end;
+  Assert((Model = nil) or (Model is TCustomModel));
+  FModel := Model;
   FListening := False;
   FListsCreated := False;
   FNeedToRecordVectors := True;
@@ -385,6 +416,7 @@ begin
   FMinimumSeparation2D := 0;
   MinSeparationHorizontal3D := 0;
   MinSeparationVertical3D := 0;
+  FLogScaled := False;
 end;
 
 procedure TCustomVectors.InvalidateAllViews;
@@ -513,22 +545,26 @@ begin
               end;
 
               X2 := AVector[2].x;
-              if Mesh.MeshType = mtProfile then
-              begin
-                Y2 := (AVector[2].Y - AVector[1].Y)
-                  /ZoomBox.Exaggeration + AVector[1].Y;
-              end
-              else
-              begin
-                Y2 := AVector[2].y;
-              end;
+              Y2 := AVector[2].y;
 
               if FVectorMethod = vcMagnitude then
               begin
-                Angle := ArcTan2(Y2-Y1, X2-X1);
                 Magnitude := Distance(AVector[1], AVector[2]);
+                if Mesh.MeshType = mtProfile then
+                begin
+                  Y2 := (AVector[2].Y - AVector[1].Y)
+                    *ZoomBox.Exaggeration + AVector[1].Y;
+                end;
+                Angle := ArcTan2(Y2-Y1, X2-X1);
                 X2 := X1 + Cos(Angle)*Magnitude;
-                Y2 := Y1 + Sin(Angle)*Magnitude;
+                if Mesh.MeshType = mtProfile then
+                begin
+                  Y2 := Y1 + Sin(Angle)*Magnitude/ZoomBox.Exaggeration;
+                end
+                else
+                begin
+                  Y2 := Y1 + Sin(Angle)*Magnitude;
+                end;
               end;
 
               Points[1].X := ZoomBox.XCoord((X1+X2)/2);
@@ -618,16 +654,28 @@ begin
                           APoint.x - StartPoint.x) - SegmentAngle;
                         X2 := Distance(StartPoint, APoint)*Cos(Angle)
                           + StartPoint.x;
-                        Y2 := (AVector[2].Z - AVector[1].Z)
-                          /ZoomBox.Exaggeration + AVector[1].Z;
-
+//                        Y2 := (AVector[2].Z - AVector[1].Z)
+//                          /ZoomBox.Exaggeration + AVector[1].Z;
+//
+//                        if FVectorMethod = vcMagnitude then
+//                        begin
+//                          Angle := ArcTan2(Y2-Y1, X2-X1);
+//                          Magnitude := Distance(AVector[1], AVector[2]);
+//                          X2 := X1 + Cos(Angle)*Magnitude;
+//                          Y2 := Y1 + Sin(Angle)*Magnitude;
+//                        end;
+                        Y2 := AVector[2].Z;
                         if FVectorMethod = vcMagnitude then
                         begin
-                          Angle := ArcTan2(Y2-Y1, X2-X1);
                           Magnitude := Distance(AVector[1], AVector[2]);
+                          Y2 := (AVector[2].Z - AVector[1].Z)
+                            *ZoomBox.Exaggeration + AVector[1].Z;
+                          Angle := ArcTan2(Y2-Y1, X2-X1);
                           X2 := X1 + Cos(Angle)*Magnitude;
-                          Y2 := Y1 + Sin(Angle)*Magnitude;
+                          Y2 := Y1 + Sin(Angle)*Magnitude/ZoomBox.Exaggeration;
                         end;
+
+
 
                         Points[2].X := ZoomBox.XCoord(X2);
                         Points[2].Y := ZoomBox.YCoord(Y2);
@@ -726,6 +774,10 @@ var
   Blue: TGLubyte;
   TotalDistance: TFloat;
   SpacingTree: TRbwOctTree;
+  HorizontalDistance: TFloat;
+  Angle: Extended;
+  StartPointHorizontal: TPoint2D;
+  EndPointHorizontal: TPoint2D;
   function ShouldPlotVector: boolean;
   var
     X1Dble: double;
@@ -826,17 +878,24 @@ begin
             Y2 := AVector[2].y;
             Z2 := AVector[2].z;
 
-            Z2 := (Z2 - AVector[1].Z)
-              /LocalModel.Exaggeration + AVector[1].Z;
-
             if FVectorMethod = vcMagnitude then
             begin
               TotalDistance := Distance(AVector[1], AVector[2]);
-              AVector[2].z := Z2;
-              AVector[2] := ProjectPoint(AVector[1], AVector[2], TotalDistance);
-              X2 := AVector[2].x;
-              Y2 := AVector[2].y;
-              Z2 := AVector[2].z;
+              Z2 := (Z2 - AVector[1].Z)
+                *LocalModel.Exaggeration + AVector[1].Z;
+              StartPointHorizontal := EquatePoint(AVector[1].x, AVector[1].y);
+              EndPointHorizontal := EquatePoint(AVector[2].x, AVector[2].y);
+              HorizontalDistance := Distance(StartPointHorizontal,
+                EndPointHorizontal);
+              Angle := ArcTan2(Z2-Z1, HorizontalDistance);
+              if HorizontalDistance <> 0 then
+              begin
+                EndPointHorizontal := ProjectPoint(StartPointHorizontal,
+                  EndPointHorizontal, Cos(Angle)*TotalDistance);
+              end;
+              Z2 := Z1 + Sin(Angle)*TotalDistance/LocalModel.Exaggeration;
+              X2 := EndPointHorizontal.x;
+              Y2 := EndPointHorizontal.y;
             end;
 
 
@@ -869,6 +928,15 @@ begin
     FColor := Value;
     InvalidateModel;
     InvalidateAllViews;
+  end;
+end;
+
+procedure TCustomVectors.SetLogScaled(const Value: boolean);
+begin
+  if FLogScaled <> Value then
+  begin
+    SetBooleanProperty(FLogScaled, Value);
+    Invalidate;
   end;
 end;
 
@@ -986,6 +1054,7 @@ begin
   end;
   FListening := False;
 end;
+
 procedure TCustomVectors.UpdateVectors;
 var
   Mesh: TSutraMesh3D;
@@ -1088,6 +1157,9 @@ var
   Z: double;
   AnElement: TSutraElement3D;
   TestLength: double;
+  MinPositive: double;
+  TestDistance: double;
+  Factor: double;
 begin
   LocalModel := FModel as TPhastModel;
   Mesh := LocalModel.SutraMesh;
@@ -1121,6 +1193,42 @@ begin
 
   MaxLength := 0;
 
+  MinPositive := 0;
+  if LogScaled then
+  begin
+    for ColIndex := 0 to Mesh.Mesh2D.Elements.Count - 1 do
+    begin
+      for LayerIndex := 0 to Mesh.LayerCount - 1 do
+      begin
+        X := XDataArray.RealData[LayerIndex,0,ColIndex];
+        Y := YDataArray.RealData[LayerIndex,0,ColIndex];
+        if ZDataArray <> nil then
+        begin
+          AnElement := Mesh.ElementArray[LayerIndex,ColIndex];
+          if AnElement.Active then
+          begin
+            Z := ZDataArray.RealData[LayerIndex,0,ColIndex];
+            TestDistance := Sqrt(Sqr(X)+ Sqr(Y) + Sqr(Z));
+            if (TestDistance > 0) and ((MinPositive = 0) or (TestDistance < MinPositive)) then
+            begin
+              MinPositive := TestDistance;
+            end;
+          end;
+        end
+        else
+        begin
+          TestDistance := Sqrt(Sqr(X)+ Sqr(Y));
+          if (TestDistance > 0) and ((MinPositive = 0) or (TestDistance < MinPositive)) then
+          begin
+            MinPositive := TestDistance;
+          end;
+        end;
+      end;
+    end;
+  end;
+
+  MinPositive := MinPositive/10;
+
   for ColIndex := 0 to Mesh.Mesh2D.Elements.Count - 1 do
   begin
     for LayerIndex := 0 to Mesh.LayerCount - 1 do
@@ -1138,6 +1246,17 @@ begin
           Z := ZDataArray.RealData[LayerIndex,0,ColIndex];
           FValues[LayerIndex,ColIndex].z := Z;
           TestLength := Sqrt(Sqr(X) + Sqr(Y) + Sqr(Z));
+          if LogScaled and (TestLength > 0) then
+          begin
+            Factor := Ln(TestLength/MinPositive)/(TestLength/MinPositive);
+            X := X * Factor;
+            Y := Y * Factor;
+            Z := Z * Factor;
+            TestLength := Sqrt(Sqr(X) + Sqr(Y) + Sqr(Z));
+            FValues[LayerIndex,ColIndex].x := X;
+            FValues[LayerIndex,ColIndex].y := Y;
+            FValues[LayerIndex,ColIndex].z := Z;
+          end;
           if TestLength > MaxLength then
           begin
             MaxLength := TestLength;
@@ -1148,6 +1267,15 @@ begin
       begin
         FValues[LayerIndex,ColIndex].z := 0;
         TestLength := Sqrt(Sqr(X) + Sqr(Y));
+        if LogScaled and (TestLength > 0) then
+        begin
+          Factor := Ln(TestLength/MinPositive)/(TestLength/MinPositive);
+          X := X * Factor;
+          Y := Y * Factor;
+          TestLength := Sqrt(Sqr(X) + Sqr(Y));
+          FValues[LayerIndex,ColIndex].x := X;
+          FValues[LayerIndex,ColIndex].y := Y;
+        end;
         if TestLength > MaxLength then
         begin
           MaxLength := TestLength;
@@ -1168,6 +1296,7 @@ end;
 
 constructor TVelocityVectors.Create(Model: TBaseModel);
 begin
+  FModel := Model;
   inherited;
   FVectorMethod := vcMagnitude;
 end;
@@ -1222,8 +1351,9 @@ end;
 
 constructor TPredefinedVectors.Create(Model: TBaseModel);
 begin
+  FModel := Model;
   inherited;
-  FVectorMethod := vcComponents;
+  FVectorMethod := vcMagnitude;
 end;
 
 procedure TPredefinedVectors.GetDataSets(out Angle1, Angle2, Angle3, DataArray,
@@ -1382,6 +1512,11 @@ var
   Value: double;
   DataArray: TDataArray;
   MaxDataArray: TDataArray;
+  MinPositive: double;
+  TestDistance: double;
+  MaxLength: double;
+  TestLength: double;
+  Factor: double;
   procedure GetRotatedValues;
   begin
     A1 := A1*DegToRadiansFactor;
@@ -1464,6 +1599,51 @@ begin
     FDefaultScale := 1;
   end;
 
+
+  MinPositive := 0;
+  if LogScaled then
+  begin
+    for ColIndex := 0 to Mesh.Mesh2D.Elements.Count - 1 do
+    begin
+      for LayerIndex := 0 to Mesh.LayerCount - 1 do
+      begin
+        if Mesh.MeshType = mt3D then
+        begin
+          Element := Mesh.ElementArray[LayerIndex,ColIndex];
+          if Element.Active then
+          begin
+            A1 := Angle1.RealData[LayerIndex,0,ColIndex];
+            A2 := Angle2.RealData[LayerIndex,0,ColIndex];
+            A3 := Angle3.RealData[LayerIndex,0,ColIndex];
+            Value := DataArray.RealData[LayerIndex,0,ColIndex];
+            GetRotatedValues;
+            TestDistance := Sqrt(Sqr(XP) + Sqr(YP) + Sqr(ZP));
+            if (TestDistance > 0) and ((MinPositive = 0) or (TestDistance < MinPositive)) then
+            begin
+              MinPositive := TestDistance
+            end;
+          end;
+        end
+        else
+        begin
+          A1 := Angle1.RealData[LayerIndex,0,ColIndex];
+          A2 := 0;
+          A3 := 0;
+          Value := DataArray.RealData[LayerIndex,0,ColIndex];
+          GetRotatedValues;
+          TestDistance := Sqrt(Sqr(XP) + Sqr(YP) + Sqr(ZP));
+          if (TestDistance > 0) and ((MinPositive = 0) or (TestDistance < MinPositive)) then
+          begin
+            MinPositive := TestDistance
+          end;
+        end;
+      end;
+    end
+  end;
+
+  MinPositive := MinPositive/10;
+
+  MaxLength := 0;
   for ColIndex := 0 to Mesh.Mesh2D.Elements.Count - 1 do
   begin
     for LayerIndex := 0 to Mesh.LayerCount - 1 do
@@ -1478,9 +1658,22 @@ begin
           A3 := Angle3.RealData[LayerIndex,0,ColIndex];
           Value := DataArray.RealData[LayerIndex,0,ColIndex];
           GetRotatedValues;
+          TestLength := Sqrt(Sqr(XP) + Sqr(YP) + Sqr(ZP));
+          if LogScaled and (MinPositive > 0) then
+          begin
+            Factor := Ln(TestLength/MinPositive)/(TestLength/MinPositive);
+            XP := XP * Factor;
+            YP := YP * Factor;
+            ZP := ZP * Factor;
+            TestLength := Sqrt(Sqr(XP) + Sqr(YP) + Sqr(ZP));
+          end;
           FValues[LayerIndex,ColIndex].x := XP;
           FValues[LayerIndex,ColIndex].y := YP;
           FValues[LayerIndex,ColIndex].z := ZP;
+          if TestLength > MaxLength then
+          begin
+            MaxLength := TestLength;
+          end;
         end
         else
         begin
@@ -1496,12 +1689,33 @@ begin
         A3 := 0;
         Value := DataArray.RealData[LayerIndex,0,ColIndex];
         GetRotatedValues;
+        TestLength := Sqrt(Sqr(XP) + Sqr(YP) + Sqr(ZP));
+        if LogScaled and (MinPositive > 0) then
+        begin
+          Factor := Ln(TestLength/MinPositive)/(TestLength/MinPositive);
+          XP := XP * Factor;
+          YP := YP * Factor;
+          ZP := ZP * Factor;
+          TestLength := Sqrt(Sqr(XP) + Sqr(YP) + Sqr(ZP));
+        end;
         FValues[LayerIndex,ColIndex].x := XP;
         FValues[LayerIndex,ColIndex].y := YP;
         FValues[LayerIndex,ColIndex].z := ZP;
+        if TestLength > MaxLength then
+        begin
+          MaxLength := TestLength;
+        end;
       end;
     end;
   end;
+//  if MaxLength <> 0 then
+//  begin
+//    FDefaultScale := DefaultMaxVectorLength/MaxLength;
+//  end
+//  else
+//  begin
+//    FDefaultScale := 1;
+//  end;
   FDataSetObserver.UpToDate := True;
 end;
 
@@ -1587,6 +1801,11 @@ begin
     end;
 end;
 
+function TVectorItem.Model: TBaseModel;
+begin
+  result := (Collection as TVectorCollection).Model;
+end;
+
 procedure TVectorItem.SetDescription(const Value: string);
 begin
   FDescription := Value;
@@ -1637,8 +1856,19 @@ begin
 end;
 
 constructor TVectorCollection.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
-  inherited Create(TVectorItem, Model);
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(TVectorItem, InvalidateModelEvent);
   FSelectedItem := -1;
 end;
 

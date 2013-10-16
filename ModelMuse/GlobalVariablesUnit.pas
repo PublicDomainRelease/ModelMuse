@@ -82,6 +82,8 @@ type
     procedure FreeSearchList;
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     function IndexOfVariable(Name: string): integer;

@@ -120,7 +120,7 @@ var
   ColIndex: Integer;
 begin
   NewRowCount := Max(2, seNumber.AsInteger+1);
-  if NewRowCount < Grid.RowCount then
+  if (NewRowCount < Grid.RowCount) then
   begin
     Grid.BeginUpdate;
     try

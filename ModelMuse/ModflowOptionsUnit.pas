@@ -7,7 +7,7 @@ uses SysUtils, Classes, GoPhastTypes;
 Type
   TModflowOptions = class(TPersistent)
   private
-    FModel: TBaseModel;
+    FOnInvalidateModel: TNotifyEvent;
     FLengthUnit: integer;
     FPrintTime: boolean;
     FProjectName: string;
@@ -48,7 +48,7 @@ Type
     procedure WriteHNoFlow(Writer: TWriter);
   public
     procedure Assign(Source: TPersistent); override;
-    constructor Create(Model: TBaseModel);
+    constructor Create(InvalidateModelEvent: TNotifyEvent);
     destructor Destroy; override;
     procedure Clear;
     property StopErrorCriterion: double read GetStopErrorCriterion write SetStopErrorCriterion;
@@ -75,7 +75,7 @@ Type
 
   TWettingOptions = class(TPersistent)
   private
-    FModel: TBaseModel;
+    FOnInvalidateModel: TNotifyEvent;
     FWettingFactor: real;
     FWettingEquation: integer;
     FWettingActive: boolean;
@@ -87,7 +87,7 @@ Type
     procedure SetWettingIterations(Value: integer);
   published
     procedure Assign(Source: TPersistent); override;
-    constructor Create(Model: TBaseModel);
+    constructor Create(InvalidateModelEvent: TNotifyEvent);
     property WettingActive: boolean read FWettingActive write SetWettingActive;
     property WettingFactor: real read FWettingFactor write SetWettingFactor;
     property WettingIterations: integer read FWettingIterations
@@ -96,8 +96,6 @@ Type
   end;
 
 implementation
-
-uses PhastModelUnit;
 
 const
   DefaultHNoFlow: real = -2e20;
@@ -134,17 +132,13 @@ begin
   end;
 end;
 
-constructor TModflowOptions.Create(Model: TBaseModel);
+constructor TModflowOptions.Create(InvalidateModelEvent: TNotifyEvent);
 begin
   inherited Create;
   FDescription := TStringList.Create;
   FStoredStopErrorCriterion := TRealStorage.Create;
   Clear;
-  FModel := Model;
-  if Assigned(FModel) then
-  begin
-    Assert(FModel is TCustomModel);
-  end;
+  FOnInvalidateModel := InvalidateModelEvent;
   FProjectDate := DateTimeToStr(Trunc(Now));
 end;
 
@@ -190,9 +184,9 @@ end;
 
 procedure TModflowOptions.InvalidateModel;
 begin
-  if Assigned(FModel) then
+  if Assigned(FOnInvalidateModel) then
   begin
-    FModel.Invalidate;
+    FOnInvalidateModel(self);
   end;
 end;
 
@@ -356,22 +350,18 @@ begin
   end;
 end;
 
-constructor TWettingOptions.Create(Model: TBaseModel);
+constructor TWettingOptions.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  FModel := Model;
-  if Assigned(FModel) then
-  begin
-    Assert(FModel is TCustomModel);
-  end;
+  FOnInvalidateModel := InvalidateModelEvent;
   FWettingFactor := 1;
   FWettingIterations := 1;
 end;
 
 procedure TWettingOptions.InvalidateModel;
 begin
-  if Assigned(FModel) then
+  if Assigned(FOnInvalidateModel) then
   begin
-    FModel.Invalidate;
+    FOnInvalidateModel(self);
   end;
 end;
 

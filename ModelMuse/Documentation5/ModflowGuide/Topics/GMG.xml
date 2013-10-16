@@ -46,7 +46,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.usgs.gov/of/2004/1261/" target="_blank" styleclass="Citation" translate="true">Wilson, J.D. and Naff, R.L., 2004, The U.S. Geological Survey modular ground-water model -- GMG linear equation solver package documentation:  U.S. Geological Survey Open-File Report 2004-1261, 47 p. </link></li>
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="filelink" href="Banta_damping_paper.pdf" styleclass="Citation" translate="true">Banta, Edward R., 2006, Modifications to MODFLOW boundary conditions and an adaptive-damping scheme for Picard iterations for a highly nonlinear regional model, in Poeter, Eileen, Hill, Mary, and Zheng, Chunmiao, MODFLOW and More 2006—Managing Ground Water Systems: International Ground Water Modeling Center and Colorado School of Mines, Golden, Colorado, 2006 [Proceedings], p. 596-600.</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="GMG_Damping.pdf" styleclass="Normal" translate="true">GMG_Damping.pdf</link></li>
@@ -66,16 +66,16 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MF2005-GMG</text></li>
           </list>
-          <list id="27" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
-            <li styleclass="Normal"><text styleclass="Normal" translate="true">MF2005-FMP2</text></li>
+          <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-OWHM</text></li>
           </list>
         </td>
       </tr>
@@ -176,7 +176,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="IADAMP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">IADAMP is a flag that controls adaptive damping. The possible values of IADAMP and their meanings are as follows:</text></para>
-                      <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IADAMP = 0, then the value assigned to DAMP is used as a constant damping parameter.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IADAMP = 1, the value of DAMP is used for the first nonlinear iteration. The damping parameter is adaptively varied on the basis of the head change, using Cooley’s method as described in Mehl and Hill (2001), for subsequent iterations.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IADAMP = 2, the relative reduced residual damping method documented in Mehl and Hill (2001) and modified by Banta (2006) is used.</text></li>
@@ -190,7 +190,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">IOUTGMG is a flag that controls the output of the GMG solver. The possible values of IOUTGMG and their meanings are as follows:</text></para>
-                      <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IOUTGMG = 0, then only the solver inputs are printed.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IOUTGMG =1, then for each linear solve, the number of PCG iterations, the value of the damping parameter, the l2norm of the residual, and the maxnorm of the head change and its location (column, row, layer) are printed. At the end of a time/stress period, the total number of GMG calls, PCG iterations, and a running total of PCG iterations for all time/stress periods are printed.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IOUTGMG = 2, then the convergence history of the PCG iteration is printed, showing the l2norm of the residual and the convergence factor for each iteration.</text></li>
@@ -205,7 +205,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="IUNITMHC" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">IUNITMHC is a flag and a unit number, which controls output of maximum head change values:</text></para>
-                      <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IUNITMHC = 0, maximum head change values are not written to an output file.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IUNITMHC &gt; 0, maximum head change values are written to unit IUNITMHC. Unit IUNITMHC should be listed in the Name file with “DATA” as the file type.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IUNITMHC &lt; 0 or is not present, IUNITMHC defaults to 0.</text></li>
@@ -234,7 +234,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">ISM is a flag that controls the type of smoother used in the multigrid preconditioner. The possible values for ISM and their meanings are as follows:</text></para>
-                      <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISM = 0, then ILU(0) smoothing is implemented in the multigrid preconditioner. This smoothing requires an additional vector on each multigrid level to store the pivots in the ILU factorization.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISM = 1, then Symmetric GaussSeidel (SGS) smoothing is implemented in the multigrid preconditioner. No additional storage is required for this smoother; users may want to use this option if available memory is exceeded or nearly exceeded when using ISM=0. Using SGS smoothing is not as robust as ILU smoothing; additional iterations are likely to be required in reducing the residuals. In extreme cases, the solver may fail to converge as the residuals cannot be reduced sufficiently.</text></li>
                       </list>
@@ -246,7 +246,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="ISC" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">ISC is a flag that controls semicoarsening in the multigrid preconditioner. The possible values of ISC and their meanings are given as follows:</text></para>
-                      <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="17" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISC = 0, then the rows, columns and layers are all coarsened.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISC = 1, then the rows and columns are coarsened, but the layers are not.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISC = 2, then the columns and layers are coarsened, but the rows are not.</text></li>

@@ -116,6 +116,8 @@ type
     {Copies the properties of Source into self.  Only those properties that
      normally would be saved to file are copied.}
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     function ThreeDElementCorner(const Column, Row, Layer: integer):
       T3DRealPoint; override;
@@ -157,6 +159,8 @@ type
     procedure WriteDELR(const DiscretizationWriter: TObject);
     procedure WriteDELC(const DiscretizationWriter: TObject);
     procedure WriteTOP(const DiscretizationWriter: TObject);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure WriteBOTM(const DiscretizationWriter: TObject;
       const Model: TBaseModel);
     procedure CheckColumnWidths;
@@ -341,7 +345,7 @@ begin
     Exit;
   end;
 
-  Model := FModel as TCustomModel;
+  Model := self.Model as TCustomModel;
   Assert(Model.LayerCount = LayerCount);
   BeginLayerChange;
   try
@@ -808,9 +812,9 @@ begin
   FCellElevationsNeedUpdating:= True;
   FCellPointsNeedUpdating:= True;
   NeedToRecalculateCellColors;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
     begin
       ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
@@ -838,11 +842,11 @@ begin
   begin
     if AnArray[Index] = 0 then
     begin
-      frmErrorsAndWarnings.AddError(FModel, ErrorString, IntToStr(Index+1));
+      frmErrorsAndWarnings.AddError(Model, ErrorString, IntToStr(Index+1));
     end;
   end;
 
-  if FModel is TChildModel then
+  if Model is TChildModel then
   begin
     // don' check the outside rows and columns in child models.
     Start := 1;
@@ -862,7 +866,7 @@ begin
       Ratio := AnArray[Index-1]/AnArray[Index];
       if (Ratio > 1.5) or (Ratio < 1/1.5) then
       begin
-        frmErrorsAndWarnings.AddWarning(FModel, WarningString,
+        frmErrorsAndWarnings.AddWarning(Model, WarningString,
           IntToStr(Index) + ', ' + IntToStr(Index+1));
       end;
     end;
@@ -883,10 +887,14 @@ var
   ErrorString: string;
   Active: TDataArray;
   DataArrayManager: TDataArrayManager;
+  LocalModel: TCustomModel;
+  ActiveAbove: Boolean;
+  ActiveBelow: Boolean;
 begin
   ErrorString := 'The top of one or more cells is below its bottom.';
   Elevations := LayerElevations;
-  DataArrayManager := (Model as TCustomModel).DataArrayManager;
+  LocalModel := Model as TCustomModel;
+  DataArrayManager := LocalModel.DataArrayManager;
   Active := DataArrayManager.GetDataSetByName(rsActive);
   Active.Initialize;
   for LayerIndex := 1 to LayerCount - 1 do
@@ -896,16 +904,32 @@ begin
       for ColIndex := 0 to ColumnCount - 1 do
       begin
         if (Elevations[ColIndex, RowIndex, LayerIndex] >
-          Elevations[ColIndex, RowIndex, LayerIndex-1])
-          and Active.BooleanData[LayerIndex-1, RowIndex, ColIndex] then
+          Elevations[ColIndex, RowIndex, LayerIndex-1]) then
         begin
-//          frmErrorsAndWarnings.AddError(FModel,ErrorString,
-//            'Column = ' + IntToStr(ColIndex+1)
-//            + '; Row = ' + IntToStr(RowIndex+1)
-//            + '; Layer = ' + IntToStr(LayerIndex));
-          frmErrorsAndWarnings.AddError(FModel,ErrorString,
-            Format(StrColumnDRow,
-              [ColIndex+1, RowIndex+1, LayerIndex]));
+          if Active.BooleanData[LayerIndex-1, RowIndex, ColIndex] then
+          begin
+            frmErrorsAndWarnings.AddError(Model,ErrorString,
+              Format(StrColumnDRow,
+                [ColIndex+1, RowIndex+1, LayerIndex]));
+          end
+          else if not LocalModel.IsLayerSimulated(LayerIndex-1) then
+          begin
+            if LayerIndex -2 >= 0 then
+            begin
+              ActiveAbove := Active.BooleanData[LayerIndex-2, RowIndex, ColIndex];
+            end
+            else
+            begin
+              ActiveAbove := False;
+            end;
+            ActiveBelow := Active.BooleanData[LayerIndex, RowIndex, ColIndex];
+            if ActiveAbove and ActiveBelow then
+            begin
+              frmErrorsAndWarnings.AddError(Model,ErrorString,
+                Format(StrColumnDRow,
+                  [ColIndex+1, RowIndex+1, LayerIndex]));
+            end;
+          end;
         end;
       end;
     end;
@@ -1489,14 +1513,14 @@ begin
   WarningString := StrOneOrMoreCellsHa;
   if (MinCol <> 0) and (MaxRow/MinCol > 10) then
   begin
-    frmErrorsAndWarnings.AddWarning(FModel, WarningString,
+    frmErrorsAndWarnings.AddWarning(Model, WarningString,
       Format(StrColumn0dRow1, [MinColIndex+1, MaxRowIndex+1]));
 //      'Column ' + IntToStr(MinColIndex+1) + ', '
 //      + 'Row ' + IntToStr(MaxRowIndex+1));
   end;
   if (MinRow <> 0) and (MaxCol/MinRow > 10) then
   begin
-    frmErrorsAndWarnings.AddWarning(FModel, WarningString,
+    frmErrorsAndWarnings.AddWarning(Model, WarningString,
       Format(StrColumn0dRow1, [MaxColIndex+1, MinRowIndex+1]));
 //      'Column ' + IntToStr(MaxColIndex+1) + ', '
 //      + 'Row ' + IntToStr(MinRowIndex+1));
@@ -1526,7 +1550,7 @@ var
   MultiplePolygons: boolean;
   LocalModel: TPhastModel;
   ChildIndex: Integer;
-  ChildModelItem: TChildModelItem;
+  ChildModel: TChildModel;
 begin
   // for the time being, don't worry about coloring the grid.
   FrontPoints := FrontCellPoints(SelectedRow);
@@ -1631,16 +1655,20 @@ begin
   DrawOrdinaryFrontLayers(BitMap, ZoomBox, FrontPoints);
   DrawOrdinaryFrontColumns(BitMap, ZoomBox, FrontPoints);
   DrawFrontContours(ZoomBox, BitMap);
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     if LocalModel.ModelSelection in [msModflowLGR , msModflowLGR2] then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
       begin
-        ChildModelItem := LocalModel.ChildModels[ChildIndex];
+        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
 //        ChildModelItem.ChildModel.DataArrayManager.UpdateDataSetDimensions;
-        ChildModelItem.ChildModel.ModflowGrid.DrawFront(BitMap, ZoomBox);
+        if (SelectedRow >= ChildModel.FirstRow)
+          and (SelectedRow <= ChildModel.LastRow) then
+        begin
+          ChildModel.ModflowGrid.DrawFront(BitMap, ZoomBox);
+        end;
       end;
     end;
   end;
@@ -1689,7 +1717,7 @@ var
   MultiplePolygons: boolean;
   LocalModel: TPhastModel;
   ChildIndex: Integer;
-  ChildModelItem: TChildModelItem;
+  ChildModel: TChildModel;
 begin
   // for the time being, don't worry about coloring the grid.
   SidePoints := SideCellPoints(SelectedColumn);
@@ -1793,16 +1821,20 @@ begin
   DrawOrdinarySideLayers(BitMap, ZoomBox, SidePoints);
   DrawOrdinarySideRows(BitMap, ZoomBox, SidePoints);
   DrawSideContours(ZoomBox, BitMap);
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     if LocalModel.ModelSelection in [msModflowLGR, msModflowLGR2] then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
       begin
-        ChildModelItem := LocalModel.ChildModels[ChildIndex];
+        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
 //        ChildModelItem.ChildModel.DataArrayManager.UpdateDataSetDimensions;
-        ChildModelItem.ChildModel.ModflowGrid.DrawSide(BitMap, ZoomBox);
+        if (SelectedColumn >= ChildModel.FirstCol)
+          and (SelectedColumn <= ChildModel.LastCol) then
+        begin
+          ChildModel.ModflowGrid.DrawSide(BitMap, ZoomBox);
+        end;
       end;
     end;
   end;
@@ -1816,9 +1848,9 @@ var
   ChildModelItem: TChildModelItem;
 begin
   inherited;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     if LocalModel.ModelSelection in [msModflowLGR, msModflowLGR2] then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
@@ -2975,9 +3007,9 @@ begin
   begin
     Exit;
   end;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     if LocalModel.LgrUsed then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
@@ -3007,9 +3039,9 @@ begin
   begin
     Exit;
   end;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     if LocalModel.LgrUsed then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
@@ -3179,7 +3211,7 @@ procedure TModflowGrid.SetLayerLineWidth(var LineWidth: single;
   LayerIndex: Integer; var UnitIndex: Integer; DividedUnits: Boolean;
   LayerBoundaries: TOneDIntegerArray);
 begin
-  if FModel is TChildModel then
+  if Model is TChildModel then
   begin
     LineWidth := OrdinaryGridLineThickness;
   end
@@ -3220,9 +3252,9 @@ begin
   begin
     Exit;
   end;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     if LocalModel.LgrUsed then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
@@ -3252,9 +3284,9 @@ begin
   begin
     Exit;
   end;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     if LocalModel.LgrUsed then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
@@ -3283,9 +3315,9 @@ begin
   begin
     Exit;
   end;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     if LocalModel.LgrUsed then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
@@ -3315,9 +3347,9 @@ begin
   begin
     Exit;
   end;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     if LocalModel.LgrUsed then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
@@ -3346,9 +3378,9 @@ begin
   begin
     Exit;
   end;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     if LocalModel.LgrUsed then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
@@ -3378,9 +3410,9 @@ begin
   begin
     Exit;
   end;
-  if FModel is TPhastModel then
+  if Model is TPhastModel then
   begin
-    LocalModel := TPhastModel(FModel);
+    LocalModel := TPhastModel(Model);
     if LocalModel.LgrUsed then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do

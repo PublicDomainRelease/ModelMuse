@@ -58,8 +58,7 @@ type
     procedure EvaluateMnwi;
     procedure WriteMnwiDataSet1(AFileName: string);
     procedure WriteMnwiDataSet2;
-    procedure WriteMnwiDataSet3(var StartUnitNumber: Integer;
-      AFileName: string);
+    procedure WriteMnwiDataSet3(AFileName: string);
     procedure EvaluateVerticalScreenFormula(var Expression: TExpression;
       const ADataName: string; var Formula: string; Compiler: TRbwParser; WellBoundary: TMnw2Boundary);
     procedure CheckWells;
@@ -72,8 +71,7 @@ type
     Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     destructor Destroy; override;
     procedure WriteFile(const AFileName: string);
-    procedure WriteMnwiFile(const AFileName: string;
-      var StartUnitNumber: integer);
+    procedure WriteMnwiFile(const AFileName: string);
     procedure UpdateDisplay(TimeLists: TModflowBoundListOfTimeLists);
   end;
 
@@ -657,8 +655,7 @@ begin
   end;
 end;
 
-procedure TModflowMNW2_Writer.WriteMnwiFile(const AFileName: string;
-  var StartUnitNumber: integer);
+procedure TModflowMNW2_Writer.WriteMnwiFile(const AFileName: string);
 var
   NameOfMnwiFile: string;
 begin
@@ -684,7 +681,7 @@ begin
       frmProgressMM.AddMessage(StrWritingMNWIPackage);
       WriteMnwiDataSet1(AFileName);
       WriteMnwiDataSet2;
-      WriteMnwiDataSet3(StartUnitNumber, AFileName);
+      WriteMnwiDataSet3(AFileName);
 
     finally
       CloseFile;
@@ -693,8 +690,7 @@ begin
   end;
 end;
 
-procedure TModflowMNW2_Writer.WriteMnwiDataSet3(var StartUnitNumber: Integer;
-  AFileName: string);
+procedure TModflowMNW2_Writer.WriteMnwiDataSet3(AFileName: string);
 
 var
   QBHflag: Integer;
@@ -722,8 +718,8 @@ begin
       WELLID := '"' + WELLID + '"';
     end;
     WELLID := WELLID + ' ';
-    UNIT_Number := StartUnitNumber;
-    Inc(StartUnitNumber);
+    UNIT_Number := Model.ParentModel.UnitNumbers.SequentialUnitNumber;
+//    Inc(StartUnitNumber);
     if Boundary.SaveExternalFlows then
     begin
       QNDflag := 1;

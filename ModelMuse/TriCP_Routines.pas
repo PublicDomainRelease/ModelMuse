@@ -620,10 +620,15 @@ var
   X: double;
   Y: double;
   SortIndex: Integer;
+  PointsToGet: Integer;
+  Data3: TQuadPointArray;
+  QuadPointIndex: Integer;
+  TriangleList: TIntegerList;
 begin
   Assert(NCP=4);
 //  CanditatePointLength := NCP;
 //  SetLength(CandidatePoints, CanditatePointLength);
+  TriangleList := TIntegerList.Create;
   QuadTree := TRbwQuadTree.Create(nil);
   try
     QuadTree.MaxPoints := 5;
@@ -668,9 +673,18 @@ begin
 //      CanditatePointLength := Length(Data2)*2;
 //      SetLength(CandidatePoints, CanditatePointLength);
 //      CandidateIndex := 0;
+        TriangleList.Clear;
         for DataIndex := 0 to Length(Data2) - 1 do
         begin
           Triangle := NativeInt(Data2[DataIndex]);
+          if TriangleList.IndexOf(Triangle) >= 0 then
+          begin
+            Continue;
+          end
+          else
+          begin
+            TriangleList.Add(Triangle);
+          end;
           for NodeIndex := 0 to 2 do
           begin
             Node := IPT[Triangle*3+NodeIndex];
@@ -702,33 +716,48 @@ begin
 //          end;
 //        end;
 
+        PointsToGet := 0;
         While SortList.Count < NCP do
         begin
+          Inc(PointsToGet);
           for SortIndex := 0 to SortList.Count - 1 do
           begin
             SortObject := SortList[SortIndex];
             X := XD[SortObject.NodeNumber];
             Y := YD[SortObject.NodeNumber];
-            QuadTree.FindClosestPointsData(X, Y, Data2);
+            QuadTree.FindNearestPoints(X, Y, PointsToGet, Data3);
+            for QuadPointIndex := 0 to Length(Data3) - 1 do
+            begin
+              Data2 := Data3[QuadPointIndex].Data;
+//            QuadTree.FindClosestPointsData(X, Y, Data2);
 //            CanditatePointLength := Length(Data2)*2;
 //            SetLength(CandidatePoints, CanditatePointLength);
 //            CandidateIndex := 0;
-            for DataIndex := 0 to Length(Data2) - 1 do
-            begin
-              Triangle := NativeInt(Data2[DataIndex]);
-              for NodeIndex := 0 to 2 do
+              for DataIndex := 0 to Length(Data2) - 1 do
               begin
-                Node := IPT[Triangle*3+NodeIndex];
-                if Node <> index then
+                Triangle := NativeInt(Data2[DataIndex]);
+                if TriangleList.IndexOf(Triangle) >= 0 then
                 begin
-                  if IntList.IndexOf(Node) < 0 then
+                  Continue;
+                end
+                else
+                begin
+                  TriangleList.Add(Triangle);
+                end;
+                for NodeIndex := 0 to 2 do
+                begin
+                  Node := IPT[Triangle*3+NodeIndex];
+                  if Node <> index then
                   begin
-                    IntList.Add(Node);
-                    SortObject := TSortNode.Create;
-                    SortList.Add(SortObject);
-                    SortObject.NodeNumber := Node;
-                    SortObject.Distance := Distance(XD[index], YD[index],
-                      XD[Node], YD[Node])
+                    if IntList.IndexOf(Node) < 0 then
+                    begin
+                      IntList.Add(Node);
+                      SortObject := TSortNode.Create;
+                      SortList.Add(SortObject);
+                      SortObject.NodeNumber := Node;
+                      SortObject.Distance := Distance(XD[index], YD[index],
+                        XD[Node], YD[Node])
+                    end;
                   end;
                 end;
               end;
@@ -834,7 +863,8 @@ begin
 //      end;
     end;
   finally
-    QuadTree.Free
+    QuadTree.Free;
+    TriangleList.Free;
   end;
 end;
 

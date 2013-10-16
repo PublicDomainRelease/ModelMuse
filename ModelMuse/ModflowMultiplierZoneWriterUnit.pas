@@ -19,6 +19,8 @@ type
       virtual;
     function GetDataArray(Param: TModflowSteadyParameter): TDataArray;
       virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetArrayName(Param: TModflowSteadyParameter;
       LayerIndex: integer; AModel: TBaseModel): string; virtual; abstract;
     function ArrayUsed(const ArrayName: string): boolean; virtual; abstract;
@@ -44,6 +46,8 @@ type
       override;
     function GetDataArray(Param: TModflowSteadyParameter): TDataArray;
       override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetArrayName(Param: TModflowSteadyParameter;
       LayerIndex: integer; AModel: TBaseModel): string; override;
     function ArrayUsed(const ArrayName: string): boolean; override;
@@ -67,6 +71,8 @@ type
       override;
     function GetDataArray(Param: TModflowSteadyParameter): TDataArray;
       override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetArrayName(Param: TModflowSteadyParameter;
       LayerIndex: integer; AModel: TBaseModel): string; override;
     function ArrayUsed(const ArrayName: string): boolean; override;

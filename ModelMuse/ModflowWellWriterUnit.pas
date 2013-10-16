@@ -32,6 +32,7 @@ type
       ZoneArrayNames: TTransientZoneCollection); override;
     procedure WriteCell(Cell: TValueCell;
       const DataSetIdentifier, VariableIdentifiers: string); override;
+    procedure Evaluate; override;
   public
     procedure WriteFile(const AFileName: string);
   end;
@@ -39,7 +40,7 @@ type
 
 implementation
 
-uses ModflowUnitNumbers, frmProgressUnit, Forms;
+uses ModflowUnitNumbers, frmProgressUnit, Forms, frmErrorsAndWarningsUnit;
 
 resourcestring
   StrWritingWELPackage = 'Writing WEL Package input.';
@@ -54,6 +55,13 @@ resourcestring
 function TModflowWEL_Writer.CellType: TValueCellType;
 begin
   result := TWell_Cell;
+end;
+
+procedure TModflowWEL_Writer.Evaluate;
+begin
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrWellFormulaError);
+  inherited;
+
 end;
 
 class function TModflowWEL_Writer.Extension: string;

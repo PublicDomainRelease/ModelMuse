@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, StdCtrls, ExtCtrls, Buttons, ComCtrls, Grids,
   RbwDataGrid4, Mask, JvExMask, JvSpin, PhastModelUnit, UndoItems,
-  OrderedCollectionUnit, ArgusDataEntry;
+  OrderedCollectionUnit, ArgusDataEntry, ScreenObjectUnit,
+  Generics.Collections;
 
 type
   TDisColumn = (dsLayerGroup, dsParentLayer, dsDiscretization);
@@ -95,13 +96,28 @@ type
     { Public declarations }
   end;
 
-  Type TUndoChildModelChange = class(TCustomUndo)
+  TUseChanges = class(TObject)
+  private
+    FUsedWithModelCollection: TUsedWithModelCollection;
+    FScreenObject: TScreenObject;
+    procedure SetUsedWithModelCollection(const Value: TUsedWithModelCollection);
+  public
+    constructor Create;
+    destructor Destroy; override;
+    property ScreenObject: TScreenObject read FScreenObject write FScreenObject;
+    property UsedWithModelCollection: TUsedWithModelCollection
+      read FUsedWithModelCollection write SetUsedWithModelCollection;
+  end;
+
+  type TUndoChildModelChange = class(TCustomUndo)
   private
     FNewChildModels: TChildModelEditCollection;
     FOldChildModels: TChildModelCollection;
     FScreenObjects: TList;
     FNewSaveBfhBoundaries: Boolean;
     FOldSaveBfhBoundaries: Boolean;
+    FDeletedModels: TList;
+    FChangedUsedWithModels: TObjectList<TUseChanges>;
     procedure ChangeChildModel(Source: TCollection);
   protected
     function Description: string; override;
@@ -119,7 +135,7 @@ var
 implementation
 
 uses
-  frmGoPhastUnit, LayerStructureUnit, ScreenObjectUnit, frmDisplayDataUnit,
+  frmGoPhastUnit, LayerStructureUnit, frmDisplayDataUnit,
   GoPhastTypes;
 
 resourcestring
@@ -742,6 +758,17 @@ constructor TUndoChildModelChange.Create(SaveBfhBoundaries: boolean;
   var NewChildModels: TChildModelEditCollection);
 var
   ChildIndex: Integer;
+//  AModel: TChildModel;
+  AnItem: TChildModelItem;
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  UsedModels: TUsedWithModelCollection;
+  ChildModel: TChildModel;
+  AUseChanges: TUseChanges;
+  NItem: TChildModelEdit;
+  DeletedItems: TList;
+  ChildModels: TChildModelCollection;
+  ChildItem: TOrderedItem;
 begin
   FNewSaveBfhBoundaries := SaveBfhBoundaries;
   FOldSaveBfhBoundaries := frmGoPhast.PhastModel.SaveBfhBoundaryConditions;
@@ -757,6 +784,66 @@ begin
     FScreenObjects.Add(frmGoPhast.PhastModel.ChildModels[ChildIndex].
       ChildModel.HorizontalPositionScreenObject);
   end;
+
+  FDeletedModels := TList.Create;
+
+  DeletedItems := TList.Create;
+  try
+    ChildModels := frmGoPhast.PhastModel.ChildModels;
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      DeletedItems.Add(ChildModels[ChildIndex]);
+    end;
+    for ChildIndex := 0 to FNewChildModels.Count - 1 do
+    begin
+      NItem := FNewChildModels[ChildIndex];
+      ChildItem := frmGoPhast.PhastModel.ChildModels.FindMatchingItem(NItem);
+      if ChildItem <> nil then
+      begin
+        DeletedItems.Remove(ChildItem)
+      end;
+    end;
+    for ChildIndex := 0 to DeletedItems.Count - 1 do
+    begin
+      AnItem := DeletedItems[ChildIndex];
+      FDeletedModels.Add(AnItem.ChildModel);
+    end;
+  finally
+    DeletedItems.Free;
+  end;
+
+//  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+//  begin
+//    AnItem := frmGoPhast.PhastModel.ChildModels[ChildIndex];
+//    if FNewChildModels.FindMatchingItem(AnItem) = nil then
+//    begin
+//      FDeletedModels.Add(AnItem.ChildModel);
+//    end;
+//  end;
+
+  FChangedUsedWithModels := TObjectList<TUseChanges>.Create;
+  if FDeletedModels.Count > 0 then
+  begin
+    for ScreenObjectIndex := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
+    begin
+      AScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
+      UsedModels := AScreenObject.UsedModels;
+      if not UsedModels.UsedWithAllModels then
+      begin
+        for ChildIndex := 0 to FDeletedModels.Count - 1 do
+        begin
+          ChildModel := FDeletedModels[ChildIndex];
+          if UsedModels.UsesModel(ChildModel) then
+          begin
+            AUseChanges := TUseChanges.Create;
+            FChangedUsedWithModels.Add(AUseChanges);
+            AUseChanges.ScreenObject := AScreenObject;
+            AUseChanges.UsedWithModelCollection := UsedModels;
+          end;
+        end;
+      end;
+    end;
+  end;
 end;
 
 function TUndoChildModelChange.Description: string;
@@ -766,6 +853,8 @@ end;
 
 destructor TUndoChildModelChange.Destroy;
 begin
+  FChangedUsedWithModels.Free;
+  FDeletedModels.Free;
   FScreenObjects.Free;
   FOldChildModels.Free;
   FNewChildModels.Free;
@@ -773,10 +862,24 @@ begin
 end;
 
 procedure TUndoChildModelChange.DoCommand;
+var
+  ChangedIndex: Integer;
+  AnItem: TUseChanges;
+  AModel: TChildModel;
+  DeleteIndex: Integer;
 begin
   inherited;
   frmGoPhast.PhastModel.SaveBfhBoundaryConditions := FNewSaveBfhBoundaries;
   ChangeChildModel(FNewChildModels);
+  for DeleteIndex := 0 to FDeletedModels.Count-1 do
+  begin
+    AModel := FDeletedModels[DeleteIndex];
+    for ChangedIndex := 0 to FChangedUsedWithModels.Count - 1 do
+    begin
+      AnItem := FChangedUsedWithModels[ChangedIndex];
+      AnItem.ScreenObject.UsedModels.RemoveModel(AModel);
+    end;
+  end;
   frmGoPhast.UpdateModelCubeBreaks;
 end;
 
@@ -784,6 +887,8 @@ procedure TUndoChildModelChange.Undo;
 var
   ChildIndex: Integer;
   ScreenObject: TScreenObject;
+  ChangedIndex: Integer;
+  AnItem: TUseChanges;
 begin
   inherited;
   frmGoPhast.PhastModel.SaveBfhBoundaryConditions := FOldSaveBfhBoundaries;
@@ -795,7 +900,32 @@ begin
     frmGoPhast.PhastModel.ChildModels[ChildIndex].
       ChildModel.HorizontalPositionScreenObject := ScreenObject;
   end;
+  for ChangedIndex := 0 to FChangedUsedWithModels.Count - 1 do
+  begin
+    AnItem := FChangedUsedWithModels[ChangedIndex];
+    AnItem.ScreenObject.UsedModels := AnItem.UsedWithModelCollection;
+  end;
+
   frmGoPhast.UpdateModelCubeBreaks;
+end;
+
+{ TUseChanges }
+
+constructor TUseChanges.Create;
+begin
+  FUsedWithModelCollection := TUsedWithModelCollection.Create(nil);
+end;
+
+destructor TUseChanges.Destroy;
+begin
+  FUsedWithModelCollection.Free;
+  inherited;
+end;
+
+procedure TUseChanges.SetUsedWithModelCollection(
+  const Value: TUsedWithModelCollection);
+begin
+  FUsedWithModelCollection.Assign(Value);
 end;
 
 end.

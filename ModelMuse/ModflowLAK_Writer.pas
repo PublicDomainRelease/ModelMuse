@@ -16,22 +16,21 @@ type
     procedure WriteDataSet1a;
     procedure WriteDataSet1b;
     procedure WriteDataSet2;
-    procedure WriteDataSet3(var StartUnitNumber: integer);
+    procedure WriteDataSet3;
     procedure WriteDataSets4To9;
     procedure WriteLakeDefinitions;
     procedure WriteDataSet5;
     procedure WriteDataSet6;
     procedure WriteDataSets7And8;
     procedure WriteDataSet9(StressPeriod: TModflowStressPeriod);
-    procedure WriteGages(var StartUnitNumber: integer; Lines: TStrings);
+    procedure WriteGages(Lines: TStrings);
   protected
     function Package: TModflowPackageSelection; override;
     class function Extension: string; override;
   public
     Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     destructor Destroy; override;
-    procedure WriteFile(const AFileName: string;
-      var StartUnitNumber: integer; Lines: TStrings);
+    procedure WriteFile(const AFileName: string; Lines: TStrings);
   end;
 
   TExternalBathymetryFileWriter = class(TCustomModflowWriter)
@@ -262,7 +261,7 @@ begin
   NewLine;
 end;
 
-procedure TModflowLAK_Writer.WriteDataSet3(var StartUnitNumber: integer);
+procedure TModflowLAK_Writer.WriteDataSet3;
 var
   STAGES, SSMN, SSMX: double;
   FirstPeriodIsSteadyState: boolean;
@@ -284,13 +283,13 @@ begin
     Lake := ScreenObject.ModflowLakBoundary;
     if FPackage.ExternalLakeChoice = elcAll then
     begin
-      IUNITLAKTAB := StartUnitNumber;
+      IUNITLAKTAB := Model.ParentModel.UnitNumbers.SequentialUnitNumber;
       case Lake.ExternalLakeTable.LakeTableChoice of
         lctInternal:
           begin
             BathymFileName := ChangeFileExt(FNameOfFile, '');
             BathymFileName := TExternalBathymetryFileWriter.FileName(BathymFileName) + IntToStr(Lake.TrueLakeID);
-            WriteToNameFile(StrData, StartUnitNumber, BathymFileName, foInput, False);
+            WriteToNameFile(StrData, IUNITLAKTAB, BathymFileName, foInput, False);
             BathymWriter := TExternalBathymetryFileWriter.Create(Model,
               Lake.ExternalLakeTable, ScreenObject, Lake.TrueLakeID);
             try
@@ -309,12 +308,12 @@ begin
                 Format(StrTheLakeBathymetry2,
                 [LakeTableFileName, ScreenObject.Name]));
             end;
-            WriteToNameFile(StrData, StartUnitNumber, LakeTableFileName,
+            WriteToNameFile(StrData, IUNITLAKTAB, LakeTableFileName,
               foInputAlreadyExists, True);
           end
         else Assert(False);
       end;
-      Inc(StartUnitNumber);
+//      Inc(StartUnitNumber);
     end
     else
     begin
@@ -588,7 +587,7 @@ begin
 end;
 
 procedure TModflowLAK_Writer.WriteFile(const AFileName: string;
-  var StartUnitNumber: integer; Lines: TStrings);
+  Lines: TStrings);
 begin
   if not Package.IsSelected then
   begin
@@ -636,7 +635,7 @@ begin
 
     frmProgressMM.AddMessage(StrWritingDataSet3);
     Application.ProcessMessages;
-    WriteDataSet3(StartUnitNumber);
+    WriteDataSet3;
     if not frmProgressMM.ShouldContinue then
     begin
       Exit;
@@ -647,10 +646,10 @@ begin
   finally
     CloseFile;
   end;
-  WriteGages(StartUnitNumber, Lines);
+  WriteGages(Lines);
 end;
 
-procedure TModflowLAK_Writer.WriteGages(var StartUnitNumber: integer;
+procedure TModflowLAK_Writer.WriteGages(
   Lines: TStrings);
 var
   ScreenObjectIndex: Integer;
@@ -663,12 +662,12 @@ var
   procedure WriteGage;
   begin
     LAKE := -ScreenObject.ModflowLakBoundary.TrueLakeID;
-    UNIT_Number := StartUnitNumber;
+    UNIT_Number := Model.ParentModel.UnitNumbers.SequentialUnitNumber;
     Line := IntToStr(LAKE) + ' '
       + IntToStr(-UNIT_Number) + ' '
       + IntToStr(OUTTYPE);
     Lines.Add(Line);
-    Inc(StartUnitNumber);
+//    Inc(StartUnitNumber);
     OutputName := ChangeFileExt(FNameOfFile, '.lakg');
     OutputName := OutputName + IntToStr(Lines.Count);
     WriteToNameFile(StrDATA, UNIT_Number, OutputName, foOutput);

@@ -3484,4 +3484,9 @@ begin
 
 end;
 
+initialization
+
+finalization
+  FreeAndNil(frmDataSets);
+
 end.

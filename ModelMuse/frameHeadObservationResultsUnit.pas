@@ -9,7 +9,7 @@ uses
   Dialogs, StdCtrls, ExtCtrls, Grids, RbwDataGrid4, JvSpin, JvExControls,
   JvColorBox, JvColorButton, frameDisplayLimitUnit, Mask, JvExMask, JvToolEdit,
   ComCtrls, GoPhastTypes, ModflowHeadObsResults, Generics.Collections,
-  UndoItems;
+  UndoItems, QuadTreeClass;
 
 type
   TUndoType = (utChange, utImport);
@@ -18,22 +18,30 @@ type
 
   TObsHeadLink = class(TObject)
   private
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FModel: TBaseModel;
     FOldHeadObsCollection: THeadObsCollection;
     FNewHeadObsCollection: THeadObsCollection;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(AModel: TBaseModel);
     destructor Destroy; override;
   end;
 
   TObsHeadLinkList = class (TObjectList<TObsHeadLink>)
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function IndexOfModel(AModel: TBaseModel): Integer;
   end;
 
   TCustomUndoChangeHeadObsResults = class(TCustomUndo)
   private
     FObsLinkList: TObsHeadLinkList;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure ApplyChange(Model: TBaseModel;
       HeadObsCollection: THeadObsCollection);
     procedure UpdateGUI;
@@ -92,6 +100,14 @@ type
     shpHalfMax: TShape;
     lblMax: TLabel;
     lblHalfMax: TLabel;
+    lblRMS: TLabel;
+    tabGraph: TTabSheet;
+    pbHeadObs: TPaintBox;
+    qtreeHeadObs: TRbwQuadTree;
+    pnlValueControls: TPanel;
+    pnlGraphControls: TPanel;
+    rgGraphType: TRadioGroup;
+    lblGraphInstructions: TLabel;
     procedure flnmedHeadObsResultsChange(Sender: TObject);
     procedure comboModelsChange(Sender: TObject);
     procedure btnHightlightObjectsClick(Sender: TObject);
@@ -100,22 +116,41 @@ type
     procedure btnRestoreClick(Sender: TObject);
     procedure btnCopyClick(Sender: TObject);
     procedure spinSymbolSizeChange(Sender: TObject);
+    procedure pbHeadObsPaint(Sender: TObject);
+    procedure pbHeadObsMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure pbHeadObsMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure pbHeadObsMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure rgGraphTypeClick(Sender: TObject);
   private
     FUndoType: TUndoType;
     FCurrentModelLink: TObsHeadLink;
     FGettingDate: Boolean;
     FImportResult: Boolean;
     ObsLinkList : TObsHeadLinkList;
+    FSelectedObsItem: THeadObsItem;
     procedure SetCurrentModelLink(Value: TObsHeadLink);
     procedure Initialize(AHeadObsColl: THeadObsCollection);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure DisplayValues(AModel: TBaseModel; AHeadObsColl: THeadObsCollection);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetDataForAModel(AModel: TBaseModel; AHeadObsColl: THeadObsCollection);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function ReadFileForAModel(AModel: TBaseModel; AHeadObsColl: THeadObsCollection;
       const FileName: string; ShowDialog: boolean): Boolean;
     procedure SetDataForAModel(HeadObs: THeadObsCollection);
+    procedure PlotValues;
     property CurrentModelLink: TObsHeadLink read FCurrentModelLink
       write SetCurrentModelLink;
     procedure TestForNewFiles;
+    function GetSelectedObjectsFromGrid(ScreenObjects: TStringList): string;
+    function GetSelectedObjectsFromGraph(ScreenObjects: TStringList): string;
+
     { Private declarations }
   protected
     procedure Loaded; override;
@@ -134,7 +169,8 @@ implementation
 
 uses
   PhastModelUnit, frmGoPhastUnit, ModflowHobUnit, frmDisplayDataUnit, Math,
-  UndoItemsScreenObjects, ScreenObjectUnit, frmGoToUnit, Contnrs;
+  UndoItemsScreenObjects, ScreenObjectUnit, frmGoToUnit, Contnrs, xygraph,
+  Generics.Defaults;
 
 {$R *.dfm}
 
@@ -153,6 +189,7 @@ resourcestring
   StrSimulatedValue = 'Simulated Value';
   StrResidual = 'Residual';
   StrObjectName = 'Object Name';
+  StrRootMeanSquareRes = 'Root Mean Square Residual = %g';
 
 
 type
@@ -446,8 +483,6 @@ procedure TframeHeadObservationResults.btnHightlightObjectsClick(
   Sender: TObject);
 var
   Undo: TUndoChangeSelection;
-  RowIndex: Integer;
-  ColIndex: Integer;
   ScreenObjects: TStringList;
   ScreenObjectIndex: Integer;
   AScreenObject: TScreenObject;
@@ -473,25 +508,16 @@ begin
     Undo := TUndoChangeSelection.Create;
     frmGoPhast.ResetSelectedScreenObjects;
 
-    for RowIndex := 1 to rdgHeadObs.RowCount - 1 do
+    if Sender = btnHightlightObjects then
     begin
-      for ColIndex := 0 to rdgHeadObs.ColCount - 1 do
-      begin
-        if rdgHeadObs.IsSelectedCell(ColIndex, RowIndex) then
-        begin
-          ScreenObjectName := rdgHeadObs.Cells[Ord(ocObjectName), RowIndex];
-          NameIndex := ScreenObjects.IndexOf(ScreenObjectName);
-          if NameIndex >= 0 then
-          begin
-            AScreenObject := ScreenObjects.Objects[NameIndex] as TScreenObject;
-            AScreenObject.Selected := True;
-          end;
-          break;
-        end;
-      end;
+      ScreenObjectName := GetSelectedObjectsFromGrid(ScreenObjects);
+    end
+    else
+    begin
+      ScreenObjectName := GetSelectedObjectsFromGraph(ScreenObjects);
     end;
-    ScreenObjectName := rdgHeadObs.Cells[
-      Ord(ocObjectName),rdgHeadObs.SelectedRow];
+
+
 
     Undo.SetPostSelection;
 
@@ -599,6 +625,7 @@ var
   Item: THeadObsItem;
   Index: Integer;
   AList: TList;
+  ColIndex: Integer;
 begin
   rdgHeadObs.BeginUpdate;
   try
@@ -630,12 +657,221 @@ begin
         lblMax.Caption := FloatToStr(AHeadObsColl.MaxResidual);
         lblHalfMax.Caption := FloatToStr(AHeadObsColl.MaxResidual/2);
         spinSymbolSizeChange(nil);
+      end
+      else
+      begin
+        for ColIndex := Ord(Low(TObsCol)) to Ord(High(TObsCol)) do
+        begin
+          rdgHeadObs.Cells[ColIndex, 1] := '';
+        end;
       end;
     finally
       AList.Free;
     end;
   finally
     rdgHeadObs.EndUpdate;
+  end;
+  if AHeadObsColl.Count > 0 then
+  begin
+    lblRMS.Caption := Format(StrRootMeanSquareRes, [AHeadObsColl.RootMeanSquare]);
+  end
+  else
+  begin
+    lblRMS.Caption := 'Root Mean Square Residual = ?';
+  end;
+end;
+
+var
+  Data: Tdatatype;
+
+type
+  THeadObsComparer = TComparer<THeadObsItem>;
+
+
+procedure TframeHeadObservationResults.PlotValues;
+var
+  Observations: THeadObsCollection;
+  index: Integer;
+  ObservedMin: Double;
+  SimulatedMin: Double;
+  ObservedMax: Double;
+  SimulatedMax: Double;
+  SimValue: Double;
+  HobDry: Double;
+  HDry: Real;
+  HNoFlow: Real;
+  Initialized: Boolean;
+  Min1To1: double;
+  Max1To1: double;
+  Count: Integer;
+  SimList: TList<THeadObsItem>;
+  ObsItem: THeadObsItem;
+  function NearlyTheSame(const X, Y: extended): boolean;
+  const
+    Epsilon = 1e-6;
+  begin
+    result := (X = Y) or (Abs(X - Y) < Epsilon) or
+      (Abs(X - Y) / (Abs(X) + Abs(Y) + Epsilon) < Epsilon);
+  end;
+  function OkSimValue(ASimulatedValue: Double): Boolean;
+  begin
+    if NearlyTheSame(HobDry, ASimulatedValue)
+      or NearlyTheSame(HDry, ASimulatedValue)
+      or NearlyTheSame(HNoFlow, ASimulatedValue)
+       then
+    begin
+      Result := False;
+    end
+    else
+    begin
+      result := True;
+    end;
+  end;
+begin
+  Observations := CurrentModelLink.FNewHeadObsCollection;
+
+  HobDry := frmGoPhast.PhastModel.ModflowPackages.HobPackage.DryHead;
+  HDry := frmGoPhast.PhastModel.ModflowOptions.HDry;
+  HNoFlow := frmGoPhast.PhastModel.ModflowOptions.HNoFlow;
+
+  Count := 0;
+
+  qtreeHeadObs.Clear;
+  if Observations.Count > 0 then
+  begin
+    SimList := TList<THeadObsItem>.Create;
+    try
+      SimList.Capacity := Observations.Count;
+      ObservedMin := Observations[0].ObservedValue;
+      ObservedMax := ObservedMin;
+      Initialized := False;
+      SimulatedMin := 0;
+      SimulatedMax := 0;
+      for index := 0 to Observations.Count - 1 do
+      begin
+        ObsItem := Observations[index];
+        if ObsItem.ObservedValue < ObservedMin then
+        begin
+          ObservedMin := ObsItem.ObservedValue
+        end
+        else if ObsItem.ObservedValue > ObservedMax then
+        begin
+          ObservedMax := ObsItem.ObservedValue
+        end;
+
+        SimValue := ObsItem.SimulatedValue;
+        if OkSimValue(SimValue) then
+        begin
+          SimList.Add(ObsItem);
+          if rgGraphType.ItemIndex = 1 then
+          begin
+            SimValue := ObsItem.Residual;
+          end;
+          Inc(Count);
+          if Initialized then
+          begin
+            if SimValue < SimulatedMin then
+            begin
+              SimulatedMin := SimValue
+            end
+            else if SimValue > SimulatedMax then
+            begin
+              SimulatedMax := SimValue
+            end;
+          end
+          else
+          begin
+            Initialized := True;
+            SimulatedMin := SimValue;
+            SimulatedMax := SimulatedMin;
+          end;
+        end;
+      end;
+
+      SimList.Sort(TComparer<THeadObsItem>.Construct(
+        function (const L, R: THeadObsItem): Integer
+          begin
+            result := Sign(L.ObservedValue - R.ObservedValue);
+          end
+        ));
+
+      qtreeHeadObs.XMax := ObservedMax;
+      qtreeHeadObs.XMin := ObservedMin;
+      qtreeHeadObs.YMax := SimulatedMax;
+      qtreeHeadObs.YMin := SimulatedMin;
+
+  //    xysetdataarray(Data, 2, Count);
+      xysetdataarray(Data, Count, 1);
+  //    SetLength(Data, 2, Count);
+
+      try
+        xycleargraph(pbHeadObs,clWhite,clBlack,1);
+
+        xystartgraph(0, 100, 0, 100, 50, 50, 50, 50, clipoff);
+
+        xyxaxis(clBlack,ObservedMin,ObservedMax,
+          (ObservedMax-ObservedMin)/10,0,'Observed',1,False,False,True, 2);
+
+        if rgGraphType.ItemIndex = 0 then
+        begin
+          xyyaxis(clBlack,SimulatedMin,SimulatedMax,
+            (SimulatedMax-SimulatedMin)/10,0,'Simulated',5,False,False,True, 2);
+        end
+        else
+        begin
+          xyyaxis(clBlack,Min(0, SimulatedMin), Max(0, SimulatedMax),
+            (SimulatedMax-SimulatedMin)/10,0,'Residual',5,False,False,True, 2);
+        end;
+
+        Count := 1;
+        for index := 0 to SimList.Count - 1 do
+        begin
+          if rgGraphType.ItemIndex = 0 then
+          begin
+            SimValue := SimList[index].SimulatedValue;
+          end
+          else
+          begin
+            SimValue := SimList[index].Residual;
+          end;
+//          if OkSimValue(SimValue) then
+//          begin
+            qtreeHeadObs.AddPoint(SimList[index].ObservedValue,
+              SimValue, SimList[index]);
+
+            Data[Count, 0] := SimList[index].ObservedValue;
+            Data[Count, 1] := SimValue;
+            Inc(Count);
+//          end;
+        end;
+
+        xysymbol(1,0,0);
+        xyplotarray(data,2,2);
+
+        if rgGraphType.ItemIndex = 0 then
+        begin
+          Min1To1 := Max(SimulatedMin, ObservedMin);
+          Max1To1 := Min(SimulatedMax, ObservedMax);
+          xymove(Min1To1, Min1To1);
+          xyDraw(Max1To1, Max1To1);
+        end
+        else
+        begin
+          xymove(ObservedMin, 0);
+          xyDraw(ObservedMax, 0);
+        end;
+
+        xyfinish;
+      except on E: exception do
+        begin
+          ShowMessage(e.message);
+          pgcHeadObs.ActivePageIndex := 0;
+          Exit;
+        end;
+      end;
+    finally
+      SimList.Free;
+    end;
   end;
 end;
 
@@ -663,6 +899,7 @@ end;
 procedure TframeHeadObservationResults.GetData;
 begin
   Handle;
+  lblRMS.Caption := 'Root Mean Square Residual = ?';
   FCurrentModelLink := nil;
   UpdateChildModels;
   CurrentModelLink := ObsLinkList[0];
@@ -724,6 +961,35 @@ begin
   end;
 
   UpdateChildModels;
+end;
+
+procedure TframeHeadObservationResults.pbHeadObsMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  XYMouseDown(Button, Shift, X, Y);
+end;
+
+procedure TframeHeadObservationResults.pbHeadObsMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  XYMouseMove(Shift, X, Y);
+end;
+
+procedure TframeHeadObservationResults.pbHeadObsMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  XYMouseup(Button, Shift, X, Y);
+  if qtreeHeadObs.Count > 0 then
+  begin
+    FSelectedObsItem := qtreeHeadObs.NearestPointsFirstData
+      (xyexportb.xw, xyexportb.yw[1]);
+    btnHightlightObjectsClick(nil);
+  end;
+end;
+
+procedure TframeHeadObservationResults.pbHeadObsPaint(Sender: TObject);
+begin
+  PlotValues;
 end;
 
 procedure TframeHeadObservationResults.rdgHeadObsMouseUp(Sender: TObject;
@@ -810,6 +1076,11 @@ begin
     result := FImportResult;
   end;
   DisplayValues(AModel, AHeadObsColl);
+end;
+
+procedure TframeHeadObservationResults.rgGraphTypeClick(Sender: TObject);
+begin
+  pbHeadObs.Invalidate;
 end;
 
 procedure TframeHeadObservationResults.SetCurrentModelLink(Value: TObsHeadLink);
@@ -1013,6 +1284,61 @@ begin
     comboModels.ItemIndex := ModelIndex;
     comboModelsChange(nil);
   end;
+end;
+
+function TframeHeadObservationResults.GetSelectedObjectsFromGraph(
+  ScreenObjects: TStringList): string;
+var
+  ItemIndex: Integer;
+  AScreenObject: TScreenObject;
+  RowIndex: Integer;
+begin
+  if FSelectedObsItem <> nil then
+  begin
+    result := FSelectedObsItem.ScreenObjectName;
+    ItemIndex := ScreenObjects.IndexOf(result);
+    if ItemIndex >= 0 then
+    begin
+      AScreenObject := ScreenObjects.Objects[ItemIndex] as TScreenObject;
+      AScreenObject.Selected := True;
+    end;
+
+    RowIndex := rdgHeadObs.Cols[Ord(ocName)].IndexOf(FSelectedObsItem.Name);
+    if RowIndex >= 1 then
+    begin
+      rdgHeadObs.TopRow := RowIndex;
+    end;
+  end;
+end;
+
+function TframeHeadObservationResults.GetSelectedObjectsFromGrid(
+  ScreenObjects: TStringList): string;
+var
+  RowIndex: Integer;
+  ScreenObjectName: string;
+  ColIndex: Integer;
+  NameIndex: Integer;
+  AScreenObject: TScreenObject;
+begin
+  for RowIndex := 1 to rdgHeadObs.RowCount - 1 do
+  begin
+    for ColIndex := 0 to rdgHeadObs.ColCount - 1 do
+    begin
+      if rdgHeadObs.IsSelectedCell(ColIndex, RowIndex) then
+      begin
+        ScreenObjectName := rdgHeadObs.Cells[Ord(ocObjectName), RowIndex];
+        NameIndex := ScreenObjects.IndexOf(ScreenObjectName);
+        if NameIndex >= 0 then
+        begin
+          AScreenObject := ScreenObjects.Objects[NameIndex] as TScreenObject;
+          AScreenObject.Selected := True;
+        end;
+        break;
+      end;
+    end;
+  end;
+  result := rdgHeadObs.Cells[
+    Ord(ocObjectName),rdgHeadObs.SelectedRow];
 end;
 
 procedure InitializeSortOrder;

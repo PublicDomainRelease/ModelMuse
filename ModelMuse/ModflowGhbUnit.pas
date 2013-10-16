@@ -102,13 +102,17 @@ type
     procedure InvalidateConductanceData(Sender: TObject);
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
+    procedure AssignListCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
       BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
       Variables, DataSets: TList; AModel: TBaseModel); override;
     function AdjustedFormula(FormulaIndex, ItemIndex: integer): string;
       override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AddSpecificBoundary(AModel: TBaseModel); override;
     procedure TestIfObservationsPresent(var EndOfLastStressPeriod: Double;
       var StartOfFirstStressPeriod: Double;
@@ -117,6 +121,7 @@ type
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
     class function ItemClass: TBoundaryItemClass; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name calls inherited @name and then sets the length of
     // the @link(TGhbStorage.GhbArray) at ItemIndex in
     // @link(TCustomMF_BoundColl.Boundaries) to BoundaryCount.
@@ -136,8 +141,8 @@ type
 
   TGhb_Cell = class(TValueCell)
   private
-    Values: TGhbRecord;
-    StressPeriod: integer;
+    FValues: TGhbRecord;
+    FStressPeriod: integer;
     function GetBoundaryHead: double;
     function GetConductance: double;
     function GetBoundaryHeadAnnotation: string;
@@ -149,9 +154,17 @@ type
     procedure SetColumn(const Value: integer); override;
     procedure SetLayer(const Value: integer); override;
     procedure SetRow(const Value: integer); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
@@ -182,6 +195,7 @@ type
       var StartOfFirstStressPeriod: Double;
       var ObservationsPresent: Boolean);
   protected
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name fills ValueTimeList with a series of TObjectLists - one for
     // each stress period.  Each such TObjectList is filled with
     // @link(TGhb_Cell)s for that stress period.
@@ -195,6 +209,7 @@ type
     class function ModflowParamItemClass: TModflowParamItemClass; override;
     function ParameterType: TParameterType; override;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name fills ValueTimeList via a call to AssignCells for each
     // link  @link(TGhbStorage) in
     // @link(TCustomMF_BoundColl.Boundaries Values.Boundaries);
@@ -466,7 +481,7 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
-    UpdataRequiredData(DataSets, Variables, ACell, AModel);
+    UpdateRequiredListData(DataSets, Variables, ACell, AModel);
 
     Expression.Evaluate;
     with GhbStorage.GhbArray[Index] do
@@ -489,7 +504,7 @@ begin
   end;
 end;
 
-procedure TGhbCollection.AssignCellLocation(
+procedure TGhbCollection.AssignListCellLocation(
   BoundaryStorage: TCustomBoundaryStorage; ACellList: TObject);
 var
   GhbStorage: TGhbStorage;
@@ -596,33 +611,33 @@ end;
 procedure TGhb_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp, Strings);
-  WriteCompInt(Comp, StressPeriod);
+  FValues.Cache(Comp, Strings);
+  WriteCompInt(Comp, FStressPeriod);
 end;
 
 function TGhb_Cell.GetBoundaryHead: double;
 begin
-  result := Values.BoundaryHead;
+  result := FValues.BoundaryHead;
 end;
 
 function TGhb_Cell.GetBoundaryHeadAnnotation: string;
 begin
-  result := Values.BoundaryHeadAnnotation;
+  result := FValues.BoundaryHeadAnnotation;
 end;
 
 function TGhb_Cell.GetColumn: integer;
 begin
-  result := Values.Cell.Column;
+  result := FValues.Cell.Column;
 end;
 
 function TGhb_Cell.GetConductance: double;
 begin
-  result := Values.Conductance;
+  result := FValues.Conductance;
 end;
 
 function TGhb_Cell.GetConductanceAnnotation: string;
 begin
-  result := Values.ConductanceAnnotation;
+  result := FValues.ConductanceAnnotation;
 end;
 
 function TGhb_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
@@ -639,7 +654,7 @@ end;
 
 function TGhb_Cell.GetLayer: integer;
 begin
-  result := Values.Cell.Layer;
+  result := FValues.Cell.Layer;
 end;
 
 function TGhb_Cell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
@@ -675,12 +690,12 @@ end;
 
 function TGhb_Cell.GetRow: integer;
 begin
-  result := Values.Cell.Row;
+  result := FValues.Cell.Row;
 end;
 
 function TGhb_Cell.GetSection: integer;
 begin
-  result := Values.Cell.Section;
+  result := FValues.Cell.Section;
 end;
 
 function TGhb_Cell.IsIdentical(AnotherCell: TValueCell): boolean;
@@ -701,29 +716,29 @@ end;
 procedure TGhb_Cell.RecordStrings(Strings: TStringList);
 begin
   inherited;
-  Values.RecordStrings(Strings);
+  FValues.RecordStrings(Strings);
 end;
 
 procedure TGhb_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp, Annotations);
-  StressPeriod := ReadCompInt(Decomp);
+  FValues.Restore(Decomp, Annotations);
+  FStressPeriod := ReadCompInt(Decomp);
 end;
 
 procedure TGhb_Cell.SetColumn(const Value: integer);
 begin
-  Values.Cell.Column := Value;
+  FValues.Cell.Column := Value;
 end;
 
 procedure TGhb_Cell.SetLayer(const Value: integer);
 begin
-  Values.Cell.Layer := Value;
+  FValues.Cell.Layer := Value;
 end;
 
 procedure TGhb_Cell.SetRow(const Value: integer);
 begin
-  Values.Cell.Row := Value;
+  FValues.Cell.Row := Value;
 end;
 
 { TGhbBoundary }
@@ -772,8 +787,8 @@ begin
         Assert(ScreenObject <> nil);
         Cell.IFace := (ScreenObject as TScreenObject).IFace;
         Cells.Add(Cell);
-        Cell.StressPeriod := TimeIndex;
-        Cell.Values := BoundaryValues;
+        Cell.FStressPeriod := TimeIndex;
+        Cell.FValues := BoundaryValues;
         Cell.ScreenObject := ScreenObject;
         LocalModel.AdjustCellPosition(Cell);
       end;

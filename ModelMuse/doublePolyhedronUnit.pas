@@ -1825,29 +1825,6 @@ begin
 
   end;
 
-  { for NodeIndex := V-1 downto 0 do
-    begin
-    if not NodeUsed[NodeIndex] then
-    begin
-    for InnerNodeIndex := NodeIndex to V-2 do
-    begin
-    Vertices[InnerNodeIndex] := Vertices[InnerNodeIndex +1];
-    end;
-    Dec(V);
-    SetLength(Vertices,V);
-    // update face indicies.
-    for FaceIndex1 := 0 to F-1 do
-    begin
-    for FaceIndex2 := 0 to DIM-1 do
-    begin
-    if Faces[FaceIndex1,FaceIndex2] > NodeIndex then
-    begin
-    Dec(Faces[FaceIndex1,FaceIndex2]);
-    end;
-    end;
-    end;
-    end;
-    end; }
 end;
 
 function TPolyhedron.FacesSame(FaceIndex1, FaceIndex2: integer): boolean;

@@ -37,6 +37,10 @@ type
   end;
 
   TFlowFileCollection = class(TPhastCollection)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   private
     function GetItem(index: Integer): TFlowFileItem;
     procedure SetItem(index: Integer; const Value: TFlowFileItem);
@@ -44,9 +48,14 @@ type
     function Add: TFlowFileItem;
     constructor Create(Model: TBaseModel);
     property Items[index: Integer]: TFlowFileItem read GetItem write SetItem; default;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
   end;
 
   TExternalFlowProperties = class(TGoPhastPersistent)
+  strict private
+    FModel: TBaseModel;
   private
     FFlowFileData: TFlowFileCollection;
     FFullFlowFileName: string;
@@ -61,7 +70,12 @@ type
     function GetFlowFileName: string;
     procedure SetFlowFileName(const Value: string);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    property Model: TBaseModel read FModel;
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
     constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure Clear;
@@ -866,8 +880,19 @@ begin
 end;
 
 constructor TFlowFileCollection.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
-  inherited Create(TFlowFileItem, Model);
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(TFlowFileItem, InvalidateModelEvent);
 end;
 
 function TFlowFileCollection.GetItem(index: Integer): TFlowFileItem;
@@ -912,7 +937,16 @@ end;
 
 constructor TExternalFlowProperties.Create(Model: TBaseModel);
 begin
-  inherited;
+  if Model = nil then
+  begin
+    inherited Create(nil);
+  end
+  else
+  begin
+    inherited Create(Model.Invalidate);
+  end;
+  Assert((Model = nil) or (Model is TCustomModel));
+  FModel := Model;
   FFlowFileData := TFlowFileCollection.Create(Model);
   Clear;
 end;

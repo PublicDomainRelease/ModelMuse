@@ -34,6 +34,7 @@ object frameDrawCrossSection: TframeDrawCrossSection
     Top = 116
     Width = 23
     Height = 22
+    Hint = 'Remove Data Set'
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000120B0000120B00001000000000000000000000000000
@@ -70,7 +71,6 @@ object frameDrawCrossSection: TframeDrawCrossSection
     OnGetText = vstAvailableDataSetsGetText
     OnGetNodeDataSize = vstAvailableDataSetsGetNodeDataSize
     OnInitNode = vstAvailableDataSetsInitNode
-    ExplicitHeight = 234
     Columns = <>
   end
   object clrbtnSelectedColor: TJvColorButton
@@ -109,7 +109,6 @@ object frameDrawCrossSection: TframeDrawCrossSection
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitHeight = 190
       object lblDataSets: TLabel
         Left = 8
         Top = 8
@@ -141,9 +140,6 @@ object frameDrawCrossSection: TframeDrawCrossSection
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitLeft = 1
-      ExplicitTop = 192
-      ExplicitWidth = 183
       object lblLayers: TLabel
         Left = 11
         Top = 3
@@ -160,7 +156,6 @@ object frameDrawCrossSection: TframeDrawCrossSection
         Margins.Top = 30
         Align = alClient
         DoubleBuffered = False
-        ItemHeight = 13
         ParentDoubleBuffered = False
         TabOrder = 0
       end

@@ -9,12 +9,14 @@ uses
   frameHeadObservationResultsUnit, frameModpathDisplayUnit,
   frameModpathTimeSeriesDisplayUnit, frameModpathEndpointDisplayUnit,
   frameCustomColorUnit, frameColorGridUnit, frameContourDataUnit,
-  frameVectorsUnit, frameDrawCrossSectionUnit;
+  frameVectorsUnit, frameDrawCrossSectionUnit, frameSwrReachConnectionsUnit,
+  frameSwrObsDisplayUnit, Mask, JvExMask, JvSpin;
 
 type
   TPostPages = (ppColorGrid, ppContourData, ppPathline, ppEndPoints,
-    ppTimeSeries, ppHeadObs, ppSfrStreamLink, ppStrStreamLink, ppVectors,
-    ppCrossSection);
+    ppTimeSeries, ppHeadObs, ppSfrStreamLink, ppStrStreamLink,
+    ppSwrReachConnections, ppSwrObsDisplay,
+    ppVectors, ppCrossSection);
 
   TfrmDisplayData = class(TfrmCustomGoPhast)
     pglstMain: TJvPageList;
@@ -44,6 +46,10 @@ type
     frameStrStreamLink: TframeStreamLink;
     jvspCrossSection: TJvStandardPage;
     frameDrawCrossSection: TframeDrawCrossSection;
+    jvspSwrReachConnections: TJvStandardPage;
+    frameSwrReachConnections: TframeSwrReachConnections;
+    jvspSwrObsDisplay: TJvStandardPage;
+    frameSwrObsDisplay: TframeSwrObsDisplay;
     procedure btnApplyClick(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
     procedure pglstMainChange(Sender: TObject);
@@ -52,6 +58,10 @@ type
     procedure tvpglstMainCustomDrawItem(Sender: TCustomTreeView;
       Node: TTreeNode; State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure frameContourDatavirttreecomboDataSetsChange(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
+    procedure FormShow(Sender: TObject);
+    procedure frameSwrReachConnectionsbtnReachColorClick(Sender: TObject);
+    procedure frameSwrReachConnectionsbtnUnconnectedColorClick(Sender: TObject);
   private
     FShouldUpdate: Boolean;
     procedure SetData;
@@ -87,6 +97,8 @@ resourcestring
   StrStreamStrLinks = 'STR Stream Links';
   StrVectors = 'Vectors';
   StrCrossSections = 'Cross Sections';
+  StrSWRReachConnection = 'SWR Reach Connections';
+  StrSWRObservations = 'SWR Observations';
 
 {$R *.dfm}
 
@@ -132,10 +144,28 @@ begin
   Node.PageIndex := jvspSfrStreamLinks.PageIndex;
   Node := tvpglstMain.Items.Add(nil, StrStreamStrLinks) as TJvPageIndexNode;
   Node.PageIndex := jvspStrStreamLinks.PageIndex;
+  Node := tvpglstMain.Items.Add(nil, StrSWRReachConnection) as TJvPageIndexNode;
+  Node.PageIndex := jvspSwrReachConnections.PageIndex;
+  Node := tvpglstMain.Items.Add(nil, StrSWRObservations) as TJvPageIndexNode;
+  Node.PageIndex := jvspSwrObsDisplay.PageIndex;
   Node := tvpglstMain.Items.Add(nil, StrVectors) as TJvPageIndexNode;
   Node.PageIndex := jvspVectors.PageIndex;
   Node := tvpglstMain.Items.Add(nil, StrCrossSections) as TJvPageIndexNode;
   Node.PageIndex := jvspCrossSection.PageIndex;
+end;
+
+procedure TfrmDisplayData.FormDestroy(Sender: TObject);
+begin
+  inherited;
+  frmDisplayData := nil;
+end;
+
+procedure TfrmDisplayData.FormShow(Sender: TObject);
+begin
+  inherited;
+  frameHeadObservationResults.lblGraphInstructions.Width :=
+    frameHeadObservationResults.pnlGraphControls.ClientWidth -
+    frameHeadObservationResults.lblGraphInstructions.Left - 8;
 end;
 
 procedure TfrmDisplayData.frameContourDatavirttreecomboDataSetsChange(
@@ -145,30 +175,43 @@ begin
   frameContourData.virttreecomboDataSetsChange(Sender);
 end;
 
+procedure TfrmDisplayData.frameSwrReachConnectionsbtnReachColorClick(
+  Sender: TObject);
+begin
+  inherited;
+  frameSwrReachConnections.btnReachColorClick(Sender);
+
+end;
+
+procedure TfrmDisplayData.frameSwrReachConnectionsbtnUnconnectedColorClick(
+  Sender: TObject);
+begin
+  inherited;
+  frameSwrReachConnections.btnUnconnectedColorClick(Sender);
+
+end;
+
 procedure TfrmDisplayData.GetData;
 var
   LocalModel: TPhastModel;
   ModflowSelected: Boolean;
   ModpathSelected: Boolean;
-//  LocalPackages: TModflowPackages;
   SfrSelected: Boolean;
   StrSelected: boolean;
   HeadObsSelected: Boolean;
   VectorSelected: Boolean;
-//  CrossSectionSelected: boolean;
-//  Node: TTreeNode;
+  SwrSelected: Boolean;
 begin
   Handle;
   tvpglstMain.Handle;
   LocalModel := frmGoPhast.PhastModel;
   ModflowSelected := LocalModel.ModelSelection in ModflowSelection;
-//  LocalPackages := LocalModel.ModflowPackages;
   ModpathSelected := ModflowSelected and LocalModel.MODPATHIsSelected;
   SfrSelected := ModflowSelected and LocalModel.SfrIsSelected;
   StrSelected := ModflowSelected and LocalModel.StrIsSelected;
+  SwrSelected := ModflowSelected and LocalModel.SwrIsSelected;
   HeadObsSelected := ModflowSelected and LocalModel.HobIsSelected;
   VectorSelected := LocalModel.ModelSelection = msSutra22;
-//  CrossSectionSelected := ModflowSelected;
 
   if Ord(High(TPostPages)) <> tvpglstMain.Items.Count-1 then
   begin
@@ -193,6 +236,8 @@ begin
     HeadObsSelected or (LocalModel.HeadObsResults.Count > 0);
   tvpglstMain.Items[Ord(ppSfrStreamLink)].Enabled := SfrSelected;
   tvpglstMain.Items[Ord(ppStrStreamLink)].Enabled := StrSelected;
+  tvpglstMain.Items[Ord(ppSwrReachConnections)].Enabled := SwrSelected;
+  tvpglstMain.Items[Ord(ppSwrObsDisplay)].Enabled := SwrSelected;
 
   tvpglstMain.Items[Ord(ppVectors)].Enabled := VectorSelected;
   tvpglstMain.Items[Ord(ppCrossSection)].Enabled := ModflowSelected;
@@ -206,6 +251,7 @@ begin
     frameModpathTimeSeriesDisplay.GetData;
     frameModpathEndpointDisplay1.GetData;
     frameDrawCrossSection.GetData;
+    frameSwrReachConnections.GetData;
   end
   else if frmGoPhast.ModelSelection = msSutra22 then
   begin
@@ -227,7 +273,14 @@ end;
 procedure TfrmDisplayData.pglstMainChange(Sender: TObject);
 begin
   inherited;
-  HelpKeyword := pglstMain.ActivePage.HelpKeyword
+  HelpKeyword := pglstMain.ActivePage.HelpKeyword;
+  btnApply.Enabled := pglstMain.ActivePage <> jvspSwrObsDisplay;
+
+  if (pglstMain.ActivePage = jvspSwrObsDisplay)
+    and not frameSwrObsDisplay.ReachesUpdated then
+  begin
+    frameSwrObsDisplay.GetData;
+  end;
 end;
 
 procedure TfrmDisplayData.SetData;
@@ -267,6 +320,15 @@ begin
       frameModpathTimeSeriesDisplay.SetData;
     end;
   end
+
+  else if pglstMain.ActivePage = jvspSwrReachConnections then
+  begin
+    if frmGoPhast.ModelSelection in ModflowSelection then
+    begin
+      frameSwrReachConnections.SetData;
+    end;
+  end
+
   else if pglstMain.ActivePage = jvspModpathEndpoints then
   begin
     if frmGoPhast.ModelSelection in ModflowSelection then

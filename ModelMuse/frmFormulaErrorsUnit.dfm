@@ -11,19 +11,19 @@ inherited frmFormulaErrors: TfrmFormulaErrors
   FormStyle = fsStayOnTop
   OnResize = FormResize
   ExplicitWidth = 556
-  ExplicitHeight = 260
+  ExplicitHeight = 264
   PixelsPerInch = 96
   TextHeight = 19
   object pnlBottom: TPanel
     Left = 0
     Top = 181
-    Width = 548
+    Width = 540
     Height = 45
     Align = alBottom
     ParentColor = True
-    TabOrder = 0
+    TabOrder = 2
     DesignSize = (
-      548
+      540
       45)
     object btnClose: TBitBtn
       Left = 441
@@ -31,11 +31,9 @@ inherited frmFormulaErrors: TfrmFormulaErrors
       Width = 83
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkClose
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 2
+      TabOrder = 4
     end
     object btnCopy: TButton
       Left = 8
@@ -55,11 +53,9 @@ inherited frmFormulaErrors: TfrmFormulaErrors
       Width = 83
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 1
+      TabOrder = 3
       OnClick = btnHelpClick
     end
     object btnClear: TButton
@@ -68,7 +64,7 @@ inherited frmFormulaErrors: TfrmFormulaErrors
       Width = 81
       Height = 33
       Caption = 'Clear'
-      TabOrder = 3
+      TabOrder = 2
       OnClick = btnClearClick
     end
     object btnSave: TButton
@@ -80,22 +76,22 @@ inherited frmFormulaErrors: TfrmFormulaErrors
       Caption = 'Save'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 4
+      TabOrder = 1
       OnClick = btnSaveClick
     end
   end
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 548
+    Width = 540
     Height = 65
     Align = alTop
     ParentColor = True
-    TabOrder = 1
+    TabOrder = 0
     object Label1: TLabel
       Left = 1
       Top = 1
-      Width = 546
+      Width = 538
       Height = 63
       Align = alClient
       Caption = 'The following formulas were invalid. They may have been reset.'
@@ -107,7 +103,7 @@ inherited frmFormulaErrors: TfrmFormulaErrors
   object sgErrors: TRbwDataGrid4
     Left = 0
     Top = 65
-    Width = 548
+    Width = 540
     Height = 116
     Align = alClient
     ColCount = 4
@@ -115,7 +111,7 @@ inherited frmFormulaErrors: TfrmFormulaErrors
     FixedCols = 0
     RowCount = 2
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
-    TabOrder = 2
+    TabOrder = 1
     ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = False
@@ -124,7 +120,6 @@ inherited frmFormulaErrors: TfrmFormulaErrors
     SelectedRowOrColumnColor = clAqua
     UnselectableColor = clBtnFace
     ColorRangeSelection = False
-    ColorSelectedRow = True
     Columns = <
       item
         AutoAdjustRowHeights = False
@@ -146,6 +141,7 @@ inherited frmFormulaErrors: TfrmFormulaErrors
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -168,6 +164,7 @@ inherited frmFormulaErrors: TfrmFormulaErrors
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -190,6 +187,7 @@ inherited frmFormulaErrors: TfrmFormulaErrors
         WordWrapCaptions = False
         WordWrapCells = True
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -212,8 +210,10 @@ inherited frmFormulaErrors: TfrmFormulaErrors
         WordWrapCaptions = False
         WordWrapCells = True
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end>
+    WordWrapRowCaptions = False
     RowHeights = (
       24
       25)

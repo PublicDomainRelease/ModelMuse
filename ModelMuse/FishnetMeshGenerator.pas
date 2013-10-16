@@ -42,7 +42,7 @@ type
     function GetItems(Index: Integer): TFishnetMeshNode;
     procedure SetItems(Index: Integer; const Value: TFishnetMeshNode);
   public
-    constructor Create(Model: TBaseModel; Generator: TFishnetMeshGenerator);
+    constructor Create(InvalidateModelEvent: TNotifyEvent; Generator: TFishnetMeshGenerator);
     function Add: TFishnetMeshNode;
     property Items[Index: Integer]: TFishnetMeshNode read GetItems
       write SetItems; default;
@@ -53,7 +53,7 @@ type
     procedure SetCount(const Value: Integer);
     function GetCount: Integer;
   public
-    Constructor Create(Model: TBaseModel);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
     procedure AssignOpposite(Source: TMeshControl);
     function Equals(OtherMeshControl: TMeshControl): Boolean; reintroduce;
     function Opposite(OtherMeshControl: TMeshControl): Boolean;
@@ -101,6 +101,9 @@ type
     property Generator: TFishnetMeshGenerator read GetGenerator;
     function Fractions1: TRealArray;
     function Fractions2: TRealArray;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    function Model: TBaseModel;
   published
     property NodeNumbers: TIntegerCollection read GetNodeNumbers
       write SetNodeNumbers;
@@ -109,6 +112,10 @@ type
   end;
 
   TFishnetMeshElementCollection = class(TPhastCollection)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   private
     FGenerator: TFishnetMeshGenerator;
     function GetItems(Index: Integer): TFishnetMeshElement;
@@ -120,6 +127,9 @@ type
     property Items[Index: Integer]: TFishnetMeshElement read GetItems
       write SetItems; default;
     property Generator: TFishnetMeshGenerator read FGenerator;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
   end;
 
   TFishnetMeshGenerator = class(TGoPhastPersistent)
@@ -243,12 +253,23 @@ begin
 end;
 
 constructor TFishnetMeshElement.Create(Collection: TCollection);
+var
+  OnInvalidateModelEvent: TNotifyEvent;
 begin
+  { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+  if Model = nil then
+  begin
+    OnInvalidateModelEvent := nil;
+  end
+  else
+  begin
+    OnInvalidateModelEvent := Model.Invalidate;
+  end;
   inherited;
-  FNodeNumbers := TIntegerCollection.Create(Model);
+  FNodeNumbers := TIntegerCollection.Create(OnInvalidateModelEvent);
   FNodes := TFishnetNodeList.Create;
-  FFirstControl := TMeshControl.Create(Model);
-  FSecondControl := TMeshControl.Create(Model);
+  FFirstControl := TMeshControl.Create(OnInvalidateModelEvent);
+  FSecondControl := TMeshControl.Create(OnInvalidateModelEvent);
 end;
 
 destructor TFishnetMeshElement.Destroy;
@@ -636,6 +657,18 @@ begin
   result := PointInConcavePolygon(APoint, Polygon);
 end;
 
+function TFishnetMeshElement.Model: TBaseModel;
+begin
+  if Collection = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := (Collection as TFishnetMeshElementCollection).Model;
+  end;
+end;
+
 procedure TFishnetMeshElement.RestoreNodes;
 var
   Generator: TFishnetMeshGenerator;
@@ -695,10 +728,10 @@ begin
   result := inherited Add as TFishnetMeshNode
 end;
 
-constructor TFishnetMeshNodeCollection.Create(Model: TBaseModel;
+constructor TFishnetMeshNodeCollection.Create(InvalidateModelEvent: TNotifyEvent;
   Generator: TFishnetMeshGenerator);
 begin
-  inherited Create(TFishnetMeshNode, Model);
+  inherited Create(TFishnetMeshNode, InvalidateModelEvent);
   FGenerator := Generator;
 end;
 
@@ -749,8 +782,19 @@ end;
 
 constructor TFishnetMeshElementCollection.Create(Model: TBaseModel;
   Generator: TFishnetMeshGenerator);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
-  inherited Create(TFishnetMeshElement, Model);
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(TFishnetMeshElement, InvalidateModelEvent);
   FGenerator := Generator;
 end;
 
@@ -791,9 +835,19 @@ begin
 end;
 
 constructor TFishnetMeshGenerator.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
   FElements := TFishnetMeshElementCollection.Create(Model, self);
-  FNodes := TFishnetMeshNodeCollection.Create(Model, self);
+  FNodes := TFishnetMeshNodeCollection.Create(InvalidateModelEvent, self);
   FFont:= TFont.Create;
 end;
 
@@ -1343,7 +1397,7 @@ begin
   end;
 end;
 
-constructor TMeshControl.Create(Model: TBaseModel);
+constructor TMeshControl.Create(InvalidateModelEvent: TNotifyEvent);
 begin
   inherited;
   Count := 2;

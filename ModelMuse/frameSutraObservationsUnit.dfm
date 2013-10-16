@@ -9,7 +9,7 @@ inherited frameSutraObservations: TframeSutraObservations
       46)
     inherited btnDelete: TBitBtn
       Left = 263
-      ExplicitLeft = 236
+      ExplicitLeft = 263
     end
     inherited btnInsert: TBitBtn
       Left = 175
@@ -67,22 +67,22 @@ inherited frameSutraObservations: TframeSutraObservations
       347
       193)
     inherited lblSchedule: TLabel
-      Width = 114
+      Width = 94
       Caption = 'Schedule (OBSSCH)'
-      ExplicitWidth = 114
+      ExplicitWidth = 94
     end
     object lblObservationFormat: TLabel [1]
       Left = 5
       Top = 131
-      Width = 173
-      Height = 16
+      Width = 145
+      Height = 13
       Caption = 'Observation format (OBSFMT)'
     end
     object lblName: TLabel [2]
       Left = 5
       Top = 30
-      Width = 97
-      Height = 16
+      Width = 80
+      Height = 13
       Caption = 'Name (OBSNAM)'
     end
     inherited pnlCaption: TPanel
@@ -100,7 +100,7 @@ inherited frameSutraObservations: TframeSutraObservations
       Left = 5
       Top = 151
       Width = 333
-      Height = 24
+      Height = 21
       Style = csDropDownList
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 3
@@ -108,7 +108,6 @@ inherited frameSutraObservations: TframeSutraObservations
       Items.Strings = (
         'Multiple observations per line (OBS)'
         'One observation per line (OBC)')
-      ExplicitWidth = 306
     end
     object edName: TEdit
       Left = 5
@@ -119,7 +118,6 @@ inherited frameSutraObservations: TframeSutraObservations
       MaxLength = 40
       TabOrder = 1
       OnExit = edNameExit
-      ExplicitWidth = 306
     end
   end
 end

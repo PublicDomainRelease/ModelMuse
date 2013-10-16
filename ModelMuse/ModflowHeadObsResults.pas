@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, GR32, GoPhastTypes, ZoomBox2, SysUtils, Dialogs, Classes, Types,
-  DataSetUnit, Graphics;
+  DataSetUnit, Graphics, Generics.Defaults;
 
 type
   THeadObsCollection = class;
@@ -48,6 +48,10 @@ type
   end;
 
   THeadObsCollection = class(TPhastCollection)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   private
     FFileName: string;
     FFileDate: TDateTime;
@@ -88,6 +92,10 @@ type
     procedure CalculateMaxResidual(AModel: TBaseModel);
     property MaxResidual: double read FMaxResidual write FMaxResidual;
     procedure ExportToShapeFile(const FileName: string);
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
+    function RootMeanSquare: double;
   published
     property FileName: string read FFileName write SetFileName;
     property FileDate: TDateTime read FFileDate write SetFileDate;
@@ -258,8 +266,19 @@ end;
 { THeadObsCollection }
 
 constructor THeadObsCollection.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
-  inherited Create(THeadObsItem, Model);
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(THeadObsItem, InvalidateModelEvent);
   FMaxTimeLimit := TColoringLimit.Create;
   FMaxResidualLimit := TColoringLimit.Create;
   FMinTimeLimit := TColoringLimit.Create;
@@ -590,6 +609,20 @@ begin
     end;
   end;
   result := True;
+end;
+
+function THeadObsCollection.RootMeanSquare: double;
+var
+  ItemIndex: Integer;
+  Item: THeadObsItem;
+begin
+  result := 0;
+  for ItemIndex := 0 to Count - 1 do
+  begin
+    Item := HeadObs[ItemIndex];
+    result := result + Sqr(Item.Residual);
+  end;
+  Result := Sqrt(result/Count);
 end;
 
 procedure THeadObsCollection.Assign(Source: TPersistent);

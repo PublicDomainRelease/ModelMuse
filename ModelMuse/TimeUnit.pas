@@ -39,10 +39,9 @@ type
   private
     FStartTime: TRealStorage;
     procedure SetStartTime(const Value: TRealStorage);
-  published
   public
     // @name creates an instance of @classname.
-    constructor Create(Model: TBaseModel);
+    constructor Create(InvalidateModelEvent: TNotifyEvent);
     // @name returns the time-step length of the first @link(TTimeItem)
     // whose ending time is greater than Time.
     function TimeStepLength(const Time: double): double;
@@ -111,9 +110,9 @@ begin
   inherited;
 end;
 
-constructor TTimeCollection.Create(Model: TBaseModel);
+constructor TTimeCollection.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(TTimeItem, Model);
+  inherited Create(TTimeItem, InvalidateModelEvent);
   FStartTime:= TRealStorage.Create;
   Initialize;
 end;

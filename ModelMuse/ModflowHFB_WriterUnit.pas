@@ -385,6 +385,9 @@ begin
           begin
             Continue;
           end;
+
+          // Initialize HydraulicConductivityExpression and
+          // ThicknessExpression.
           DataToCompile := TModflowDataObject.Create;
           try
             DataToCompile.Compiler := Model.GetCompiler(dsoTop, eaBlocks);

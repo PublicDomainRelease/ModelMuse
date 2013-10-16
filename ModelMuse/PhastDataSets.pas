@@ -891,7 +891,7 @@ to elements or cells.}
     function GetItemOfDataSet(const DataSet: TDataArray): TInterpValuesItem;
   public
     // @name creates an instance of @classname.
-    constructor Create(Model: TBaseModel);
+    constructor Create(InvalidateModelEvent: TNotifyEvent);
     // @name provides a way to retrieve the @link(TInterpValuesItem)
     // associated with a particular data set.
     property ItemOfDataSet[const DataSet: TDataArray]: TInterpValuesItem
@@ -957,6 +957,7 @@ to elements or cells.}
     // @name removes all the @link(TSparseArrayPhastInterpolationDataSet)s from
     // the @classname.
     procedure Clear; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname.
     constructor Create(Model: TBaseModel);
     // @name destroys the current instance of @classname.
@@ -2787,9 +2788,9 @@ end;
 
 { TInterpValuesCollection }
 
-constructor TInterpValuesCollection.Create(Model: TBaseModel);
+constructor TInterpValuesCollection.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(TInterpValuesItem, Model);
+  inherited Create(TInterpValuesItem, InvalidateModelEvent);
 end;
 
 function TInterpValuesCollection.GetItemOfDataSet(

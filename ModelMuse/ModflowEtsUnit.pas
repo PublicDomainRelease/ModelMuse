@@ -151,12 +151,12 @@ type
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary(AModel: TBaseModel); override;
     function GetTimeList(Index: integer; AModel: TBaseModel): TModflowTimeList; override;
-    // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
-    // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+    // See @link(TCustomListArrayBoundColl.AssignArrayCellValues
+    // TCustomListArrayBoundColl.AssignArrayCellValues)
+    procedure AssignArrayCellValues(DataSets: TList; ItemIndex: Integer;
       AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
-    // TCustomMF_ArrayBoundColl.InitializeTimeLists)
+    // See @link(TCustomListArrayBoundColl.InitializeTimeLists
+    // TCustomListArrayBoundColl.InitializeTimeLists)
     procedure InitializeTimeLists(ListOfTimeLists: TList;
       AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
@@ -949,7 +949,7 @@ begin
   inherited;
 end;
 
-procedure TEtsSurfDepthCollection.AssignCellValues(DataSets: TList;
+procedure TEtsSurfDepthCollection.AssignArrayCellValues(DataSets: TList;
   ItemIndex: Integer; AModel: TBaseModel);
 var
   EvapotranspirationSurfaceArray: TDataArray;

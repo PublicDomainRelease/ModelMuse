@@ -117,7 +117,6 @@ object frameCustomSutraFeature: TframeCustomSutraFeature
       SelectedRowOrColumnColor = clAqua
       UnselectableColor = clBtnFace
       ColorRangeSelection = False
-      ColorSelectedRow = True
       Columns = <
         item
           AutoAdjustRowHeights = True
@@ -139,6 +138,7 @@ object frameCustomSutraFeature: TframeCustomSutraFeature
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -161,6 +161,7 @@ object frameCustomSutraFeature: TframeCustomSutraFeature
           WordWrapCaptions = False
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end
         item
@@ -183,6 +184,7 @@ object frameCustomSutraFeature: TframeCustomSutraFeature
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -205,8 +207,10 @@ object frameCustomSutraFeature: TframeCustomSutraFeature
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end>
+      WordWrapRowCaptions = False
     end
   end
   object pnlTop: TPanel

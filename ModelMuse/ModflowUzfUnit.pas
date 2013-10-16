@@ -169,12 +169,12 @@ type
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary(AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
-    // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+    // See @link(TCustomListArrayBoundColl.AssignArrayCellValues
+    // TCustomListArrayBoundColl.AssignArrayCellValues)
+    procedure AssignArrayCellValues(DataSets: TList; ItemIndex: Integer;
       AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
-    // TCustomMF_ArrayBoundColl.InitializeTimeLists)
+    // See @link(TCustomListArrayBoundColl.InitializeTimeLists
+    // TCustomListArrayBoundColl.InitializeTimeLists)
     procedure InitializeTimeLists(ListOfTimeLists: TList; AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
@@ -207,12 +207,12 @@ type
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary(AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
-    // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList;ItemIndex: Integer;
+    // See @link(TCustomListArrayBoundColl.AssignArrayCellValues
+    // TCustomListArrayBoundColl.AssignArrayCellValues)
+    procedure AssignArrayCellValues(DataSets: TList;ItemIndex: Integer;
       AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
-    // TCustomMF_ArrayBoundColl.InitializeTimeLists)
+    // See @link(TCustomListArrayBoundColl.InitializeTimeLists
+    // TCustomListArrayBoundColl.InitializeTimeLists)
     procedure InitializeTimeLists(ListOfTimeLists: TList; AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
@@ -968,7 +968,7 @@ begin
   AddBoundary(TUzfExtinctDepthStorage.Create(AModel));
 end;
 
-procedure TUzfExtinctionDepthCollection.AssignCellValues(DataSets: TList;
+procedure TUzfExtinctionDepthCollection.AssignArrayCellValues(DataSets: TList;
   ItemIndex: Integer; AModel: TBaseModel);
 var
   ExtinctionDepthRateArray: TDataArray;
@@ -1104,7 +1104,7 @@ begin
   AddBoundary(TUzfWaterContentStorage.Create(AModel));
 end;
 
-procedure TUzfWaterContentCollection.AssignCellValues(DataSets: TList;
+procedure TUzfWaterContentCollection.AssignArrayCellValues(DataSets: TList;
   ItemIndex: Integer; AModel: TBaseModel);
 var
   WaterContentArray: TDataArray;

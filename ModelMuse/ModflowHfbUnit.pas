@@ -256,7 +256,7 @@ var
   Model: TPhastModel;
   ChildIndex: Integer;
 begin
-  Model := FModel as TPhastModel;
+  Model := ParentModel as TPhastModel;
   if not (csDestroying in Model.ComponentState) then
   begin
     Observer.UpToDate := True;

@@ -32,7 +32,8 @@ uses Windows,
   frameScreenObjectFarmUnit, frameScreenObjectFmpBoundaryUnit,
   frameScreenObjectFmpPrecipUnit, frameScreenObjectFmpEvapUnit,
   frameScreenObjectCropIDUnit, frameScreenObjectCfpPipesUnit,
-  frameScreenObjectCfpFixedUnit;
+  frameScreenObjectCfpFixedUnit, frameScreenObjectSwrUnit,
+  frameScreenObjectSwrReachUnit, ModflowSwrReachUnit;
 
   { TODO : Consider making this a property sheet like the Object Inspector that
   could stay open at all times.  Boundary conditions and vertices might be
@@ -84,46 +85,6 @@ type
   // (TfrmScreenObjectProperties.@link(
   // TfrmScreenObjectProperties.dgWellElevations)).
   TWellIntervalColumns = (wicNone, wicFirst, wicSecond);
-
-  // @name is used to store edited values associated with a @link(TDataArray)
-  // in a @link(TScreenObject)  while they are being edited
-  // prior to actually changing those values.
-{  TScreenObjectDataEdit = class(TClassificationObject)
-  private
-    FDataArray: TDataArray;
-    FUsed: TCheckBoxState;
-    FFormula: string;
-    FInterpValue: TInterpValuesCollection;
-    FUsesList: TStringList;
-    FVariable: TCustomVariable;
-    FExpression: TExpression;
-    FShouldUpdateDataSet: boolean;
-    FUsedBy: TStringList;
-    FNode: TTreeNode;
-    procedure SetUsed(const Value: TCheckBoxState);
-    procedure SetFormula(const Value: string);
-  public
-    property DataArray: TDataArray read FDataArray;
-    property Used: TCheckBoxState read FUsed write SetUsed;
-    property Formula: string read FFormula write SetFormula;
-    // @name holds @link(TInterpValuesItem)s for @link(DataArray).
-    // Each one in @name corresponds to a different
-    // @link(TScreenObject).
-    property InterpValue: TInterpValuesCollection read FInterpValue
-      write FInterpValue;
-    Constructor Create(ListOfScreenObjects: TList; DataArray: TDataArray);
-    Destructor Destroy; override;
-    property UsesList: TStringList read FUsesList;
-    property Variable: TCustomVariable read FVariable write FVariable;
-    property Expression: TExpression read FExpression write FExpression;
-    property ShouldUpdateDataSet: boolean read FShouldUpdateDataSet;
-    property UsedBy: TStringList read FUsedBy;
-    procedure Invalidate;
-    property Node: TTreeNode read FNode write FNode;
-    function ClassificationName: string; override;
-    function FullClassification: string; override;
-  end;
-  }
 
   {@abstract(@name is used to edit one or more
    @link(ScreenObjectUnit.TScreenObject)s.)  When a
@@ -318,6 +279,29 @@ type
     frameCfpFixedHeads: TframeScreenObjectCfpFixed;
     jvspCfpRechargeFraction: TJvStandardPage;
     frameCfpRechargeFraction: TframeScreenObjectNoParam;
+    jvspSWR_Rain: TJvStandardPage;
+    frameSWR_Rain: TframeScreenObjectNoParam;
+    jvspSWR_Evap: TJvStandardPage;
+    frameSWR_Evap: TframeScreenObjectNoParam;
+    jvspSwr_LatInfl: TJvStandardPage;
+    jvspSWR_Stage: TJvStandardPage;
+    frameSWR_LatInfl: TframeScreenObjectSwr;
+    frameSWR_Stage: TframeScreenObjectNoParam;
+    jvspSWR_DirectRunoff: TJvStandardPage;
+    frameSWR_DirectRunoff: TframeScreenObjectNoParam;
+    jvspSwrReaches: TJvStandardPage;
+    frameSwrReach: TframeScreenObjectSwrReach;
+    splComment: TSplitter;
+    cbCaptionVisible: TCheckBox;
+    lblCaptionX: TLabel;
+    lblCaptionY: TLabel;
+    memoCaption: TMemo;
+    rdeCaptionX: TRbwDataEntry;
+    rdeCaptionY: TRbwDataEntry;
+    dlgFontCaption: TFontDialog;
+    btnCaptionFont: TButton;
+    grpCaption: TGroupBox;
+    grpComment: TGroupBox;
     // @name changes which check image is displayed for the selected item
     // in @link(jvtlModflowBoundaryNavigator).
     procedure jvtlModflowBoundaryNavigatorMouseDown(Sender: TObject;
@@ -547,6 +531,32 @@ type
     procedure frameCfpRechargeFractiondgModflowBoundarySetEditText(
       Sender: TObject; ACol, ARow: Integer; const Value: string);
     procedure frameCfpRechargeFractionseNumberOfTimesChange(Sender: TObject);
+    procedure frameSWR_RaindgModflowBoundaryEndUpdate(Sender: TObject);
+    procedure frameSWR_RaindgModflowBoundarySetEditText(Sender: TObject; ACol,
+      ARow: Integer; const Value: string);
+    procedure frameSWR_RainseNumberOfTimesChange(Sender: TObject);
+    procedure frameSWR_EvapdgModflowBoundarySetEditText(Sender: TObject; ACol,
+      ARow: Integer; const Value: string);
+    procedure frameSWR_EvapseNumberOfTimesChange(Sender: TObject);
+    procedure frameSWR_EvapdgModflowBoundaryEndUpdate(Sender: TObject);
+    procedure frameSWR_LatInfldgModflowBoundarySetEditText(Sender: TObject;
+      ACol, ARow: Integer; const Value: string);
+    procedure frameSWR_LatInflseNumberOfTimesChange(Sender: TObject);
+    procedure frameSWR_LatInflcomboFormulaInterpChange(Sender: TObject);
+    procedure frameSWR_LatInfldgModflowBoundaryEndUpdate(Sender: TObject);
+    procedure frameSWR_StagedgModflowBoundarySetEditText(Sender: TObject; ACol,
+      ARow: Integer; const Value: string);
+    procedure frameSWR_StagedgModflowBoundaryEndUpdate(Sender: TObject);
+    procedure frameSWR_StageseNumberOfTimesChange(Sender: TObject);
+    procedure frameSWR_DirectRunoffdgModflowBoundarySetEditText(Sender: TObject;
+      ACol, ARow: Integer; const Value: string);
+    procedure frameSWR_DirectRunoffseNumberOfTimesChange(Sender: TObject);
+    procedure frameSWR_DirectRunoffdgModflowBoundaryEndUpdate(Sender: TObject);
+    procedure frameSwrdgModflowBoundarySetEditText(Sender: TObject; ACol,
+      ARow: Integer; const Value: string);
+    procedure cbCaptionVisibleClick(Sender: TObject);
+    procedure memoCaptionChange(Sender: TObject);
+    procedure btnCaptionFontClick(Sender: TObject);
   published
     // Clicking @name closes the @classname without changing anything.
     // See @link(btnCancelClick),
@@ -1365,6 +1375,12 @@ type
     FCfpPipe_Node: TJvPageIndexNode;
     FCfpFixedHead_Node: TJvPageIndexNode;
     FCRCH_Node: TJvPageIndexNode;
+    FSWR_Rain_Node: TJvPageIndexNode;
+    FSWR_Evap_Node: TJvPageIndexNode;
+    FSWR_LatInflow_Node: TJvPageIndexNode;
+    FSWR_Stage_Node: TJvPageIndexNode;
+    FSWR_DirectRunoff_Node: TJvPageIndexNode;
+    FSWR_Reach_Node: TJvPageIndexNode;
     // @name is used to store the column that the user last selected
     // in one of the grids for boundary-condition, time-varying stress.
     // For boundary conditions that allow PHAST-style interpolation,
@@ -1486,6 +1502,9 @@ type
     FSutraSpecTempConc_Node: TJvPageIndexNode;
     FSutraFluidFlux_Node: TJvPageIndexNode;
     FSutraMassEnergyFlux_Node: TJvPageIndexNode;
+    FCaptionFontChanged: Boolean;
+    FCaptionTextChanged: Boolean;
+    FCaptionFont: TFont;
     Function GenerateNewDataSetFormula(DataArray: TDataArray): string;
     // @name assigns new formulas for @link(TDataArray)s for each
     // @link(TScreenObject) in @link(FNewProperties).
@@ -1767,6 +1786,33 @@ type
       ColumnOffset: Integer; ScreenObjectList: TList;
       TimeList: TParameterTimeList);
     procedure StoreResBoundary;
+
+    procedure GetSwrRainBoundary(ScreenObjectList: TList);
+    procedure GetSwrRainBoundaryCollection(DataGrid: TRbwDataGrid4;
+      ColumnOffset: Integer; ScreenObjectList: TList;
+      TimeList: TParameterTimeList);
+    procedure StoreSwrRainBoundary;
+    procedure GetSwrEvapBoundary(ScreenObjectList: TList);
+    procedure StoreSwrEvapBoundary;
+    procedure CreateSWR_Reach_Node(AScreenObject: TScreenObject);
+    procedure CreateSWR_Rain_Node(AScreenObject: TScreenObject);
+    procedure CreateSWR_Evap_Node(AScreenObject: TScreenObject);
+    procedure GetSwrEvapBoundaryCollection(DataGrid: TRbwDataGrid4;
+      ColumnOffset: Integer; ScreenObjectList: TList;
+      TimeList: TParameterTimeList);
+    procedure CreateSWR_LatInflow_Node(AScreenObject: TScreenObject);
+    procedure GetSwrLatInflowBoundary(ScreenObjectList: TList);
+    procedure StoreSwrLatInflowBoundary;
+    procedure GetSwrLatInflowBoundaryCollection(DataGrid: TRbwDataGrid4;
+      ColumnOffset: Integer; ScreenObjectList: TList;
+      TimeList: TParameterTimeList);
+    procedure CreateSWR_Stage_Node(AScreenObject: TScreenObject);
+    procedure GetSwrStageBoundary(ScreenObjectList: TList);
+    procedure GetSwrStageBoundaryCollection(DataGrid: TRbwDataGrid4;
+      ColumnOffset: Integer; ScreenObjectList: TList;
+      TimeList: TParameterTimeList);
+    procedure StoreSwrStageBoundary;
+
     procedure GetGlobalVariables;
     procedure GetLakBoundary(ScreenObjectList: TList);
     procedure GetLakeBoundaryCollection(DataGrid: TRbwDataGrid4;
@@ -1867,6 +1913,13 @@ type
     procedure CreateCfpRechargeNode;
     procedure GetCfpRechargeBoundary(ScreenObjectList: TList);
     procedure StoreCfpRechargeFraction;
+    procedure CreateSWR_DirectRunoff_Node(AScreenObject: TScreenObject);
+    procedure GetSwrDirectRunoffBoundary(ScreenObjectList: TList);
+    procedure StoreSwrDirectRunoffBoundary;
+    procedure GetSwrDirectRunoffBoundaryCollection(DataGrid: TRbwDataGrid4;
+      ColumnOffset: Integer; ScreenObjectList: TList;
+      TimeList: TParameterTimeList);
+    procedure GetSwrReaches(const ScreenObjectList: TList);
 
     // @name is set to @true when the @classname has stored values of the
     // @link(TScreenObject)s being edited.
@@ -2050,6 +2103,8 @@ type
     procedure CreateSutraFeatureNodes;
     procedure SetDefaultCellSize;
     procedure SetModflowBoundaryColCount;
+    procedure GetObjectLabelForAdditionalScreenObject(AScreenObject: TScreenObject);
+    procedure SetObjectCaption(List: TList);
     { Private declarations }
   public
     procedure Initialize;
@@ -2099,7 +2154,8 @@ uses Math, StrUtils, JvToolEdit, frmGoPhastUnit, AbstractGridUnit,
   ModflowStrUnit, ModflowFhbUnit, ModflowFmpFarmUnit, frameDeliveryGridUnit,
   ModflowFmpPrecipitationUnit, ModflowFmpEvapUnit, ModflowFmpCropSpatialUnit,
   ModflowFmpWellUnit, ModflowCfpPipeUnit, ModflowCfpFixedUnit,
-  ModflowCfpRechargeUnit;
+  ModflowCfpRechargeUnit, ModflowSwrUnit, ModflowSwrDirectRunoffUnit,
+  ObjectLabelUnit;
 
 resourcestring
   StrConcentrationObserv = 'Concentration Observations: ';
@@ -2162,7 +2218,7 @@ resourcestring
   'erence.';
   StrYouMustSpecifyNod = 'You must specify nodes or elements before editing ' +
   'the formula.';
-  StrErrorTheFormulaI = 'Error: the formula is does not result in a real num' +
+  StrErrorTheFormulaI = 'Error: the formula does not result in a real num' +
   'ber';
   StrThisObjectWillNo = 'This object will no longer set the properties of 2D' +
   ' data sets that are used in its elevation formula(s) either directly or i' +
@@ -2183,8 +2239,8 @@ resourcestring
   StrFirstDepth = 'First Depth';
   StrSecondDepth = 'Second Depth';
   StrSpecifiedSolution = 'Specified solution';
-  StrErrorThereAppearsCirc = 'Error: There appears to be an error or a cirul' +
-  'ar reference in this formula.  Do you wish to restore the old formula';
+  StrErrorThereAppearsCirc = 'Error: There appears to be an error or a cirular' +
+  ' reference in this formula.  Do you wish to restore the old formula';
   StrErrorThereAppears2 = 'Error: There appears to be a cirular reference to' +
   ' "%s" in this formula.  Do you wish to restore the old formula';
   StrInvalidMethod = 'You are attempting to specify MODFLOW features but' +
@@ -2864,6 +2920,31 @@ begin
     begin
       StoreCfpRechargeFraction;
     end
+    else if jvtlModflowBoundaryNavigator.Selected = FSWR_Reach_Node then
+    begin
+      jvtlModflowBoundaryNavigator.Invalidate;
+    end
+    else if jvtlModflowBoundaryNavigator.Selected = FSWR_Rain_Node then
+    begin
+      StoreSwrRainBoundary;
+    end
+    else if jvtlModflowBoundaryNavigator.Selected = FSWR_Evap_Node then
+    begin
+      StoreSwrEvapBoundary;
+    end
+    else if jvtlModflowBoundaryNavigator.Selected = FSWR_LatInflow_Node then
+    begin
+      StoreSwrLatInflowBoundary;
+    end
+    else if jvtlModflowBoundaryNavigator.Selected = FSWR_Stage_Node then
+    begin
+      StoreSwrStageBoundary;
+    end
+    else if jvtlModflowBoundaryNavigator.Selected = FSWR_DirectRunoff_Node then
+    begin
+      StoreSwrDirectRunoffBoundary;
+    end
+
     else
     begin
       Assert(False);
@@ -2877,6 +2958,12 @@ begin
 //      jvtlModflowBoundaryNavigator.Invalidate;
 //    end;
   end;
+end;
+
+procedure TfrmScreenObjectProperties.memoCaptionChange(Sender: TObject);
+begin
+  inherited;
+  FCaptionTextChanged := True;
 end;
 
 procedure TfrmScreenObjectProperties.InitializeControls(
@@ -2993,6 +3080,12 @@ begin
   CreateMt3dmsSsmNode;
   CreateMt3dmsTobConcNode(AScreenObject);
   CreateMt3dmsTobFluxNode;
+  CreateSWR_Reach_Node(AScreenObject);
+  CreateSWR_Rain_Node(AScreenObject);
+  CreateSWR_Evap_Node(AScreenObject);
+  CreateSWR_LatInflow_Node(AScreenObject);
+  CreateSWR_Stage_Node(AScreenObject);
+  CreateSWR_DirectRunoff_Node(AScreenObject);
 
   CreateSutraFeatureNodes;
 
@@ -3067,10 +3160,12 @@ var
   ValueItem: TValueArrayItem;
   TreeViewFilled: boolean;
   SelectCell: TGridRect;
+  ObjectLabel: TObjectLabel;
 begin
   // This line should always be the first line.
   IsLoaded := False;
 
+  memoComments.Enabled := True;
   SetModflowBoundaryColCount;
 
 //  clbChildModels.Handle;
@@ -3105,10 +3200,22 @@ begin
   FCanFillTreeView := False;
   tabImportedData.TabVisible := True;
   memoComments.Text := AScreenObject.Comment;
+
+  FCaptionFontChanged := False;
+  ObjectLabel := AScreenObject.ObjectLabel;
+  cbCaptionVisible.AllowGrayed := False;
+  cbCaptionVisible.Checked := ObjectLabel.Visible;
+  rdeCaptionX.IntegerValue := ObjectLabel.OffSet.X;
+  rdeCaptionY.IntegerValue := ObjectLabel.OffSet.Y;
+  memoCaption.Lines.Text := ObjectLabel.Caption;
+  FCaptionTextChanged := False;
+
   SetCheckBoxCaptions;
   frameModpathParticles.InitializeFrame;
   edObjectOrder.Text := IntToStr(
     frmGoPhast.PhastModel.IndexOfScreenObject(AScreenObject)+1);
+
+  frameSwrReach.InitializeFrame;
 
   InitializeGridObjects;
   seBoundaryTimes.Value := 1;
@@ -3516,6 +3623,12 @@ begin
         BoundaryNodeList.Add(FCfpPipe_Node);
         BoundaryNodeList.Add(FCfpFixedHead_Node);
         BoundaryNodeList.Add(FCRCH_Node);
+        BoundaryNodeList.Add(FSWR_Reach_Node);
+        BoundaryNodeList.Add(FSWR_Rain_Node);
+        BoundaryNodeList.Add(FSWR_Evap_Node);
+        BoundaryNodeList.Add(FSWR_LatInflow_Node);
+        BoundaryNodeList.Add(FSWR_Stage_Node);
+        BoundaryNodeList.Add(FSWR_DirectRunoff_Node);
 
 
         BoundaryNodeList.Pack;
@@ -3873,6 +3986,7 @@ begin
       TframeScreenObject(Component).FrameLoaded := Value;
     end;
   end;
+  frameSwrReach.frameSwr.FrameLoaded := Value;
 end;
 
 procedure TfrmScreenObjectProperties.Mnw2Changed(Sender: TObject);
@@ -3949,10 +4063,24 @@ begin
 end;
 
 procedure TfrmScreenObjectProperties.SetMultipleScreenObjectData;
+var
+  List: TList;
+  index: Integer;
 begin
   UpdateScreenObjectData;
 
   SetFrameData;
+
+  List := TList.Create;
+  try
+    for index := 0 to FNewProperties.Count - 1 do
+    begin
+      List.Add(FNewProperties[index].ScreenObject)
+    end;
+    SetObjectCaption(List);
+  finally
+    List.Free;
+  end;
 
   FUndoSetScreenObjectProperties.Free;
   FUndoSetScreenObjectProperties :=
@@ -3967,7 +4095,7 @@ begin
   if FUndoSetScreenObjectProperties <> nil then
   begin
     SetGages(FScreenObjectList);
-    SetAllFluxObservations(FScreenObjectList);
+    SetAllFluxObservations(List);
     FUndoSetScreenObjectProperties.UpdateObservations;
     frmGoPhast.UndoStack.Submit(FUndoSetScreenObjectProperties);
     FUndoSetScreenObjectProperties := nil;
@@ -4012,6 +4140,7 @@ begin
     List.Add(FScreenObject);
     SetGages(List);
     SetAllFluxObservations(List);
+    SetObjectCaption(List);
   finally
     List.Free;
   end;
@@ -4128,6 +4257,12 @@ begin
   inherited;
   (Sender as TCheckBox).AllowGrayed := False;
   SetGageNodeStateIndex;
+end;
+
+procedure TfrmScreenObjectProperties.cbCaptionVisibleClick(Sender: TObject);
+begin
+  inherited;
+  cbCaptionVisible.AllowGrayed := False;
 end;
 
 procedure TfrmScreenObjectProperties.cbDuplicatesAllowedClick(Sender: TObject);
@@ -4634,9 +4769,12 @@ begin
     end;
     if AScreenObjectList.Count > 1 then
     begin
+      memoComments.Enabled := False;
+      memoComments.Lines.Clear;
+
       tabVertexValues.TabVisible := False;
       clbChildModels.Enabled := False;
-      tabImportedData.TabVisible := False;
+//      tabImportedData.TabVisible := False;
       tabImportedData.TabVisible := False;
       CompilerList := TList.Create;
       try
@@ -4683,6 +4821,7 @@ begin
         AScreenObject := AScreenObjectList[ScreenObjectIndex];
         memoNames.Lines.Add(AScreenObject.Name);
 
+        GetObjectLabelForAdditionalScreenObject(AScreenObject);
         GetEvaluatedAtForAdditionalObject(AScreenObject);
         GetPositionLockedForAdditionalObject(AScreenObject);
         GetDataSetsForAdditionalObject(AScreenObject);
@@ -4748,6 +4887,55 @@ begin
 //  OutputDebugString('SAMPLING OFF');
 end;
 
+procedure TfrmScreenObjectProperties.SetObjectCaption(List: TList);
+var
+  AScreenObject: TScreenObject;
+  ObjectLabel: TObjectLabel;
+  index: Integer;
+begin
+  for index := 0 to List.Count - 1 do
+  begin
+    AScreenObject := List[index];
+    ObjectLabel := AScreenObject.ObjectLabel;
+    if cbCaptionVisible.State <> cbGrayed then
+    begin
+      ObjectLabel.Visible := cbCaptionVisible.Checked;
+    end;
+    if (rdeCaptionX.Text <> '') and (rdeCaptionY.Text <> '') then
+    begin
+      ObjectLabel.OffSet := Point(rdeCaptionX.IntegerValue, rdeCaptionY.IntegerValue);
+    end;
+    if FCaptionTextChanged then
+    begin
+      ObjectLabel.Caption := memoCaption.Text;
+    end;
+    if FCaptionFontChanged then
+    begin
+      ObjectLabel.Font := FCaptionFont;
+    end;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.GetObjectLabelForAdditionalScreenObject(AScreenObject: TScreenObject);
+var
+  ObjectLabel: TObjectLabel;
+begin
+  ObjectLabel := AScreenObject.ObjectLabel;
+  if cbCaptionVisible.Checked <> ObjectLabel.Visible then
+  begin
+    cbCaptionVisible.AllowGrayed := True;
+    cbCaptionVisible.State := cbGrayed;
+  end;
+  if (rdeCaptionX.Text <> '') and (rdeCaptionX.IntegerValue <> ObjectLabel.OffSet.X) then
+  begin
+    rdeCaptionX.Text := '';
+  end;
+  if (rdeCaptionY.Text <> '') and (rdeCaptionY.IntegerValue <> ObjectLabel.OffSet.Y) then
+  begin
+    rdeCaptionY.Text := '';
+  end;
+end;
+
 procedure TfrmScreenObjectProperties.SetModflowBoundaryColCount;
 var
   CropIrrigationRequirement: TCropIrrigationRequirement;
@@ -4794,6 +4982,12 @@ begin
     frameEtsParam.dgModflowBoundary.ColCount := 5 + (frmGoPhast.PhastModel.ModflowPackages.EtsPackage.SegmentCount - 1) * 2;
   end;
   frameMT3DMS_SSM.dgModflowBoundary.ColCount := 2 + frmGoPhast.PhastModel.MobileComponents.Count + frmGoPhast.PhastModel.ImmobileComponents.Count;
+  frameSWR_Rain.dgModflowBoundary.ColCount := 3;
+  frameSWR_Evap.dgModflowBoundary.ColCount := 3;
+  frameSWR_LatInfl.dgModflowBoundary.ColCount := 3;
+  frameSWR_Stage.dgModflowBoundary.ColCount := 3;
+  frameSWR_DirectRunoff.dgModflowBoundary.ColCount := 4;
+//  frameSwrReach.frameSwr.dgModflowBoundary.ColCount := 6;
 end;
 
 procedure TfrmScreenObjectProperties.CreateSutraFeatureNodes;
@@ -4841,7 +5035,10 @@ end;
 //end;
 
 procedure TfrmScreenObjectProperties.GetCanSelectNode(Node: TTreeNode; var AllowChange: Boolean);
+var
+  SwrPackage: TSwrPackage;
 begin
+  SwrPackage := frmGoPhast.PhastModel.ModflowPackages.SwrPackage;
   if (Node = FChob_Node) then
   begin
     if (FCHD_Node = nil) or (FCHD_Node.StateIndex = 1) then
@@ -4936,6 +5133,30 @@ begin
     begin
       AllowChange := True;
     end
+    else if (FSWR_Reach_Node <> nil) and (FSWR_Reach_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end
+    else if (FSWR_Rain_Node <> nil) and (FSWR_Rain_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end
+    else if (FSWR_Evap_Node <> nil) and (FSWR_Evap_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end
+    else if (FSWR_LatInflow_Node <> nil) and (FSWR_LatInflow_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end
+    else if (FSWR_Stage_Node <> nil) and (FSWR_Stage_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end
+    else if (FSWR_DirectRunoff_Node <> nil) and (FSWR_DirectRunoff_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end
     {else if (FFmpFarm_Node <> nil) and (FFmpFarm_Node.StateIndex <> 1) then
     begin
       AllowChange := True;
@@ -4974,6 +5195,50 @@ begin
       AllowChange := False;
     end
   end
+  else if (Node = FSWR_Reach_Node) and (FSWR_Reach_Node.StateIndex <> 1) then
+  begin
+    AllowChange := True;
+  end
+  else if Node = FSWR_Rain_Node then
+  begin
+    if (SwrPackage.RainSpecification = smObject) and (FSWR_Reach_Node.StateIndex = 1) then
+    begin
+      AllowChange := False;
+    end;
+   { TODO -cSWR : Allow selection only if reach definintion also selected or if array method used in package. }
+//    AllowChange := True;
+  end
+  else if Node = FSWR_Evap_Node then
+  begin
+    if (SwrPackage.EvapSpecification = smObject) and (FSWR_Reach_Node.StateIndex = 1) then
+    begin
+      AllowChange := False;
+    end;
+   { TODO -cSWR : Allow selection only if reach definintion also selected or if array method used in package. }
+//    AllowChange := True;
+  end
+  else if Node = FSWR_LatInflow_Node then
+  begin
+    if (SwrPackage.LateralInflowSpecification = smObject) and (FSWR_Reach_Node.StateIndex = 1) then
+    begin
+      AllowChange := False;
+    end;
+   { TODO -cSWR : Allow selection only if reach definintion also selected or if array method used in package. }
+//    AllowChange := True;
+  end
+  else if Node = FSWR_Stage_Node then
+  begin
+    if (SwrPackage.StageSpecification = smObject) and (FSWR_Reach_Node.StateIndex = 1) then
+    begin
+      AllowChange := False;
+    end;
+   { TODO -cSWR : Allow selection only if reach definintion also selected or if array method used in package. }
+//    AllowChange := True;
+  end
+  else if Node = FSWR_DirectRunoff_Node then
+  begin
+    AllowChange := True;
+  end;
 
 //  end
 //  else if (Node = FMt3dms_Node) then
@@ -5406,6 +5671,13 @@ begin
     frameFhbFlow.SetData(FNewProperties,
       (FFhbFlow_Node.StateIndex = 2),
       (FFhbFlow_Node.StateIndex = 1) and frmGoPhast.PhastModel.FhbIsSelected);
+  end;
+
+  if (FSWR_Reach_Node <> nil) then
+  begin
+    frameSwrReach.SetData(FNewProperties,
+      (FSWR_Reach_Node.StateIndex = 2),
+      (FSWR_Reach_Node.StateIndex = 1) and frmGoPhast.PhastModel.SwrIsSelected);
   end;
 
   if (FSutraObs_Node <> nil) then
@@ -6160,6 +6432,793 @@ procedure TfrmScreenObjectProperties.GetStreamFluxObservations(
 begin
   GetFluxObservationsForFrame(FStob_Node, frmGoPhast.PhastModel.StreamObservations,
     AScreenObjectList, frameSTOB);
+end;
+
+procedure TfrmScreenObjectProperties.GetSwrEvapBoundary(
+  ScreenObjectList: TList);
+var
+  TimeList: TParameterTimeList;
+  ColumnOffset: integer;
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  Boundary: TSwrEvapBoundary;
+  Item: TCustomModflowBoundaryItem;
+  Time: TParameterTime;
+  TimeIndex: Integer;
+  Time1: TParameterTime;
+  Time2: TParameterTime;
+  DataGrid: TRbwDataGrid4;
+  State: TCheckBoxState;
+  First: Boolean;
+begin
+  if not frmGoPhast.PhastModel.SwrIsSelected then
+  begin
+    Exit;
+  end;
+  TimeList := TParameterTimeList.Create;
+  try
+    State := cbUnchecked;
+    for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+    begin
+      AScreenObject := ScreenObjectList[ScreenObjectIndex];
+      Boundary := AScreenObject.ModflowSwrEvap;
+      UpdateBoundaryState(Boundary, ScreenObjectIndex, State);
+    end;
+    if FSWR_Evap_Node <> nil then
+    begin
+      FSWR_Evap_Node.StateIndex := Ord(State)+1;
+    end;
+    First := True;
+    for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+    begin
+      AScreenObject := ScreenObjectList[ScreenObjectIndex];
+      Boundary := AScreenObject.ModflowSwrEvap;
+      // get all the times associated with the boundary.
+      if Boundary <> nil then
+      begin
+        for TimeIndex := 0 to Boundary.Values.Count - 1 do
+        begin
+          Item := Boundary.Values[TimeIndex] as TCustomModflowBoundaryItem;
+          Time := TParameterTime.Create;
+          Time.StartTime := Item.StartTime;
+          Time.EndTime := Item.EndTime;
+          TimeList.Add(Time);
+        end;
+
+      end;
+    end;
+    // Sort the times in ascending order.
+    TimeList.Sort;
+    // get rid of duplicate times.
+    for TimeIndex := TimeList.Count - 1 downto 1 do
+    begin
+      Time1 := TimeList[TimeIndex];
+      Time2 := TimeList[TimeIndex - 1];
+      if (Time1.StartTime = Time2.StartTime) and (Time1.EndTime = Time2.EndTime) then
+      begin
+        TimeList.Delete(TimeIndex);
+      end;
+    end;
+
+    // display the times that are left.
+
+    frameSWR_Evap.seNumberOfTimes.Value := TimeList.Count;
+    DataGrid := frameSWR_Evap.dgModflowBoundary;
+    DataGrid.BeginUpdate;
+    try
+      for TimeIndex := 0 to TimeList.Count - 1 do
+      begin
+        Time := TimeList[TimeIndex];
+        DataGrid.Cells[0, TimeIndex + 1] := FloatToStr(Time.StartTime);
+        DataGrid.Cells[1, TimeIndex + 1] := FloatToStr(Time.EndTime);
+      end;
+
+      ColumnOffset := 2;
+      GetSwrEvapBoundaryCollection(DataGrid, ColumnOffset,
+        ScreenObjectList, TimeList);
+    finally
+      DataGrid.EndUpdate;
+    end;
+
+  finally
+    TimeList.Free;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.GetSwrLatInflowBoundary(
+  ScreenObjectList: TList);
+var
+  TimeList: TParameterTimeList;
+  ColumnOffset: integer;
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  Boundary: TSwrLatInflowBoundary;
+  Item: TCustomModflowBoundaryItem;
+  Time: TParameterTime;
+  TimeIndex: Integer;
+  Time1: TParameterTime;
+  Time2: TParameterTime;
+  DataGrid: TRbwDataGrid4;
+  State: TCheckBoxState;
+  First: Boolean;
+begin
+  if not frmGoPhast.PhastModel.SwrIsSelected then
+  begin
+    Exit;
+  end;
+  frameSWR_LatInfl.comboFormulaInterp.Enabled :=
+    frmGoPhast.PhastModel.ModflowPackages.
+    SwrPackage.LateralInflowSpecification = smObject;
+  TimeList := TParameterTimeList.Create;
+  try
+    State := cbUnchecked;
+    for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+    begin
+      AScreenObject := ScreenObjectList[ScreenObjectIndex];
+      Boundary := AScreenObject.ModflowSwrLatInflow;
+      UpdateBoundaryState(Boundary, ScreenObjectIndex, State);
+    end;
+    if FSWR_LatInflow_Node <> nil then
+    begin
+      FSWR_LatInflow_Node.StateIndex := Ord(State)+1;
+    end;
+    First := True;
+    for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+    begin
+      AScreenObject := ScreenObjectList[ScreenObjectIndex];
+      Boundary := AScreenObject.ModflowSwrLatInflow;
+      // get all the times associated with the boundary.
+      if Boundary <> nil then
+      begin
+        for TimeIndex := 0 to Boundary.Values.Count - 1 do
+        begin
+          Item := Boundary.Values[TimeIndex] as TCustomModflowBoundaryItem;
+          Time := TParameterTime.Create;
+          Time.StartTime := Item.StartTime;
+          Time.EndTime := Item.EndTime;
+          TimeList.Add(Time);
+        end;
+
+        if First then
+        begin
+          frameSWR_LatInfl.comboFormulaInterp.ItemIndex :=
+            Ord(Boundary.FormulaInterpretation);
+          First := False;
+        end
+        else
+        begin
+          if frameSWR_LatInfl.comboFormulaInterp.ItemIndex <>
+            Ord(Boundary.FormulaInterpretation) then
+          begin
+            frameSWR_LatInfl.comboFormulaInterp.ItemIndex := -1;
+          end;
+        end;
+      end;
+    end;
+    // Sort the times in ascending order.
+    TimeList.Sort;
+    // get rid of duplicate times.
+    for TimeIndex := TimeList.Count - 1 downto 1 do
+    begin
+      Time1 := TimeList[TimeIndex];
+      Time2 := TimeList[TimeIndex - 1];
+      if (Time1.StartTime = Time2.StartTime) and (Time1.EndTime = Time2.EndTime) then
+      begin
+        TimeList.Delete(TimeIndex);
+      end;
+    end;
+
+    // display the times that are left.
+
+    frameSWR_LatInfl.seNumberOfTimes.Value := TimeList.Count;
+    DataGrid := frameSWR_LatInfl.dgModflowBoundary;
+    DataGrid.BeginUpdate;
+    try
+      for TimeIndex := 0 to TimeList.Count - 1 do
+      begin
+        Time := TimeList[TimeIndex];
+        DataGrid.Cells[0, TimeIndex + 1] := FloatToStr(Time.StartTime);
+        DataGrid.Cells[1, TimeIndex + 1] := FloatToStr(Time.EndTime);
+      end;
+
+      ColumnOffset := 2;
+      GetSwrLatInflowBoundaryCollection(DataGrid, ColumnOffset,
+        ScreenObjectList, TimeList);
+    finally
+      DataGrid.EndUpdate;
+    end;
+
+  finally
+    TimeList.Free;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.GetSwrRainBoundary(
+  ScreenObjectList: TList);
+var
+  TimeList: TParameterTimeList;
+  ColumnOffset: integer;
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  Boundary: TSwrRainBoundary;
+  Item: TCustomModflowBoundaryItem;
+  Time: TParameterTime;
+  TimeIndex: Integer;
+  Time1: TParameterTime;
+  Time2: TParameterTime;
+  DataGrid: TRbwDataGrid4;
+  State: TCheckBoxState;
+  First: Boolean;
+begin
+  if not frmGoPhast.PhastModel.SwrIsSelected then
+  begin
+    Exit;
+  end;
+  TimeList := TParameterTimeList.Create;
+  try
+    State := cbUnchecked;
+    for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+    begin
+      AScreenObject := ScreenObjectList[ScreenObjectIndex];
+      Boundary := AScreenObject.ModflowSwrRain;
+      UpdateBoundaryState(Boundary, ScreenObjectIndex, State);
+    end;
+    if FSWR_Rain_Node <> nil then
+    begin
+      FSWR_Rain_Node.StateIndex := Ord(State)+1;
+    end;
+    First := True;
+    for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+    begin
+      AScreenObject := ScreenObjectList[ScreenObjectIndex];
+      Boundary := AScreenObject.ModflowSwrRain;
+      // get all the times associated with the boundary.
+      if Boundary <> nil then
+      begin
+        for TimeIndex := 0 to Boundary.Values.Count - 1 do
+        begin
+          Item := Boundary.Values[TimeIndex] as TCustomModflowBoundaryItem;
+          Time := TParameterTime.Create;
+          Time.StartTime := Item.StartTime;
+          Time.EndTime := Item.EndTime;
+          TimeList.Add(Time);
+        end;
+      end;
+    end;
+    // Sort the times in ascending order.
+    TimeList.Sort;
+    // get rid of duplicate times.
+    for TimeIndex := TimeList.Count - 1 downto 1 do
+    begin
+      Time1 := TimeList[TimeIndex];
+      Time2 := TimeList[TimeIndex - 1];
+      if (Time1.StartTime = Time2.StartTime) and (Time1.EndTime = Time2.EndTime) then
+      begin
+        TimeList.Delete(TimeIndex);
+      end;
+    end;
+
+    // display the times that are left.
+
+    frameSWR_Rain.seNumberOfTimes.Value := TimeList.Count;
+    DataGrid := frameSWR_Rain.dgModflowBoundary;
+    DataGrid.BeginUpdate;
+    try
+      for TimeIndex := 0 to TimeList.Count - 1 do
+      begin
+        Time := TimeList[TimeIndex];
+        DataGrid.Cells[0, TimeIndex + 1] := FloatToStr(Time.StartTime);
+        DataGrid.Cells[1, TimeIndex + 1] := FloatToStr(Time.EndTime);
+      end;
+
+      ColumnOffset := 2;
+      GetSwrRainBoundaryCollection(DataGrid, ColumnOffset,
+        ScreenObjectList, TimeList);
+    finally
+      DataGrid.EndUpdate;
+    end;
+
+  finally
+    TimeList.Free;
+  end;
+end;
+
+
+procedure TfrmScreenObjectProperties.GetSwrDirectRunoffBoundary(
+  ScreenObjectList: TList);
+var
+  TimeList: TParameterTimeList;
+  ColumnOffset: integer;
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  Boundary: TSwrDirectRunoffBoundary;
+  Item: TCustomModflowBoundaryItem;
+  Time: TParameterTime;
+  TimeIndex: Integer;
+  Time1: TParameterTime;
+  Time2: TParameterTime;
+  DataGrid: TRbwDataGrid4;
+  State: TCheckBoxState;
+  First: Boolean;
+begin
+  if not frmGoPhast.PhastModel.SwrIsSelected then
+  begin
+    Exit;
+  end;
+  TimeList := TParameterTimeList.Create;
+  try
+    State := cbUnchecked;
+    for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+    begin
+      AScreenObject := ScreenObjectList[ScreenObjectIndex];
+      Boundary := AScreenObject.ModflowSwrDirectRunoff;
+      UpdateBoundaryState(Boundary, ScreenObjectIndex, State);
+    end;
+    if FSWR_DirectRunoff_Node <> nil then
+    begin
+      FSWR_DirectRunoff_Node.StateIndex := Ord(State)+1;
+    end;
+    First := True;
+    for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+    begin
+      AScreenObject := ScreenObjectList[ScreenObjectIndex];
+      Boundary := AScreenObject.ModflowSwrDirectRunoff;
+      // get all the times associated with the boundary.
+      if Boundary <> nil then
+      begin
+        for TimeIndex := 0 to Boundary.Values.Count - 1 do
+        begin
+          Item := Boundary.Values[TimeIndex] as TCustomModflowBoundaryItem;
+          Time := TParameterTime.Create;
+          Time.StartTime := Item.StartTime;
+          Time.EndTime := Item.EndTime;
+          TimeList.Add(Time);
+        end;
+
+      end;
+    end;
+    // Sort the times in ascending order.
+    TimeList.Sort;
+    // get rid of duplicate times.
+    for TimeIndex := TimeList.Count - 1 downto 1 do
+    begin
+      Time1 := TimeList[TimeIndex];
+      Time2 := TimeList[TimeIndex - 1];
+      if (Time1.StartTime = Time2.StartTime) and (Time1.EndTime = Time2.EndTime) then
+      begin
+        TimeList.Delete(TimeIndex);
+      end;
+    end;
+
+    // display the times that are left.
+
+    frameSWR_DirectRunoff.seNumberOfTimes.Value := TimeList.Count;
+    DataGrid := frameSWR_DirectRunoff.dgModflowBoundary;
+    DataGrid.BeginUpdate;
+    try
+      for TimeIndex := 0 to TimeList.Count - 1 do
+      begin
+        Time := TimeList[TimeIndex];
+        DataGrid.Cells[0, TimeIndex + 1] := FloatToStr(Time.StartTime);
+        DataGrid.Cells[1, TimeIndex + 1] := FloatToStr(Time.EndTime);
+      end;
+
+      ColumnOffset := 2;
+      GetSwrDirectRunoffBoundaryCollection(DataGrid, ColumnOffset,
+        ScreenObjectList, TimeList);
+    finally
+      DataGrid.EndUpdate;
+    end;
+
+  finally
+    TimeList.Free;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.GetSwrStageBoundary(
+  ScreenObjectList: TList);
+var
+  TimeList: TParameterTimeList;
+  ColumnOffset: integer;
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  Boundary: TSwrStageBoundary;
+  Item: TCustomModflowBoundaryItem;
+  Time: TParameterTime;
+  TimeIndex: Integer;
+  Time1: TParameterTime;
+  Time2: TParameterTime;
+  DataGrid: TRbwDataGrid4;
+  State: TCheckBoxState;
+  First: Boolean;
+begin
+  if not frmGoPhast.PhastModel.SwrIsSelected then
+  begin
+    Exit;
+  end;
+  TimeList := TParameterTimeList.Create;
+  try
+    State := cbUnchecked;
+    for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+    begin
+      AScreenObject := ScreenObjectList[ScreenObjectIndex];
+      Boundary := AScreenObject.ModflowSwrStage;
+      UpdateBoundaryState(Boundary, ScreenObjectIndex, State);
+    end;
+    if FSWR_Stage_Node <> nil then
+    begin
+      FSWR_Stage_Node.StateIndex := Ord(State)+1;
+    end;
+    First := True;
+    for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+    begin
+      AScreenObject := ScreenObjectList[ScreenObjectIndex];
+      Boundary := AScreenObject.ModflowSwrStage;
+      // get all the times associated with the boundary.
+      if Boundary <> nil then
+      begin
+        for TimeIndex := 0 to Boundary.Values.Count - 1 do
+        begin
+          Item := Boundary.Values[TimeIndex] as TCustomModflowBoundaryItem;
+          Time := TParameterTime.Create;
+          Time.StartTime := Item.StartTime;
+          Time.EndTime := Item.EndTime;
+          TimeList.Add(Time);
+        end;
+
+      end;
+    end;
+    // Sort the times in ascending order.
+    TimeList.Sort;
+    // get rid of duplicate times.
+    for TimeIndex := TimeList.Count - 1 downto 1 do
+    begin
+      Time1 := TimeList[TimeIndex];
+      Time2 := TimeList[TimeIndex - 1];
+      if (Time1.StartTime = Time2.StartTime) and (Time1.EndTime = Time2.EndTime) then
+      begin
+        TimeList.Delete(TimeIndex);
+      end;
+    end;
+
+    // display the times that are left.
+
+    frameSWR_Stage.seNumberOfTimes.Value := TimeList.Count;
+    DataGrid := frameSWR_Stage.dgModflowBoundary;
+    DataGrid.BeginUpdate;
+    try
+      for TimeIndex := 0 to TimeList.Count - 1 do
+      begin
+        Time := TimeList[TimeIndex];
+        DataGrid.Cells[0, TimeIndex + 1] := FloatToStr(Time.StartTime);
+        DataGrid.Cells[1, TimeIndex + 1] := FloatToStr(Time.EndTime);
+      end;
+
+      ColumnOffset := 2;
+      GetSwrStageBoundaryCollection(DataGrid, ColumnOffset,
+        ScreenObjectList, TimeList);
+    finally
+      DataGrid.EndUpdate;
+    end;
+
+  finally
+    TimeList.Free;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.GetSwrRainBoundaryCollection(
+  DataGrid: TRbwDataGrid4; ColumnOffset: Integer; ScreenObjectList: TList;
+  TimeList: TParameterTimeList);
+var
+  RowIndex: Integer;
+  AScreenObject: TScreenObject;
+  Boundary: TModflowBoundary;
+  Values: TCustomMF_BoundColl;
+  ValuesIdentical: Boolean;
+  ScreenObjectIndex: Integer;
+  AnotherBoundary: TModflowBoundary;
+  TimeIndex: Integer;
+  Item: TCustomModflowBoundaryItem;
+  BoundaryIndex: Integer;
+begin
+  AScreenObject := ScreenObjectList[0];
+  Boundary := AScreenObject.ModflowSwrRain;
+  if Boundary = nil then
+  begin
+    Values := nil;
+  end
+  else
+  begin
+    Values := Boundary.Values;
+  end;
+  ValuesIdentical := True;
+  for ScreenObjectIndex := 1 to ScreenObjectList.Count - 1 do
+  begin
+    AScreenObject := ScreenObjectList[ScreenObjectIndex];
+    AnotherBoundary := AScreenObject.ModflowSwrRain;
+    if (Boundary = nil) and (AnotherBoundary = nil) then
+    begin
+      ValuesIdentical := True;
+    end
+    else if (Boundary = nil) or (AnotherBoundary = nil) then
+    begin
+      ValuesIdentical := False;
+    end
+    else
+    begin
+      ValuesIdentical := Values.IsSame(AnotherBoundary.Values);
+    end;
+    if not ValuesIdentical then
+    begin
+      break;
+    end;
+  end;
+  if ValuesIdentical and (Values <> nil) then
+  begin
+    for TimeIndex := 0 to Values.Count - 1 do
+    begin
+      Item := Values[TimeIndex] as TCustomModflowBoundaryItem;
+      RowIndex := TimeList.IndexOfTime(Item.StartTime, Item.EndTime) + 1;
+      Assert(RowIndex >= 1);
+      for BoundaryIndex := 0 to Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
+      begin
+        DataGrid.Cells[ColumnOffset + BoundaryIndex, RowIndex]
+          := Item.BoundaryFormula[BoundaryIndex];
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.GetSwrStageBoundaryCollection(
+  DataGrid: TRbwDataGrid4; ColumnOffset: Integer; ScreenObjectList: TList;
+  TimeList: TParameterTimeList);
+var
+  RowIndex: Integer;
+  AScreenObject: TScreenObject;
+  Boundary: TModflowBoundary;
+  Values: TCustomMF_BoundColl;
+  ValuesIdentical: Boolean;
+  ScreenObjectIndex: Integer;
+  AnotherBoundary: TModflowBoundary;
+  TimeIndex: Integer;
+  Item: TCustomModflowBoundaryItem;
+  BoundaryIndex: Integer;
+begin
+  AScreenObject := ScreenObjectList[0];
+  Boundary := AScreenObject.ModflowSwrStage;
+  if Boundary = nil then
+  begin
+    Values := nil;
+  end
+  else
+  begin
+    Values := Boundary.Values;
+  end;
+  ValuesIdentical := True;
+  for ScreenObjectIndex := 1 to ScreenObjectList.Count - 1 do
+  begin
+    AScreenObject := ScreenObjectList[ScreenObjectIndex];
+    AnotherBoundary := AScreenObject.ModflowSwrStage;
+    if (Boundary = nil) and (AnotherBoundary = nil) then
+    begin
+      ValuesIdentical := True;
+    end
+    else if (Boundary = nil) or (AnotherBoundary = nil) then
+    begin
+      ValuesIdentical := False;
+    end
+    else
+    begin
+      ValuesIdentical := Values.IsSame(AnotherBoundary.Values);
+    end;
+    if not ValuesIdentical then
+    begin
+      break;
+    end;
+  end;
+  if ValuesIdentical and (Values <> nil) then
+  begin
+    for TimeIndex := 0 to Values.Count - 1 do
+    begin
+      Item := Values[TimeIndex] as TCustomModflowBoundaryItem;
+      RowIndex := TimeList.IndexOfTime(Item.StartTime, Item.EndTime) + 1;
+      Assert(RowIndex >= 1);
+      for BoundaryIndex := 0 to Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
+      begin
+        DataGrid.Cells[ColumnOffset + BoundaryIndex, RowIndex]
+          := Item.BoundaryFormula[BoundaryIndex];
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.GetSwrDirectRunoffBoundaryCollection(
+  DataGrid: TRbwDataGrid4; ColumnOffset: Integer; ScreenObjectList: TList;
+  TimeList: TParameterTimeList);
+var
+  RowIndex: Integer;
+  AScreenObject: TScreenObject;
+  Boundary: TModflowBoundary;
+  Values: TCustomMF_BoundColl;
+  ValuesIdentical: Boolean;
+  ScreenObjectIndex: Integer;
+  AnotherBoundary: TModflowBoundary;
+  TimeIndex: Integer;
+  Item: TCustomModflowBoundaryItem;
+  BoundaryIndex: Integer;
+begin
+  AScreenObject := ScreenObjectList[0];
+  Boundary := AScreenObject.ModflowSwrDirectRunoff;
+  if Boundary = nil then
+  begin
+    Values := nil;
+  end
+  else
+  begin
+    Values := Boundary.Values;
+  end;
+  ValuesIdentical := True;
+  for ScreenObjectIndex := 1 to ScreenObjectList.Count - 1 do
+  begin
+    AScreenObject := ScreenObjectList[ScreenObjectIndex];
+    AnotherBoundary := AScreenObject.ModflowSwrDirectRunoff;
+    if (Boundary = nil) and (AnotherBoundary = nil) then
+    begin
+      ValuesIdentical := True;
+    end
+    else if (Boundary = nil) or (AnotherBoundary = nil) then
+    begin
+      ValuesIdentical := False;
+    end
+    else
+    begin
+      ValuesIdentical := Values.IsSame(AnotherBoundary.Values);
+    end;
+    if not ValuesIdentical then
+    begin
+      break;
+    end;
+  end;
+  if ValuesIdentical and (Values <> nil) then
+  begin
+    for TimeIndex := 0 to Values.Count - 1 do
+    begin
+      Item := Values[TimeIndex] as TCustomModflowBoundaryItem;
+      RowIndex := TimeList.IndexOfTime(Item.StartTime, Item.EndTime) + 1;
+      Assert(RowIndex >= 1);
+      for BoundaryIndex := 0 to Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
+      begin
+        DataGrid.Cells[ColumnOffset + BoundaryIndex, RowIndex]
+          := Item.BoundaryFormula[BoundaryIndex];
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.GetSwrEvapBoundaryCollection(
+  DataGrid: TRbwDataGrid4; ColumnOffset: Integer; ScreenObjectList: TList;
+  TimeList: TParameterTimeList);
+var
+  RowIndex: Integer;
+  AScreenObject: TScreenObject;
+  Boundary: TModflowBoundary;
+  Values: TCustomMF_BoundColl;
+  ValuesIdentical: Boolean;
+  ScreenObjectIndex: Integer;
+  AnotherBoundary: TModflowBoundary;
+  TimeIndex: Integer;
+  Item: TCustomModflowBoundaryItem;
+  BoundaryIndex: Integer;
+begin
+  AScreenObject := ScreenObjectList[0];
+  Boundary := AScreenObject.ModflowSwrEvap;
+  if Boundary = nil then
+  begin
+    Values := nil;
+  end
+  else
+  begin
+    Values := Boundary.Values;
+  end;
+  ValuesIdentical := True;
+  for ScreenObjectIndex := 1 to ScreenObjectList.Count - 1 do
+  begin
+    AScreenObject := ScreenObjectList[ScreenObjectIndex];
+    AnotherBoundary := AScreenObject.ModflowSwrEvap;
+    if (Boundary = nil) and (AnotherBoundary = nil) then
+    begin
+      ValuesIdentical := True;
+    end
+    else if (Boundary = nil) or (AnotherBoundary = nil) then
+    begin
+      ValuesIdentical := False;
+    end
+    else
+    begin
+      ValuesIdentical := Values.IsSame(AnotherBoundary.Values);
+    end;
+    if not ValuesIdentical then
+    begin
+      break;
+    end;
+  end;
+  if ValuesIdentical and (Values <> nil) then
+  begin
+    for TimeIndex := 0 to Values.Count - 1 do
+    begin
+      Item := Values[TimeIndex] as TCustomModflowBoundaryItem;
+      RowIndex := TimeList.IndexOfTime(Item.StartTime, Item.EndTime) + 1;
+      Assert(RowIndex >= 1);
+      for BoundaryIndex := 0 to Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
+      begin
+        DataGrid.Cells[ColumnOffset + BoundaryIndex, RowIndex]
+          := Item.BoundaryFormula[BoundaryIndex];
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.GetSwrLatInflowBoundaryCollection(
+  DataGrid: TRbwDataGrid4; ColumnOffset: Integer; ScreenObjectList: TList;
+  TimeList: TParameterTimeList);
+var
+  RowIndex: Integer;
+  AScreenObject: TScreenObject;
+  Boundary: TModflowBoundary;
+  Values: TCustomMF_BoundColl;
+  ValuesIdentical: Boolean;
+  ScreenObjectIndex: Integer;
+  AnotherBoundary: TModflowBoundary;
+  TimeIndex: Integer;
+  Item: TCustomModflowBoundaryItem;
+  BoundaryIndex: Integer;
+begin
+  AScreenObject := ScreenObjectList[0];
+  Boundary := AScreenObject.ModflowSwrLatInflow;
+  if Boundary = nil then
+  begin
+    Values := nil;
+  end
+  else
+  begin
+    Values := Boundary.Values;
+  end;
+  ValuesIdentical := True;
+  for ScreenObjectIndex := 1 to ScreenObjectList.Count - 1 do
+  begin
+    AScreenObject := ScreenObjectList[ScreenObjectIndex];
+    AnotherBoundary := AScreenObject.ModflowSwrLatInflow;
+    if (Boundary = nil) and (AnotherBoundary = nil) then
+    begin
+      ValuesIdentical := True;
+    end
+    else if (Boundary = nil) or (AnotherBoundary = nil) then
+    begin
+      ValuesIdentical := False;
+    end
+    else
+    begin
+      ValuesIdentical := Values.IsSame(AnotherBoundary.Values);
+    end;
+    if not ValuesIdentical then
+    begin
+      break;
+    end;
+  end;
+  if ValuesIdentical and (Values <> nil) then
+  begin
+    for TimeIndex := 0 to Values.Count - 1 do
+    begin
+      Item := Values[TimeIndex] as TCustomModflowBoundaryItem;
+      RowIndex := TimeList.IndexOfTime(Item.StartTime, Item.EndTime) + 1;
+      Assert(RowIndex >= 1);
+      for BoundaryIndex := 0 to Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
+      begin
+        DataGrid.Cells[ColumnOffset + BoundaryIndex, RowIndex]
+          := Item.BoundaryFormula[BoundaryIndex];
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmScreenObjectProperties.GetMt3dmsFluxObservations(
@@ -9329,6 +10388,116 @@ begin
   end;
 end;
 
+procedure TfrmScreenObjectProperties.CreateSWR_Rain_Node(AScreenObject: TScreenObject);
+var
+  Node: TJvPageIndexNode;
+begin
+  FSWR_Rain_Node := nil;
+  if frmGoPhast.PhastModel.SwrIsSelected
+    and (AScreenObject.ViewDirection = vdTop) then
+  begin
+    Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil, 'Rain in ' +
+      frmGoPhast.PhastModel.ModflowPackages.SwrPackage.PackageIdentifier)
+      as TJvPageIndexNode;
+    Node.PageIndex := jvspSWR_Rain.PageIndex;
+    frameSWR_Rain.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FSWR_Rain_Node := Node;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.CreateSWR_Reach_Node(
+  AScreenObject: TScreenObject);
+var
+  Node: TJvPageIndexNode;
+begin
+  FSWR_Reach_Node := nil;
+  if frmGoPhast.PhastModel.SwrIsSelected
+    and (AScreenObject.ViewDirection = vdTop) then
+  begin
+    Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil, 'Reaches in ' +
+      frmGoPhast.PhastModel.ModflowPackages.SwrPackage.PackageIdentifier)
+      as TJvPageIndexNode;
+    Node.PageIndex := jvspSwrReaches.PageIndex;
+    frameSwrReach.frameSwr.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FSWR_Reach_Node := Node;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.CreateSWR_Stage_Node(AScreenObject: TScreenObject);
+var
+  Node: TJvPageIndexNode;
+begin
+  FSWR_Stage_Node := nil;
+  if frmGoPhast.PhastModel.SwrIsSelected
+    and (AScreenObject.ViewDirection = vdTop)
+    and (frmGoPhast.PhastModel.ModflowPackages.SwrPackage.StageSpecification = smArray) then
+  begin
+    Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil, 'Stage in ' +
+      frmGoPhast.PhastModel.ModflowPackages.SwrPackage.PackageIdentifier)
+      as TJvPageIndexNode;
+    Node.PageIndex := jvspSWR_Stage.PageIndex;
+    frameSWR_Stage.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FSWR_Stage_Node := Node;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.CreateSWR_DirectRunoff_Node(AScreenObject: TScreenObject);
+var
+  Node: TJvPageIndexNode;
+begin
+  FSWR_DirectRunoff_Node := nil;
+  if frmGoPhast.PhastModel.SwrIsSelected
+    and (AScreenObject.ViewDirection = vdTop) then
+  begin
+    Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil, 'Direct Runoff in ' +
+      frmGoPhast.PhastModel.ModflowPackages.SwrPackage.PackageIdentifier)
+      as TJvPageIndexNode;
+    Node.PageIndex := jvspSWR_DirectRunoff.PageIndex;
+    frameSWR_DirectRunoff.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FSWR_DirectRunoff_Node := Node;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.CreateSWR_Evap_Node(AScreenObject: TScreenObject);
+var
+  Node: TJvPageIndexNode;
+begin
+  FSWR_Evap_Node := nil;
+  if frmGoPhast.PhastModel.SwrIsSelected
+    and (AScreenObject.ViewDirection = vdTop) then
+  begin
+    Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil, 'Evaporation in ' +
+      frmGoPhast.PhastModel.ModflowPackages.SwrPackage.PackageIdentifier)
+      as TJvPageIndexNode;
+    Node.PageIndex := jvspSWR_Evap.PageIndex;
+    frameSWR_Evap.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FSWR_Evap_Node := Node;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.CreateSWR_LatInflow_Node(AScreenObject: TScreenObject);
+var
+  Node: TJvPageIndexNode;
+begin
+  FSWR_LatInflow_Node := nil;
+  if frmGoPhast.PhastModel.SwrIsSelected
+    and (AScreenObject.ViewDirection = vdTop) then
+  begin
+    Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil, 'Lateral Inflow in ' +
+      frmGoPhast.PhastModel.ModflowPackages.SwrPackage.PackageIdentifier)
+      as TJvPageIndexNode;
+    Node.PageIndex := jvspSWR_LatInfl.PageIndex;
+    frameSWR_LatInfl.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FSWR_LatInflow_Node := Node;
+  end;
+end;
+
 procedure TfrmScreenObjectProperties.CreateEtsNode(AScreenObject: TScreenObject);
 var
   Node: TJvPageIndexNode;
@@ -9891,6 +11060,32 @@ function TfrmScreenObjectProperties.ShouldStoreBoundary(Node: TJvPageIndexNode;
 begin
   result := (Node <> nil) and ((Node.StateIndex = 2)
     or ((Node.StateIndex = 3) and Boundary.Used));
+end;
+
+procedure TfrmScreenObjectProperties.GetSwrReaches(const ScreenObjectList: TList);
+var
+  State: TCheckBoxState;
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  Boundary: TSwrReachBoundary;
+begin
+  if not frmGoPhast.PhastModel.SwrIsSelected then
+  begin
+    Exit;
+  end;
+  State := cbUnchecked;
+  for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+  begin
+    AScreenObject := ScreenObjectList[ScreenObjectIndex];
+    Boundary := AScreenObject.ModflowSwrReaches;
+    UpdateBoundaryState(Boundary, ScreenObjectIndex, State);
+  end;
+  if FSWR_Reach_Node <> nil then
+  begin
+    FSWR_Reach_Node.StateIndex := Ord(State)+1;
+  end;
+  frameSwrReach.GetData(FNewProperties, FSWR_Reach_Node);
+
 end;
 
 procedure TfrmScreenObjectProperties.GetSfrBoundary(const ScreenObjectList: TList);
@@ -11316,6 +12511,12 @@ begin
   GetMt3dmsChemBoundary(AScreenObjectList);
   GetMt3dConcObservations(AScreenObjectList);
   GetMt3dmsFluxObservations(AScreenObjectList);
+  GetSwrReaches(AScreenObjectList);
+  GetSwrRainBoundary(AScreenObjectList);
+  GetSwrEvapBoundary(AScreenObjectList);
+  GetSwrLatInflowBoundary(AScreenObjectList);
+  GetSwrStageBoundary(AScreenObjectList);
+  GetSwrDirectRunoffBoundary(AScreenObjectList);
   SetSelectedMfBoundaryNode;
   GetChildModels(AScreenObjectList);
 end;
@@ -11803,6 +13004,48 @@ begin
       AScreenObject.ModflowCfpRchFraction := nil;
     end;
 
+    AScreenObject.CreateSwrRainBoundary;
+    frameSWR_Rain.InitializeNoParamFrame(AScreenObject.ModflowSwrRain);
+    if (AScreenObject.ModflowSwrRain <> nil)
+      and not AScreenObject.ModflowSwrRain.Used then
+    begin
+      AScreenObject.ModflowSwrRain := nil;
+    end;
+
+    AScreenObject.CreateSwrEvapBoundary;
+    frameSWR_Evap.InitializeNoParamFrame(AScreenObject.ModflowSwrEvap);
+    if (AScreenObject.ModflowSwrEvap <> nil)
+      and not AScreenObject.ModflowSwrEvap.Used then
+    begin
+      AScreenObject.ModflowSwrEvap := nil;
+    end;
+
+    AScreenObject.CreateSwrLatInflowBoundary;
+    frameSWR_LatInfl.InitializeNoParamFrame(AScreenObject.ModflowSwrLatInflow);
+    if (AScreenObject.ModflowSwrLatInflow <> nil)
+      and not AScreenObject.ModflowSwrLatInflow.Used then
+    begin
+      AScreenObject.ModflowSwrLatInflow := nil;
+    end;
+
+    AScreenObject.CreateSwrStageBoundary;
+    frameSWR_Stage.InitializeNoParamFrame(AScreenObject.ModflowSwrStage);
+    if (AScreenObject.ModflowSwrStage <> nil)
+      and not AScreenObject.ModflowSwrStage.Used then
+    begin
+      AScreenObject.ModflowSwrStage := nil;
+    end;
+
+    AScreenObject.CreateSwrDirectRunoffBoundary;
+    frameSWR_DirectRunoff.InitializeNoParamFrame(AScreenObject.ModflowSwrDirectRunoff);
+    if (AScreenObject.ModflowSwrDirectRunoff <> nil)
+      and not AScreenObject.ModflowSwrDirectRunoff.Used then
+    begin
+      AScreenObject.ModflowSwrDirectRunoff := nil;
+    end;
+
+    frameSwrReach.InitializeFrame;
+
   finally
     AScreenObject.CanInvalidateModel := PriorCanInvalidateModel;
     frmGoPhast.PhastModel.UpToDate := StoredUpToDate;
@@ -12017,7 +13260,8 @@ begin
   begin
     DataSet := DataArrayManager.DataSets[Index];
     if (Index <> DataSetIndex)
-      and (EvaluatedAt = DataSet.EvaluatedAt) then
+      and (EvaluatedAt = DataSet.EvaluatedAt)
+      and DataSet.Visible then
     begin
       VariableName := DataSet.Name;
 //      OtherEdit := FDataEdits[GetDataSetIndexByName(VariableName)];
@@ -12041,6 +13285,7 @@ end;
 procedure TfrmScreenObjectProperties.FormDestroy(Sender: TObject);
 begin
   inherited;
+  FCaptionFont.Free;
   FCurrentEdit := nil;
 
   // If FUndoSetScreenObjectProperties was submitted, it will have
@@ -14337,11 +15582,15 @@ var
   UsedIndex: Integer;
   UsedArray: TDataArray;
   DataArrayManager: TDataArrayManager;
+  DataSetPostion: Integer;
+  ADataArray: TDataArray;
+  SwrReaches: TSwrReachBoundary;
 begin
 { TODO : See if some of this can be combined with ValidateEdFormula. }
 
   inherited;
   // edit the formula that is not part of a data set or boundary data set.
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
   ed := nil;
   if Sender = btnZ then
   begin
@@ -14418,6 +15667,10 @@ begin
   else if Sender = frameCfpFixedHeads.btnFixedHead then
   begin
     ed := frameCfpFixedHeads.edFixedHead;
+  end
+  else if Sender = frameSwrReach.btnEditReachLength then
+  begin
+    ed := frameSwrReach.edReachLength
   end
   else
   begin
@@ -14546,6 +15799,132 @@ begin
     begin
       FunctionString := framePhastInterpolationBoundaries.edMixFormula.Text;
     end
+    else if Sender = frameCfpPipes.btnDiameter then
+    begin
+      for ScreenObjectIndex := 0 to FScreenObjectList.Count - 1 do
+      begin
+        AScreenObject := FScreenObjectList[ScreenObjectIndex];
+        ADataArray := DataArrayManager.GetDataSetByName(KPipeDiameter);
+        DataSetPostion := AScreenObject.IndexOfDataSet(ADataArray);
+
+        if (DataSetPostion >= 0) then
+        begin
+          FunctionString := AScreenObject.DataSetFormulas[DataSetPostion];
+          break;
+        end;
+      end;
+    end
+    else if Sender = frameCfpPipes.btnTortuosity then
+    begin
+      for ScreenObjectIndex := 0 to FScreenObjectList.Count - 1 do
+      begin
+        AScreenObject := FScreenObjectList[ScreenObjectIndex];
+        ADataArray := DataArrayManager.GetDataSetByName(KTortuosity);
+        DataSetPostion := AScreenObject.IndexOfDataSet(ADataArray);
+        if (DataSetPostion >= 0) then
+        begin
+          FunctionString := AScreenObject.DataSetFormulas[DataSetPostion];
+          break;
+        end;
+      end;
+    end
+    else if Sender = frameCfpPipes.btnRoughnessHeight then
+    begin
+      for ScreenObjectIndex := 0 to FScreenObjectList.Count - 1 do
+      begin
+        AScreenObject := FScreenObjectList[ScreenObjectIndex];
+        ADataArray := DataArrayManager.GetDataSetByName(KRoughnessHeight);
+        DataSetPostion := AScreenObject.IndexOfDataSet(ADataArray);
+        if (DataSetPostion >= 0) then
+        begin
+          FunctionString := AScreenObject.DataSetFormulas[DataSetPostion];
+          break;
+        end;
+      end;
+    end
+    else if Sender = frameCfpPipes.btnLowerCriticalR then
+    begin
+      for ScreenObjectIndex := 0 to FScreenObjectList.Count - 1 do
+      begin
+        AScreenObject := FScreenObjectList[ScreenObjectIndex];
+        ADataArray := DataArrayManager.GetDataSetByName(KLowerCriticalR);
+        DataSetPostion := AScreenObject.IndexOfDataSet(ADataArray);
+        if (DataSetPostion >= 0) then
+        begin
+          FunctionString := AScreenObject.DataSetFormulas[DataSetPostion];
+          break;
+        end;
+      end;
+    end
+    else if Sender = frameCfpPipes.btnHigherCriticalR then
+    begin
+      for ScreenObjectIndex := 0 to FScreenObjectList.Count - 1 do
+      begin
+        AScreenObject := FScreenObjectList[ScreenObjectIndex];
+        ADataArray := DataArrayManager.GetDataSetByName(KUpperCriticalR);
+        DataSetPostion := AScreenObject.IndexOfDataSet(ADataArray);
+        if (DataSetPostion >= 0) then
+        begin
+          FunctionString := AScreenObject.DataSetFormulas[DataSetPostion];
+          break;
+        end;
+      end;
+    end
+    else if Sender = frameCfpPipes.btnConductancePermeability then
+    begin
+      for ScreenObjectIndex := 0 to FScreenObjectList.Count - 1 do
+      begin
+        AScreenObject := FScreenObjectList[ScreenObjectIndex];
+        ADataArray := DataArrayManager.GetDataSetByName(KPipeConductanceOrPer);
+        DataSetPostion := AScreenObject.IndexOfDataSet(ADataArray);
+        if (DataSetPostion >= 0) then
+        begin
+          FunctionString := AScreenObject.DataSetFormulas[DataSetPostion];
+          break;
+        end;
+      end;
+    end
+    else if Sender = frameCfpPipes.btnElevation then
+    begin
+      for ScreenObjectIndex := 0 to FScreenObjectList.Count - 1 do
+      begin
+        AScreenObject := FScreenObjectList[ScreenObjectIndex];
+        ADataArray := DataArrayManager.GetDataSetByName(KCfpNodeElevation);
+        DataSetPostion := AScreenObject.IndexOfDataSet(ADataArray);
+        if (DataSetPostion >= 0) then
+        begin
+          FunctionString := AScreenObject.DataSetFormulas[DataSetPostion];
+          break;
+        end;
+      end;
+    end
+    else if Sender = frameCfpFixedHeads.btnFixedHead then
+    begin
+      for ScreenObjectIndex := 0 to FScreenObjectList.Count - 1 do
+      begin
+        AScreenObject := FScreenObjectList[ScreenObjectIndex];
+        ADataArray := DataArrayManager.GetDataSetByName(KCfpFixedHeads);
+        DataSetPostion := AScreenObject.IndexOfDataSet(ADataArray);
+        if (DataSetPostion >= 0) then
+        begin
+          FunctionString := AScreenObject.DataSetFormulas[DataSetPostion];
+          break;
+        end;
+      end;
+    end
+    else if Sender = frameSwrReach.btnEditReachLength then
+    begin
+      for ScreenObjectIndex := 0 to FScreenObjectList.Count - 1 do
+      begin
+        AScreenObject := FScreenObjectList[ScreenObjectIndex];
+        SwrReaches := AScreenObject.ModflowSwrReaches;
+        if SwrReaches <> nil then
+        begin
+          FunctionString := SwrReaches.ReachLengthFormula;
+          break;
+        end;
+      end;
+     end
     else
     begin
       Assert(False);
@@ -14564,6 +15943,7 @@ begin
     or (ed = frameCfpPipes.edConductancePermeability)
     or (ed = frameCfpPipes.edElevation)
     or (ed = frameCfpFixedHeads.edFixedHead)
+    or (ed = frameSwrReach.edReachLength)
     then
   begin
     Compiler := GetCompiler(dso3D, eaBlocks);
@@ -14617,7 +15997,7 @@ begin
         end;
       end;
 
-      DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+//      DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
       for Index := 0 to DataArrayManager.DataSetCount - 1 do
       begin
         DataArray := DataArrayManager.DataSets[Index];
@@ -14702,6 +16082,7 @@ begin
     end
     else
     begin
+      TCustomEditCrack(ed).Color := clWindow;
       FunctionString := CompiledFormula.DecompileDisplay;
       if FunctionString <> ed.Text then
       begin
@@ -14744,6 +16125,7 @@ begin
     or (ed = frameCfpPipes.edConductancePermeability)
     or (ed = frameCfpPipes.edElevation)
     or (ed = frameCfpFixedHeads.edFixedHead)
+    or (ed = frameSwrReach.edReachLength)
     then
   begin
     // do nothing
@@ -15876,7 +17258,7 @@ begin
   frameRes.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
   if not frameRes.dgModflowBoundary.DistributingText then
   begin
-    StoreResBoundary;  
+    StoreResBoundary;
   end;
 end;
 
@@ -16414,6 +17796,160 @@ begin
   inherited;
   frameSutraObservations.edNameExit(Sender);
 //
+end;
+
+procedure TfrmScreenObjectProperties.frameSwrdgModflowBoundarySetEditText(
+  Sender: TObject; ACol, ARow: Integer; const Value: string);
+begin
+  inherited;
+  UpdateNodeState(FSWR_Reach_Node);
+  frameSwrReach.frameSwrdgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
+
+end;
+
+procedure TfrmScreenObjectProperties.frameSWR_DirectRunoffdgModflowBoundaryEndUpdate(
+  Sender: TObject);
+begin
+  inherited;
+  StoreSwrDirectRunoffBoundary;
+end;
+
+procedure TfrmScreenObjectProperties.frameSWR_DirectRunoffdgModflowBoundarySetEditText(
+  Sender: TObject; ACol, ARow: Integer; const Value: string);
+begin
+  inherited;
+  UpdateNodeState(FSWR_DirectRunoff_Node);
+  frameSWR_DirectRunoff.dgModflowBoundarySetEditText(Sender, ACol, ARow,
+    Value);
+  if not frameSWR_DirectRunoff.dgModflowBoundary.DistributingText then
+  begin
+    StoreSwrDirectRunoffBoundary;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.frameSWR_DirectRunoffseNumberOfTimesChange(
+  Sender: TObject);
+begin
+  inherited;
+  frameSWR_DirectRunoff.seNumberOfTimesChange(Sender);
+  StoreSwrDirectRunoffBoundary;
+end;
+
+procedure TfrmScreenObjectProperties.frameSWR_EvapdgModflowBoundaryEndUpdate(
+  Sender: TObject);
+begin
+  inherited;
+  StoreSwrEvapBoundary
+end;
+
+procedure TfrmScreenObjectProperties.frameSWR_EvapdgModflowBoundarySetEditText(
+  Sender: TObject; ACol, ARow: Integer; const Value: string);
+begin
+  inherited;
+
+  UpdateNodeState(FSWR_Evap_Node);
+  frameSWR_Evap.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
+  if not frameSWR_Evap.dgModflowBoundary.DistributingText then
+  begin
+    StoreSwrEvapBoundary;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.frameSWR_EvapseNumberOfTimesChange(
+  Sender: TObject);
+begin
+  inherited;
+  frameSWR_Evap.seNumberOfTimesChange(Sender);
+  StoreSwrEvapBoundary
+end;
+
+procedure TfrmScreenObjectProperties.frameSWR_LatInflcomboFormulaInterpChange(
+  Sender: TObject);
+begin
+  inherited;
+  StoreSwrLatInflowBoundary;
+end;
+
+procedure TfrmScreenObjectProperties.frameSWR_LatInfldgModflowBoundaryEndUpdate(
+  Sender: TObject);
+begin
+  inherited;
+ StoreSwrLatInflowBoundary;
+end;
+
+procedure TfrmScreenObjectProperties.frameSWR_LatInfldgModflowBoundarySetEditText(
+  Sender: TObject; ACol, ARow: Integer; const Value: string);
+begin
+  inherited;
+  UpdateNodeState(FSWR_LatInflow_Node);
+  frameSWR_LatInfl.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
+  if not frameSWR_LatInfl.dgModflowBoundary.DistributingText then
+  begin
+    StoreSwrLatInflowBoundary;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.frameSWR_LatInflseNumberOfTimesChange(
+  Sender: TObject);
+begin
+  inherited;
+  frameSWR_LatInfl.seNumberOfTimesChange(Sender);
+  StoreSwrLatInflowBoundary
+end;
+
+procedure TfrmScreenObjectProperties.frameSWR_RaindgModflowBoundaryEndUpdate(
+  Sender: TObject);
+begin
+  inherited;
+  StoreSwrRainBoundary
+end;
+
+procedure TfrmScreenObjectProperties.frameSWR_RaindgModflowBoundarySetEditText(
+  Sender: TObject; ACol, ARow: Integer; const Value: string);
+begin
+  inherited;
+  UpdateNodeState(FSWR_Rain_Node);
+  frameSWR_Rain.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
+  if not frameSWR_Rain.dgModflowBoundary.DistributingText then
+  begin
+    StoreSwrRainBoundary;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.frameSWR_RainseNumberOfTimesChange(
+  Sender: TObject);
+begin
+  inherited;
+  frameSWR_Rain.seNumberOfTimesChange(Sender);
+  StoreSwrRainBoundary
+end;
+
+procedure TfrmScreenObjectProperties.frameSWR_StagedgModflowBoundaryEndUpdate(
+  Sender: TObject);
+begin
+  inherited;
+  StoreSwrStageBoundary;
+end;
+
+procedure TfrmScreenObjectProperties.frameSWR_StagedgModflowBoundarySetEditText(
+  Sender: TObject; ACol, ARow: Integer; const Value: string);
+begin
+  inherited;
+  UpdateNodeState(FSWR_Stage_Node);
+  frameSWR_Stage.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
+  if not frameSWR_Stage.dgModflowBoundary.DistributingText then
+  begin
+    StoreSwrStageBoundary;
+  end;
+
+end;
+
+procedure TfrmScreenObjectProperties.frameSWR_StageseNumberOfTimesChange(
+  Sender: TObject);
+begin
+  inherited;
+  frameSWR_Stage.seNumberOfTimesChange(Sender);
+    StoreSwrStageBoundary;
 end;
 
 procedure TfrmScreenObjectProperties.frameWellParamclbParametersStateChange(
@@ -17508,7 +19044,7 @@ begin
       begin
         StoreMF_BoundColl(ColumnOffset, BoundaryLayers, Times, Frame);
       end
-      else if  FETS_Node.StateIndex = 1 then
+      else if  (FETS_Node.StateIndex = 1) then
       begin
         Boundary.Clear;
       end;
@@ -17675,6 +19211,156 @@ begin
   end;
 end;
 
+procedure TfrmScreenObjectProperties.StoreSwrEvapBoundary;
+var
+  Frame: TframeScreenObjectNoParam;
+  Times: TTimeArray;
+  Index: Integer;
+  Item: TScreenObjectEditItem;
+  Boundary: TSwrEvapBoundary;
+begin
+  if IsLoaded then
+  begin
+    Frame := frameSWR_Evap;
+    GetMF_BoundaryTimes(Times, Frame);
+    for Index := 0 to FNewProperties.Count - 1 do
+    begin
+      Item := FNewProperties[Index];
+      Item.ScreenObject.CreateSwrEvapBoundary;
+      Boundary := Item.ScreenObject.ModflowSwrEvap;
+      if ShouldStoreBoundary(FSWR_Evap_Node, Boundary) then
+      begin
+        StoreModflowBoundaryValues(Frame, Times, Boundary);
+      end
+      else if FSWR_Evap_Node.StateIndex = 1 then
+      begin
+        Boundary.Clear;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.StoreSwrLatInflowBoundary;
+var
+  Frame: TframeScreenObjectNoParam;
+  Times: TTimeArray;
+  Index: Integer;
+  Item: TScreenObjectEditItem;
+  Boundary: TSwrLatInflowBoundary;
+begin
+  if IsLoaded then
+  begin
+    Frame := frameSWR_LatInfl;
+    GetMF_BoundaryTimes(Times, Frame);
+    for Index := 0 to FNewProperties.Count - 1 do
+    begin
+      Item := FNewProperties[Index];
+      Item.ScreenObject.CreateSwrLatInflowBoundary;
+      Boundary := Item.ScreenObject.ModflowSwrLatInflow;
+      if ShouldStoreBoundary(FSWR_LatInflow_Node, Boundary) then
+      begin
+        StoreModflowBoundaryValues(Frame, Times, Boundary);
+        if frameSWR_LatInfl.comboFormulaInterp.ItemIndex >= 1 then
+        begin
+          Boundary.FormulaInterpretation :=
+            TFormulaInterpretation(frameSWR_LatInfl.comboFormulaInterp.ItemIndex)
+        end;
+      end
+      else if FSWR_LatInflow_Node.StateIndex = 1 then
+      begin
+        Boundary.Clear;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.StoreSwrRainBoundary;
+var
+  Frame: TframeScreenObjectNoParam;
+  Times: TTimeArray;
+  Index: Integer;
+  Item: TScreenObjectEditItem;
+  Boundary: TSwrRainBoundary;
+begin
+  if IsLoaded then
+  begin
+    Frame := frameSWR_Rain;
+    GetMF_BoundaryTimes(Times, Frame);
+    for Index := 0 to FNewProperties.Count - 1 do
+    begin
+      Item := FNewProperties[Index];
+      Item.ScreenObject.CreateSwrRainBoundary;
+      Boundary := Item.ScreenObject.ModflowSwrRain;
+      if ShouldStoreBoundary(FSWR_Rain_Node, Boundary) then
+      begin
+        StoreModflowBoundaryValues(Frame, Times, Boundary);
+      end
+      else if FSWR_Rain_Node.StateIndex = 1 then
+      begin
+        Boundary.Clear;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.StoreSwrStageBoundary;
+var
+  Frame: TframeScreenObjectNoParam;
+  Times: TTimeArray;
+  Index: Integer;
+  Item: TScreenObjectEditItem;
+  Boundary: TSwrStageBoundary;
+begin
+  if IsLoaded then
+  begin
+    Frame := frameSWR_Stage;
+    GetMF_BoundaryTimes(Times, Frame);
+    for Index := 0 to FNewProperties.Count - 1 do
+    begin
+      Item := FNewProperties[Index];
+      Item.ScreenObject.CreateSwrStageBoundary;
+      Boundary := Item.ScreenObject.ModflowSwrStage;
+      if ShouldStoreBoundary(FSWR_Stage_Node, Boundary) then
+      begin
+        StoreModflowBoundaryValues(Frame, Times, Boundary);
+      end
+      else if FSWR_Stage_Node.StateIndex = 1 then
+      begin
+        Boundary.Clear;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.StoreSwrDirectRunoffBoundary;
+var
+  Frame: TframeScreenObjectNoParam;
+  Times: TTimeArray;
+  Index: Integer;
+  Item: TScreenObjectEditItem;
+  Boundary: TSwrDirectRunoffBoundary;
+begin
+  if IsLoaded then
+  begin
+    Frame := frameSWR_DirectRunoff;
+    GetMF_BoundaryTimes(Times, Frame);
+    for Index := 0 to FNewProperties.Count - 1 do
+    begin
+      Item := FNewProperties[Index];
+      Item.ScreenObject.CreateSwrDirectRunoffBoundary;
+      Boundary := Item.ScreenObject.ModflowSwrDirectRunoff;
+      if ShouldStoreBoundary(FSWR_DirectRunoff_Node, Boundary) then
+      begin
+        StoreModflowBoundaryValues(Frame, Times, Boundary);
+      end
+      else if FSWR_DirectRunoff_Node.StateIndex = 1 then
+      begin
+        Boundary.Clear;
+      end;
+    end;
+  end;
+end;
+
 procedure TfrmScreenObjectProperties.StoreCfpRechargeFraction;
 var
   Frame: TframeScreenObjectNoParam;
@@ -17697,7 +19383,7 @@ begin
       begin
         StoreModflowBoundaryValues(Frame, Times, Boundary);
       end
-      else if  FUZF_Node.StateIndex = 1 then
+      else if (FCRCH_Node.StateIndex = 1) then
       begin
         Boundary.Clear;
       end;
@@ -17869,6 +19555,10 @@ begin
     for Index := 0 to DataArrayManager.DataSetCount - 1 do
     begin
       DataSet := DataArrayManager.DataSets[Index];
+      if not DataSet.Visible then
+      begin
+        Continue;
+      end;
       if (EvaluatedAt = DataSet.EvaluatedAt) then
       begin
         if ((Orientation = dso3D)
@@ -19492,6 +21182,10 @@ begin
     for Index := 0 to DataArrayManager.DataSetCount - 1 do
     begin
       DataSet := DataArrayManager.DataSets[Index];
+      if not DataSet.Visible then
+      begin
+        Continue;
+      end;
       if (EvaluatedAt = DataSet.EvaluatedAt) then
       begin
         if ((Orientation = dso3D)
@@ -19654,6 +21348,29 @@ begin
   frmGoPhast.PhastModel.UpToDate := FPriorModelUpToDate;
 end;
 
+procedure TfrmScreenObjectProperties.btnCaptionFontClick(Sender: TObject);
+var
+  AScreenObject: TScreenObject;
+begin
+  inherited;
+  if FScreenObject <> nil then
+  begin
+    dlgFontCaption.Font := FScreenObject.ObjectLabel.Font;
+  end
+  else
+  begin
+    AScreenObject := FScreenObjectList[0];
+    dlgFontCaption.Font := AScreenObject.ObjectLabel.Font;
+  end;
+  if dlgFontCaption.Execute then
+  begin
+    FCaptionFont.Free;
+    FCaptionFont := TFont.Create;
+    FCaptionFont.Assign(dlgFontCaption.Font);
+    FCaptionFontChanged := True;
+  end;
+end;
+
 procedure TfrmScreenObjectProperties.splitterBoundaryMoved(Sender: TObject);
 begin
   inherited;
@@ -19760,6 +21477,10 @@ begin
       for Index := 0 to DataArrayManager.DataSetCount - 1 do
       begin
         DataSet := DataArrayManager.DataSets[Index];
+        if not DataSet.Visible then
+        begin
+          Continue
+        end;
         if (DataSet <> FCurrentEdit.DataArray)
           and (EvaluatedAt = DataSet.EvaluatedAt) then
         begin
@@ -20002,6 +21723,10 @@ begin
     for Index := 0 to DataArrayManager.DataSetCount - 1 do
     begin
       DataSet := DataArrayManager.DataSets[Index];
+      if not DataSet.Visible then
+      begin
+        Continue;
+      end;
       if (Index <> FDataEdits.IndexOf(Edit))
         and (EvaluatedAt = DataSet.EvaluatedAt) then
       begin

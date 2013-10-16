@@ -25,7 +25,6 @@ object frameCrossSection: TframeCrossSection
     SelectedRowOrColumnColor = clAqua
     UnselectableColor = clBtnFace
     ColorRangeSelection = False
-    ColorSelectedRow = True
     Columns = <
       item
         AutoAdjustRowHeights = True
@@ -47,6 +46,7 @@ object frameCrossSection: TframeCrossSection
         WordWrapCaptions = True
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -69,7 +69,9 @@ object frameCrossSection: TframeCrossSection
         WordWrapCaptions = True
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end>
+    WordWrapRowCaptions = False
   end
 end

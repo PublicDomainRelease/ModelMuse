@@ -10,16 +10,7 @@ uses Windows, ZLib, SysUtils, Classes, Contnrs, OrderedCollectionUnit,
 
 type
   {
-    @longcode(
-  TEvtRecord = record
-    Cell: TCellLocation;
-    EvapotranspirationRate: double;
-    StartingTime: double;
-    EndingTime: double;
-    EvapotranspirationRateAnnotation: string;
-  end;
-    )
-    @name stores the location, time and evapotranspiration rate for a cell.
+     @name stores the location, time and evapotranspiration rate for a cell.
   }
   TEvtRecord = record
     Cell: TCellLocation;
@@ -33,17 +24,6 @@ type
   end;
 
   {
-    @longcode(
-  TEvtSurfDepthRecord = record
-    Cell: TCellLocation;
-    EvapotranspirationSurface: double;
-    EvapotranspirationDepth: double;
-    StartingTime: double;
-    EndingTime: double;
-    EvapotranspirationSurfaceAnnotation: string;
-    EvapotranspirationDepthAnnotation: string;
-  end;
-    )
     @name stores the location, time, evaporation surface and evaporation depth for a cell.
   }
   TEvtSurfDepthRecord = record
@@ -60,15 +40,6 @@ type
   end;
 
   {
-    @longcode(
-  TEvtLayerRecord = record
-    Cell: TCellLocation;
-    EvapotranspirationLayer: integer;
-    StartingTime: double;
-    EndingTime: double;
-    EvapotranspirationLayerAnnotation: string;
-  end;
-    )
     @name stores the location, and evaporation layer for a cell.
   }
   TEvtLayerRecord = record
@@ -253,12 +224,12 @@ type
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary(AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
-    // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+    // See @link(TCustomListArrayBoundColl.AssignArrayCellValues
+    // TCustomListArrayBoundColl.AssignArrayCellValues)
+    procedure AssignArrayCellValues(DataSets: TList; ItemIndex: Integer;
       AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
-    // TCustomMF_ArrayBoundColl.InitializeTimeLists)
+    // See @link(TCustomListArrayBoundColl.InitializeTimeLists
+    // TCustomListArrayBoundColl.InitializeTimeLists)
     procedure InitializeTimeLists(ListOfTimeLists: TList;
       AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
@@ -291,12 +262,12 @@ type
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary(AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
-    // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+    // See @link(TCustomListArrayBoundColl.AssignArrayCellValues
+    // TCustomListArrayBoundColl.AssignArrayCellValues)
+    procedure AssignArrayCellValues(DataSets: TList; ItemIndex: Integer;
       AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
-    // TCustomMF_ArrayBoundColl.InitializeTimeLists)
+    // See @link(TCustomListArrayBoundColl.InitializeTimeLists
+    // TCustomListArrayBoundColl.InitializeTimeLists)
     procedure InitializeTimeLists(ListOfTimeLists: TList;
       AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
@@ -334,12 +305,12 @@ type
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary(AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
-    // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+    // See @link(TCustomListArrayBoundColl.AssignArrayCellValues
+    // TCustomListArrayBoundColl.AssignArrayCellValues)
+    procedure AssignArrayCellValues(DataSets: TList; ItemIndex: Integer;
       AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
-    // TCustomMF_ArrayBoundColl.InitializeTimeLists)
+    // See @link(TCustomListArrayBoundColl.InitializeTimeLists
+    // TCustomListArrayBoundColl.InitializeTimeLists)
     procedure InitializeTimeLists(ListOfTimeLists: TList;
       AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
@@ -624,7 +595,7 @@ begin
   AddBoundary(TEvtStorage.Create(AModel));
 end;
 
-procedure TEvtCollection.AssignCellValues(DataSets: TList; ItemIndex: Integer;
+procedure TEvtCollection.AssignArrayCellValues(DataSets: TList; ItemIndex: Integer;
   AModel: TBaseModel);
 var
   EvapotranspirationRateArray: TDataArray;
@@ -1341,7 +1312,7 @@ begin
   AddBoundary(TEvtLayerStorage.Create(AModel));
 end;
 
-procedure TEvtLayerCollection.AssignCellValues(DataSets: TList;
+procedure TEvtLayerCollection.AssignArrayCellValues(DataSets: TList;
   ItemIndex: Integer; AModel: TBaseModel);
 var
   EvapotranspirationLayerArray: TDataArray;
@@ -1689,7 +1660,7 @@ begin
   AddBoundary(TEvtSurfDepthStorage.Create(AModel));
 end;
 
-procedure TEvtSurfDepthCollection.AssignCellValues(DataSets: TList;
+procedure TEvtSurfDepthCollection.AssignArrayCellValues(DataSets: TList;
   ItemIndex: Integer; AModel: TBaseModel);
 var
   EvapotranspirationSurfaceArray: TDataArray;

@@ -486,9 +486,12 @@ end;
 { TObsGroup }
 
 constructor TObsGroup.Create;
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
   FLocations := TObsLocationList.Create;
-  FTimeValues:= TRealCollection.Create(nil);
+  InvalidateModelEvent := nil;
+  FTimeValues:= TRealCollection.Create(InvalidateModelEvent);
 end;
 
 destructor TObsGroup.Destroy;

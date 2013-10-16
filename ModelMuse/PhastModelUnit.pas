@@ -33,7 +33,8 @@ uses Windows, Types, GuiSettingsUnit, SysUtils, Classes, Contnrs, Controls,
   SutraOptionsUnit, SutraTimeScheduleUnit, frmSutraOutputControlUnit,
   SutraOutputControlUnit, SutraBoundariesUnit, FishnetMeshGenerator,
   VectorDisplayUnit, ModflowFmpCropUnit, ModflowFmpSoilUnit,
-  ModflowFmpClimateUnit, ModflowFmpAllotmentUnit;
+  ModflowFmpClimateUnit, ModflowFmpAllotmentUnit, ModflowSwrTabfilesUnit,
+  ModflowSwrReachGeometryUnit, ModflowSwrStructureUnit, ModflowSwrObsUnit;
 
 const
   kHufThickness = '_Thickness';
@@ -207,6 +208,11 @@ const
   KEffectivePorosity = 'EffectivePorosity';
   KSourceFluidDensityZone = 'SourceFluidDensityZone';
   KSWI_Observation_Name = 'SWI_Observation_Name';
+  KSwrReach = 'SWR_Reach_Number';
+  KSwrReachGroup = 'SWR_Reach_Group_Number';
+  KSwrRoutingType = 'SWR_Routing_Type';
+  KSwrReachLength = 'SWR_Reach_Length';
+  KReachString = 'Reach';
 
 
   // @name is the name of the @link(TDataArray) that specifies
@@ -387,6 +393,16 @@ const
   StrFarmWellPumpRequired = 'Farm Well Pump Only If Required';
 
   StrCfpRecharge = 'Conduit Recharge';
+  StrSWR_Rain = 'SWR Rain';
+  StrSWR_Evap = 'SWR Evaporation';
+  StrSWR_LatInflow = 'SWR Lateral Inflow';
+  StrSWR_Stage = 'SWR Stage';
+  StrSWR_DirectRunoffReach = 'SWR Direct Runoff Reach';
+  StrSWR_DirectRunoffValue = 'SWR Direct Runoff Value';
+  StrSWR_Vertical_Offset = 'SWR Vertical Offset';
+  StrSWR_BoundaryType = 'SWR Boundary Type';
+  StrSWR_GeometryNumber = 'SWR Geometry Number';
+
 
 const
   StrMT3DMS = 'MT3DMS';
@@ -395,9 +411,10 @@ const
 
 resourcestring
   strUzfClassification = 'UZF';
-  StrUzfFmpClassifiation = 'UZF and FMP2';
+  StrUzfFmpClassifiation = 'UZF' {$IFDEF FMP} + ' and FMP2' {$ENDIF};
   StrFmp2Classifiation = 'FMP2';
   StrCFPClassifiation = 'CFP';
+  StrSwrClassifiation = 'SWR';
   StrHydrology = 'Hydrology';
   StrChemistry = 'Chemistry';
   StrOutput = 'Output';
@@ -1692,15 +1709,6 @@ that affects the model output should also have a comment. }
 
   TChildModelCollection = class;
 
-//  TDataArrayColor = class(TObject)
-//    DataArray: TDataArray;
-//    Color: TColor;
-//  end;
-//
-//  TDataArrayColorList = Class(TObjectList<TDataArrayColor>)
-//    procedure RemoveDataArray(ADataArray: TDataArray);
-//  end;
-
   TCrossSection = class(TObserver)
   private
     FLayersToUse: TList<integer>;
@@ -1903,6 +1911,10 @@ that affects the model output should also have a comment. }
     FOnHeadOBsChanged: TNotifyEvent;
     FCrossSection: TCrossSection;
     FOnCrossSectionChanged: TNotifyEvent;
+    FSwrTabFiles: TTabFileCollection;
+    FSwrReachGeometry: TReachGeometryCollection;
+    FSwrStructures: TStructureCollection;
+    FSwrObservations: TSwrObsCollection;
     procedure CrossSectionChanged(Sender: TObject);
     procedure SetAlternateFlowPackage(const Value: boolean);
     procedure SetAlternateSolver(const Value: boolean);
@@ -2062,8 +2074,17 @@ that affects the model output should also have a comment. }
     procedure UpdateAllotmentFullStressPeriods(TimeList: TRealList);
 {$ENDIF}
     procedure SetCrossSection(const Value: TCrossSection);
-
+    procedure SetSwrTabFiles(const Value: TTabFileCollection);
+    procedure SetSwrReachGeometry(const Value: TReachGeometryCollection);
+    procedure SetSwrStructures(const Value: TStructureCollection);
+    procedure SetSwrObservations(const Value: TSwrObsCollection);
+    function GetUnitNumbers: TUnitNumbers;
+    function SwrSelected(Sender: TObject): Boolean;
+    procedure UpdateSwrReachNumber(Sender: TObject);
+    function GetModelInputFiles: TStrings;
+    function GetFilesToArchive: TStrings;
   protected
+    function GetParentModel: TCustomModel; virtual;
     procedure GenerateIrregularMesh(var ErrorMessage: string);
     procedure GenerateFishNetMesh(var ErrorMessage: string); virtual;
   var
@@ -2094,16 +2115,15 @@ that affects the model output should also have a comment. }
     FThreeDTimeList: TCustomTimeList;
     FPValFile: TStringList;
     FTemplate: TStringList;
-    FGageUnitNumber: integer;
     FGages: TStringList;
     FPathLine: TPathLineReader;
     FTimeSeries: TTimeSeriesReader;
     FEndPoints: TEndPointReader;
     F_SP_Epsilon: double;
   strict private
+    FUnitNumbers: TUnitNumbers;
     FHfbWriter: TObject;
     FMfHobHeads: THobDisplayTimeList;
-    FUnitNumbers: TUnitNumbers;
     FHfbDisplayer: THfbDisplayer;
 
     // @name holds the @link(TCustomTimeList)s in the model.
@@ -2115,6 +2135,8 @@ that affects the model output should also have a comment. }
     procedure SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot); virtual; abstract;
     function GetStrStreamLinkPlot: TSfrStreamLinkPlot; virtual; abstract;
     procedure SetStrStreamLinkPlot(const Value: TSfrStreamLinkPlot); virtual; abstract;
+    function GetSwrReachConnectionsPlot: TSwrReachConnectionsPlot; virtual; abstract;
+    procedure SetSwrReachConnectionsPlot(const Value: TSwrReachConnectionsPlot); virtual; abstract;
     procedure SetFileName(const Value: string); virtual;
     procedure SetFrontTimeList(const Value: TCustomTimeList); virtual;
     procedure SetSideTimeList(const Value: TCustomTimeList); virtual;
@@ -2174,9 +2196,12 @@ that affects the model output should also have a comment. }
     procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection);
       virtual; abstract;
   public
+    property ParentModel: TCustomModel read GetParentModel;
     procedure DrawSfrStreamLinkages(const BitMap: TBitmap32;
       const ZoomBox: TQRbwZoomBox2);
     procedure DrawStrStreamLinkages(const BitMap: TBitmap32;
+      const ZoomBox: TQRbwZoomBox2);
+    procedure DrawSwrReachConnections(const BitMap: TBitmap32;
       const ZoomBox: TQRbwZoomBox2);
     procedure RenameDataArray(DataArray: TDataArray;
       const NewName, NewDisplayName: string);
@@ -2366,7 +2391,7 @@ that affects the model output should also have a comment. }
 
     function ProgramName: string;
 
-    property UnitNumbers: TUnitNumbers read FUnitNumbers
+    property UnitNumbers: TUnitNumbers read GetUnitNumbers
       write SetUnitNumbers stored False;
 
     function PackageGeneratedExternally(const PackageName: string): boolean;
@@ -2617,6 +2642,15 @@ that affects the model output should also have a comment. }
     procedure InvalidateMfFmpEvap(Sender: TObject);
     procedure InvalidateMfFmpCropID(Sender: TObject);
 
+    procedure InvalidateMfSwrRainfall(Sender: TObject);
+    procedure InvalidateMfSwrEvaporation(Sender: TObject);
+    procedure InvalidateMfSwrLateralInflow(Sender: TObject);
+    procedure InvalidateMfSwrStage(Sender: TObject);
+    procedure InvalidateMfSwrDirectRunoffReach(Sender: TObject);
+    procedure InvalidateMfSwrDirectRunoffValue(Sender: TObject);
+    procedure InvalidateMfSwrVerticalOffset(Sender: TObject);
+    procedure InvalidateMfSwrBoundaryType(Sender: TObject);
+    procedure InvalidateMfSwrGeometryNumber(Sender: TObject);
 
     property NameFileWriter: TObject read FNameFileWriter write SetNameFileWriter;
     function ModflowLayerCount: integer; virtual;
@@ -2683,6 +2717,8 @@ that affects the model output should also have a comment. }
       write SetSfrStreamLinkPlot;
     property StrStreamLinkPlot: TSfrStreamLinkPlot read GetStrStreamLinkPlot
       write SetStrStreamLinkPlot;
+    property SwrReachConnectionsPlot: TSwrReachConnectionsPlot
+      read GetSwrReachConnectionsPlot write SetSwrReachConnectionsPlot;
     procedure InvalidateSutraSpecPressure(Sender: TObject);
     procedure InvalidateSutraSpecPressureU(Sender: TObject);
     procedure InvalidateSutraFluidFlux(Sender: TObject);
@@ -2693,6 +2729,7 @@ that affects the model output should also have a comment. }
     property SP_Epsilon: double read F_SP_Epsilon;
     function RelativeFileName(const FullFileName: string): string;
     function CfpIsSelected: Boolean; virtual;
+    function SwrIsSelected: Boolean; virtual;
     function CfpPipesSelected(Sender: TObject): Boolean;
     procedure ExportHeadObservationsToShapeFile(const FileName: string);
     property OnHeadOBsChanged: TNotifyEvent read FOnHeadOBsChanged
@@ -2795,9 +2832,9 @@ that affects the model output should also have a comment. }
 
     property HydrogeologicUnits: THydrogeologicUnits read FHydrogeologicUnits
       write SetHydrogeologicUnits stored StoreHydrogeologicUnits;
-    property FilesToArchive: TStrings read FFilesToArchive
+    property FilesToArchive: TStrings read GetFilesToArchive
       write SetFilesToArchive;
-    property ModelInputFiles: TStrings read FModelInputFiles
+    property ModelInputFiles: TStrings read GetModelInputFiles
       write SetModelInputFiles;
     // @name is the name of the ModelMuse file that has been opened or saved.
     property ModelFileName: string read FFileName write SetFileName;
@@ -2833,6 +2870,14 @@ that affects the model output should also have a comment. }
       write SetSutraOptions;
     property SutraOutputControl: TSutraOutputControl read FSutraOutputControl
       write SetSutraOutputControl;
+    property SwrTabFiles: TTabFileCollection read FSwrTabFiles
+      write SetSwrTabFiles;
+    property SwrReachGeometry: TReachGeometryCollection read FSwrReachGeometry
+      write SetSwrReachGeometry;
+    property SwrStructures: TStructureCollection read FSwrStructures
+      write SetSwrStructures;
+    property SwrObservations: TSwrObsCollection read FSwrObservations
+      write SetSwrObservations;
   end;
 
   TMapping = record
@@ -2846,10 +2891,10 @@ that affects the model output should also have a comment. }
 
   TFontChangeNotifyier = class(TFontAdapter)
   private
-    FModel: TCustomModel;
+    FInvalidateModelEvent: TNotifyEvent;
   public
     procedure Changed; override;
-    Constructor Create(AModel: TCustomModel; AFont: TFont);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent; AFont: TFont);
   end;
 
   {
@@ -3045,6 +3090,7 @@ that affects the model output should also have a comment. }
     FShowContourLabels: Boolean;
     FSfrStreamLinkPlot: TSfrStreamLinkPlot;
     FStrStreamLinkPlot: TSfrStreamLinkPlot;
+    FSwrReachConnectionsPlot: TSwrReachConnectionsPlot;
     FMt3dmsOutputControl: TMt3dmsOutputControl;
     FMt3dmsTimes: TMt3dmsTimeCollection;
     FImmobileComponents: TChemSpeciesCollection;
@@ -3249,6 +3295,8 @@ that affects the model output should also have a comment. }
       List: TList);
     procedure PasteArgusOneContoursFromClipboard(const ClipboardText: string;
       List: TList);
+//    function GetUnitNumbers: TUnitNumbers; override;
+//    procedure SetUnitNumbers(const Value: TUnitNumbers); override;
 //    procedure SetSutraOutputControl(const Value: TSutraOutputControl);
   protected
     function GetGlobalVariables: TGlobalVariables; override;
@@ -3257,6 +3305,8 @@ that affects the model output should also have a comment. }
     procedure SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot); override;
     function GetStrStreamLinkPlot: TSfrStreamLinkPlot; override;
     procedure SetStrStreamLinkPlot(const Value: TSfrStreamLinkPlot); override;
+    function GetSwrReachConnectionsPlot: TSwrReachConnectionsPlot; override;
+    procedure SetSwrReachConnectionsPlot(const Value: TSwrReachConnectionsPlot); override;
     procedure SetFileName(const Value: string); override;
     function GetFormulaManager: TFormulaManager; override;
     function GetLayerStructure: TLayerStructure;override;
@@ -3352,8 +3402,12 @@ that affects the model output should also have a comment. }
     procedure UpdateChildGrids;
     procedure UpdateDataSetConnections;
     function AddDataSet(const DataSet: TDataArray): Integer; override;
+    { TODO -cRefactor : Consider replacing CModel with an interface. }
+    //
     function IsChildModelEdgeColRow(Col, Row, Layer: integer;
       out CModel: TBaseModel): boolean;
+    { TODO -cRefactor : Consider replacing CModel with an interface. }
+    //
     function IsChildModelEdgeCell(Col, Row, Layer: integer;
       out CModel: TBaseModel): boolean;
     procedure AllowChildGridUpdates;
@@ -3391,6 +3445,8 @@ that affects the model output should also have a comment. }
       var NearestLake, NearestStream: TScreenObject; Tolerance: double = 0);
     procedure LocateNearestStrStream(TestScreenObject: TScreenObject;
       var NearestStream: TScreenObject; Tolerance: double = 0);
+    procedure LocateNearestSwrReachObjects(TestScreenObject: TScreenObject;
+      var NearestReachObjects: TList<TScreenObject>; Tolerance: double);
     // @name increments @link(FScreenObjectUpdateCount).  While
     // @link(FScreenObjectUpdateCount) is greater than zero the
     // @link(OnScreenObjectsChanged) event is not called.
@@ -3769,8 +3825,7 @@ that affects the model output should also have a comment. }
     function ZoneBudgetIsSelected: Boolean;
     function FarmProcessIsSelected: Boolean;
     function CfpRechargeIsSelected(Sender: TObject): boolean;
-//    function CfpIsSelected: Boolean;
-//    function CfpPipesSelected: Boolean;
+    function SwrIsSelected: Boolean; override;
     function PackageIsSelected(APackage: TObject): Boolean;
     procedure ExportModflowLgrModel(const FileName: string;
       RunModel, ExportModpath, ExportZoneBudget, ShowWarning: boolean);
@@ -4010,6 +4065,8 @@ that affects the model output should also have a comment. }
     procedure Update(Item: TCollectionItem); override;
   public
     function IsSame(AnOrderedCollection: TOrderedCollection): boolean; override;
+    { TODO -cRefactor : Consider replacing CModel with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     procedure Assign(Source: TPersistent); override;
     property BottomLayerGroup: TLayerGroup read GetBottomLayerGroup
@@ -4095,7 +4152,10 @@ that affects the model output should also have a comment. }
     procedure AdjustCellPosition(var Column, Row, Layer: integer); overload;
     function GetSaveBfhBoundaryConditions: boolean; override;
     procedure SetSaveBfhBoundaryConditions(const Value: boolean);  override;
+//    function GetUnitNumbers: TUnitNumbers; override;
+//    procedure SetUnitNumbers(const Value: TUnitNumbers); override;
   protected
+    function GetParentModel: TCustomModel; override;
     function GetGlobalVariables: TGlobalVariables; override;
     procedure SetGlobalVariables(const Value: TGlobalVariables); override;
     function StoreHydrogeologicUnits: Boolean; override;
@@ -4158,6 +4218,8 @@ that affects the model output should also have a comment. }
     procedure SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot); override;
     function GetStrStreamLinkPlot: TSfrStreamLinkPlot; override;
     procedure SetStrStreamLinkPlot(const Value: TSfrStreamLinkPlot); override;
+    function GetSwrReachConnectionsPlot: TSwrReachConnectionsPlot; override;
+    procedure SetSwrReachConnectionsPlot(const Value: TSwrReachConnectionsPlot); override;
   public
     property CanUpdateGrid: Boolean read FCanUpdateGrid write SetCanUpdateGrid;
     function LayerGroupUsed(LayerGroup: TLayerGroup): boolean; override;
@@ -4169,8 +4231,7 @@ that affects the model output should also have a comment. }
     procedure Assign(Source: TPersistent); override;
     constructor Create(AnOwner: TComponent); override;
     destructor Destroy; override;
-    procedure Invalidate; override;
-    property ParentModel: TCustomModel read FParentModel;
+    procedure Invalidate(Sender: TObject); override;
     function GetScreenObjectByName(AName: string): TScreenObject; override;
     procedure UpdateLayerCount;
     property HorizontalPositionScreenObject: TScreenObject
@@ -4241,6 +4302,8 @@ that affects the model output should also have a comment. }
     FModelName: string;
     FDiscretization: TChildDiscretizationCollection;
     FChildCellsPerParentCell: integer;
+    { TODO -cRefactor : Consider replacing CModel with an interface. }
+    //
     FChildModel: TBaseModel;
     FStartingHeadSource: TStartingHeadSource;
     FMaxIterations: integer;
@@ -4293,8 +4356,12 @@ that affects the model output should also have a comment. }
   end;
 
   TChildModelEditCollection = class(TOrderedCollection)
+  private
+    function GetItems(Index: integer): TChildModelEdit;
+    procedure SetItems(Index: integer; const Value: TChildModelEdit);
   public
     constructor Create;
+    property Items[Index: integer]: TChildModelEdit read GetItems write SetItems; default;
   end;
 
   TChildModelItem = class(TOrderedItem)
@@ -4323,6 +4390,8 @@ that affects the model output should also have a comment. }
     property Items[Index: integer]: TChildModelItem read GetItem
       write SetItem; default;
   published
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
   end;
 
@@ -6217,7 +6286,7 @@ const
   //         in the object properties dialog box is now set to a reasonable
   //         value based on the dimensions of the model area.
   //       Bug fix: Fixed bug in the "Delete Model Results" command
-  //         that invalidated formaulas incorrectly. Not in released version.
+  //         that invalidated formulas incorrectly. Not in released version.
   //    '2.19.1.12' Bug fix: Fixed bug in displaying the Show/Hide Objects
   //         dialog box when drain return objects were not defined properly.
   //    '2.19.1.13' Change: Changing the name of a "Model Results" data set
@@ -6352,7 +6421,7 @@ const
   //    '3.0.0.3' no real change.
   //    '3.0.0.4' Fixed reading certain real numbers when opening a file on
   //         a computer in which the decimal separator is not a period.
-  //    '3.0.0.5' Fixed Checkbox bug in TRbwDtatGrid4. Not in released version.
+  //    '3.0.0.5' Fixed Checkbox bug in TRbwDataGrid4. Not in released version.
   //    '3.0.0.6' No released changes.
   //    '3.0.0.7' Enhancement: If the initial step size for MT3DMS is larger
   //         than the maximum step size, the backgrounds of the cells in the
@@ -6418,9 +6487,163 @@ const
   //         of data set values for child models when those values should be
   //         set using parameters has been fixed.
   //    '3.2.1.0' No additional changes.
+  //    '3.2.1.1' Bug fix: fixed bug in determining tributaries in the STR
+  //         package.
+  //       Bug fix: Fixed display of transient data when the specified time
+  //         is the first time in a stress period.
+  //       Bug fix: fixed bug that could cause ModelMuse to enter an infinite
+  //         loop when using the ACM 626 method to draw contour lines.
+  //       Bug fix: ModelMuse can now handle a data set that has an invalid
+  //         formula when first opening the model.
+  //       Bug fix: Fixed bug importing MODFLOW models containing specified
+  //         heads defined by both the CHD package and negative IBOUND values.
+  //    '3.2.1.2' Bug fix: Fixed bugs related to editing and exporting CFP
+  //         information.
+  //       Bug fix: Fixed bug the could cause and access violation when
+  //         switching to a SUTRA model.
+  //    '3.2.1.3' Bug fix: Fixed generation of time schedules in SUTRA when
+  //         one or more of the times is larger than the largest possible
+  //         single precision number.
+  //       Bug fix: Fixed export of time information for MT3DMS.
+  //       Bug fix: Fixed export of MODFLOW flow observation factors when the
+  //         formula for the factor uses the layer, row, or column number.
+  //       Enhancement: When displaying data or head observation results,
+  //         the root mean square residual is displayed in the
+  //         Data Visualization dialog box.
+  //       Enhancement: In the Show and Hide Objects, dialog box, the head
+  //         observation group name is displayed with head observations.
+  //     '3.2.1.4' Bug fix: Fixed display of Data Visualization dialog box.
+  //         (not in released version.)
+  //     '3.2.1.5' Change: The formula used for 3D data sets when importing
+  //         model results has been changed;
+  //     '3.2.1.6' Bug fix: Entering an invalid maximum or minimum value to
+  //         display in the Data Visualization dialog box no longer results
+  //         in a bug report.
+  //       Bug fix: Fixed importing model results with MODFLOW-LGR
+  //         and MODFLOW-LGR2 models.
+  //       Bug fix: If a formula for the pumping rate in a MODFLOW well results
+  //         in a math error such as a division by zero error, An error
+  //         message is displayed in the Errors and Warnings dialog box
+  //         instead of generating a bug report.
+  //     '3.2.1.7' Bug fix: ModelMuse now saves the location of MODFLOW-LGR2.
+  //     '3.2.1.8' Bug fix: Fixed bug related to editing data for
+  //         conduit recharge.
+  //     '3.2.1.9' Change: In MODFLOW-LGR and MODFLOW-LGR2 models, child
+  //         models are now only displayed on the front and side views if the
+  //         selected row or column of the parent model intersects the child
+  //         model.
+  //       Enhancement: When importing model results from MODFLOW-LGR2 models,
+  //         ModelMuse now does a better job of selecting default names for
+  //         the model result files for the child models.
+  //     '3.2.1.10' Bug fix: Fixed the process of deleting and undoing the
+  //         deletion of child models in MODFLOW-LGR and MODFLOW-LGR2.
+  //     '3.2.1.11' Bug fix: Fixed reading Shapefiles with 32-bit version of
+  //         ModelMuse. (Not broken in 64-bit version.)
+  //     '3.2.1.12' Bug fix: In the Global Variables dialog box, clicking
+  //         where there isn't a cell, no longer causes an error.
+  //       Bug fix: Fixed drawing fishnet mesh elements in SUTRA models.
+  //       Bug fix: Fixed drawing objects in 2D SUTRA models.
+  //     '3.2.1.13' Enhancement: VertexValue function added.
+  //       Bug fix: Fixed export of FHB package input file when only flows
+  //         or only heads were specified in the package.
+  //       Bug fix: Fixed specification of FHB flow and head values to allow
+  //         formulas to be used for the flows or heads.
+  //     '3.2.1.14' Bug fix: Fixed import of models in which routing to
+  //         steams or lakes is defined in the UZF package but the lake and SFR
+  //         packages are not active.
+  //       Enhancement: added a method for importing multiple gridded data
+  //         files at one time.
+  //       Bug fix: fixed a bug that incorrectly prevented the deletion of
+  //         selected points from complicated polygon objects.
+  //     '3.2.1.15' Enhancement: Added the capability to import quadrilateral
+  //         meshes generated by Argus ONE for use in SUTRA.
+  //     '3.2.1.16' Bug fix: (not in released version) Fixed enabling import
+  //         of SUTRA mesh.
+  //     '3.2.1.17' Bug fix: Fixed import of MODFLOW models containing the
+  //         SFR input files that use external flow files.
+  //     '3.2.1.18' Bug fix: Fixed visualization of boundary conditions in
+  //         SUTRA models.
+  //     '3.2.1.19' Enhancement: Added ability to display labels with objects.
+  //       Enhancement: Added a plot of simulated versus observed values for
+  //         head observation results.
+  //     '3.2.1.20' Bug fix: in some cases creating a contour plot of SUTRA
+  //         data caused ModelMuse to crash.
+  //       Enhancement: Creating contour plots of SUTRA data is faster.
+  //     '3.2.1.21' Bug fix: Fixed display of vectors in SUTRA.
+  //       Bug fix: Fixed generation of error message is an invalid formula
+  //         is used with SUTRA boundary conditions.
+  //     '3.2.1.22' Bug fix: Cross sections no longer plot heads equal to HDRY
+  //         in MODFLOW models.
+  //     '3.2.1.23' No real change.
+  //     '3.2.1.24' Bug fix: not in released version. Fixed plotting
+  //         cross sections for 2D data sets.
+  //     '3.2.1.25' Bug fix: Fixed vertical exaggeration in top view when
+  //         switching from a SUTRA profile model to any other sort of model.
+  //       Bug fix: Fixed range check error when editing SUTRA boundary
+  //         conditions.
+  //     '3.2.1.26' Bug fix: Fixed bug that could cause an assertion failure
+  //         when assigning values to a data set.
+  //     '3.2.1.27' Bug fix: Attempting to export a Shapefile when the
+  //         database file is in use, now results in an error message to the
+  //         user instead of a bug report.
+  //     '3.2.1.28' Bug fix: Fixed bug that could cause a range check error
+  //         in SUTRA models with large numbers of nodes.
+  //     '3.2.1.29' Enhancement: Improved speed of displaying object properties
+  //         for SUTRA models in the Object Properties dialog box.
+  //     '3.2.1.30' Change: ModelMuse no longer checks for certain
+  //         discrepancies in the SFR package input files when importing
+  //         existing models. The change allows such models to be imported
+  //         for the purpose of visualizing them. However, it will not be
+  //         possible to run such models from ModelMuse until the discrepancies
+  //         are resolved.
+  //     '3.2.1.31' Enhancement: Added support for importing model results data
+  //         from .bcof, .bcos, .bcop, or .bcou SUTRA output files into
+  //         ModelMuse.
+  //     '3.2.1.32' Enhancement: Added support for the Surface Water Routing
+  //         process (SWR).
+  //     '3.2.1.33' Minor bug fixes not in released version.
+  //     '3.2.1.34' Bug fix: not in released version. Fixed import
+  //         from .bcof, .bcos, .bcop, or .bcou SUTRA output files
+  //         when more than one time step was selected.
+  //     '3.2.1.35' Bug fix: Attempting to import a locked Shapefile now
+  //         results in an error message to the user rather than a bug report.
+  //     '3.2.1.36' Bug fix: When importing existing models, cell top and
+  //         bottom elevations are now imported correctly.
+  //     '3.2.1.37' Enhancement: When importing model results for a MODFLOW
+  //         model, it is now possible to select all the data of a certain
+  //         type or a certain time step by checking a single check box.
+  //     '3.2.1.38' Enhancement: When importing existing MODFLOW models that
+  //         have invalid tributary numbers in the STR package, ModelMuse
+  //         now generates a warning message to the user instead of a bug
+  //         report.
+  //     '3.2.1.39' Bug fix: Importing stream observations from existing models
+  //         now works correctly when the same segment is part of more than
+  //         one observation.
+  //     '3.2.1.40' Enhancement: If there is an error importing and existing
+  //         MODFLOW model, the error message dialog box will show the console
+  //         lines generated by MODFLOW importing program as an aid to
+  //         diagnosing the problem.
+  //       Bug fix: Fixed editing of SFR channel data when a cross section
+  //         was not required.
+  //     '3.2.1.41' Bug fix: Fixed bug in importing existing models with
+  //         multilayer head observations.
+  //       Bug fix: Fixed bug that could cause ModelMuse to crash because of
+  //         a stack overflow.
+  //     '3.2.1.42' Enhancement: Improved checking of layer heights in MODFLOW
+  //         models.
+  //       Bug fix: Fixed a bug that could cause a stack overflow when closing
+  //         ModelMuse.
+  //       Bug fix: Sometimes it is impossible to save a very large model as
+  //         a ModelMuse text file (.gpt). Now, if an error occurs in
+  //         converting the file from the binary to the text format, the user
+  //         is prompted to save the file as a binary file.
+  //       Bug fix: Output files from MODPATH version 5 are now archived.
+  //     '3.3.0.0' Enhancement: The Global variables dialog box has been
+  //         converted to a non-modal dialog box.
 
 const
-  IModelVersion = '3.2.1.0';
+  // version number of ModelMuse.
+  IModelVersion = '3.3.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -6516,7 +6739,8 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
   QuadMeshGenerator, MeshRenumbering, ModflowPCGN_WriterUnit, Character,
   SutraBoundaryWriterUnit, QuadtreeClass, frmMeshInformationUnit,
   MeshRenumberingTypes, ModflowStrWriterUnit, ModflowFhbWriterUnit,
-  ModflowFmpWriterUnit, ModflowCfpWriterUnit, ModflowSwiWriterUnit;
+  ModflowFmpWriterUnit, ModflowCfpWriterUnit, ModflowSwiWriterUnit,
+  ModflowSwrWriterUnit, SolidGeom;
 
 resourcestring
   StrMpathDefaultPath = 'C:\WRDAPP\Mpath.5_0\setup\Mpathr5_0.exe';
@@ -6529,7 +6753,7 @@ resourcestring
   StrModelMateDefaultPath = 'C:\WRDAPP\ModelMate_1_0_1\Bin\ModelMate.exe';
   strModflowLgrDefaultPath = 'C:\WRDAPP\mflgr.1_2\bin\mflgr.exe';
   strModflowLgr2DefaultPath = 'C:\WRDAPP\mflgr.2_0\bin\mflgr.exe';
-  strModflowNwtDefaultPath = 'C:\WRDAPP\MODFLOW-NWT_1.0.8\bin\MODFLOW-NWT.exe';
+  strModflowNwtDefaultPath = 'C:\WRDAPP\MODFLOW-NWT_1.0.9\bin\MODFLOW-NWT.exe';
 
   StrProgramLocations = 'Program Locations';
   StrMODFLOW2005 = 'MODFLOW-2005';
@@ -6584,7 +6808,8 @@ resourcestring
   'e?';
   StrMODPATHRequiresTha = 'MODPATH requires that the heads and flows be save' +
   'd for every time step of the model. That isn''t the case for this model. ' +
-  'Do you want to export the MODPATH input anyway?';
+  'Do you want to export the MODPATH input anyway? You can change the times ' +
+  'at which data are saved in the "Model|MODFLOW Output Control..." dialog box.';
 //  StrMT3DMS5 = 'MT3DMS-5';
   strMt3dmsDefaultPath = 'C:\mt3dms5\bin\mt3dms5b.exe';
   StrTheBeginningOfThe = 'The beginning of the first stress period is %0:g. ' +
@@ -6624,7 +6849,8 @@ resourcestring
   'the export of the MT3DMS files.)';
   StrMODPATHVersion6Re = 'MODPATH version 6 requires that if heads are saved, ' +
   'they must be saved in a binary format. That isn''t the case for this ' +
-  'model. Do you want to export the MODPATH input anyway?';
+  'model. Do you want to export the MODPATH input anyway? You can change the ' +
+  'file format in the "Model|MODFLOW Output Control..." dialog box.';
   StrYouNeedToDrawQua = 'You need to draw quadrilaterals that will be used t' +
   'o define the mesh and assign the number of nodes along two edges of each ' +
   'quadrilateral.';
@@ -6648,6 +6874,10 @@ resourcestring
   StrSWIObservationName = 'SWI_Observation_Name';
   StrVersion = 'Version';
   StrModelMuseVersion = 'ModelMuse Version';
+  StrSwrReach = 'SWR_Reach_Number';
+  StrSwrReachGroup = 'SWR_Reach_Group_Number';
+  StrSwrRoutingType = 'SWR_Routing_Type';
+  StrSwrReachLength = 'SWR_Reach_Length';
 
 
 const
@@ -6823,7 +7053,7 @@ function TPhastModel.AddScreenObject(const AScreenObject: TScreenObject):
   integer;
 begin
   result := FScreenObjectList.Add(AScreenObject);
-  Invalidate;
+  Invalidate(self);
 end;
 
 procedure TPhastModel.AdjustDataArray(ADataArray: TDataArray);
@@ -7222,6 +7452,7 @@ begin
     DataSetList := SourceModel.DataSetList;
     SfrStreamLinkPlot := SourceModel.SfrStreamLinkPlot;
     StrStreamLinkPlot := SourceModel.StrStreamLinkPlot;
+    SwrReachConnectionsPlot := SourceModel.SwrReachConnectionsPlot;
     SutraSettings := SourceModel.SutraSettings;
   {$IFDEF FMP}
     FmpCrops := SourceModel.FmpCrops;
@@ -7299,10 +7530,12 @@ var
   ChangeNotifier: IChangeNotifier;
 begin
   inherited;
+//  FUnitNumbers := TUnitNumbers.Create(self);
+
 
   FGlobalVariables := TGlobalVariables.Create(self);
   FFishnetMeshGenerator := TFishnetMeshGenerator.Create(self);
-  FColorSchemes := TUserDefinedColorSchemeCollection.Create(self);
+  FColorSchemes := TUserDefinedColorSchemeCollection.Create(Invalidate);
   FSaveBfhBoundaryConditions := True;
   FSaveDataSetValues := sdsvAlways;
   FSelectedModel := self;
@@ -7375,7 +7608,7 @@ begin
   FFluidProperties.SetSubComponent(True);
   FSolutionOptions := TSolutionOptions.Create(self);
   FSolutionOptions.SetSubComponent(True);
-  FPrintFrequency := TPrintFrequencyCollection.Create(self);
+  FPrintFrequency := TPrintFrequencyCollection.Create(Invalidate);
   FPrintInitial := TPrintInitial.Create;
   FGridOptions := TGridOptions.Create;
   FSteadyFlowOptions := TSteadyFlowOptions.Create;
@@ -7385,10 +7618,10 @@ begin
   FTitle := TStringList.Create;
   FTitle.Add('PHAST input generated by ' + StrModelName + '.');
   FUnits := TUnits.Create;
-  FTimes := TTimeCollection.Create(self);
+  FTimes := TTimeCollection.Create(Invalidate);
   FTimes.Add;
 
-  FModflowStressPeriods := TModflowStressPeriods.Create(self);
+  FModflowStressPeriods := TModflowStressPeriods.Create(Invalidate);
   FModflowFullStressPeriods := TModflowStressPeriods.Create(nil);
   with FModflowStressPeriods.Add as TModflowStressPeriod do
   begin
@@ -7399,9 +7632,9 @@ begin
     DrawDownReference := False;
   end;
 
-  FModflowOutputControl := TModflowOutputControl.Create(Self);
-  FMt3dmsOutputControl := TMt3dmsOutputControl.Create(Self);
-  FMt3dmsTimes:= TMt3dmsTimeCollection.Create(Self);
+  FModflowOutputControl := TModflowOutputControl.Create(Invalidate);
+  FMt3dmsOutputControl := TMt3dmsOutputControl.Create(Invalidate);
+  FMt3dmsTimes:= TMt3dmsTimeCollection.Create(Invalidate);
 
   FModflowSteadyParameters:= TModflowSteadyParameters.Create(Self);
   FModflowTransientParameters := TModflowTransientListParameters.Create(self);
@@ -7416,18 +7649,19 @@ begin
   FDataArrayManager.CreateInitialDataSets;
 
   FContourFont := TFont.Create;
-  ChangeNotifier := TFontChangeNotifyier.Create(self, FContourFont);
+  ChangeNotifier := TFontChangeNotifyier.Create(Invalidate, FContourFont);
   FContourFont.FontAdapter := ChangeNotifier;
   FShowContourLabels := True;
 
   FSfrStreamLinkPlot := TSfrStreamLinkPlot.Create(self);
   FStrStreamLinkPlot := TSfrStreamLinkPlot.Create(self);
+  FSwrReachConnectionsPlot := TSwrReachConnectionsPlot.Create(self);
 
   FImmobileComponents := TChemSpeciesCollection.Create(Self);
   FMobileComponents := TMobileChemSpeciesCollection.Create(Self);
 
   FSutraLayerStructure:= TSutraLayerStructure.Create(Self);
-  FSutraTimeOptions := TSutraTimeOptions.Create(Self);
+  FSutraTimeOptions := TSutraTimeOptions.Create(Invalidate);
   FSutraSettings := TSutraSettings.Create(Self);
 //  LayerGroup := FSutraLayerStructure.Add as TSutraLayerGroup;
 //  LayerGroup.AquiferName := 'SUTRA_Mesh_Top';
@@ -7446,6 +7680,7 @@ begin
   FFmpSoils := TSoilCollection.Create(self);
   FFmpClimate := TClimateCollection.Create(self);
   FFmpAllotment := TAllotmentCollection.Create(self);
+
 end;
 
 procedure TPhastModel.CreateArchive(const FileName: string; const ArchiveCommand: string = '');
@@ -7634,7 +7869,7 @@ var
 begin
   frmFileProgress:= TfrmProgressMM.Create(nil);
   try
-
+//    FUnitNumbers.Free;
     DataArrayManager.UnlinkDeletedDataSets;
     FClearing := True;
     try
@@ -7651,6 +7886,7 @@ begin
     FImmobileComponents.Free;
     FMobileComponents.Free;
 
+    FSwrReachConnectionsPlot.Free;
     FStrStreamLinkPlot.Free;
     FSfrStreamLinkPlot.Free;
     FChildModels.Free;
@@ -8094,6 +8330,46 @@ begin
   end;
 end;
 
+procedure TPhastModel.LocateNearestSwrReachObjects(TestScreenObject: TScreenObject;
+  var NearestReachObjects: TList<TScreenObject>; Tolerance: double);
+var
+  ReferenceLocation: TPoint2D;
+  procedure FindNearbyObjects;
+  var
+    Index: Integer;
+    AScreenObject: TScreenObject;
+    TestLocation: TPoint2D;
+    TestDist: TFloat;
+  begin
+    for Index := 0 to ScreenObjectCount - 1 do
+    begin
+      AScreenObject := ScreenObjects[Index];
+      if not AScreenObject.Deleted and (AScreenObject <> TestScreenObject)
+        and (AScreenObject.ModflowSwrReaches <> nil)
+        and AScreenObject.ModflowSwrReaches.Used then
+      begin
+        TestLocation := AScreenObject.Points[0];
+        TestDist := Distance(TestLocation, ReferenceLocation);
+        if (TestDist < Tolerance) and (NearestReachObjects.IndexOf(AScreenObject) < 0) then
+        begin
+          NearestReachObjects.Add(AScreenObject);
+        end;
+      end;
+    end;
+  end;
+begin
+  NearestReachObjects.Clear;
+
+  ReferenceLocation := TestScreenObject.Points[0];
+  FindNearbyObjects;
+
+  if TestScreenObject.Count > 1 then
+  begin
+    ReferenceLocation := TestScreenObject.Points[TestScreenObject.Count-1];
+    FindNearbyObjects;
+  end;
+end;
+
 procedure TPhastModel.LocateNearestStrStream(TestScreenObject: TScreenObject;
   var NearestStream: TScreenObject; Tolerance: double);
 var
@@ -8381,8 +8657,7 @@ begin
   MidVectors.InitializeVariables;
   MinVectors.InitializeVariables;
   VelocityVectors.Clear;
-
-  Invalidate;
+  Invalidate(self);
   inherited;
 end;
 
@@ -8404,14 +8679,14 @@ end;
 procedure TPhastModel.ExtractScreenObject(const AScreenObject: TScreenObject);
 begin
   FScreenObjectList.Extract(AScreenObject);
-  Invalidate;
+  Invalidate(self);
 end;
 
 procedure TPhastModel.InsertScreenObject(const Index: integer;
   const AScreenObject: TScreenObject);
 begin
   FScreenObjectList.Insert(Index, AScreenObject);
-  Invalidate;
+  Invalidate(self);
 end;
 
 function TPhastModel.GetObservationPurpose: TObservationPurpose;
@@ -8439,6 +8714,16 @@ function TCustomModel.CfpPipesSelected(Sender: TObject): Boolean;
 begin
   result := CfpIsSelected and
     ModflowPackages.ConduitFlowProcess.PipesUsed;
+end;
+
+function TCustomModel.SwrIsSelected: Boolean;
+begin
+  result := ModflowPackages.SwrPackage.IsSelected;
+end;
+
+function TCustomModel.SwrSelected(Sender: TObject): Boolean;
+begin
+  result := SwrIsSelected
 end;
 
 function TPhastModel.CfpRechargeIsSelected(Sender: TObject): Boolean;
@@ -8508,13 +8793,13 @@ end;
 procedure TPhastModel.ClearScreenObjects;
 begin
   FScreenObjectList.Clear;
-  Invalidate;
+  Invalidate(self);
 end;
 
 procedure TPhastModel.RemoveScreenObject(const AScreenObject: TScreenObject);
 begin
   FScreenObjectList.Remove(AScreenObject);
-  Invalidate;
+  Invalidate(self);
 end;
 
 procedure TPhastModel.RenameOldVerticalLeakance;
@@ -8636,7 +8921,7 @@ end;
 procedure TCustomModel.SetPhastGrid(const Value: TPhastGrid);
 begin
   FPhastGrid.Assign(Value);
-  Invalidate;
+  Invalidate(self);
 end;
 
 function TPhastModel.GetHufParameters: THufModflowParameters;
@@ -8992,7 +9277,7 @@ begin
   if FModelMateProjectFileName <> Value then
   begin
     FModelMateProjectFileName := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -9176,7 +9461,7 @@ begin
     end;
 
     DataArrayManager.UpdateClassifications;
-    Invalidate;
+    Invalidate(self);
     if Assigned(OnModelSelectionChange) then
     begin
       OnModelSelectionChange(self);
@@ -9433,6 +9718,11 @@ begin
     FSutraLayerStructure := TSutraLayerStructure.Create(self);
   end;
   result := FSutraLayerStructure
+end;
+
+function TPhastModel.GetSwrReachConnectionsPlot: TSwrReachConnectionsPlot;
+begin
+  result := FSwrReachConnectionsPlot;
 end;
 
 procedure TPhastModel.SetFrontHeight(Value: integer);
@@ -9907,7 +10197,22 @@ begin
     ExistingDataSet.Assign(ADataSet);
     Compiler := GetCompiler(ExistingDataSet.Orientation,
       ExistingDataSet.EvaluatedAt);
-    Compiler.Compile(Item.FDataSetFormula);
+    try
+      Compiler.Compile(Item.FDataSetFormula);
+    except on E: ERbwParserError do
+      begin
+//        frmFormulaErrors.DelayShowing := True;
+        frmFormulaErrors.AddFormulaError('', ExistingDataSet.Name, Item.FDataSetFormula, E.Message);
+        case ExistingDataSet.DataType of
+          rdtDouble: Item.FDataSetFormula := '0.';
+          rdtInteger: Item.FDataSetFormula := '0';
+          rdtBoolean: Item.FDataSetFormula := 'False';
+          rdtString: Item.FDataSetFormula := '""';
+        end;
+        Compiler.Compile(Item.FDataSetFormula);
+
+      end;
+    end;
     ExistingDataSet.Formula := Item.FDataSetFormula;
     if ExistingDataSet is TCustomPhastDataSet then
     begin
@@ -10104,7 +10409,7 @@ begin
   if FFreeSurface <> Value then
   begin
     FFreeSurface := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -10121,7 +10426,7 @@ end;
 procedure TPhastModel.SetTitle(const Value: TStrings);
 begin
   FTitle.Assign(Value);
-  Invalidate;
+  Invalidate(self);
 end;
 
 procedure TCustomModel.SetThreeDDataSet(const Value: TDataArray);
@@ -10152,7 +10457,7 @@ end;
 procedure TPhastModel.SetTimes(const Value: TTimeCollection);
 begin
   FTimes.Assign(Value);
-  Invalidate;
+  Invalidate(self);
 end;
 
 function TPhastModel.ScreenObjectClass: TScreenObjectClass;
@@ -10162,6 +10467,7 @@ end;
 
 procedure TPhastModel.ScreenObjectsChanged(Sender: TObject);
 begin
+  if (csDestroying in ComponentState) then Exit;
   if FScreenObjectUpdateCount > 0 then Exit;
 
   if Assigned(OnScreenObjectsChanged) then
@@ -10845,36 +11151,77 @@ var
   TimeIndex: integer;
   LocalSelectedLayer, LocalSelectedRow, LocalSelectedColumn: integer;
 begin
-  if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
+  if Grid <> nil then
+  begin
+    if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
+    begin
+      FFrontTimeList := nil;
+      Grid.FrontDataSet := nil;
+      Exit;
+    end;
+    LocalSelectedLayer := Grid.SelectedLayer;
+    LocalSelectedRow := Grid.SelectedRow;
+    LocalSelectedColumn := Grid.SelectedColumn;
+    try
+      if not TimeList.UpToDate then
+      begin
+        TimeList.Initialize;
+      end;
+      TimeIndex := TimeList.FirstTimeGreaterThan(Time) - 1;
+      if TimeIndex < 0 then
+      begin
+        Grid.FrontDataSet := nil;
+      end
+      else
+      begin
+        Grid.FrontDataSet := TimeList.Items[TimeIndex];
+        Grid.FrontDataSet.UpdateMinMaxValues;
+      end;
+      FFrontTimeList := TimeList;
+      FFrontDisplayTime := Time;
+    finally
+      Grid.SelectedLayer := LocalSelectedLayer;
+      Grid.SelectedRow := LocalSelectedRow;
+      Grid.SelectedColumn := LocalSelectedColumn;
+    end;
+  end
+  else if Mesh <> nil then
+  begin
+    if (Mesh.LayerCount <= 0) {or (Mesh.RowCount <= 0) or (Mesh.ColumnCount <= 0)} then
+    begin
+      FFrontTimeList := nil;
+//      Mesh.FrontDataSet := nil;
+      Exit;
+    end;
+//    LocalSelectedLayer := Mesh.SelectedLayer;
+//    LocalSelectedRow := Mesh.SelectedRow;
+//    LocalSelectedColumn := Mesh.SelectedColumn;
+    try
+      if not TimeList.UpToDate then
+      begin
+        TimeList.Initialize;
+      end;
+//      TimeIndex := TimeList.FirstTimeGreaterThan(Time) - 1;
+//      if TimeIndex < 0 then
+//      begin
+//        Mesh.FrontDataSet := nil;
+//      end
+//      else
+//      begin
+//        Mesh.FrontDataSet := TimeList.Items[TimeIndex];
+//        Mesh.FrontDataSet.UpdateMinMaxValues;
+//      end;
+      FFrontTimeList := TimeList;
+      FFrontDisplayTime := Time;
+    finally
+//      Mesh.SelectedLayer := LocalSelectedLayer;
+//      Mesh.SelectedRow := LocalSelectedRow;
+//      Mesh.SelectedColumn := LocalSelectedColumn;
+    end;
+  end
+  else
   begin
     FFrontTimeList := nil;
-    Grid.FrontDataSet := nil;
-    Exit;
-  end;
-  LocalSelectedLayer := Grid.SelectedLayer;
-  LocalSelectedRow := Grid.SelectedRow;
-  LocalSelectedColumn := Grid.SelectedColumn;
-  try
-    if not TimeList.UpToDate then
-    begin
-      TimeList.Initialize;
-    end;
-    TimeIndex := TimeList.FirstTimeGreaterThan(Time) - 1;
-    if TimeIndex < 0 then
-    begin
-      Grid.FrontDataSet := nil;
-    end
-    else
-    begin
-      Grid.FrontDataSet := TimeList.Items[TimeIndex];
-      Grid.FrontDataSet.UpdateMinMaxValues;
-    end;
-    FFrontTimeList := TimeList;
-    FFrontDisplayTime := Time;
-  finally
-    Grid.SelectedLayer := LocalSelectedLayer;
-    Grid.SelectedRow := LocalSelectedRow;
-    Grid.SelectedColumn := LocalSelectedColumn;
   end;
 end;
 
@@ -11076,6 +11423,19 @@ begin
   end;
 end;
 
+procedure TCustomModel.UpdateSwrReachNumber(Sender: TObject);
+var
+  SwrWriter: TModflowSwrWriter;
+begin
+  frmProgressMM.ShouldContinue := True;
+  SwrWriter := TModflowSwrWriter.Create(Self, etDisplay);
+  try
+    SwrWriter.UpdateReachNumberDisplay;
+  finally
+    SwrWriter.Free;
+  end;
+end;
+
 procedure TCustomModel.UpdateOnPostInitialize;
 var
   ActiveArray: TDataArray;
@@ -11087,6 +11447,10 @@ var
   ChildIndex: Integer;
   ResKvArray: TDataArray;
   Mt3dActiveArray: TDataArray;
+  SwrReachArray: TDataArray;
+  SwrReachGroupArray: TDataArray;
+  SwrRoutingTypeArray: TDataArray;
+  SwrReachLengthArray: TDataArray;
 begin
   if ModelSelection = msSutra22 then
   begin
@@ -11099,6 +11463,31 @@ begin
   ModPathZoneArray := FDataArrayManager.GetDataSetByName(StrModpathZone);
   ResKvArray := FDataArrayManager.GetDataSetByName(rsResKv);
   Mt3dActiveArray := FDataArrayManager.GetDataSetByName(StrMT3DMSActive);
+  SwrReachArray := FDataArrayManager.GetDataSetByName(KSwrReach);
+  SwrReachGroupArray := FDataArrayManager.GetDataSetByName(KSwrReachGroup);
+  SwrRoutingTypeArray := FDataArrayManager.GetDataSetByName(KSwrRoutingType);
+  SwrReachLengthArray := FDataArrayManager.GetDataSetByName(KSwrReachLength);
+
+
+  if SwrReachArray <> nil then
+  begin
+    SwrReachArray.OnPostInitialize := UpdateSwrReachNumber;
+  end;
+
+  if SwrReachGroupArray <> nil then
+  begin
+    SwrReachGroupArray.OnPostInitialize := UpdateSwrReachNumber;
+  end;
+
+  if SwrRoutingTypeArray <> nil then
+  begin
+    SwrRoutingTypeArray.OnPostInitialize := UpdateSwrReachNumber;
+  end;
+
+  if SwrReachLengthArray <> nil then
+  begin
+    SwrReachLengthArray.OnPostInitialize := UpdateSwrReachNumber;
+  end;
 
   if Mt3dActiveArray <> nil then
   begin
@@ -11231,36 +11620,77 @@ var
   TimeIndex: integer;
   LocalSelectedLayer, LocalSelectedRow, LocalSelectedColumn: integer;
 begin
-  if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
+  if Grid <> nil then
+  begin
+    if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
+    begin
+      FSideTimeList := nil;
+      Grid.SideDataSet := nil;
+      Exit;
+    end;
+    LocalSelectedLayer := Grid.SelectedLayer;
+    LocalSelectedRow := Grid.SelectedRow;
+    LocalSelectedColumn := Grid.SelectedColumn;
+    try
+      if not TimeList.UpToDate then
+      begin
+        TimeList.Initialize;
+      end;
+      TimeIndex := TimeList.FirstTimeGreaterThan(Time) - 1;
+      if TimeIndex < 0 then
+      begin
+        Grid.SideDataSet := nil;
+      end
+      else
+      begin
+        Grid.SideDataSet := TimeList.Items[TimeIndex];
+        Grid.SideDataSet.UpdateMinMaxValues;
+      end;
+      FSideTimeList := TimeList;
+      FSideDisplayTime := Time;
+    finally
+      Grid.SelectedLayer := LocalSelectedLayer;
+      Grid.SelectedRow := LocalSelectedRow;
+      Grid.SelectedColumn := LocalSelectedColumn;
+    end;
+  end
+  else if Mesh <> nil then
+  begin
+    if (Mesh.LayerCount <= 0) {or (Mesh.RowCount <= 0) or (Mesh.ColumnCount <= 0)} then
+    begin
+      FSideTimeList := nil;
+//      Mesh.SideDataSet := nil;
+      Exit;
+    end;
+//    LocalSelectedLayer := Mesh.SelectedLayer;
+//    LocalSelectedRow := Mesh.SelectedRow;
+//    LocalSelectedColumn := Mesh.SelectedColumn;
+    try
+      if not TimeList.UpToDate then
+      begin
+        TimeList.Initialize;
+      end;
+//      TimeIndex := TimeList.FirstTimeGreaterThan(Time) - 1;
+//      if TimeIndex < 0 then
+//      begin
+//        Mesh.SideDataSet := nil;
+//      end
+//      else
+//      begin
+//        Mesh.SideDataSet := TimeList.Items[TimeIndex];
+//        Mesh.SideDataSet.UpdateMinMaxValues;
+//      end;
+      FSideTimeList := TimeList;
+      FSideDisplayTime := Time;
+    finally
+//      Mesh.SelectedLayer := LocalSelectedLayer;
+//      Mesh.SelectedRow := LocalSelectedRow;
+//      Mesh.SelectedColumn := LocalSelectedColumn;
+    end;
+  end
+  else
   begin
     FSideTimeList := nil;
-    Grid.SideDataSet := nil;
-    Exit;
-  end;
-  LocalSelectedLayer := Grid.SelectedLayer;
-  LocalSelectedRow := Grid.SelectedRow;
-  LocalSelectedColumn := Grid.SelectedColumn;
-  try
-    if not TimeList.UpToDate then
-    begin
-      TimeList.Initialize;
-    end;
-    TimeIndex := TimeList.FirstTimeGreaterThan(Time) - 1;
-    if TimeIndex < 0 then
-    begin
-      Grid.SideDataSet := nil;
-    end
-    else
-    begin
-      Grid.SideDataSet := TimeList.Items[TimeIndex];
-      Grid.SideDataSet.UpdateMinMaxValues;
-    end;
-    FSideTimeList := TimeList;
-    FSideDisplayTime := Time;
-  finally
-    Grid.SelectedLayer := LocalSelectedLayer;
-    Grid.SelectedRow := LocalSelectedRow;
-    Grid.SelectedColumn := LocalSelectedColumn;
   end;
 end;
 
@@ -11270,7 +11700,6 @@ var
   TimeIndex: integer;
   LocalSelectedLayer, LocalSelectedRow, LocalSelectedColumn: integer;
 begin
-
   if Grid <> nil then
   begin
     if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
@@ -12269,7 +12698,7 @@ begin
   ModelTimes.Add(0);
   InitializePhastBoundaries;
   RecordTimeControl;
-  Invalidate;
+  Invalidate(self);
 end;
 
 function TPhastModel.InitialWaterTableUsed(Sender: TObject): boolean;
@@ -12550,6 +12979,7 @@ begin
   begin
     FDiffusivity := 0;
   end;
+  SwrObservations.Loaded;
 
   UpdateTimeLists;
 
@@ -12841,7 +13271,7 @@ begin
   if FDiffusivity <> Value then
   begin
     FDiffusivity := Value;
-    Invalidate;
+    Invalidate(self);
   end;
   FDiffusivitySet := True;
 end;
@@ -13441,6 +13871,25 @@ begin
     begin
       result := result or
         ChildModels[ChildIndex].ChildModel.SurfacesUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.SwrIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := inherited;;
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.SwrIsSelected;
+      end;
     end;
   end;
 end;
@@ -14439,7 +14888,7 @@ begin
   if FUseWaterTable <> Value then
   begin
     FUseWaterTable := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -15034,7 +15483,7 @@ begin
   if FSoluteTransport <> Value then
   begin
     FSoluteTransport := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -15062,6 +15511,46 @@ end;
 procedure TPhastModel.SetSutraTimeOptions(const Value: TSutraTimeOptions);
 begin
   FSutraTimeOptions.Assign(Value);
+end;
+
+procedure TPhastModel.SetSwrReachConnectionsPlot(
+  const Value: TSwrReachConnectionsPlot);
+var
+  UpdateReachNumbers: Boolean;
+begin
+  UpdateReachNumbers := SwrIsSelected
+    and (FSwrReachConnectionsPlot.ReachesToPlot <> Value.ReachesToPlot)
+    and ((FSwrReachConnectionsPlot.ReachesToPlot = stpNone)
+    or (Value.ReachesToPlot = stpNone));
+
+  FSwrReachConnectionsPlot.Assign(Value);
+
+  if UpdateReachNumbers then
+  begin
+    UpdateSwrReachNumber(nil);
+  end;
+end;
+
+procedure TCustomModel.SetSwrObservations(const Value: TSwrObsCollection);
+begin
+  FSwrObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetSwrReachGeometry(
+  const Value: TReachGeometryCollection);
+begin
+  FSwrReachGeometry.Assign(Value);
+  InvalidateMfSwrGeometryNumber(self);
+end;
+
+procedure TCustomModel.SetSwrStructures(const Value: TStructureCollection);
+begin
+  FSwrStructures.Assign(Value);
+end;
+
+procedure TCustomModel.SetSwrTabFiles(const Value: TTabFileCollection);
+begin
+  FSwrTabFiles.Assign(Value);
 end;
 
 procedure TPhastModel.SetSaveBfhBoundaryConditions(const Value: boolean);
@@ -15425,6 +15914,267 @@ begin
     end;
   finally
     StreamList.Free;
+  end;
+end;
+
+procedure TCustomModel.DrawSwrReachConnections(const BitMap: TBitmap32;
+  const ZoomBox: TQRbwZoomBox2);
+const
+  SquareSize = 6;
+var
+  SwrReachArray: TModflowBoundaryDisplayDataArray;
+  ReachIndex: Integer;
+  AReach: TSwrReachPlot;
+  APoint2D: TPoint2D;
+  APoint: TPoint;
+  ConnectedColor: TColor32;
+  UnConnectedColor: TColor32;
+  NeighborIndex: Integer;
+  NeightborReachIndex: Integer;
+  NeighborReach: TSwrReachPlot;
+  NeighborPoint: TPoint2D;
+  Points: array[0..1] of TPoint;
+  UnconnectedReachesPresent: boolean;
+  StructureIndex: Integer;
+  AStructure: TStructure;
+  StructureColor: TColor32;
+  AScreenObject: TScreenObject;
+begin
+  if SwrReachConnectionsPlot.ReachesToPlot = stpNone then
+  begin
+    exit;
+  end;
+  if not SwrSelected(nil) then
+  begin
+    Exit;
+  end;
+  SwrReachArray := DataArrayManager.GetDataSetByName(KSwrReach)
+    as TModflowBoundaryDisplayDataArray;
+  if SwrReachArray = nil then
+  begin
+    Exit;
+  end;
+  if not SwrReachArray.UpToDate then
+  begin
+    UpdateSwrReachNumber(nil);
+  end;
+  SwrReachConnectionsPlot.UpdateReachVisibility;
+  ConnectedColor := Color32(SwrReachConnectionsPlot.ConnectedColor);
+  UnConnectedColor := Color32(SwrReachConnectionsPlot.UnConnectedColor);
+  StructureColor := Color32(SwrReachConnectionsPlot.StructureColor);
+  UnconnectedReachesPresent := False;
+  for ReachIndex := 0 to SwrReachConnectionsPlot.ReachList.Count - 1 do
+  begin
+    AReach := SwrReachConnectionsPlot.ReachList[ReachIndex];
+    if AReach.Visible then
+    begin
+      if AReach.NeighborCount = 0 then
+      begin
+        UnconnectedReachesPresent := True;
+      end
+      else
+      begin
+        if SwrReachConnectionsPlot.PlotReachConnections then
+        begin
+          AScreenObject := AReach.ScreenObject as TScreenObject;
+          if AScreenObject.Count = 1 then
+          begin
+            APoint2D := AScreenObject.Points[0];
+          end
+          else
+          begin
+            APoint2D := Grid.TwoDElementCenter(AReach.Column, AReach.Row);
+          end;
+          APoint.X := ZoomBox.XCoord(APoint2D.x);
+          APoint.Y := ZoomBox.YCoord(APoint2D.y);
+          Points[0] := APoint;
+          for NeighborIndex := 0 to AReach.NeighborCount - 1 do
+          begin
+            NeightborReachIndex := AReach.Neighbors[NeighborIndex]-1;
+            NeighborReach := SwrReachConnectionsPlot.ReachList[NeightborReachIndex];
+            if NeighborReach.Visible then
+            begin
+              AScreenObject := NeighborReach.ScreenObject as TScreenObject;
+              if AScreenObject.Count = 1 then
+              begin
+                NeighborPoint := AScreenObject.Points[0];
+              end
+              else
+              begin
+                NeighborPoint := Grid.TwoDElementCenter(NeighborReach.Column, NeighborReach.Row);
+              end;
+              APoint.X := ZoomBox.XCoord(NeighborPoint.x);
+              APoint.Y := ZoomBox.YCoord(NeighborPoint.y);
+              Points[1] := APoint;
+
+              if (Points[0].X = Points[1].X) and (Points[0].Y = Points[1].Y) then
+              begin
+                DrawBigRectangle32(BitMap, ConnectedColor, ConnectedColor, 1,
+                  Points[0].X - SquareSize, Points[0].Y - SquareSize,
+                  Points[0].X + SquareSize, Points[0].Y + SquareSize);
+              end
+              else
+              begin
+                DrawBigPolyline32(BitMap, ConnectedColor, 2, Points, True);
+              end;
+
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+  if UnconnectedReachesPresent and SwrReachConnectionsPlot.PlotUnconnected then
+  begin
+    for ReachIndex := 0 to SwrReachConnectionsPlot.ReachList.Count - 1 do
+    begin
+      AReach := SwrReachConnectionsPlot.ReachList[ReachIndex];
+      if AReach.Visible then
+      begin
+        if AReach.NeighborCount = 0 then
+        begin
+          AScreenObject := AReach.ScreenObject as TScreenObject;
+          if AScreenObject.Count = 1 then
+          begin
+            APoint2D := AScreenObject.Points[0];
+          end
+          else
+          begin
+            APoint2D := Grid.TwoDElementCenter(AReach.Column, AReach.Row);
+          end;
+          APoint.X := ZoomBox.XCoord(APoint2D.x);
+          APoint.Y := ZoomBox.YCoord(APoint2D.y);
+          DrawBigRectangle32(BitMap, UnconnectedColor, UnconnectedColor, 1,
+            APoint.X - SquareSize, APoint.Y - SquareSize,
+            APoint.X + SquareSize, APoint.Y + SquareSize);
+        end
+      end;
+    end;
+  end;
+  if SwrReachConnectionsPlot.PlotStructures then
+  begin
+    for StructureIndex := 0 to SwrStructures.Count - 1 do
+    begin
+      AStructure := SwrStructures[StructureIndex];
+      if AStructure.Reach >= 1 then
+      begin
+        AReach := SwrReachConnectionsPlot.ReachList[AStructure.Reach-1];
+        Assert(AStructure.Reach = AReach.Reach);
+        if AReach.Visible then
+        begin
+          AScreenObject := AReach.ScreenObject as TScreenObject;
+          if AScreenObject.Count = 1 then
+          begin
+            APoint2D := AScreenObject.Points[0];
+          end
+          else
+          begin
+            APoint2D := Grid.TwoDElementCenter(AReach.Column, AReach.Row);
+          end;
+          APoint.X := ZoomBox.XCoord(APoint2D.x);
+          APoint.Y := ZoomBox.YCoord(APoint2D.y);
+          Points[0] := APoint;
+          if AStructure.ConnectedReach >= 1 then
+          begin
+            AReach := SwrReachConnectionsPlot.ReachList[AStructure.ConnectedReach-1];
+            Assert(AStructure.ConnectedReach = AReach.Reach);
+            if AReach.Visible then
+            begin
+              AScreenObject := AReach.ScreenObject as TScreenObject;
+              if AScreenObject.Count = 1 then
+              begin
+                APoint2D := AScreenObject.Points[0];
+              end
+              else
+              begin
+                APoint2D := Grid.TwoDElementCenter(AReach.Column, AReach.Row);
+              end;
+              APoint.X := ZoomBox.XCoord(APoint2D.x);
+              APoint.Y := ZoomBox.YCoord(APoint2D.y);
+              Points[1] := APoint;
+              if (Points[0].X = Points[1].X) and (Points[0].Y = Points[1].Y) then
+              begin
+                DrawBigRectangle32(BitMap, StructureColor, StructureColor, 1,
+                  Points[0].X - SquareSize, Points[0].Y - SquareSize,
+                  Points[0].X + SquareSize, Points[0].Y + SquareSize);
+              end
+              else
+              begin
+                DrawBigPolyline32(BitMap, StructureColor, 2, Points, True);
+              end;
+            end;
+          end
+          else
+          begin
+            DrawBigRectangle32(BitMap, StructureColor, StructureColor, 1,
+              APoint.X - SquareSize, APoint.Y - SquareSize,
+              APoint.X + SquareSize, APoint.Y + SquareSize);
+          end;
+          if (AStructure.StructureType in [sstPump,sstMoveableWeir,
+            sstGatedSpillway, sstSpillEquation])
+            and (AStructure.ControlReach >= 1) then
+          begin
+            AReach := SwrReachConnectionsPlot.ReachList[AStructure.ControlReach-1];
+            Assert(AStructure.ControlReach = AReach.Reach);
+            if AReach.Visible then
+            begin
+              AScreenObject := AReach.ScreenObject as TScreenObject;
+              if AScreenObject.Count = 1 then
+              begin
+                APoint2D := AScreenObject.Points[0];
+              end
+              else
+              begin
+                APoint2D := Grid.TwoDElementCenter(AReach.Column, AReach.Row);
+              end;
+              APoint.X := ZoomBox.XCoord(APoint2D.x);
+              APoint.Y := ZoomBox.YCoord(APoint2D.y);
+              Points[1] := APoint;
+              if (Points[0].X = Points[1].X) and (Points[0].Y = Points[1].Y) then
+              begin
+                DrawBigRectangle32(BitMap, StructureColor, StructureColor, 1,
+                  Points[0].X - SquareSize, Points[0].Y - SquareSize,
+                  Points[0].X + SquareSize, Points[0].Y + SquareSize);
+              end
+              else
+              begin
+                DrawBigPolyline32(BitMap, StructureColor, 2, Points, True);
+              end;
+            end;
+            if (AStructure.ControlType = ctFlow) and (AStructure.ConnectedControlReach >= 1) then
+            begin
+              AReach := SwrReachConnectionsPlot.ReachList[AStructure.ConnectedControlReach-1];
+              Assert(AStructure.ConnectedControlReach = AReach.Reach);
+              if AReach.Visible then
+              begin
+                AScreenObject := AReach.ScreenObject as TScreenObject;
+                if AScreenObject.Count = 1 then
+                begin
+                  APoint2D := AScreenObject.Points[0];
+                end
+                else
+                begin
+                  APoint2D := Grid.TwoDElementCenter(AReach.Column, AReach.Row);
+                end;
+                APoint.X := ZoomBox.XCoord(APoint2D.x);
+                APoint.Y := ZoomBox.YCoord(APoint2D.y);
+                Points[1] := APoint;
+                if (Points[0].X = Points[1].X) and (Points[0].Y = Points[1].Y) then
+                begin
+                  DrawBigRectangle32(BitMap, StructureColor, StructureColor, 1,
+                    Points[0].X - SquareSize, Points[0].Y - SquareSize,
+                    Points[0].X + SquareSize, Points[0].Y + SquareSize);
+                end
+                else
+                begin
+                  DrawBigPolyline32(BitMap, StructureColor, 2, Points, True);
+                end;
+              end;
+            end;
+          end;
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -16085,7 +16835,7 @@ begin
           msSutra22:
             begin
 
-              if (Mesh.LayerCount > 0) then
+              if (Mesh.MeshType = mt3D) and (Mesh.LayerCount > 0) then
               begin
                 GetUnitID(UnitID);
                 if UnitID > 0 then
@@ -16358,7 +17108,7 @@ begin
             end;
           msSutra22:
             begin
-              if (Mesh.LayerCount > 0) then
+              if (Mesh.MeshType = mt3D) and (Mesh.LayerCount > 0) then
               begin
                 GetUnitID(UnitID);
                 if UnitID > 0 then
@@ -16541,7 +17291,7 @@ begin
             end;
           msSutra22:
             begin
-              if (Mesh.LayerCount > 0) then
+              if (Mesh.MeshType = mt3D) and (Mesh.LayerCount > 0) then
               begin
                 GetUnitID(UnitID);
                 if UnitID > 0 then
@@ -16859,9 +17609,54 @@ begin
   ModflowPackages.StrPackage.MfStrWidth.Invalidate;
 end;
 
+procedure TCustomModel.InvalidateMfSwrBoundaryType(Sender: TObject);
+begin
+  ModflowPackages.SwrPackage.MfBoundaryType.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfSwrDirectRunoffReach(Sender: TObject);
+begin
+  ModflowPackages.SwrPackage.MfDirectRunoffReach.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfSwrDirectRunoffValue(Sender: TObject);
+begin
+  ModflowPackages.SwrPackage.MfDirectRunoffValue.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfSwrEvaporation(Sender: TObject);
+begin
+  ModflowPackages.SwrPackage.MfEvaporation.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfSwrGeometryNumber(Sender: TObject);
+begin
+  ModflowPackages.SwrPackage.MfGeometryNumber.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfSwrLateralInflow(Sender: TObject);
+begin
+  ModflowPackages.SwrPackage.MfLatInflow.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfSwrRainfall(Sender: TObject);
+begin
+  ModflowPackages.SwrPackage.MfRainfall.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfSwrStage(Sender: TObject);
+begin
+  ModflowPackages.SwrPackage.MfStage.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfSwrVerticalOffset(Sender: TObject);
+begin
+  ModflowPackages.SwrPackage.MfVerticalOffset.Invalidate;
+end;
+
 procedure TPhastModel.InvalidateMfSfrWidthCoefficient(Sender: TObject);
 begin
-  ModflowPackages.SfrPackage.MfSfrWidthCoefficient.Invalidate
+  ModflowPackages.SfrPackage.MfSfrWidthCoefficient.Invalidate;
 end;
 
 procedure TPhastModel.InvalidateMfSfrWidthExponent(Sender: TObject);
@@ -19328,6 +20123,7 @@ begin
     ZoneBudgetLocation := SourceLocations.ZoneBudgetLocation;
     ModelMateLocation := SourceLocations.ModelMateLocation;
     ModflowLgrLocation := SourceLocations.ModflowLgrLocation;
+    ModflowLgr2Location := SourceLocations.ModflowLgr2Location;
     ModflowNwtLocation := SourceLocations.ModflowNwtLocation;
     Mt3dmsLocation := SourceLocations.Mt3dmsLocation;
     Sutra22Location := SourceLocations.Sutra22Location;
@@ -19592,6 +20388,7 @@ begin
   IniFile.WriteString(StrProgramLocations, StrZonebudget, ZoneBudgetLocation);
   IniFile.WriteString(StrProgramLocations, StrModelMate, ModelMateLocation);
   IniFile.WriteString(StrProgramLocations, strModflowLgr, ModflowLgrLocation);
+  IniFile.WriteString(StrProgramLocations, strModflowLgr2, ModflowLgr2Location);
   IniFile.WriteString(StrProgramLocations, strModflowNWT, ModflowNwtLocation);
   IniFile.WriteString(StrProgramLocations, StrMT3DMS, Mt3dmsLocation);
   IniFile.WriteString(StrProgramLocations, KSutra22, Sutra22Location);
@@ -19628,13 +20425,14 @@ end;
 constructor TCustomModel.Create(AnOwner: TComponent);
 begin
   inherited;
+  FUnitNumbers := TUnitNumbers.Create(self);
   FCrossSection := TCrossSection.Create(self);
   FCrossSection.OnUpToDateSet := CrossSectionChanged;
   FGages := TStringList.Create;
   FHfbDisplayer:= THfbDisplayer.Create(self);
   FHfbDisplayer.OnNeedToUpdate := UpdateHfb;
 
-  FModflowOptions := TModflowOptions.Create(self);
+  FModflowOptions := TModflowOptions.Create(Invalidate);
   FPValFile := TStringList.Create;
   FTemplate := TStringList.Create;
   FTimeLists := TList.Create;
@@ -19726,7 +20524,7 @@ begin
   FHydrogeologicUnits := THydrogeologicUnits.Create(self);
   FFilesToArchive := TStringList.Create;
   FModelInputFiles := TStringList.Create;
-  FModflowWettingOptions := TWettingOptions.Create(Self);
+  FModflowWettingOptions := TWettingOptions.Create(Invalidate);
 
   FTopGridObserver:= TObserver.Create(nil);
   FThreeDGridObserver:= TObserver.Create(nil);
@@ -19747,10 +20545,13 @@ begin
   FHufSyNotifier := TObserver.Create(nil);
   FHufSyNotifier.Name := 'HufSyNotifier';
 
-  FUnitNumbers := TUnitNumbers.Create(self);
-
   FSutraOptions := TSutraOptions.Create(self);
-  FSutraOutputControl := TSutraOutputControl.Create(self);
+  FSutraOutputControl := TSutraOutputControl.Create(Invalidate);
+
+  FSwrTabFiles := TTabFileCollection.Create(self);
+  FSwrReachGeometry := TReachGeometryCollection.Create(self);
+  FSwrStructures := TStructureCollection.Create(self);
+  FSwrObservations := TSwrObsCollection.Create(Invalidate);
 
   FDataArrayManager.DefinePackageDataArrays;
   CreateModflowDisplayTimeLists;
@@ -19958,6 +20759,10 @@ end;
 
 destructor TCustomModel.Destroy;
 begin
+  FSwrObservations.Free;
+  FSwrStructures.Free;
+  FSwrReachGeometry.Free;
+  FSwrTabFiles.Free;
   FSutraSpecPressureTimeList.Free;
   FSutraSpecPresUTimeList.Free;
   FSutraConcTempTimeList.Free;
@@ -20086,7 +20891,7 @@ end;
 procedure TCustomModel.SetModflowGrid(const Value: TModflowGrid);
 begin
   FModflowGrid.Assign(Value);
-  Invalidate;
+  Invalidate(self);
 end;
 
 procedure TCustomModel.SetModflowLocation(const Value: string);
@@ -20120,7 +20925,7 @@ begin
   if FAlternateSolver <> Value then
   begin
     FAlternateSolver := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -20129,7 +20934,7 @@ begin
   if FAlternateFlowPackage <> Value then
   begin
     FAlternateFlowPackage := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -20137,7 +20942,7 @@ procedure TCustomModel.SetBatchFileAdditionsBeforeModel(const Value: TStrings);
 begin
   if not FBatchFileAdditionsBeforeModel.Equals(Value) then
   begin
-    Invalidate;
+    Invalidate(self);
   end;
   FBatchFileAdditionsBeforeModel.Assign(Value);
 end;
@@ -20151,7 +20956,7 @@ procedure TCustomModel.SetBatchFileAdditionsAfterModel(const Value: TStrings);
 begin
   if not FBatchFileAdditionsAfterModel.Equals(Value) then
   begin
-    Invalidate;
+    Invalidate(self);
   end;
   FBatchFileAdditionsAfterModel.Assign(Value);
 end;
@@ -20159,7 +20964,7 @@ end;
 procedure TCustomModel.SetModflowNameFileLines(const Value: TStrings);
 begin
   FModflowNameFileLines.Assign(Value);
-  Invalidate;
+  Invalidate(self);
 end;
 
 procedure TCustomModel.SetModflowOptions(const Value: TModflowOptions);
@@ -20344,7 +21149,7 @@ end;
 procedure TCustomModel.SetFilesToArchive(const Value: TStrings);
 begin
   FFilesToArchive.Assign(Value);
-  Invalidate;
+  Invalidate(self);
 end;
 
 procedure TCustomModel.SetFrontDataSet(const Value: TDataArray);
@@ -20377,7 +21182,7 @@ end;
 procedure TCustomModel.SetModelInputFiles(const Value: TStrings);
 begin
   FModelInputFiles.Assign(Value);
-  Invalidate;
+  Invalidate(self);
 end;
 
 procedure TCustomModel.SetFileName(const Value: string);
@@ -20385,7 +21190,7 @@ begin
   if FFileName <> Value then
   begin
     FFileName := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -20498,7 +21303,7 @@ begin
   if ModelInputFiles.IndexOf(FileName) < 0 then
   begin
     ModelInputFiles.Add(FileName);
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -20512,7 +21317,7 @@ begin
   if FilesToArchive.IndexOf(FileName) < 0 then
   begin
     FilesToArchive.Add(FileName);
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -20521,6 +21326,10 @@ var
   Index: Integer;
   DataSet: TDataArray;
 begin
+  FSwrReachGeometry.Clear;
+  FSwrTabFiles.Clear;
+  FSwrStructures.Clear;
+  FSwrObservations.Clear;
   if FSutraMesh <> nil then
   begin
     FSutraMesh.Clear;
@@ -20681,6 +21490,13 @@ begin
           MinX := ScreenObject.MinX;
           MaxY := ScreenObject.MaxY;
           MinY := ScreenObject.MinY;
+        end
+        else
+        begin
+          MaxX := 0;
+          MinX := 0;
+          MaxY := 0;
+          MinY := 0;
         end;
         for ScreenObjectIndex := 0 to List.Count - 1 do
         begin
@@ -22316,7 +23132,7 @@ procedure TDataArrayManager.DefinePackageDataArrays;
     ARecord.Min := 0;
   end;
 const
-  ArrayCount = 105;
+  ArrayCount = 109;
 var
   Index: integer;
 begin
@@ -23942,6 +24758,67 @@ begin
     'MODFLOW, SWI Package: Data Set 8 OBSNAM';
   Inc(Index);
 
+  FDataArrayCreationRecords[Index].DataSetType := TModflowBoundaryDisplayDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KSwrReach;
+  FDataArrayCreationRecords[Index].DisplayName := StrSwrReach;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrSwrClassifiation;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwrSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SWR Process Data Set 4a: IRCH4A';
+  FDataArrayCreationRecords[Index].Visible := False;
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TModflowBoundaryDisplayDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KSwrReachGroup;
+  FDataArrayCreationRecords[Index].DisplayName := StrSwrReachGroup;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrSwrClassifiation;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwrSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SWR Process Data Set 4a: IRGNUM';
+  FDataArrayCreationRecords[Index].Visible := False;
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TModflowBoundaryDisplayDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KSwrRoutingType;
+  FDataArrayCreationRecords[Index].DisplayName := StrSwrRoutingType;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrSwrClassifiation;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwrSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SWR Process Data Set 4a: IROUTETYPE';
+  FDataArrayCreationRecords[Index].Visible := False;
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TModflowBoundaryDisplayDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KSwrReachLength;
+  FDataArrayCreationRecords[Index].DisplayName := StrSwrReachLength;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrSwrClassifiation;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwrSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SWR Process Data Set 4a: RLEN';
+  FDataArrayCreationRecords[Index].Visible := False;
+  Inc(Index);
+
+  // See ArrayCount.
   Assert(Length(FDataArrayCreationRecords) = Index);
 end;
 
@@ -24267,7 +25144,7 @@ end;
 
 procedure TDataArrayManager.Invalidate;
 begin
-  FCustomModel.Invalidate;
+  FCustomModel.Invalidate(self);
 end;
 
 procedure TDataArrayManager.InvalidateAll3DDataSets;
@@ -24551,6 +25428,10 @@ begin
     Mt3dmsStrMassFluxObservations := SourceModel.Mt3dmsStrMassFluxObservations;
     Mt3dmsFhbHeadMassFluxObservations := SourceModel.Mt3dmsFhbHeadMassFluxObservations;
     Mt3dmsFhbFlowMassFluxObservations := SourceModel.Mt3dmsFhbFlowMassFluxObservations;
+    SwrTabFiles := SourceModel.SwrTabFiles;
+    SwrReachGeometry := SourceModel.SwrReachGeometry;
+    SwrStructures := SourceModel.SwrStructures;
+    SwrObservations := SourceModel.SwrObservations;
 
     OnCrossSectionChanged := SourceModel.OnCrossSectionChanged;
 //    SfrStreamLinkPlot := SourceModel.SfrStreamLinkPlot;
@@ -24857,7 +25738,9 @@ begin
   result := UzfPackageUsed(Sender)
     and ModflowPackages.UzfPackage.RouteDischargeToStreams
     and (ModflowPackages.SfrPackage.IsSelected
-    or ModflowPackages.LakPackage.IsSelected);
+    or ModflowPackages.LakPackage.IsSelected
+    or ModflowPackages.SwrPackage.IsSelected
+    );
 end;
 
 function TCustomModel.UzfInitialInfiltrationUsed(Sender: TObject): boolean;
@@ -25955,7 +26838,7 @@ begin
   if FObservationPurpose <> Value then
   begin
     FObservationPurpose := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -26024,10 +26907,37 @@ begin
   end;
 end;
 
-procedure TCustomModel.GetMfHobHeadsUseList(Sender: TObject; NewUseList: TStringList);
+procedure TCustomModel.GetMfHobHeadsUseList(Sender: TObject;
+  NewUseList: TStringList);
 begin
   NewUseList.Add(rsActive);
   // do nothing
+end;
+
+function TCustomModel.GetModelInputFiles: TStrings;
+var
+  index: Integer;
+  ATabFile: string;
+begin
+  if SwrSelected(nil) then
+  begin
+    for index := 0 to SwrTabFiles.Count - 1 do
+    begin
+      ATabFile := SwrTabFiles[index].FullTabFileName;
+      if (ATabFile <> '') and (FModelInputFiles.IndexOf(ATabFile) < 0) then
+      begin
+        FModelInputFiles.Add(ATabFile);
+      end;
+    end;
+  end;
+  for index := FModelInputFiles.Count - 1 downto 0 do
+  begin
+    if Trim(FModelInputFiles[index]) = '' then
+    begin
+      FModelInputFiles.Delete(Index);
+    end;
+  end;
+  result := FModelInputFiles;
 end;
 
 function TCustomModel.GetModflowLocation: string;
@@ -26530,7 +27440,7 @@ end;
 procedure TCustomModel.InitializeGages;
 begin
   FGages.Clear;
-  FGageUnitNumber:= UnitNumbers.UnitNumber(StrUNIT);
+  UnitNumbers.Initialize;
 end;
 
 procedure TCustomModel.ExportHeadObservationsToShapeFile(
@@ -26549,7 +27459,7 @@ var
 begin
   LocalNameWriter := NameFileWriter as TNameFileWriter;
   SetCurrentNameFileWriter(LocalNameWriter);
-  (LakWriter as TModflowLAK_Writer).WriteFile(FileName, FGageUnitNumber, Gages);
+  (LakWriter as TModflowLAK_Writer).WriteFile(FileName, Gages);
   FDataArrayManager.CacheDataArrays;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
@@ -26568,7 +27478,7 @@ var
 begin
   UzfWriter := TModflowUzfWriter.Create(Self, etExport);
   try
-    UzfWriter.WriteFile(FileName, FGageUnitNumber);
+    UzfWriter.WriteFile(FileName);
   finally
     UzfWriter.Free;
   end;
@@ -26596,7 +27506,7 @@ var
 begin
   LocalNameWriter := NameFileWriter as TNameFileWriter;
   SetCurrentNameFileWriter(LocalNameWriter);
-  (SfrWriter as TModflowSFR_Writer).WriteFile(FileName, FGageUnitNumber, Gages);
+  (SfrWriter as TModflowSFR_Writer).WriteFile(FileName, Gages);
   FDataArrayManager.CacheDataArrays;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
@@ -26665,6 +27575,7 @@ var
 {$ENDIF}
   SwiWriter: TSwiWriter;
   CfpWriter: TModflowCfpWriter;
+  SwrWriter: TModflowSwrWriter;
 begin
   // Note: MODFLOW can not read Unicode text files.
 
@@ -27151,7 +28062,7 @@ begin
       Mnw2Writer := TModflowMNW2_Writer.Create(self, etExport);
       try
         Mnw2Writer.WriteFile(FileName);
-        Mnw2Writer.WriteMnwiFile(FileName, FGageUnitNumber);
+        Mnw2Writer.WriteMnwiFile(FileName);
       finally
         Mnw2Writer.Free;
       end;
@@ -27198,6 +28109,25 @@ begin
       end;
       if ModflowPackages.SwiPackage.IsSelected
         and (ModelSelection in [msModflow, msModflowNWT]) then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      SwrWriter := TModflowSwrWriter.Create(self, etExport);
+      try
+        SwrWriter.WriteFile(FileName);
+      finally
+        SwrWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      { TODO -cFMP : This needs to be finished. }
+      if ModflowPackages.SwrPackage.IsSelected
+        and (ModelSelection in [msModflowNWT]) then
       begin
         frmProgressMM.StepIt;
       end;
@@ -27389,7 +28319,7 @@ begin
       // first so that the data in Gages is set.
       GagWriter := TModflowGAG_Writer.Create(self, etExport);
       try
-        GagWriter.WriteFile(FileName, Gages, (SfrWriter as TModflowSFR_Writer), FGageUnitNumber);
+        GagWriter.WriteFile(FileName, Gages, (SfrWriter as TModflowSFR_Writer));
       finally
         GagWriter.Free;
       end;
@@ -28090,6 +29020,11 @@ begin
       end;
     end;
   end;
+end;
+
+function TCustomModel.GetParentModel: TCustomModel;
+begin
+  result := self;
 end;
 
 procedure TCustomModel.UpdateLpfDataArrayParameterUsed(const DataArrayName: string;
@@ -29377,7 +30312,14 @@ end;
 
 function TChildModel.GetGlobalVariables: TGlobalVariables;
 begin
-  result := ParentModel.GetGlobalVariables;
+  if ParentModel = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ParentModel.GetGlobalVariables;
+  end;
 end;
 
 function TChildModel.GetHufParameters: THufModflowParameters;
@@ -29476,6 +30418,11 @@ end;
 function TChildModel.GetObservationPurpose: TObservationPurpose;
 begin
   result := ParentModel.GetObservationPurpose;
+end;
+
+function TChildModel.GetParentModel: TCustomModel;
+begin
+  result := FParentModel
 end;
 
 function TChildModel.GetProgramLocations: TProgramLocations;
@@ -29653,17 +30600,23 @@ begin
   result := ParentModel.GetStrStreamLinkPlot
 end;
 
+function TChildModel.GetSwrReachConnectionsPlot: TSwrReachConnectionsPlot;
+begin
+  result := ParentModel.GetSwrReachConnectionsPlot
+end;
+
 function TChildModel.GetUseWaterTable: boolean;
 begin
   result := ParentModel.GetUseWaterTable
 end;
 
-procedure TChildModel.Invalidate;
+procedure TChildModel.Invalidate(Sender: TObject);
 begin
   inherited;
   if ParentModel <> nil then
   begin
-    ParentModel.Invalidate;
+  { TODO -cRefactor : Consider replacing ParentModel with a TNotifyEvent. }
+    ParentModel.Invalidate(Sender);
   end;
 end;
 
@@ -29753,7 +30706,7 @@ begin
   begin
     FChildCellsPerParentCell := Value;
     UpdateGrid;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -29767,7 +30720,7 @@ begin
   if FCouplingMethod <> Value then
   begin
     FCouplingMethod := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -29782,7 +30735,7 @@ begin
   if FFluxClosureCriterion <> Value then
   begin
     FFluxClosureCriterion := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -29791,7 +30744,7 @@ begin
   if FFluxRelaxationFactor <> Value then
   begin
     FFluxRelaxationFactor := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -29810,7 +30763,7 @@ begin
   if FHeadClosureCriterion <> Value then
   begin
     FHeadClosureCriterion := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -29819,7 +30772,7 @@ begin
   if FHeadRelaxationFactor <> Value then
   begin
     FHeadRelaxationFactor := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -29839,7 +30792,7 @@ begin
       FHorizontalPositionScreenObject.ChildModel := self;
     end;
     UpdateGrid;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -29864,7 +30817,7 @@ begin
   if FLgrPrintChoice <> Value then
   begin
     FLgrPrintChoice := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -29873,7 +30826,7 @@ begin
   if FMaxIterations <> Value then
   begin
     FMaxIterations := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -29888,7 +30841,7 @@ begin
   if FModelName <> Value then
   begin
     FModelName := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
@@ -29971,13 +30924,19 @@ begin
   if FStartingHeadSource <> Value then
   begin
     FStartingHeadSource := Value;
-    Invalidate;
+    Invalidate(self);
   end;
 end;
 
 procedure TChildModel.SetStrStreamLinkPlot(const Value: TSfrStreamLinkPlot);
 begin
   ParentModel.SetStrStreamLinkPlot(Value);
+end;
+
+procedure TChildModel.SetSwrReachConnectionsPlot(
+  const Value: TSwrReachConnectionsPlot);
+begin
+  ParentModel.SetSwrReachConnectionsPlot(Value);
 end;
 
 procedure TChildModel.SetUseWaterTable(const Value: boolean);
@@ -30532,6 +31491,7 @@ begin
   inherited;
   Discretization.Loaded;
   ModelSelection := ParentModel.ModelSelection;
+  SwrObservations.Loaded;
   UpdateGrid;
 end;
 
@@ -31216,17 +32176,28 @@ begin
   inherited Create(TChildModelEdit, nil);
 end;
 
+function TChildModelEditCollection.GetItems(Index: integer): TChildModelEdit;
+begin
+  result := inherited Items[Index] as TChildModelEdit;
+end;
+
+procedure TChildModelEditCollection.SetItems(Index: integer;
+  const Value: TChildModelEdit);
+begin
+  inherited Items[Index] := Value;
+end;
+
 { TFontChangeNotifyier }
 
 procedure TFontChangeNotifyier.Changed;
 begin
-  FModel.Invalidate;
+  FInvalidateModelEvent(self);
 end;
 
-constructor TFontChangeNotifyier.Create(AModel: TCustomModel; AFont: TFont);
+constructor TFontChangeNotifyier.Create(InvalidateModelEvent: TNotifyEvent; AFont: TFont);
 begin
   inherited Create(AFont);
-  FModel := AModel;
+  FInvalidateModelEvent := InvalidateModelEvent;
 end;
 
 procedure TCustomModel.SetPathLine(const Value: TPathLineReader);
@@ -31301,6 +32272,11 @@ begin
   end;
 end;
 
+function TCustomModel.GetUnitNumbers: TUnitNumbers;
+begin
+  result := FUnitNumbers;
+end;
+
 function TCustomModel.GroundSurfaceUsed(Sender: TObject): boolean;
 begin
   result := UzfPackageUsed(Sender) or FarmProcessUsed(Sender);
@@ -31318,6 +32294,20 @@ begin
     FEndPoints := TEndPointReader.Create(self);
   end;
   result := FEndPoints;
+end;
+
+function TCustomModel.GetFilesToArchive: TStrings;
+var
+  index: Integer;
+begin
+  for index := FFilesToArchive.Count - 1 downto 0 do
+  begin
+    if Trim(FFilesToArchive[Index]) = '' then
+    begin
+      FFilesToArchive.Delete(Index);
+    end;
+  end;
+  result := FFilesToArchive
 end;
 
 function TCustomModel.GetFrontDataSet: TDataArray;
@@ -31412,6 +32402,8 @@ begin
 end;
 
 procedure TCrossSection.Draw(ABitMap: TBitmap32; ViewDirection: TViewDirection);
+const
+  Epsilon = 1e-6;
 var
   ADataArray: TDataArray;
   ActiveDataArray: TDataArray;
@@ -31426,18 +32418,42 @@ var
     case Orientation of
       dsoTop:
         begin
-          for LayerIndex := 0 to ActiveDataArray.LayerCount - 1 do
+          if Not NearlyTheSame(ADataArray.RealData[0,Row,Col],
+            FModel.ModflowOptions.HDry, Epsilon) then
           begin
-            if ActiveDataArray.BooleanData[LayerIndex, Row, Col] then
+            for LayerIndex := 0 to ActiveDataArray.LayerCount - 1 do
             begin
-              result := True;
-              Exit;
+              if ActiveDataArray.BooleanData[LayerIndex, Row, Col] then
+              begin
+                result := True;
+                Exit;
+              end;
             end;
           end;
         end;
       dso3D:
         begin
-          result := ActiveDataArray.BooleanData[Layer, Row, Col];
+          if ActiveDataArray.BooleanData[Layer, Row, Col] then
+          begin
+            if FModel.ModelSelection in ModflowSelection then
+            begin
+              if Not NearlyTheSame(ADataArray.RealData[Layer,Row,Col],
+                FModel.ModflowOptions.HDry, Epsilon) then
+              begin
+                result := True;
+                Exit;
+              end;
+            end
+            else
+            begin
+              result := True;
+              Exit;
+            end;
+          end
+          else
+          begin
+            result := False;
+          end;
         end
       else Assert(False);
     end;

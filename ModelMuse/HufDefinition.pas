@@ -28,9 +28,13 @@ type
     procedure FillDataArrayNames(DataArrayNames: TStrings);
     function HufUnit: THydrogeologicUnit;
     function HufUnits: THydrogeologicUnits;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure CreateOrUpdataDataArray(var LayerName: string;
       DataType: TRbwDataType; UseDataArray: boolean; AModel: TBaseModel);
     procedure RenameLayer(const NewHufName: string);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure RenameDataArrays(NewRoot: string; AModel: TBaseModel);
     function GetParameter: TModflowParameter;
     function ArrayRoot: string;
@@ -68,6 +72,8 @@ type
     procedure RemoveUsedParameter(const ParameterName: string);
   public
     property Items[Index: integer]: THufUsedParameter read GetItem; default;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel; HufUnit: THydrogeologicUnit);
     function GetUsedParameterByName(const ParameterName: string): THufUsedParameter;
     function IsUsed(const ParameterName: string): boolean;
@@ -90,6 +96,10 @@ type
   end;
 
   TPrintCollection = class(TPhastCollection)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   private
     function GetPrint(Index: TPrintParam): boolean;
     procedure SetPrint(Index: TPrintParam; const Value: boolean);
@@ -101,8 +111,13 @@ type
     function GetItem(Index: TPrintParam): TPrintItem;
   public
     property Print[Index: TPrintParam]: boolean read GetPrint write SetPrint;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     property Items[Index: TPrintParam]: TPrintItem read GetItem; default;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
   end;
 
   THydrogeologicUnit = class(TOrderedItem)
@@ -128,6 +143,8 @@ type
     procedure SetPrintItems(const Value: TPrintCollection);
     procedure RenameLayer(const NewHufName: string);
     procedure FillDataArrayNames(DataArrayNames: TStrings);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure CreateOrRenameDataArray(var LayerName: string;
       Extension, DisplayExtension: string; const NewHufName: string;
       AModel: TBaseModel);
@@ -169,6 +186,8 @@ type
     function GetItems(Index: integer): THydrogeologicUnit;
     procedure SetItems(Index: integer; const Value: THydrogeologicUnit);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     property Items[Index: integer]: THydrogeologicUnit read GetItems write SetItems; default;
     procedure RenameParameters(const OldName, NewName: string);
@@ -190,6 +209,8 @@ type
   private
     function GetItem(Index: integer): THufParameter;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     function GetParameterByName(const ParameterName: string): THufParameter;
     property Items[Index: integer]: THufParameter read GetItem; default;
@@ -1154,7 +1175,7 @@ begin
   result := Print;
   if result and (PrintParam in [pprSS, pprSY]) then
   begin
-    Model := (Collection as TPhastCollection).Model as TCustomModel;
+    Model := (Collection as TPrintCollection).Model as TCustomModel;
     result := Model.ModflowFullStressPeriods.TransientModel;
   end;
   
@@ -1166,8 +1187,18 @@ constructor TPrintCollection.Create(Model: TBaseModel);
 var
   Index: TPrintParam;
   NewItem: TPrintItem;
+  InvalidateModelEvent: TNotifyEvent;
 begin
-  inherited Create(TPrintItem, Model);
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(TPrintItem, InvalidateModelEvent);
   for Index := Low(TPrintParam) to High(TPrintParam) do
   begin
     NewItem := Add as TPrintItem;

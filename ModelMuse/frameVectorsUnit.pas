@@ -34,6 +34,7 @@ type
     rdeMinVerticalSpacing3D: TRbwDataEntry;
     lblMinHorizontalSpacing3D: TLabel;
     lblMinVerticalSpacing3D: TLabel;
+    cbLogTransform: TCheckBox;
     procedure comboVectorSourceChange(Sender: TObject);
     procedure udVectorsChangingEx(Sender: TObject; var AllowChange: Boolean;
       NewValue: SmallInt; Direction: TUpDownDirection);
@@ -175,6 +176,7 @@ begin
       NewItemIndex := -1;
       rdeScale.Text := FloatToStr(LocalModel.MaxVectors.Scale);
       rdeScale3D.Text := FloatToStr(LocalModel.MaxVectors.Scale3D);
+      cbLogTransform.Checked := LocalModel.MaxVectors.LogScaled;
       case LocalModel.MaxVectors.VectorType of
         pvtPermeability:
           begin
@@ -254,6 +256,9 @@ begin
   LocalModel.MidVectors.MinSeparationVertical3D := rdeMinVerticalSpacing3D.RealValue;
   LocalModel.MinVectors.MinSeparationVertical3D := rdeMinVerticalSpacing3D.RealValue;
 
+  LocalModel.MaxVectors.LogScaled := cbLogTransform.Checked;
+  LocalModel.MidVectors.LogScaled := cbLogTransform.Checked;
+  LocalModel.MinVectors.LogScaled := cbLogTransform.Checked;
 
   if PredefinedVisible then
   begin
@@ -324,6 +329,7 @@ begin
       VItem.Vectors.MinimumSeparation2D := seMinSpacing2D.AsInteger;
       VItem.Vectors.MinSeparationVertical3D := rdeMinVerticalSpacing3D.RealValue;
       VItem.Vectors.MinSeparationHorizontal3D := rdeMinHorizontalSpacing3D.RealValue;
+      VItem.Vectors.LogScaled := cbLogTransform.Checked;
     end;
   end;
 end;

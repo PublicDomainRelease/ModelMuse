@@ -10,17 +10,25 @@ type
 
   TChildModelValue = class(TOrderedItem)
   private
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FChildModel: TBaseModel;
     FChildModelName: string;
     FValue: double;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetChildModel: TBaseModel;
     function GetChildModelName: string;
     procedure SetValue(const Value: double);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure SetChildModel(const Value: TBaseModel);
     procedure SetChildModelName(const Value: string);
   protected
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property ChildModel: TBaseModel read GetChildModel write SetChildModel;
   published
     property Value: double read FValue write SetValue;
@@ -34,6 +42,8 @@ type
     procedure SetItems(Index: integer; const Value: TChildModelValue);
     procedure Loaded;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     property Items[Index: integer]: TChildModelValue
       read GetItems write SetItems; default;
@@ -53,8 +63,12 @@ type
     procedure Assign(Source: TPersistent); override;
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure ChildModelBeingDestroyed(Model: TBaseModel);
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure NewChildModelCreated(Model: TBaseModel);
   published
     property ChildModelValues: TChildModelValues read FChildModelValues
@@ -68,6 +82,8 @@ type
       const Value: TModflowTransientListParameter);
   public
     procedure UpdateDisplay(Value: TModflowTransientListParameter);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     property Items[Index: integer]: TModflowTransientListParameter
       read GetItems write SetItems; default;

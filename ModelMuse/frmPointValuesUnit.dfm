@@ -3,9 +3,9 @@ inherited frmPointValues: TfrmPointValues
   HelpKeyword = 'Vertex_Values_Dialog_Box'
   Caption = 'Vertex Values'
   ClientWidth = 367
-  ExplicitWidth = 375
-  ExplicitHeight = 260
-  PixelsPerInch = 96
+  ExplicitWidth = 385
+  ExplicitHeight = 271
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -19,10 +19,8 @@ inherited frmPointValues: TfrmPointValues
       Top = 6
       Width = 83
       Height = 33
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnHelpClick
     end
@@ -31,10 +29,8 @@ inherited frmPointValues: TfrmPointValues
       Top = 6
       Width = 83
       Height = 33
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnOKClick
     end
@@ -43,10 +39,8 @@ inherited frmPointValues: TfrmPointValues
       Top = 6
       Width = 83
       Height = 33
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 3
     end
     object btnAdd: TButton
@@ -71,6 +65,8 @@ inherited frmPointValues: TfrmPointValues
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs, goAlwaysShowEditor]
     TabOrder = 0
     OnKeyPress = rdgValuesKeyPress
+    OnSelectCell = rdgValuesSelectCell
+    OnSetEditText = rdgValuesSetEditText
     ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = True
@@ -78,8 +74,8 @@ inherited frmPointValues: TfrmPointValues
     AutoIncreaseRowCount = True
     SelectedRowOrColumnColor = clAqua
     UnselectableColor = clBtnFace
+    OnButtonClick = rdgValuesButtonClick
     ColorRangeSelection = False
-    ColorSelectedRow = True
     Columns = <
       item
         AutoAdjustRowHeights = False
@@ -101,6 +97,7 @@ inherited frmPointValues: TfrmPointValues
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -123,7 +120,10 @@ inherited frmPointValues: TfrmPointValues
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end>
+    OnEndUpdate = rdgValuesEndUpdate
+    WordWrapRowCaptions = False
   end
 end

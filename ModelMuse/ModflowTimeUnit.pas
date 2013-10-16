@@ -84,8 +84,8 @@ type
   // in the model.
   TModflowStressPeriods = class(TCollection)
   private
-    // @name is either nil or a TPhastModel.
-    FModel: TBaseModel;
+    // @name is is used to invalidate a model
+    FOnInvalidateModel: TNotifyEvent;
     // See @link(Items).
     function GetItems(Index: Integer): TModflowStressPeriod;
     // @name calls @link(TBaseModel.Invalidate) indirectly.
@@ -99,8 +99,7 @@ type
     // @name copies Source to the current @classname.
     procedure Assign(Source: TPersistent); override;
     // @name creates an instance of @classname.
-    // Model must be either nil or a TPhastModel.
-    constructor Create(Model: TBaseModel);
+    constructor Create(InvalidateModelEvent: TNotifyEvent);
     // @name is used to access a @link(TModflowStressPeriod)
     // stored in @classname.
     property Items[Index: Integer]: TModflowStressPeriod
@@ -123,6 +122,7 @@ type
     function MaxStepsInAnyStressPeriod: integer;
     // @name returns the number of the first stress period that contains ATime.
     function FindStressPeriod(ATime: double): integer;
+    function FindEndStressPeriod(ATime: double): integer;
     property First: TModflowStressPeriod read GetFirst;
     property Last: TModflowStressPeriod read GetLast;
   end;
@@ -132,7 +132,7 @@ function GetNumberOfTimeSteps(const PerLength, MaxFirstTimeStepLength,
 
 implementation
 
-uses RTLConsts, Math, PhastModelUnit, ModflowDiscretizationWriterUnit, 
+uses RTLConsts, Math, ModflowDiscretizationWriterUnit,
   frmErrorsAndWarningsUnit, Mt3dmsBtnWriterUnit, Mt3dmsTimesUnit,
   ModflowPackageSelectionUnit;
 
@@ -357,10 +357,9 @@ begin
   end;
 end;
 
-constructor TModflowStressPeriods.Create(Model: TBaseModel);
+constructor TModflowStressPeriods.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  Assert((Model = nil) or (Model is TPhastModel));
-  FModel := Model;
+  FOnInvalidateModel := InvalidateModelEvent;
   inherited Create(TModflowStressPeriod);
 end;
 
@@ -411,9 +410,9 @@ end;
 
 procedure TModflowStressPeriods.InvalidateModel;
 begin
-  if FModel <> nil then
+  if Assigned(FOnInvalidateModel) then
   begin
-    FModel.Invalidate;
+    FOnInvalidateModel(self);
   end;
 end;
 
@@ -485,6 +484,7 @@ var
   StressPeriod: TModflowStressPeriod;
 begin
   Strings.Clear;
+  Strings.Capacity := Count;
   for TimeIndex := 0 to Count - 1 do
   begin
     StressPeriod := Items[TimeIndex];
@@ -498,6 +498,7 @@ var
   TimeIndex: Integer;
 begin
   Strings.Clear;
+  Strings.Capacity := Count;
   for TimeIndex := 0 to Count - 1 do
   begin
     StressPeriod := Items[TimeIndex];
@@ -505,7 +506,7 @@ begin
   end;
 end;
 
-function TModflowStressPeriods.FindStressPeriod(ATime: double): integer;
+function TModflowStressPeriods.FindEndStressPeriod(ATime: double): integer;
 var
   Index: Integer;
   StressPeriod: TModflowStressPeriod;
@@ -519,6 +520,37 @@ begin
     begin
       result := Index;
       Exit;
+    end;
+  end;
+end;
+
+function TModflowStressPeriods.FindStressPeriod(ATime: double): integer;
+var
+  Index: Integer;
+  StressPeriod: TModflowStressPeriod;
+begin
+  result := -1;
+  for Index := 0 to Count - 1 do
+  begin
+    StressPeriod := Items[Index];
+    if (StressPeriod.StartTime <= ATime) then
+    begin
+      if Index = Count -1 then
+      begin
+        if (StressPeriod.EndTime >= ATime) then
+        begin
+          result := Index;
+          Exit;
+        end;
+      end
+      else
+      begin
+        if (StressPeriod.EndTime > ATime) then
+        begin
+          result := Index;
+          Exit;
+        end;
+      end;
     end;
   end;
 end;

@@ -419,8 +419,8 @@ begin
     Inc(Row);
     Assert(Row < dgCredit.RowCount);
     dgCredit.Cells[0, Row] := 'Virtual Tree View';
-    dgCredit.Cells[1, Row] := 'Mike Lischke';
-    dgCredit.Cells[2, Row] := 'http://www.soft-gems.net/';
+    dgCredit.Cells[1, Row] := 'Mike Lischke and Joachim Marder';
+    dgCredit.Cells[2, Row] := 'http://www.jam-software.com/virtual-treeview/';
 
     {  Inc(Row);
       dgCredit.Cells[0,Row] := 'OpenGL12.pas';
@@ -515,6 +515,12 @@ begin
     dgCredit.Cells[0, Row] := 'TMMJLabel, MMJLabel.pas';
     dgCredit.Cells[1, Row] := 'Mihaela Mihaljevic Jakic';
     dgCredit.Cells[2, Row] := 'mickj@hi.hinet.hr';
+
+    Inc(Row);
+    Assert(Row < dgCredit.RowCount);
+    dgCredit.Cells[0, Row] := 'xygraph.pas';
+    dgCredit.Cells[1, Row] := 'Wilko C Emmens';
+    dgCredit.Cells[2, Row] := 'wcemmens@solcon.nl, http://home.solcon.nl/wcemmens/xygraph.htm';
 
     Assert(Row = dgCredit.RowCount-1);
   finally

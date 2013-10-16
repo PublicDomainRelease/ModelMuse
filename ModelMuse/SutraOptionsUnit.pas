@@ -17,6 +17,8 @@ type
   TReadStart = (rsNone, rsPressure, rsU, rsBoth);
 
   TSutraOptions = class(TGoPhastPersistent)
+  strict private
+    FModel: TBaseModel;
   private
     FTransportChoice: TTransportChoice;
     FSaturationChoice: TSaturationChoice;
@@ -179,7 +181,12 @@ type
     function GetReadStartRestartFileName: string;
     procedure SetReadStartRestartFileName(const Value: string);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    property Model: TBaseModel read FModel;
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure Initialize;
@@ -518,7 +525,16 @@ end;
 
 constructor TSutraOptions.Create(Model: TBaseModel);
 begin
-  inherited;
+  if Model = nil then
+  begin
+    inherited Create(nil);
+  end
+  else
+  begin
+    inherited Create(Model.Invalidate);
+  end;
+  Assert((Model = nil) or (Model is TCustomModel));
+  FModel := Model;
   FRestartFrequency := 10000;
 
   FStoredTransportCriterion := TRealStorage.Create;

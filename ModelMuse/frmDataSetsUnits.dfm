@@ -10,6 +10,7 @@ inherited frmDataSets: TfrmDataSets
   Font.Height = 19
   OnActivate = FormActivate
   OnClose = FormClose
+  ExplicitTop = -60
   ExplicitWidth = 656
   ExplicitHeight = 507
   PixelsPerInch = 96
@@ -35,8 +36,8 @@ inherited frmDataSets: TfrmDataSets
       640
       41)
     object btnOK: TBitBtn
-      Left = 432
-      Top = 6
+      Left = 434
+      Top = 2
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
@@ -61,47 +62,47 @@ inherited frmDataSets: TfrmDataSets
         0000}
       ModalResult = 1
       NumGlyphs = 2
-      TabOrder = 2
+      TabOrder = 3
       OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
-      Left = 529
-      Top = 4
+      Left = 531
+      Top = 2
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
       Kind = bkClose
       NumGlyphs = 2
-      TabOrder = 3
+      TabOrder = 4
       OnClick = btnCancelClick
     end
     object btnAdd: TButton
       Left = 8
-      Top = 6
+      Top = 2
       Width = 73
       Height = 33
       Caption = 'Add'
-      TabOrder = 4
+      TabOrder = 0
       OnClick = btnAddClick
     end
     object btnDelete: TButton
       Left = 87
-      Top = 4
+      Top = 2
       Width = 73
       Height = 33
       Caption = 'Delete'
-      TabOrder = 0
+      TabOrder = 1
       OnClick = btnDeleteClick
     end
     object btnHelp: TBitBtn
       Left = 337
-      Top = 4
+      Top = 2
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
       Kind = bkHelp
       NumGlyphs = 2
-      TabOrder = 1
+      TabOrder = 2
       OnClick = btnHelpClick
     end
   end
@@ -138,10 +139,6 @@ inherited frmDataSets: TfrmDataSets
     TabOrder = 1
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         312
         367)
@@ -441,6 +438,7 @@ inherited frmDataSets: TfrmDataSets
           Width = 245
           Height = 34
           Caption = 'Use PHAST-style interpolation for all cells'
+          TabOrder = 0
           WordWrap = True
           OnClick = framePhastInterpolationcbPhastInterpolationClick
           AutoSize = False
@@ -492,6 +490,7 @@ inherited frmDataSets: TfrmDataSets
           Width = 272
           Height = 78
           Columns = 2
+          TabOrder = 1
           OnClick = framePhastInterpolationrgInterpolationDirectionClick
           ExplicitLeft = 12
           ExplicitTop = 43
@@ -525,10 +524,6 @@ inherited frmDataSets: TfrmDataSets
     object tabComment: TTabSheet
       Caption = 'Comment'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Splitter2: TSplitter
         Left = 0
         Top = 175
@@ -550,10 +545,11 @@ inherited frmDataSets: TfrmDataSets
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 69
+          Width = 306
           Height = 19
           Align = alTop
           Caption = 'Comment'
+          ExplicitWidth = 69
         end
         object reComment: TRichEdit
           AlignWithMargins = True
@@ -581,10 +577,11 @@ inherited frmDataSets: TfrmDataSets
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 164
+          Width = 306
           Height = 19
           Align = alTop
           Caption = 'Associated model data'
+          ExplicitWidth = 164
         end
         object memoAssociatedDataSets: TMemo
           AlignWithMargins = True

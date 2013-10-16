@@ -14,7 +14,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
   OnResize = FormResize
   ExplicitWidth = 810
   ExplicitHeight = 436
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   object JvNetscapeSplitter1: TJvNetscapeSplitter
     Left = 121

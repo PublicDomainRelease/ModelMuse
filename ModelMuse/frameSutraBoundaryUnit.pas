@@ -61,14 +61,8 @@ type
     { Public declarations }
   end;
 
-//procedure AdjustBoundaryValues(ASchedule: TSutraTimeSchedule;
-//  SutraValues: TCustomSutraBoundaryCollection);
-
 var
   frameSutraBoundary: TframeSutraBoundary;
-
-//procedure AdjustBoundaryTimes(TimeValues: TOneDRealArray;
-//  Values: TCustomSutraBoundaryCollection);
 
 implementation
 
@@ -113,75 +107,80 @@ var
   SutraBoundaries: TSutraBoundaries;
   ABoundary: TSutraBoundary;
 begin
-  inherited;
-  ClearData;
-
-  FInitialTime := frmGoPhast.PhastModel.SutraTimeOptions.InitialTime;
-  FGettingData := True;
-  BoundaryList := TSutraBoundaryList.Create;
+  rdgSutraFeature.BeginUpdate;
   try
-    for index := 0 to ScreenObjects.Count - 1 do
-    begin
-      ABoundary := nil;
-      SutraBoundaries := ScreenObjects[index].ScreenObject.SutraBoundaries;
-      case BoundaryType of
-        sbtFluidSource:
-          begin
-            ABoundary := SutraBoundaries.FluidSource;
-          end;
-        sbtMassEnergySource:
-          begin
-            ABoundary := SutraBoundaries.MassEnergySource;
-          end;
-        sbtSpecPress:
-          begin
-            ABoundary := SutraBoundaries.SpecifiedPressure;
-          end;
-        sbtSpecConcTemp:
-          begin
-            ABoundary := SutraBoundaries.SpecifiedConcTemp;
-          end;
-        else
-          Assert(False);
-      end;
-      if ABoundary.Used then
+    inherited;
+    ClearData;
+
+    FInitialTime := frmGoPhast.PhastModel.SutraTimeOptions.InitialTime;
+    FGettingData := True;
+    BoundaryList := TSutraBoundaryList.Create;
+    try
+      for index := 0 to ScreenObjects.Count - 1 do
       begin
-        BoundaryList.Add(ABoundary);
+        ABoundary := nil;
+        SutraBoundaries := ScreenObjects[index].ScreenObject.SutraBoundaries;
+        case BoundaryType of
+          sbtFluidSource:
+            begin
+              ABoundary := SutraBoundaries.FluidSource;
+            end;
+          sbtMassEnergySource:
+            begin
+              ABoundary := SutraBoundaries.MassEnergySource;
+            end;
+          sbtSpecPress:
+            begin
+              ABoundary := SutraBoundaries.SpecifiedPressure;
+            end;
+          sbtSpecConcTemp:
+            begin
+              ABoundary := SutraBoundaries.SpecifiedConcTemp;
+            end;
+          else
+            Assert(False);
+        end;
+        if ABoundary.Used then
+        begin
+          BoundaryList.Add(ABoundary);
+        end;
       end;
-    end;
 
-    if BoundaryList.Count = 0 then
-    begin
-      FCheckState := cbUnchecked;
-    end
-    else if ScreenObjects.Count = BoundaryList.Count then
-    begin
-      FCheckState := cbChecked;
-    end
-    else
-    begin
-      FCheckState := cbGrayed;
-    end;
-    if Assigned(OnActivate) then
-    begin
-      OnActivate(self, FCheckState);
-    end;
+      if BoundaryList.Count = 0 then
+      begin
+        FCheckState := cbUnchecked;
+      end
+      else if ScreenObjects.Count = BoundaryList.Count then
+      begin
+        FCheckState := cbChecked;
+      end
+      else
+      begin
+        FCheckState := cbGrayed;
+      end;
+      if Assigned(OnActivate) then
+      begin
+        OnActivate(self, FCheckState);
+      end;
 
-    if BoundaryList.Count = 0 then
-    begin
-      Exit;
+      if BoundaryList.Count = 0 then
+      begin
+        Exit;
+      end;
+      GetScheduleName(BoundaryList);
+      GetBoundaryValues(BoundaryList);
+  //    comboScheduleChange(nil);
+  //    CheckSchedule(BoundaryList);
+
+
+    finally
+      BoundaryList.Free;
+      FGettingData := False;
     end;
-    GetScheduleName(BoundaryList);
-    GetBoundaryValues(BoundaryList);
-//    comboScheduleChange(nil);
-//    CheckSchedule(BoundaryList);
-
-
+    comboScheduleChange(nil);
   finally
-    BoundaryList.Free;
-    FGettingData := False;
+    rdgSutraFeature.EndUpdate;
   end;
-  comboScheduleChange(nil);
 end;
 
 procedure TframeSutraBoundary.SetBoundaryType(
@@ -995,6 +994,7 @@ procedure TframeSutraBoundary.rdgSutraFeatureSelectCell(Sender: TObject; ACol,
 begin
   inherited;
   if (ARow >= rdgSutraFeature.FixedRows) and (ACol >= Ord(sbgtVariable1))
+    and (ARow < rdgSutraFeature.RowCount)
     and (rdgSutraFeature.CheckState[Ord(sbgtUsed), ARow] = cbUnchecked) then
   begin
     CanSelect := False;

@@ -23,6 +23,7 @@ inherited frameScreenObjectFhbHead: TframeScreenObjectFhbHead
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -38,13 +39,14 @@ inherited frameScreenObjectFhbHead: TframeScreenObjectFhbHead
           CheckMax = False
           CheckMin = False
           ComboUsed = False
-          Format = rcf4Real
+          Format = rcf4String
           LimitToList = False
           MaxLength = 0
           ParentButtonFont = False
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end>
     end

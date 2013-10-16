@@ -62,7 +62,7 @@ type
     function IsSame(AnotherGrowControls : TGrowthControls): boolean;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TBaseModel);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
 //    constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
     function LayerCount: Integer; virtual;
@@ -137,6 +137,8 @@ type
     function GetSimulated: boolean; virtual;
     procedure SetSimulated(const Value: boolean); virtual;
     procedure UpdateDataArray(const NewName, NewDisplayName: string);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure SetTopDisplayName(Model: TBaseModel);
   protected
     function Collection: TCustomLayerStructure;
@@ -191,6 +193,8 @@ type
     function GetItem(index: Integer): TConduitLayerItem;
     procedure SetItem(index: Integer; const Value: TConduitLayerItem);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     property Items[index: Integer] : TConduitLayerItem read GetItem
       write SetItem; default;
@@ -325,11 +329,12 @@ type
     function IntegerArray(Method: TIntTypeMethod): TOneDIntegerArray;
     function FloatArray(Method: TFloatTypeMethod): TOneDRealArray;
   public
-//    function First: TLayerGroup;
     function Last: TLayerGroup;
     function NonSimulatedLayersPresent: boolean;
     procedure AssignAssociatedInputDataSets;
     procedure Assign(Source: TPersistent);override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     property LayerGroups[const Index: integer]: TLayerGroup
@@ -372,6 +377,8 @@ type
     function GetLayerGroup(const Index: integer): TSutraLayerGroup;
   public
     function LayerCount: integer; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     property LayerGroups[const Index: integer]: TSutraLayerGroup
       read GetLayerGroup; default;
@@ -422,13 +429,23 @@ begin
 end;
 
 constructor TLayerGroup.Create(Collection: TCollection);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
   inherited;
-  FMt3dmsHorzTransDisp := TRealCollection.Create(Model);
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  FMt3dmsHorzTransDisp := TRealCollection.Create(InvalidateModelEvent);
   FMt3dmsHorzTransDisp.InitialValue := 0.1;
-  FMt3dmsVertTransDisp := TRealCollection.Create(Model);
+  FMt3dmsVertTransDisp := TRealCollection.Create(InvalidateModelEvent);
   FMt3dmsVertTransDisp.InitialValue := 0.01;
-  FMt3dmsDiffusionCoef := TRealCollection.Create(Model);
+  FMt3dmsDiffusionCoef := TRealCollection.Create(InvalidateModelEvent);
   FMt3dmsDiffusionCoef.InitialValue := 0;
   FSubNoDelayBedLayers := TSubNoDelayBedLayers.Create(Model);
   FSubDelayBedLayers := TSubDelayBedLayers.Create(Model);
@@ -1573,9 +1590,17 @@ begin
   end;
 end;
 
-constructor TGrowthControls.Create(Model: TBaseModel);
+constructor TGrowthControls.Create(InvalidateModelEvent: TNotifyEvent);
 begin
   inherited;
+//  if Model = nil then
+//  begin
+//    inherited Create(nil);
+//  end
+//  else
+//  begin
+//    inherited Create(Model.Invalidate);
+//  end;
   FLayerCollection:= TLayerCollection.Create(self);
   FGrowthRate := 1.2;
   InvalidateModel;
@@ -1611,7 +1636,7 @@ end;
 constructor TGrowItem.Create(Collection: TCollection);
 begin
   inherited;
-  FGrowthControls := TGrowthControls.Create(Model);
+  FGrowthControls := TGrowthControls.Create(OnInvalidateModelEvent);
 end;
 
 destructor TGrowItem.Destroy;

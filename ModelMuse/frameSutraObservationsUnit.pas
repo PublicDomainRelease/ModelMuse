@@ -118,10 +118,15 @@ var
   Index: integer;
 begin
   seNumberOfTimes.AsInteger := Times.Count;
-  rdgSutraFeature.RowCount := Times.Count + 1;
-  for Index := 0 to Times.Count - 1 do
-  begin
-    rdgSutraFeature.Cells[0, Index+1] := FloatToStr(Times[Index].Value)
+  rdgSutraFeature.BeginUpdate;
+  try
+    rdgSutraFeature.RowCount := Times.Count + 1;
+    for Index := 0 to Times.Count - 1 do
+    begin
+      rdgSutraFeature.Cells[0, Index+1] := FloatToStr(Times[Index].Value)
+    end;
+  finally
+    rdgSutraFeature.EndUpdate;
   end;
 end;
 
@@ -144,54 +149,59 @@ var
   Obs: TSutraObservations;
   ObsList: TSutraObsList;
 begin
-  inherited;
-  FGettingData := True;
-  rdgSutraFeature.Cells[0,0] := StrObservationTimes;
-  ObsList := TSutraObsList.Create;
+  rdgSutraFeature.BeginUpdate;
   try
-    for index := 0 to ScreenObjects.Count - 1 do
-    begin
-      Obs := ScreenObjects[index].ScreenObject.SutraBoundaries.Observations;
-      if Obs.Used then
+    inherited;
+    FGettingData := True;
+    rdgSutraFeature.Cells[0,0] := StrObservationTimes;
+    ObsList := TSutraObsList.Create;
+    try
+      for index := 0 to ScreenObjects.Count - 1 do
       begin
-        ObsList.Add(Obs);
+        Obs := ScreenObjects[index].ScreenObject.SutraBoundaries.Observations;
+        if Obs.Used then
+        begin
+          ObsList.Add(Obs);
+        end;
       end;
-    end;
 
-    if ObsList.Count = 0 then
-    begin
-      FCheckState := cbUnchecked;
-    end
-    else if ScreenObjects.Count = ObsList.Count then
-    begin
-      FCheckState := cbChecked;
-    end
-    else
-    begin
-      FCheckState := cbGrayed;
-    end;
-    if Assigned(OnActivate) then
-    begin
-      OnActivate(self, FCheckState);
-    end;
+      if ObsList.Count = 0 then
+      begin
+        FCheckState := cbUnchecked;
+      end
+      else if ScreenObjects.Count = ObsList.Count then
+      begin
+        FCheckState := cbChecked;
+      end
+      else
+      begin
+        FCheckState := cbGrayed;
+      end;
+      if Assigned(OnActivate) then
+      begin
+        OnActivate(self, FCheckState);
+      end;
 
-    if ObsList.Count = 0 then
-    begin
-      comboSchedule.ItemIndex := 0;
-      comboObservationFormat.ItemIndex := 0;
-      seNumberOfTimes.AsInteger := 0;
-      seNumberOfTimes.OnChange(seNumberOfTimes);
-      edName.Text := '';
-      Exit;
-    end;
+      if ObsList.Count = 0 then
+      begin
+        comboSchedule.ItemIndex := 0;
+        comboObservationFormat.ItemIndex := 0;
+        seNumberOfTimes.AsInteger := 0;
+        seNumberOfTimes.OnChange(seNumberOfTimes);
+        edName.Text := '';
+        Exit;
+      end;
 
-    GetObservationName(ObsList);
-    GetScheduleName(ObsList);
-    GetObservationFormat(ObsList);
-    GetObservationTimes(ObsList);
-    CheckStoredTimes(ObsList);
+      GetObservationName(ObsList);
+      GetScheduleName(ObsList);
+      GetObservationFormat(ObsList);
+      GetObservationTimes(ObsList);
+      CheckStoredTimes(ObsList);
+    finally
+      ObsList.Free;
+    end;
   finally
-    ObsList.Free;
+    rdgSutraFeature.EndUpdate;
     FGettingData := False;
   end;
 end;
@@ -210,6 +220,7 @@ var
   NewTimes: TRealCollection;
   RowIndex: Integer;
   AValue: Extended;
+  InvalidateModelEvent: TNotifyEvent;
 begin
   inherited;
   Assert(ScreenObjects.Count > 0);
@@ -241,11 +252,13 @@ begin
           as TSutraTimeSchedule;
         TimeValues := ASchedule.TimeValues(SutraTimeOptions.InitialTime,
           SutraTimeOptions.Schedules);
-        NewTimes := TRealCollection.Create(nil, TimeValues);
+        InvalidateModelEvent := nil;
+        NewTimes := TRealCollection.Create(InvalidateModelEvent, TimeValues);
       end
       else
       begin
-        NewTimes := TRealCollection.Create(nil);
+        InvalidateModelEvent := nil;
+        NewTimes := TRealCollection.Create(InvalidateModelEvent);
         for RowIndex := 1 to seNumberOfTimes.AsInteger do
         begin
           if TryStrToFloat(rdgSutraFeature.Cells[0,RowIndex], AValue) then

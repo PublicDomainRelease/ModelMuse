@@ -355,7 +355,8 @@ begin
   frmGoPhast.PhastModel.FilesToArchive := FNewFilesToArchive;
   frmGoPhast.PhastModel.ModelInputFiles := FNewModelFiles;
   frmGoPhast.PhastModel.ModelFileName := FNewFileName;
-  frmGoPhast.PhastModel.Invalidate;
+  { TODO -cRefactor : Consider replacing frmGoPhast.PhastModel with a TNotifyEvent. }
+  frmGoPhast.PhastModel.Invalidate(self);
 end;
 
 procedure TUndoFilesToArchive.Undo;
@@ -364,7 +365,8 @@ begin
   frmGoPhast.PhastModel.FilesToArchive := FOriginalFilesToArchive;
   frmGoPhast.PhastModel.ModelInputFiles := FOriginalFilesToArchive;
   frmGoPhast.PhastModel.ModelFileName := FOriginalFileName;
-  frmGoPhast.PhastModel.Invalidate;
+  { TODO -cRefactor : Consider replacing frmGoPhast.PhastModel with a TNotifyEvent. }
+  frmGoPhast.PhastModel.Invalidate(self);
 end;
 
 end.

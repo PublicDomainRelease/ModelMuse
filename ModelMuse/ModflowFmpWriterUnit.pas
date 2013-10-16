@@ -3620,7 +3620,6 @@ begin
   for CellIndex := 0 to CellList.Count - 1 do
   begin
     Cell := CellList[CellIndex] as TFmpWell_Cell;
-//    Cell.FarmWellId := CellIndex+1;
     WriteCell(Cell, DataSetIdentifier, VariableIdentifiers);
     CheckCell(Cell, 'FMP2');
   end;

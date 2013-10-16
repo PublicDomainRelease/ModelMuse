@@ -25,13 +25,13 @@ type
     procedure WriteDataSet6a;
     procedure WriteDataSet6b;
     procedure WriteDataSet7;
-    procedure WriteDataSet8(var GageStart: integer);
+    procedure WriteDataSet8(GageStart: integer);
     procedure WriteStressPeriods; reintroduce;
     procedure WriteInfiltrationRates(CellList: TList);
     procedure WritePotentialEtRates(CellList: TList);
     procedure WriteExtinctionDepth(CellList: TList);
     procedure WriteExtinctionWaterContent(CellList: TList);
-    procedure WriteGagesToNameFile(const AFileName: string; GageStart: integer);
+    procedure WriteGagesToNameFile(const AFileName: string; var GageStart: integer);
   protected
     procedure Evaluate; override;
     class function Extension: string; override;
@@ -41,7 +41,7 @@ type
     Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     // @name destroys the current instance of @classname.
     Destructor Destroy; override;
-    procedure WriteFile(const AFileName: string; var GageStart: integer);
+    procedure WriteFile(const AFileName: string);
     procedure UpdateDisplay(TimeLists: TModflowBoundListOfTimeLists);
   end;
 
@@ -291,15 +291,16 @@ begin
 end;
 
 procedure TModflowUzfWriter.WriteGagesToNameFile(const AFileName: string;
-  GageStart: integer);
+  var GageStart: integer);
 var
   FileRoot: string;
   Index: Integer;
 begin
+  GageStart := Model.ParentModel.UnitNumbers.SequentialUnitNumber+1;
   FileRoot := ChangeFileExt(AFileName, '');
   for Index := 0 to NUZGAG - 1 do
   begin
-    WriteToNameFile(StrDATA, GageStart + Index, FileRoot
+    WriteToNameFile(StrDATA, Model.ParentModel.UnitNumbers.SequentialUnitNumber, FileRoot
       + IntToStr(Index + 1) + '.uzfg', foOutput);
   end;
 end;
@@ -418,7 +419,9 @@ begin
   end;
   if Model.ModflowPackages.UzfPackage.RouteDischargeToStreams
     and (Model.ModflowPackages.SfrPackage.IsSelected
-    or Model.ModflowPackages.LakPackage.IsSelected) then
+    or Model.ModflowPackages.LakPackage.IsSelected
+    or Model.ModflowPackages.SwrPackage.IsSelected
+    ) then
   begin
     IRUNFLG := 1;
   end
@@ -566,7 +569,7 @@ begin
   end;
 end;
 
-procedure TModflowUzfWriter.WriteDataSet8(var GageStart: integer);
+procedure TModflowUzfWriter.WriteDataSet8(GageStart: integer);
 var
   GageArray: TDataArray;
   ColIndex: integer;
@@ -622,10 +625,10 @@ begin
   end;
 end;
 
-procedure TModflowUzfWriter.WriteFile(const AFileName: string;
-  var GageStart: integer);
+procedure TModflowUzfWriter.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
+  GageStart: integer;
 begin
   if not Package.IsSelected then
   begin

@@ -5,8 +5,8 @@ inherited frmModflowPackages: TfrmModflowPackages
   ClientHeight = 555
   ClientWidth = 782
   OnResize = FormResize
-  ExplicitWidth = 800
-  ExplicitHeight = 600
+  ExplicitWidth = 798
+  ExplicitHeight = 593
   PixelsPerInch = 120
   TextHeight = 18
   object JvNetscapeSplitter1: TJvNetscapeSplitter
@@ -27,7 +27,7 @@ inherited frmModflowPackages: TfrmModflowPackages
     Top = 0
     Width = 595
     Height = 514
-    ActivePage = jvspSWI
+    ActivePage = jvspSWR
     PropagateEnable = False
     Align = alClient
     OnChange = jvplPackagesChange
@@ -8459,6 +8459,7 @@ inherited frmModflowPackages: TfrmModflowPackages
           inherited tabBasic: TTabSheet
             ExplicitLeft = 4
             ExplicitTop = 29
+            ExplicitWidth = 437
             ExplicitHeight = 343
             inherited lblNumberOfSurfaces: TLabel
               Width = 192
@@ -8580,6 +8581,7 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
           end
           inherited tabSolver: TTabSheet
+            ExplicitLeft = 4
             ExplicitTop = 29
             ExplicitWidth = 587
             ExplicitHeight = 378
@@ -8711,13 +8713,13 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
           end
           inherited tabDensity: TTabSheet
+            ExplicitLeft = 4
             ExplicitTop = 29
+            ExplicitWidth = 437
             ExplicitHeight = 343
             inherited rdgDensity: TRbwDataGrid4
-              Width = 587
-              Height = 378
+              Height = 343
               FixedCols = 0
-              ExplicitWidth = 587
               ExplicitHeight = 343
             end
           end
@@ -8772,6 +8774,658 @@ inherited frmModflowPackages: TfrmModflowPackages
         end
       end
     end
+    object jvspSWR: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 595
+      Height = 514
+      HelpType = htKeyword
+      HelpKeyword = 'SWR_Surface_Water_Routing_Proc'
+      Caption = 'jvspSWR'
+      inline framePkgSWR: TframePackageSwr
+        Left = 0
+        Top = 0
+        Width = 595
+        Height = 514
+        Align = alClient
+        TabOrder = 0
+        TabStop = True
+        inherited lblComments: TLabel
+          Width = 76
+          Height = 18
+          ExplicitWidth = 76
+          ExplicitHeight = 18
+        end
+        inherited lblPackage: TLabel
+          Width = 78
+          Height = 18
+          ExplicitWidth = 78
+          ExplicitHeight = 18
+        end
+        inherited jvplSwr: TJvPageList
+          HelpType = htKeyword
+          HelpKeyword = 'SWR_Surface_Water_Routing_Proc'
+          OnChange = framePkgSWRjvplSwrChange
+          inherited jvspSolutionOptions: TJvStandardPage
+            inherited lblScaling: TLabel
+              Top = 296
+              Width = 52
+              Height = 18
+              ExplicitTop = 296
+              ExplicitWidth = 52
+              ExplicitHeight = 18
+            end
+            inherited lblReordering: TLabel
+              Top = 344
+              Width = 78
+              Height = 18
+              ExplicitTop = 344
+              ExplicitWidth = 78
+              ExplicitHeight = 18
+            end
+            inherited lblNewton: TLabel
+              Top = 398
+              Width = 130
+              Height = 18
+              ExplicitTop = 398
+              ExplicitWidth = 130
+              ExplicitHeight = 18
+            end
+            inherited cbSwrOnly: TCheckBox
+              Height = 41
+              WordWrap = True
+              ExplicitHeight = 41
+            end
+            inherited cbContinueNonConverge: TCheckBox
+              Top = 50
+              ExplicitTop = 50
+            end
+            inherited cbUpstreamWeighting: TCheckBox
+              Top = 90
+              ExplicitTop = 90
+            end
+            inherited cbInexactNewton: TCheckBox
+              Top = 130
+              ExplicitTop = 130
+            end
+            inherited cbUseSteadyStateStorage: TCheckBox
+              Top = 164
+              ExplicitTop = 164
+            end
+            inherited cbUseLaggedStagesAndFlows: TCheckBox
+              Top = 201
+              ExplicitTop = 201
+            end
+            inherited cbUseLinearDepthScaling: TCheckBox
+              Top = 249
+              Height = 41
+              ExplicitTop = 249
+              ExplicitHeight = 41
+            end
+            inherited comboScaling: TJvImageComboBox
+              Top = 318
+              Height = 28
+              ItemHeight = 22
+              ExplicitTop = 318
+              ExplicitHeight = 28
+            end
+            inherited comboReordering: TJvImageComboBox
+              Top = 363
+              Height = 28
+              ItemHeight = 22
+              ExplicitTop = 363
+              ExplicitHeight = 28
+            end
+            inherited comboNewton: TJvImageComboBox
+              Top = 420
+              Height = 28
+              ItemHeight = 22
+              ExplicitTop = 420
+              ExplicitHeight = 28
+            end
+          end
+          inherited jvspTimeStepOptions: TJvStandardPage
+            inherited lblInitialTimeStepLength: TLabel
+              Width = 199
+              Height = 18
+              ExplicitWidth = 199
+              ExplicitHeight = 18
+            end
+            inherited lblMinTimeStepLength: TLabel
+              Width = 237
+              Height = 18
+              ExplicitWidth = 237
+              ExplicitHeight = 18
+            end
+            inherited lblMaxTimeStepLength: TLabel
+              Width = 249
+              Height = 18
+              ExplicitWidth = 249
+              ExplicitHeight = 18
+            end
+            inherited lblTimeStepMultiplier: TLabel
+              Width = 209
+              Height = 18
+              ExplicitWidth = 209
+              ExplicitHeight = 18
+            end
+            inherited lblTimeStepIncreaseFrequency: TLabel
+              Width = 219
+              Height = 36
+              ExplicitWidth = 219
+              ExplicitHeight = 36
+            end
+            inherited lblMinGradientForDiffusiveFlow: TLabel
+              Width = 242
+              Height = 36
+              ExplicitWidth = 242
+              ExplicitHeight = 36
+            end
+            inherited lblMinDepthForOutflow: TLabel
+              Width = 276
+              Height = 18
+              ExplicitWidth = 276
+              ExplicitHeight = 18
+            end
+            inherited lblMaxRainfallForStepAdjustment: TLabel
+              Width = 255
+              Height = 36
+              ExplicitWidth = 255
+              ExplicitHeight = 36
+            end
+            inherited lblMaxStageChangePerStep: TLabel
+              Width = 230
+              Height = 36
+              ExplicitWidth = 230
+              ExplicitHeight = 36
+            end
+            inherited lblMaxInflowChange: TLabel
+              Width = 230
+              Height = 36
+              ExplicitWidth = 230
+              ExplicitHeight = 36
+            end
+            inherited seTimeStepIncreaseFrequency: TJvSpinEdit
+              Height = 26
+              ExplicitHeight = 26
+            end
+          end
+          inherited jvspSpecificationMethod: TJvStandardPage
+            inherited grpSpecificationMethod: TGroupBox
+              inherited rgRainfallSpecification: TRadioGroup
+                Items.Strings = (
+                  'Specify by reach (> 0)'
+                  'Specify by cell (< 0)')
+              end
+              inherited rgEvapSpecification: TRadioGroup
+                Items.Strings = (
+                  'Specify by reach (> 0)'
+                  'Specify by cell (< 0)')
+              end
+              inherited rgLateralInflowSpecification: TRadioGroup
+                Items.Strings = (
+                  'Specify by reach (> 0)'
+                  'Specify by cell (< 0)')
+              end
+              inherited rgStageSpecification: TRadioGroup
+                Items.Strings = (
+                  'Specify by reach (> 0)'
+                  'Specify by cell (< 0)')
+              end
+            end
+            inherited grpAssignmentMethod: TGroupBox
+              Left = 227
+              Width = 212
+              Align = alClient
+              ExplicitLeft = 227
+              ExplicitWidth = 212
+              inherited rgRainAssignmentMethod: TRadioGroup
+                Width = 206
+                ExplicitWidth = 206
+              end
+              inherited rgEvapAssignmentMethod: TRadioGroup
+                Width = 206
+                ExplicitWidth = 206
+              end
+              inherited rgLateralInflowAssignmentMethod: TRadioGroup
+                Width = 206
+                ExplicitWidth = 206
+              end
+              inherited rgStageAssignmentMethod: TRadioGroup
+                Width = 206
+                ExplicitWidth = 206
+              end
+            end
+          end
+          inherited jvspPrintOptions: TJvStandardPage
+            inherited lblPrintInflowsAndOutflows: TLabel
+              Top = 5
+              Width = 254
+              Height = 36
+              ExplicitTop = 5
+              ExplicitWidth = 254
+              ExplicitHeight = 36
+            end
+            inherited lblPrintStage: TLabel
+              Width = 176
+              Height = 18
+              ExplicitWidth = 176
+              ExplicitHeight = 18
+            end
+            inherited lblPrintReachExchangeAndProperties: TLabel
+              Width = 227
+              Height = 18
+              ExplicitWidth = 227
+              ExplicitHeight = 18
+            end
+            inherited lblPrintReachLateralFlow: TLabel
+              Width = 246
+              Height = 18
+              ExplicitWidth = 246
+              ExplicitHeight = 18
+            end
+            inherited lblPrintStructureFlow: TLabel
+              Width = 226
+              Height = 18
+              ExplicitWidth = 226
+              ExplicitHeight = 18
+            end
+            inherited lblSaveSwrTimeStepLength: TLabel
+              Width = 194
+              Height = 36
+              ExplicitWidth = 194
+              ExplicitHeight = 36
+            end
+            inherited lblSaveRiver: TLabel
+              Top = 338
+              Width = 141
+              Height = 18
+              ExplicitTop = 338
+              ExplicitWidth = 141
+              ExplicitHeight = 18
+            end
+            inherited lblSaveObs: TLabel
+              Top = 392
+              Width = 129
+              Height = 18
+              ExplicitTop = 392
+              ExplicitWidth = 129
+              ExplicitHeight = 18
+            end
+            inherited lblSaveFrequency: TLabel
+              Top = 475
+              Width = 248
+              Height = 36
+              ExplicitTop = 475
+              ExplicitWidth = 248
+              ExplicitHeight = 36
+            end
+            inherited lblObsFormat: TLabel
+              Top = 448
+              Width = 215
+              Height = 18
+              ExplicitTop = 448
+              ExplicitWidth = 215
+              ExplicitHeight = 18
+            end
+            inherited comboPrintInflowsAndOutflows: TJvImageComboBox
+              Height = 28
+              ItemHeight = 22
+              ExplicitHeight = 28
+            end
+            inherited comboPrintStage: TJvImageComboBox
+              Height = 28
+              ItemHeight = 22
+              ExplicitHeight = 28
+            end
+            inherited comboPrintReachExchangeAndProperties: TJvImageComboBox
+              Height = 28
+              ItemHeight = 22
+              ExplicitHeight = 28
+            end
+            inherited comboPrintReachLateralFlow: TJvImageComboBox
+              Height = 28
+              ItemHeight = 22
+              ExplicitHeight = 28
+            end
+            inherited comboPrintStructureFlow: TJvImageComboBox
+              Height = 28
+              ItemHeight = 22
+              ExplicitHeight = 28
+            end
+            inherited comboSaveSwrTimeStepLength: TJvImageComboBox
+              Height = 28
+              ItemHeight = 22
+              ExplicitHeight = 28
+            end
+            inherited cbSaveConvergenceHistory: TCheckBox
+              Top = 299
+              ExplicitTop = 299
+            end
+            inherited comboSaveRiver: TJvImageComboBox
+              Top = 358
+              Height = 28
+              ItemHeight = 22
+              Items = <
+                item
+                  Brush.Style = bsClear
+                  Indent = 0
+                  Text = 'None'
+                end
+                item
+                  Brush.Style = bsClear
+                  Indent = 0
+                  Text = 'SAVE_RIVER_PACKAGE'
+                end
+                item
+                  Brush.Style = bsClear
+                  Indent = 0
+                  Text = 'SAVE_RIVER_PACKAGE_ALL'
+                end>
+              ExplicitTop = 358
+              ExplicitHeight = 28
+            end
+            inherited comboSaveObs: TJvImageComboBox
+              Top = 414
+              Height = 28
+              ItemHeight = 22
+              Items = <
+                item
+                  Brush.Style = bsClear
+                  Indent = 0
+                  Text = 'None'
+                end
+                item
+                  Brush.Style = bsClear
+                  Indent = 0
+                  Text = 'SAVE_SWROBSERVATIONS'
+                end
+                item
+                  Brush.Style = bsClear
+                  Indent = 0
+                  Text = 'SAVE_SWROBSERVATIONS_ALL'
+                end>
+              ExplicitTop = 414
+              ExplicitHeight = 28
+            end
+            inherited rdeSaveFrequency: TRbwDataEntry
+              Top = 478
+              ExplicitTop = 478
+            end
+            inherited cbSaveAverageSimulatedResults: TCheckBox
+              Top = 257
+              ExplicitTop = 257
+            end
+            inherited comboObsFormat: TJvImageComboBox
+              Top = 445
+              Height = 28
+              ItemHeight = 22
+              ExplicitTop = 445
+              ExplicitHeight = 28
+            end
+          end
+          inherited jvspSolverMandatory: TJvStandardPage
+            inherited lblSolver: TLabel
+              Width = 125
+              Height = 18
+              ExplicitWidth = 125
+              ExplicitHeight = 18
+            end
+            inherited lblMaxOuterIterations: TLabel
+              Width = 251
+              Height = 36
+              ExplicitWidth = 251
+              ExplicitHeight = 36
+            end
+            inherited lblMaxInnerIterations: TLabel
+              Width = 250
+              Height = 36
+              ExplicitWidth = 250
+              ExplicitHeight = 36
+            end
+            inherited lblMaxLineSearchIterations: TLabel
+              Width = 223
+              Height = 36
+              ExplicitWidth = 223
+              ExplicitHeight = 36
+            end
+            inherited lblStageTolerance: TLabel
+              Width = 165
+              Height = 18
+              ExplicitWidth = 165
+              ExplicitHeight = 18
+            end
+            inherited lblFlowToleranceOption: TLabel
+              Width = 148
+              Height = 18
+              ExplicitWidth = 148
+              ExplicitHeight = 18
+            end
+            inherited lblFlowTolerance: TLabel
+              Width = 156
+              Height = 18
+              ExplicitWidth = 156
+              ExplicitHeight = 18
+            end
+            inherited lblExchangeToleranceOption: TLabel
+              Width = 184
+              Height = 18
+              ExplicitWidth = 184
+              ExplicitHeight = 18
+            end
+            inherited lblExchangeTolerance: TLabel
+              Width = 192
+              Height = 18
+              ExplicitWidth = 192
+              ExplicitHeight = 18
+            end
+            inherited lblSteadyStateDampingFactor: TLabel
+              Width = 199
+              Height = 36
+              Caption = 'Steady state damping factor (DAMPSS) '
+              WordWrap = True
+              ExplicitWidth = 199
+              ExplicitHeight = 36
+            end
+            inherited lblTransientDampingFactor: TLabel
+              Top = 361
+              Width = 252
+              Height = 18
+              ExplicitTop = 361
+              ExplicitWidth = 252
+              ExplicitHeight = 18
+            end
+            inherited lblConvergencePrintoutInterval: TLabel
+              Top = 390
+              Width = 277
+              Height = 18
+              ExplicitTop = 390
+              ExplicitWidth = 277
+              ExplicitHeight = 18
+            end
+            inherited lblPrintConvergence: TLabel
+              Top = 419
+              Width = 209
+              Height = 18
+              ExplicitTop = 419
+              ExplicitWidth = 209
+              ExplicitHeight = 18
+            end
+            inherited comboSolver: TJvImageComboBox
+              Height = 28
+              ItemHeight = 22
+              ExplicitHeight = 28
+            end
+            inherited seMaxOuterIterations: TJvSpinEdit
+              Height = 26
+              ExplicitHeight = 26
+            end
+            inherited seMaxInnerIterations: TJvSpinEdit
+              Height = 26
+              ExplicitHeight = 26
+            end
+            inherited seMaxLineSearchIterations: TJvSpinEdit
+              Height = 26
+              ExplicitHeight = 26
+            end
+            inherited comboFlowToleranceOption: TJvImageComboBox
+              Top = 193
+              Height = 28
+              ItemHeight = 22
+              ItemIndex = -1
+              Items = <
+                item
+                  Brush.Style = bsClear
+                  Indent = 0
+                  Text = 'None'
+                end
+                item
+                  Brush.Style = bsClear
+                  Indent = 0
+                  Text = 'USE_FRACTIONAL_TOLR'
+                end
+                item
+                  Brush.Style = bsClear
+                  Indent = 0
+                  Text = 'USE_L2NORM_TOLR'
+                end>
+              ExplicitTop = 193
+              ExplicitHeight = 28
+            end
+            inherited comboExchangeToleranceOption: TJvImageComboBox
+              Height = 28
+              ItemHeight = 22
+              ItemIndex = -1
+              Items = <
+                item
+                  Brush.Style = bsClear
+                  Indent = 0
+                  Text = 'None'
+                end
+                item
+                  Brush.Style = bsClear
+                  Indent = 0
+                  Text = 'USE_GLOBAL_TOLA'
+                end
+                item
+                  Brush.Style = bsClear
+                  Indent = 0
+                  Text = 'USE_ABSOLUTE_TOLA'
+                end>
+              ExplicitHeight = 28
+            end
+            inherited rdeExchangeTolerance: TRbwDataEntry
+              Top = 288
+              ExplicitTop = 288
+            end
+            inherited rdeSteadyStateDampingFactor: TRbwDataEntry
+              Top = 322
+              ExplicitTop = 322
+            end
+            inherited rdeTransientDampingFactor: TRbwDataEntry
+              Top = 358
+              ExplicitTop = 358
+            end
+            inherited seConvergencePrintoutInterval: TJvSpinEdit
+              Top = 386
+              Height = 26
+              ExplicitTop = 386
+              ExplicitHeight = 26
+            end
+            inherited comboPrintConvergence: TJvImageComboBox
+              Top = 438
+              Height = 28
+              ItemHeight = 22
+              ItemIndex = -1
+              Items = <
+                item
+                  Brush.Style = bsClear
+                  Indent = 0
+                  Text = 'Print max residual every time step (0)'
+                end
+                item
+                  Brush.Style = bsClear
+                  Indent = 0
+                  Text = 'Print number of iterations (1)'
+                end
+                item
+                  Brush.Style = bsClear
+                  Indent = 0
+                  Text = 'Print none (2)'
+                end
+                item
+                  Brush.Style = bsClear
+                  Indent = 0
+                  Text = 'Print if convergence fails (3)'
+                end>
+              ExplicitTop = 438
+              ExplicitHeight = 28
+            end
+          end
+          inherited jvspSolverOptional: TJvStandardPage
+            inherited lblPreconditioner: TLabel
+              Left = 255
+              Width = 142
+              Height = 18
+              ExplicitLeft = 255
+              ExplicitWidth = 142
+              ExplicitHeight = 18
+            end
+            inherited lblMaxLevels: TLabel
+              Width = 270
+              Height = 18
+              ExplicitWidth = 270
+              ExplicitHeight = 18
+            end
+            inherited lblDropThreshold: TLabel
+              Width = 192
+              Height = 18
+              ExplicitWidth = 192
+              ExplicitHeight = 18
+            end
+            inherited lblPrintLineSearchInterval: TLabel
+              Width = 289
+              Height = 36
+              ExplicitWidth = 289
+              ExplicitHeight = 36
+            end
+            inherited lblAlternativeFlowTolerance: TLabel
+              Width = 238
+              Height = 18
+              ExplicitWidth = 238
+              ExplicitHeight = 18
+            end
+            inherited comboPreconditioner: TJvImageComboBox
+              Width = 243
+              Height = 28
+              ItemHeight = 22
+              ExplicitWidth = 243
+              ExplicitHeight = 28
+            end
+            inherited seMaxLevels: TJvSpinEdit
+              Height = 26
+              ExplicitHeight = 26
+            end
+            inherited sePrintLineSearchInterval: TJvSpinEdit
+              Height = 26
+              ExplicitHeight = 26
+            end
+          end
+        end
+        inherited tvpglstSwr: TJvPageListTreeView
+          Items.Links = {00000000}
+        end
+        inherited rcSelectionController: TRbwController
+          ControlList = <
+            item
+              Control = framePkgSWR.lblComments
+            end
+            item
+              Control = framePkgSWR.memoComments
+            end>
+        end
+      end
+    end
   end
   object pnlBottom: TPanel
     Left = 0
@@ -8790,10 +9444,8 @@ inherited frmModflowPackages: TfrmModflowPackages
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end
@@ -8803,10 +9455,8 @@ inherited frmModflowPackages: TfrmModflowPackages
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -8816,10 +9466,8 @@ inherited frmModflowPackages: TfrmModflowPackages
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
   end
@@ -8892,7 +9540,7 @@ inherited frmModflowPackages: TfrmModflowPackages
     Left = 136
     Top = 96
     Bitmap = {
-      494C0101080009002C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010108000D00040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

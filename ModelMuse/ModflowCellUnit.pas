@@ -36,16 +36,28 @@ type
     procedure SetColumn(const Value: integer); virtual; abstract;
     procedure SetLayer(const Value: integer); virtual; abstract;
     procedure SetRow(const Value: integer); virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetIntegerValue(Index: integer;
       AModel: TBaseModel): integer; virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetRealValue(Index: integer;
       AModel: TBaseModel): double; virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetBooleanValue(Index: integer;
       AModel: TBaseModel): boolean; virtual;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetRealAnnotation(Index: integer;
       AModel: TBaseModel): string; virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetIntegerAnnotation(Index: integer;
       AModel: TBaseModel): string; virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetBooleanAnnotation(Index: integer;
       AModel: TBaseModel): string; virtual;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); virtual;
@@ -64,16 +76,28 @@ type
     // @name is the column number for this cell. Valid values range from 0 to
     // the number of columns in the grid minus 1.
     property Column: integer read GetColumn write SetColumn;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property IntegerValue[Index: integer; AModel: TBaseModel]: integer
       read GetIntegerValue;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property RealValue[Index: integer; AModel: TBaseModel]: double
       read GetRealValue;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property BooleanValue[Index: integer; AModel: TBaseModel]: boolean
       read GetBooleanValue;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property RealAnnotation[Index: integer; AModel: TBaseModel]: string
       read GetRealAnnotation;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property IntegerAnnotation[Index: integer; AModel: TBaseModel]: string
       read GetIntegerAnnotation;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property BooleanAnnotation[Index: integer; AModel: TBaseModel]: string
       read GetBooleanAnnotation;
     property IFace: TIface read FIFace write FIFace;

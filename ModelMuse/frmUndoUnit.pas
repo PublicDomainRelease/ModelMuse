@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, frmCustomGoPhastUnit, Undo, StdCtrls, Mask, JvExMask, JvSpin;
+  Dialogs, frmCustomGoPhastUnit, Undo, StdCtrls, Mask, JvExMask, JvSpin,
+  JvExStdCtrls, JvCombobox, JvListComb;
 
 type
   {@abstract(@name is a form with a built-in @link(TUndoStack).)

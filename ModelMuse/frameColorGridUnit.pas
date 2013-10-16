@@ -439,6 +439,7 @@ begin
     frmGoPhast.PhastModel.SutraTimeOptions.CalculateAllTimes;
     AllTimes := frmGoPhast.PhastModel.SutraTimeOptions.AllTimes;
     comboTime3D.Items.Clear;
+    comboTime3D.Items.Capacity := AllTimes.Count;
     for TimeIndex := 0 to AllTimes.Count - 1 do
     begin
       comboTime3D.Items.Add(FloatToStr(AllTimes[TimeIndex]));

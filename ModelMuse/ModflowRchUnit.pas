@@ -156,12 +156,12 @@ type
     function PackageAssignmentMethod(AModel: TBaseModel): TUpdateMethod; virtual;
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary(AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
-    // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+    // See @link(TCustomListArrayBoundColl.AssignArrayCellValues
+    // TCustomListArrayBoundColl.AssignArrayCellValues)
+    procedure AssignArrayCellValues(DataSets: TList; ItemIndex: Integer;
       AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
-    // TCustomMF_ArrayBoundColl.InitializeTimeLists)
+    // See @link(TCustomListArrayBoundColl.InitializeTimeLists
+    // TCustomListArrayBoundColl.InitializeTimeLists)
     procedure InitializeTimeLists(ListOfTimeLists: TList; AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
@@ -191,12 +191,12 @@ type
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary(AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
-    // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+    // See @link(TCustomListArrayBoundColl.AssignArrayCellValues
+    // TCustomListArrayBoundColl.AssignArrayCellValues)
+    procedure AssignArrayCellValues(DataSets: TList; ItemIndex: Integer;
       AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
-    // TCustomMF_ArrayBoundColl.InitializeTimeLists)
+    // See @link(TCustomListArrayBoundColl.InitializeTimeLists
+    // TCustomListArrayBoundColl.InitializeTimeLists)
     procedure InitializeTimeLists(ListOfTimeLists: TList;
       AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
@@ -439,7 +439,7 @@ begin
   AddBoundary(TRchStorage.Create(AModel));
 end;
 
-procedure TRchCollection.AssignCellValues(DataSets: TList; ItemIndex: Integer;
+procedure TRchCollection.AssignArrayCellValues(DataSets: TList; ItemIndex: Integer;
   AModel: TBaseModel);
 var
   RechargeRateArray: TDataArray;
@@ -1124,7 +1124,7 @@ begin
   AddBoundary(TRchLayerStorage.Create(AModel));
 end;
 
-procedure TRchLayerCollection.AssignCellValues(DataSets: TList;
+procedure TRchLayerCollection.AssignArrayCellValues(DataSets: TList;
   ItemIndex: Integer; AModel: TBaseModel);
 var
   RechargeLayerArray: TDataArray;

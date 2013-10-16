@@ -9,13 +9,12 @@ type
   private
     FSfrWriter: TModflowSFR_Writer;
     FNameOfFile: string;
-    procedure Evaluate(var StartUnitNumber: integer;
-      Gages: TStrings);
+    procedure Evaluate(Gages: TStrings);
   protected
     class function Extension: string; override;
   public
     procedure WriteFile(const AFileName: string; Gages: TStrings;
-      SfrWriter: TModflowSFR_Writer; var StartUnitNumber: integer);
+      SfrWriter: TModflowSFR_Writer);
   end;
 
 implementation
@@ -29,8 +28,7 @@ resourcestring
 
 { TModflowGAG_Writer }
 
-procedure TModflowGAG_Writer.Evaluate(var StartUnitNumber: integer;
-  Gages: TStrings);
+procedure TModflowGAG_Writer.Evaluate(Gages: TStrings);
 var
   Index: Integer;
   List: TList;
@@ -56,13 +54,13 @@ var
     Line: string;
     OutputName: string;
   begin
-    UNIT_Number := StartUnitNumber;
+    UNIT_Number := Model.ParentModel.UnitNumbers.SequentialUnitNumber;
     Line := IntToStr(GAGESEG) + ' '
       + IntToStr(GAGERCH) + ' '
       + IntToStr(UNIT_Number) + ' '
       + IntToStr(OUTTYPE);
     Gages.Add(Line);
-    Inc(StartUnitNumber);
+//    Inc(StartUnitNumber);
     OutputName := ChangeFileExt(FNameOfFile, '.sfrg');
     OutputName := OutputName + IntToStr(Gages.Count);
     WriteToNameFile(StrDATA, UNIT_Number, OutputName, foOutput);
@@ -205,7 +203,7 @@ begin
 end;
 
 procedure TModflowGAG_Writer.WriteFile(const AFileName: string;
-  Gages: TStrings; SfrWriter: TModflowSFR_Writer; var StartUnitNumber: integer);
+  Gages: TStrings; SfrWriter: TModflowSFR_Writer);
 var
   NUMGAGES: integer;
 begin
@@ -215,7 +213,7 @@ begin
   end;
   FSfrWriter := SfrWriter;
   FNameOfFile := FileName(AFileName);
-  Evaluate(StartUnitNumber, Gages);
+  Evaluate(Gages);
   if Gages.Count > 0 then
   begin
     frmProgressMM.AddMessage(StrWritingGAGEPackage);

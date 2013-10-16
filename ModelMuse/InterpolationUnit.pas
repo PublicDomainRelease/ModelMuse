@@ -377,6 +377,7 @@ var
   NearestSegment: TCellElementSegment;
   SumSin: real;
   SumCos: Real;
+  ErrorFunction: string;
 begin
   SumWeights := 0;
   Sum := 0;
@@ -413,7 +414,7 @@ begin
 
 
       ScreenObjectFunction := AScreenObject.DataSetFormulas[DataSetIndex];
-
+      ErrorFunction := ScreenObjectFunction;
       Compiler := frmGoPhast.PhastModel.GetCompiler(DataSet.Orientation,
         DataSet.EvaluatedAt);
       try
@@ -421,7 +422,7 @@ begin
       except on E: ERbwParserError do
         begin
           ResetScreenObjectFunction(DataSetIndex, AScreenObject, Compiler,
-            DataSet.DataType, E.Message, False);
+            DataSet.DataType, E.Message, False, ErrorFunction);
         end;
       end;
 
@@ -1062,6 +1063,7 @@ var
   TopCell: T2DTopCell;
   NearestSegment: TCellElementSegment;
   Model: TCustomModel;
+  ErrorFunction: string;
 begin
   Assert(DataSet <> nil);
   DataSetIndex := AScreenObject.IndexOfDataSet(DataSet);
@@ -1085,12 +1087,13 @@ begin
   Assert(FModel = Model);
   Compiler := Model.GetCompiler(
     DataSet.Orientation, DataSet.EvaluatedAt);
+  ErrorFunction := ScreenObjectFunction;
   try
     Compiler.Compile(ScreenObjectFunction);
   except on E: ERbwParserError do
     begin
       ResetScreenObjectFunction(DataSetIndex, AScreenObject, Compiler,
-        DataSet.DataType, E.Message, IsBoundary);
+        DataSet.DataType, E.Message, IsBoundary, ErrorFunction);
     end;
   end;
 

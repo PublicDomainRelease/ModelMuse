@@ -300,6 +300,7 @@ end;
 procedure TUndoModelSelectionChange.DoCommand;
 begin
   inherited;
+  frmGoPhast.tbSelectClick(frmGoPhast.tbSelect);
   frmGoPhast.ModelSelection := FNewModelSelection;
   frmGoPhast.PhastModel.ChildModels.Assign(FNewChildModels);
   UpdatedRequiredDataSets;
@@ -310,6 +311,7 @@ var
   Packages: TModflowPackages;
 begin
   inherited;
+  frmGoPhast.tbSelectClick(frmGoPhast.tbSelect);
   frmGoPhast.ModelSelection := FOldModelSelection;
   frmGoPhast.PhastModel.ChildModels.Assign(FOldChildModels);
   Packages := frmGoPhast.PhastModel.ModflowPackages;

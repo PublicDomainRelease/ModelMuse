@@ -2,9 +2,9 @@ unit ModflowDrnUnit;
 
 interface
 
-uses Windows, ZLib, SysUtils, Classes, Contnrs, ModflowBoundaryUnit,
-  OrderedCollectionUnit, DataSetUnit, ModflowCellUnit, FormulaManagerUnit,
-  SubscriptionUnit, SparseDataSets, RbwParser, GoPhastTypes;
+uses ZLib, SysUtils, Classes, Contnrs, ModflowBoundaryUnit,
+  OrderedCollectionUnit, ModflowCellUnit, FormulaManagerUnit,
+  SubscriptionUnit, RbwParser, GoPhastTypes;
 
 type
   TDrnRecord = record
@@ -97,7 +97,7 @@ type
     procedure InvalidateConductanceData(Sender: TObject);
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
+    procedure AssignListCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
       BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
@@ -457,7 +457,7 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
-    UpdataRequiredData(DataSets, Variables, ACell, AModel);
+    UpdateRequiredListData(DataSets, Variables, ACell, AModel);
     // 2. update locations
     Expression.Evaluate;
     with DrnStorage.DrnArray[Index] do
@@ -480,7 +480,7 @@ begin
   end;
 end;
 
-procedure TDrnCollection.AssignCellLocation(
+procedure TDrnCollection.AssignListCellLocation(
   BoundaryStorage: TCustomBoundaryStorage; ACellList: TObject);
 var
   DrnStorage: TDrnStorage;
@@ -918,8 +918,6 @@ begin
   WriteCompReal(Comp, EndingTime);
   WriteCompInt(Comp, Strings.IndexOf(ConductanceAnnotation));
   WriteCompInt(Comp, Strings.IndexOf(ElevationAnnotation));
-//  WriteCompString(Comp, ConductanceAnnotation);
-//  WriteCompString(Comp, ElevationAnnotation);
 end;
 
 procedure TDrnRecord.RecordStrings(Strings: TStringList);
@@ -937,8 +935,6 @@ begin
   EndingTime := ReadCompReal(Decomp);
   ConductanceAnnotation := Annotations[ReadCompInt(Decomp)];
   ElevationAnnotation := Annotations[ReadCompInt(Decomp)];
-//  ConductanceAnnotation := ReadCompString(Decomp, Annotations);
-//  ElevationAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TDrnStorage }

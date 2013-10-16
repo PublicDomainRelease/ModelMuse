@@ -23,7 +23,7 @@ type
     // parameter name in the Objects property is a TList.  Each TList
     // contains a series of @link(TValueCellList)s; one for each stress period.
     // Each such list contains series of @link(TValueCell)s. Each
-    // @link(FParamValuesTValueCell) defines one boundary cell for
+    // @link(TValueCell) defines one boundary cell for
     // one stress period.
     FParamValues: TStringList;
     FScreenObject: TScreenObject;
@@ -56,9 +56,6 @@ type
   TStrSegmentComparer = class(TComparer<TStrSegment>)
     function Compare(const Left, Right: TStrSegment): Integer; override;
   end;
-
-//  TParameterSegments = class;
-//  TParamterSegmentsList = TList<TParameterSegments>;
 
   TParameterSegments = class(TObject)
   private
@@ -1082,7 +1079,7 @@ begin
       StrItem := StrValues[ItemIndex] as TStrItem;
       if (StrItem.OutflowSegment > 0) or (StrItem.DiversionSegment > 0) then
       begin
-        EndStressPeriod := StressPeriods.FindStressPeriod(StrItem.EndTime);
+        EndStressPeriod := StressPeriods.FindEndStressPeriod(StrItem.EndTime);
         if EndStressPeriod < 0 then
         begin
           Continue;

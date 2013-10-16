@@ -1,5 +1,5 @@
 inherited UndoForm: TUndoForm
   Caption = 'UndoForm'
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
 end

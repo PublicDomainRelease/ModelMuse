@@ -27,7 +27,7 @@ inherited frameScreenObjectParam: TframeScreenObjectParam
       Align = alClient
       AutoScroll = False
       Columns = 4
-      ItemHeight = 13
+      ItemHeight = 16
       TabOrder = 1
       OnStateChange = clbParametersStateChange
       InternalVersion = 202
@@ -66,6 +66,8 @@ inherited frameScreenObjectParam: TframeScreenObjectParam
           ParentButtonFont = False
           WordWrapCaptions = True
           WordWrapCells = False
+          CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -87,6 +89,8 @@ inherited frameScreenObjectParam: TframeScreenObjectParam
           ParentButtonFont = False
           WordWrapCaptions = True
           WordWrapCells = False
+          CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -108,6 +112,8 @@ inherited frameScreenObjectParam: TframeScreenObjectParam
           ParentButtonFont = False
           WordWrapCaptions = True
           WordWrapCells = False
+          CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end>
       ExplicitHeight = 126

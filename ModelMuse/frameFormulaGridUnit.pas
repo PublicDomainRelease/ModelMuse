@@ -13,21 +13,28 @@ type
   TframeFormulaGrid = class(TframeGrid)
     pnlTop: TPanel;
     edFormula: TLabeledEdit;
+    cbMultiCheck: TCheckBox;
     procedure edFormulaChange(Sender: TObject);
     procedure GridColSize(Sender: TObject; ACol, PriorWidth: Integer);
     procedure GridHorizontalScroll(Sender: TObject);
     procedure FrameResize(Sender: TObject);
     procedure GridMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure cbMultiCheckClick(Sender: TObject);
   private
     FFirstFormulaColumn: Integer;
     FOnValidCell: TValidCellEvent;
+    FFirstCheckColumn: Integer;
+    FOnValidCheckCell: TValidCellEvent;
     { Private declarations }
   public
     procedure LayoutMultiRowEditControls; virtual;
     property FirstFormulaColumn: Integer read FFirstFormulaColumn
       write FFirstFormulaColumn;
+    property FirstCheckColumn: Integer read FFirstCheckColumn
+      write FFirstCheckColumn;
     property OnValidCell: TValidCellEvent read FOnValidCell write FOnValidCell;
+    property OnValidCheckCell: TValidCellEvent read FOnValidCheckCell write FOnValidCheckCell;
     procedure ClearGrid;
     { Public declarations }
   end;
@@ -41,6 +48,45 @@ uses
   frmCustomGoPhastUnit, Math;
 
 {$R *.dfm}
+
+procedure TframeFormulaGrid.cbMultiCheckClick(Sender: TObject);
+var
+  ColIndex: integer;
+  RowIndex: Integer;
+//  TempOptions: TGridOptions;
+  ValidCell: Boolean;
+begin
+  inherited;
+  Grid.BeginUpdate;
+  try
+    for RowIndex := Grid.FixedRows to
+      Grid.RowCount - 1 do
+    begin
+      for ColIndex := FirstFormulaColumn to Grid.ColCount - 1 do
+      begin
+        if Grid.IsSelectedCell(ColIndex, RowIndex) then
+        begin
+          ValidCell := True;
+          if Assigned (OnValidCell) then
+          begin
+            OnValidCell(Grid, ColIndex, RowIndex, ValidCell);
+          end;
+          if ValidCell then
+          begin
+            Grid.Checked[ColIndex, RowIndex] := cbMultiCheck.Checked;
+            if Assigned(Grid.OnStateChange) then
+            begin
+              Grid.OnStateChange(
+                Grid,ColIndex,RowIndex, cbMultiCheck.State);
+            end;
+          end;
+        end;
+      end;
+    end;
+  finally
+    Grid.EndUpdate
+  end
+end;
 
 procedure TframeFormulaGrid.ClearGrid;
 var
@@ -133,34 +179,68 @@ var
   ColIndex, RowIndex: Integer;
 begin
   inherited;
-  ShouldEnable := False;
-  for RowIndex := Grid.FixedRows to Grid.RowCount -1 do
+  if edFormula.Visible then
   begin
-    for ColIndex := FirstFormulaColumn to Grid.ColCount - 1 do
+    ShouldEnable := False;
+    for RowIndex := Grid.FixedRows to Grid.RowCount -1 do
     begin
-      ShouldEnable := Grid.IsSelectedCell(ColIndex,RowIndex);
-      if ShouldEnable then
+      for ColIndex := FirstFormulaColumn to Grid.ColCount - 1 do
       begin
-        if Assigned(OnValidCell) then
+        ShouldEnable := Grid.IsSelectedCell(ColIndex,RowIndex);
+        if ShouldEnable then
         begin
-          OnValidCell(self, ColIndex, RowIndex, ShouldEnable);
-          if ShouldEnable then
+          if Assigned(OnValidCell) then
           begin
-            Break;
+            OnValidCell(self, ColIndex, RowIndex, ShouldEnable);
+            if ShouldEnable then
+            begin
+              Break;
+            end;
+          end
+          else
+          begin
+            break;
           end;
-        end
-        else
-        begin
-          break;
         end;
       end;
+      if ShouldEnable then
+      begin
+        break;
+      end;
     end;
-    if ShouldEnable then
-    begin
-      break;
-    end;
+    edFormula.Enabled := ShouldEnable;
   end;
-  edFormula.Enabled := ShouldEnable;
+  if cbMultiCheck.Visible then
+  begin
+    ShouldEnable := False;
+    for RowIndex := Grid.FixedRows to Grid.RowCount -1 do
+    begin
+      for ColIndex := FirstCheckColumn to Grid.ColCount - 1 do
+      begin
+        ShouldEnable := Grid.IsSelectedCell(ColIndex,RowIndex);
+        if ShouldEnable then
+        begin
+          if Assigned(OnValidCheckCell) then
+          begin
+            OnValidCheckCell(self, ColIndex, RowIndex, ShouldEnable);
+            if ShouldEnable then
+            begin
+              Break;
+            end;
+          end
+          else
+          begin
+            break;
+          end;
+        end;
+      end;
+      if ShouldEnable then
+      begin
+        break;
+      end;
+    end;
+    cbMultiCheck.Enabled := ShouldEnable;
+  end
 end;
 
 procedure TframeFormulaGrid.LayoutMultiRowEditControls;
@@ -174,23 +254,46 @@ begin
   begin
     Exit
   end;
-  Column := Max(FirstFormulaColumn,Grid.LeftCol);
-  if Assigned(OnValidCell) then
+  if edFormula.Visible then
   begin
-    Row := 1;
-    for ColIndex := Column to Grid.ColCount - 1 do
+    Column := Max(FirstFormulaColumn,Grid.LeftCol);
+    if Assigned(OnValidCell) then
     begin
-      ValidCell := True;
-      OnValidCell(self, ColIndex,Row,ValidCell);
-      if ValidCell then
+      Row := 1;
+      for ColIndex := Column to Grid.ColCount - 1 do
       begin
-        Column := ColIndex;
-        break;
+        ValidCell := True;
+        OnValidCell(self, ColIndex,Row,ValidCell);
+        if ValidCell then
+        begin
+          Column := ColIndex;
+          break;
+        end;
       end;
     end;
+    LayoutControls(Grid, edFormula, nil,
+      Column);
   end;
-  LayoutControls(Grid, edFormula, nil,
-    Column);
+  if cbMultiCheck.Visible then
+  begin
+    Column := Max(FirstCheckColumn,Grid.LeftCol);
+    if Assigned(OnValidCheckCell) then
+    begin
+      Row := 1;
+      for ColIndex := Column to Grid.ColCount - 1 do
+      begin
+        ValidCell := True;
+        OnValidCheckCell(self, ColIndex,Row,ValidCell);
+        if ValidCell then
+        begin
+          Column := ColIndex;
+          break;
+        end;
+      end;
+    end;
+    LayoutControls(Grid, cbMultiCheck, nil,
+      Column);
+  end;
 end;
 
 end.

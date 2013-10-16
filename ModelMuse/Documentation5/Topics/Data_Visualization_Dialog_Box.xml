@@ -17,6 +17,8 @@
       <li styleclass="Bullet List"><link displaytype="text" defaultstyle="true" type="topiclink" href="Head_Observation_Results" styleclass="Bullet List" translate="true">Head Observation Results</link></li>
       <li styleclass="Bullet List"><link displaytype="text" defaultstyle="true" type="topiclink" href="Stream_Links_Pane" styleclass="Bullet List" translate="true">SFR Stream Links</link></li>
       <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="Stream_Links_Pane" styleclass="Bullet List" translate="true">STR Stream Links</link></li>
+      <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR_Reach_Connections" styleclass="Bullet List" translate="true">SWR Reach Connections</link></li>
+      <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR_Observations" styleclass="Bullet List" translate="true">SWR Observations</link></li>
       <li styleclass="Bullet List"><link displaytype="text" defaultstyle="true" type="topiclink" href="Vectors_Pane" styleclass="Bullet List" translate="true">Vectors</link></li>
       <li styleclass="Bullet List"><link displaytype="text" defaultstyle="true" type="topiclink" href="Cross_Sections_Pane" styleclass="Bullet List" translate="true">Cross Sections</link></li>
     </list>

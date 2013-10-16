@@ -95,7 +95,7 @@ type
     procedure SetObservationFormat(const Value: TObservationFormat);
   public
     procedure Assign(Source: TPersistent); override;
-    constructor Create(Model: TBaseModel);
+    constructor Create(InvalidateModelEvent: TNotifyEvent);
     destructor Destroy; override;
     function Used: boolean;
     property ExportScheduleName: AnsiString read FExportScheduleName
@@ -152,7 +152,7 @@ type
     procedure SetScheduleName(const Value: AnsiString);
   protected
     procedure UChangeHandler(Sender: TObject); virtual;
-    procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
+    procedure AssignListCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
       BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
@@ -331,6 +331,8 @@ type
     procedure SetObservations(const Value: TSutraObservations);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
     Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     destructor Destroy; override;
   published
@@ -368,7 +370,7 @@ begin
   Assert(False);
 end;
 
-procedure TCustomSutraBoundaryCollection.AssignCellLocation(
+procedure TCustomSutraBoundaryCollection.AssignListCellLocation(
   BoundaryStorage: TCustomBoundaryStorage; ACellList: TObject);
 begin
   inherited;
@@ -466,10 +468,10 @@ begin
   end;
 end;
 
-constructor TSutraObservations.Create(Model: TBaseModel);
+constructor TSutraObservations.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited;
-  FTimes:= TRealCollection.Create(Model);
+  inherited Create(InvalidateModelEvent);
+  FTimes:= TRealCollection.Create(InvalidateModelEvent);
 end;
 
 destructor TSutraObservations.Destroy;
@@ -710,13 +712,23 @@ begin
 end;
 
 constructor TSutraBoundaries.Create(Model: TBaseModel; ScreenObject: TObject);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
-  inherited Create(Model);
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(InvalidateModelEvent);
   FFluidSource := TSutraFluidBoundary.Create(Model, ScreenObject);
   FMassEnergySource := TSutraMassEnergySourceSinkBoundary.Create(Model, ScreenObject);
   FSpecifiedPressure := TSutraSpecifiedPressureBoundary.Create(Model, ScreenObject);
   FSpecifiedConcTemp := TSutraSpecifiedConcTempBoundary.Create(Model, ScreenObject);
-  FObservations := TSutraObservations.Create(Model);
+  FObservations := TSutraObservations.Create(InvalidateModelEvent);
 end;
 
 destructor TSutraBoundaries.Destroy;

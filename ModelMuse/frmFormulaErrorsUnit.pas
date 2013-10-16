@@ -235,6 +235,7 @@ begin
     if FErrorAdded then
     begin
       Beep;
+      Handle;
       Show;
     end;
   end;

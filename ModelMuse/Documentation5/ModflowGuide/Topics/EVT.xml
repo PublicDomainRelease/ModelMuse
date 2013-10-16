@@ -89,7 +89,7 @@
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
           </list>
           <list id="19" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
-            <li styleclass="Normal"><text styleclass="Normal" translate="true">MF2005-FMP2</text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-OWHM</text></li>
           </list>
         </td>
       </tr>
@@ -488,7 +488,7 @@
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Normal"><anchor id="EXDP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">EXDP—is the ET extinction depth. This variable is read only if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="INEXDP" styleclass="Normal" translate="true">INEXDP</link><text styleclass="Normal" translate="true">&#32;</text><text styleclass="Normal" style="font-family:Symbol;" translate="true">³</text><text styleclass="Normal" translate="true"> 0.</text></para>
+                <para styleclass="Normal"><anchor id="EXDP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">EXDP—is the ET extinction depth. This variable is read only if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="INEXDP" styleclass="Normal" translate="true">INEXDP</link><text styleclass="Normal" translate="true">&#32;</text><text styleclass="Normal" style="font-family:Symbol;" translate="true">³</text><text styleclass="Normal" translate="true"> 0. </text><text styleclass="New Materials" translate="true">This is the distance from </text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="SURF" styleclass="New Materials" translate="true">SURF</link><text styleclass="New Materials" translate="true">, not an elevation.</text></para>
               </td>
             </tr>
           </table></para>

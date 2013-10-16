@@ -103,7 +103,7 @@ type
     procedure WriteDataSet1b;
     procedure WriteDataSet1c;
     procedure WriteDataSet2;
-    procedure WriteDataSets3and4(var StartUnitNumber: integer);
+    procedure WriteDataSets3and4;
     procedure WriteDataSet4b6a(StartTime: double;
       Segment: TSegment; ParamScreenObjectItem: TSfrParamIcalcItem;
       SfrBoundary: TSfrBoundary; DataSet4B: boolean; SubSegIndex: integer);
@@ -129,11 +129,11 @@ type
       ParamScreenObjectItem: TSfrParamIcalcItem; StartTime: double;
       Segment: TSegment; SubSegIndex: integer);
     procedure WriteDataSet8(Segment: TSegment; SubSegIndex,
-      TimeIndex: integer; var StartUnitNumber: integer);
-    procedure WriteDataSets5to7(var StartUnitNumber: integer);
+      TimeIndex: integer);
+    procedure WriteDataSets5to7;
     function FindConvertedSegment(OriginalSegmentNumber: integer;
       Direction: TStreamDirection): integer;
-    procedure WriteGages(var StartUnitNumber: integer; Lines: TStrings);
+    procedure WriteGages(Lines: TStrings);
     function GetSegment(Index: integer): TSegment;
     function GetSegmentCount: integer;
     procedure TestBedElevations;
@@ -142,7 +142,7 @@ type
     procedure WriteSegment(Segment: TSegment;
       StartTime: double; SubSegIndex: integer; Item: TSfrParamIcalcItem;
       Boundary: TSfrBoundary; TimeIndex: integer;
-      IsParameter: boolean; var StartUnitNumber: integer);
+      IsParameter: boolean);
     procedure LgrAdjustSegmentValues(
       Segment: TSegment; StartTime: double; SubSegIndex: integer;
       StressPeriod: integer);
@@ -162,8 +162,7 @@ type
     property SegmentCount: integer read GetSegmentCount;
     Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     destructor Destroy; override;
-    procedure WriteFile(const AFileName: string;
-      var StartUnitNumber: integer; Lines: TStrings);
+    procedure WriteFile(const AFileName: string; Lines: TStrings);
     procedure UpdateDisplay(TimeLists: TModflowBoundListOfTimeLists);
   end;
 
@@ -3289,7 +3288,7 @@ begin
 end;
 
 
-procedure TModflowSFR_Writer.WriteDataSets3and4(var StartUnitNumber: integer);
+procedure TModflowSFR_Writer.WriteDataSets3and4;
 var
   ParamIndex: integer;
   SfrPackage: TSfrPackageSelection;
@@ -3455,7 +3454,7 @@ begin
                   SubSegIndex := -1;
                   WriteSegment(Segment, InstanceItem.StartTime,
                     SubSegIndex, ParamScreenObjectItem, SfrBoundary,
-                    ScreenObjectParamIndex, True, StartUnitNumber);
+                    ScreenObjectParamIndex, True);
                 end
                 else
                 begin
@@ -3463,7 +3462,7 @@ begin
                   begin
                     WriteSegment(Segment, InstanceItem.StartTime,
                       SubSegIndex, ParamScreenObjectItem, SfrBoundary,
-                      ScreenObjectParamIndex, True, StartUnitNumber)
+                      ScreenObjectParamIndex, True)
                   end;
                 end;
 
@@ -3685,7 +3684,7 @@ end;
 procedure TModflowSFR_Writer.WriteSegment(Segment: TSegment; StartTime: double;
   SubSegIndex: integer;
   Item: TSfrParamIcalcItem; Boundary: TSfrBoundary; TimeIndex: integer;
-  IsParameter: boolean; var StartUnitNumber: integer);
+  IsParameter: boolean);
 begin
 //  LgrAdjustSegmentValues(Segment, StartTime, SubSegIndex, TimeIndex);
 
@@ -3714,7 +3713,7 @@ begin
   // data set 6g
 end;
 
-procedure TModflowSFR_Writer.WriteDataSets5to7(var StartUnitNumber: integer);
+procedure TModflowSFR_Writer.WriteDataSets5to7;
 var
   TimeIndex: Integer;
   StressPeriod: TModflowStressPeriod;
@@ -3873,14 +3872,14 @@ begin
           begin
             SubSegIndex := -1;
             WriteSegment(Segment, StressPeriod.StartTime,
-              SubSegIndex, Item, Boundary, TimeIndex, False, StartUnitNumber);
+              SubSegIndex, Item, Boundary, TimeIndex, False);
           end
           else
           begin
             for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
             begin
               WriteSegment(Segment, StressPeriod.StartTime,
-                SubSegIndex, Item, Boundary, TimeIndex, False, StartUnitNumber);
+                SubSegIndex, Item, Boundary, TimeIndex, False);
             end;
           end;
         end;
@@ -3933,13 +3932,13 @@ begin
           if Segment.FSubSegmentList.Count = 0 then
           begin
             SubSegIndex := -1;
-            WriteDataSet8(Segment, SubSegIndex, TimeIndex, StartUnitNumber);
+            WriteDataSet8(Segment, SubSegIndex, TimeIndex);
           end
           else
           begin
             for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
             begin
-              WriteDataSet8(Segment, SubSegIndex, TimeIndex, StartUnitNumber);
+              WriteDataSet8(Segment, SubSegIndex, TimeIndex);
             end;
           end;
         end;
@@ -3957,8 +3956,7 @@ begin
   end;
 end;
 
-procedure TModflowSFR_Writer.WriteFile(const AFileName: string;
-  var StartUnitNumber: integer; Lines: TStrings);
+procedure TModflowSFR_Writer.WriteFile(const AFileName: string; Lines: TStrings);
 begin
   if not Package.IsSelected then
   begin
@@ -4006,7 +4004,7 @@ begin
     end;
 
     frmProgressMM.AddMessage(StrWritingDataSets3and4);
-    WriteDataSets3and4(StartUnitNumber);
+    WriteDataSets3and4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
     begin
@@ -4014,15 +4012,14 @@ begin
     end;
 
     frmProgressMM.AddMessage(StrWritingDataSets5to7);
-    WriteDataSets5to7(StartUnitNumber);
+    WriteDataSets5to7;
   finally
     CloseFile;
   end;
-  WriteGages(StartUnitNumber, Lines);
+  WriteGages(Lines);
 end;
 
-procedure TModflowSFR_Writer.WriteGages(var StartUnitNumber: integer;
-  Lines: TStrings);
+procedure TModflowSFR_Writer.WriteGages(Lines: TStrings);
 var
   SegmentIndex: Integer;
   Segment: TSegment;
@@ -4041,13 +4038,13 @@ var
     Line: string;
     OutputName: string;
   begin
-    UNIT_Number := StartUnitNumber;
+    UNIT_Number := Model.ParentModel.UnitNumbers.SequentialUnitNumber;
     Line := IntToStr(GAGESEG) + ' '
       + IntToStr(GAGERCH) + ' '
       + IntToStr(UNIT_Number) + ' '
       + IntToStr(OUTTYPE);
     Lines.Add(Line);
-    Inc(StartUnitNumber);
+//    Inc(StartUnitNumber);
     OutputName := ChangeFileExt(FNameOfFile, '.sfrg');
     OutputName := OutputName + IntToStr(Lines.Count);
     WriteToNameFile(StrDATA, UNIT_Number, OutputName, foOutput);
@@ -4188,7 +4185,7 @@ begin
 end;
 
 procedure TModflowSFR_Writer.WriteDataSet8(Segment: TSegment;
-  SubSegIndex, TimeIndex: integer; var StartUnitNumber: integer);
+  SubSegIndex, TimeIndex: integer);
 var
   SubSeg: TSubSegment;
   ParentSeg: TSegment;
@@ -4198,7 +4195,9 @@ var
   ExternalWriter: TExternalFlowFileWriter;
   FlowLines: TStringList;
   NUMVAL: Integer;
+  IUNIT: Integer;
 begin
+  IUNIT := -1;
   if (TimeIndex > 0) or (SubSegIndex > 0)
     or (Segment.ExternalFlow.FlowFileChoice = ffcNone) then
   begin
@@ -4267,7 +4266,8 @@ begin
             Format(StrTheStreamFlowFile2,
             [FlowFileName, Segment.FScreenObject.Name]));
         end;
-        WriteToNameFile(StrData, StartUnitNumber, FlowFileName,
+        IUNIT := Model.ParentModel.UnitNumbers.SequentialUnitNumber;
+        WriteToNameFile(StrData, IUNIT, FlowFileName,
           foInputAlreadyExists, True);
 
       end;
@@ -4275,7 +4275,8 @@ begin
       begin
         FlowFileName := ChangeFileExt(FNameOfFile, '');
         FlowFileName := TExternalFlowFileWriter.FileName(FlowFileName) + IntToStr(SEGNUM);
-        WriteToNameFile(StrData, StartUnitNumber, FlowFileName, foInput, False);
+        IUNIT := Model.ParentModel.UnitNumbers.SequentialUnitNumber;
+        WriteToNameFile(StrData, IUNIT, FlowFileName, foInput, False);
         ExternalWriter := TExternalFlowFileWriter.Create(
           Model, Segment.ExternalFlow, SEGNUM);
         try
@@ -4289,11 +4290,11 @@ begin
   end;
   WriteInteger(SEGNUM);
   WriteInteger(NUMVAL);
-  WriteInteger(StartUnitNumber);
+  WriteInteger(IUNIT);
   WriteString(' # Data set 8: SEGNUM, NUMVAL, IUNIT');
   NewLine;
 
-  Inc(StartUnitNumber);
+//  Inc(StartUnitNumber);
 end;
 
 procedure TModflowSFR_Writer.WriteDataSet4e6d(Parameter: Boolean;

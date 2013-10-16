@@ -68,6 +68,8 @@ type
   TDiversionPosition = (dpStart, dpMiddle, dpEnd);
 
   TSfrDiversionObject = class(TGoPhastPersistent)
+  strict private
+    FModel: TBaseModel;
   private
     FObjectName: string;
     FScreenObject: TObject;
@@ -80,6 +82,12 @@ type
     procedure SetDiversionPosition(const Value: TDiversionPosition);
     procedure SetDiversionVertex(const Value: integer);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    property Model: TBaseModel read FModel;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    Constructor Create(Model: TBaseModel);
     class function ValidScreenObject(AScreenObject: TObject): boolean;
     procedure Assign(Source: TPersistent); override;
     property ScreenObject: TObject read GetScreenObject
@@ -103,6 +111,8 @@ type
   end;
 
   TSfrDiversion = class(TGoPhastPersistent)
+  strict private
+    FModel: TBaseModel;
   private
     FDiversionObject: TSfrDiversionObject;
     FDiversionCell: TReturnCell;
@@ -116,7 +126,12 @@ type
     function StoreDiversionLocation: boolean;
     function StoreDiversionObject: boolean;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    property Model: TBaseModel read FModel;
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     // @name returns the cell where the farm gets or returns water.
@@ -1275,6 +1290,20 @@ begin
   end;
 end;
 
+constructor TSfrDiversionObject.Create(Model: TBaseModel);
+begin
+  if Model = nil then
+  begin
+    inherited Create(nil);
+  end
+  else
+  begin
+    inherited Create(Model.Invalidate);
+  end;
+  Assert((Model = nil) or (Model is TCustomModel));
+  FModel := Model;
+end;
+
 function TSfrDiversionObject.GetObjectName: string;
 var
   ScreenObject: TScreenObject;
@@ -1418,10 +1447,22 @@ begin
 end;
 
 constructor TSfrDiversion.Create(Model: TBaseModel);
+var
+  OnInvalidateModelEvent: TNotifyEvent;
 begin
-  inherited;
-  FDiversionCell := TReturnCell.Create(Model);
-  FDiversionLocation := TReturnLocation.Create(Model);
+  if Model = nil then
+  begin
+    OnInvalidateModelEvent := nil;
+  end
+  else
+  begin
+    OnInvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(OnInvalidateModelEvent);
+  Assert((Model = nil) or (Model is TCustomModel));
+  FModel := Model;
+  FDiversionCell := TReturnCell.Create(OnInvalidateModelEvent);
+  FDiversionLocation := TReturnLocation.Create(OnInvalidateModelEvent);
   FDiversionObject := TSfrDiversionObject.Create(Model);
 end;
 

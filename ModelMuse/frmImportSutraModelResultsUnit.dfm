@@ -4,9 +4,9 @@ inherited frmImportSutraModelResults: TfrmImportSutraModelResults
   Caption = 'Import SUTRA Model Results'
   ClientHeight = 417
   ClientWidth = 417
-  ExplicitWidth = 433
-  ExplicitHeight = 455
-  PixelsPerInch = 120
+  ExplicitWidth = 435
+  ExplicitHeight = 462
+  PixelsPerInch = 96
   TextHeight = 18
   object lblTimeStepsToImport: TLabel
     Left = 223
@@ -72,10 +72,8 @@ inherited frmImportSutraModelResults: TfrmImportSutraModelResults
       Width = 82
       Height = 30
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnHelpClick
     end
@@ -85,10 +83,8 @@ inherited frmImportSutraModelResults: TfrmImportSutraModelResults
       Width = 82
       Height = 30
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 3
       OnClick = btnOKClick
     end
@@ -98,10 +94,8 @@ inherited frmImportSutraModelResults: TfrmImportSutraModelResults
       Width = 83
       Height = 30
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 4
     end
     object rgDisplayChoice: TRadioGroup
@@ -169,11 +163,20 @@ inherited frmImportSutraModelResults: TfrmImportSutraModelResults
     WordWrap = True
     OnClick = btnDeselectAllTimesClick
   end
-  object dlgOpenSutraFile: TOpenDialog
+  object dlgOpenSutraFile: TJvOpenDialog
     DefaultExt = '.nod'
-    Filter = 'SUTRA output files (*.nod; *.ele)|*.nod;*.ele'
+    Filter = 
+      'SUTRA output files (*.nod; *.ele; *.bcof; *.bcos; *.bcop; *.bcou' +
+      ')|*.nod;*.ele;*.bcof;*.bcos;*.bcop;*.bcou|SUTRA node and element' +
+      ' files (*.nod; *.ele)|*.nod;*.ele|Fluid sources and sinks (*.bco' +
+      'f)|*.bcof|Solute or energy sources and sinks (*.bcos)|*.bcos|Spe' +
+      'cified pressure (*.bcop)|*.bcop|Specified concentration or tempe' +
+      'rature (*.bcou)|*.bcou'
     Options = [ofHideReadOnly, ofFileMustExist, ofEnableSizing]
-    Left = 144
-    Top = 88
+    OnTypeChange = dlgOpenSutraFileTypeChange
+    Height = 0
+    Width = 0
+    Left = 128
+    Top = 104
   end
 end

@@ -88,7 +88,11 @@ type
       FNewHydrogeologicUnits: THydrogeologicUnits;
       FOldHydrogeologicUnits: THydrogeologicUnits;
       FNewDataSets: TList;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignNewHufUnits(AModel: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignOldHufUnits(AModel: TBaseModel);
     protected
       function Description: string; override;

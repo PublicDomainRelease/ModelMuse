@@ -1,5 +1,5 @@
 {
-  These procedures replace the WRITE statements in TriPack.for.
+  These procedures replace the WRITE statements in Tripack.for.
 
  @author(Richard B. Winston <rbwinst@usgs.gov>)
  This file is in the public domain.

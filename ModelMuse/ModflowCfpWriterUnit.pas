@@ -135,6 +135,18 @@ resourcestring
   StrConduitRechargeNot = 'Conduit Recharge not defined.';
   StrConduitRechargeWas = 'Conduit Recharge was selected but no conduit rec' +
   'harge boundaries were defined.';
+  StrCFPDiameterIsNot = 'CFP Diameter is not assigned in the following object' +
+  's.';
+  StrCFPTortuosityIsNo = 'CFP Tortuosity is not assigned in the following obj' +
+  'ects.';
+  StrCFPRoughnessHeight = 'CFP Roughness Height is not assigned in the follow' +
+  'ing objects.';
+  StrCFPLowerCriticalR = 'CFP Lower Critical Reynolds number is not assigned' +
+  ' in the following objects.';
+  StrCFPUpperCriticalR = 'CFP Upper Critical Reynolds number is not assigned' +
+  ' in the following objects.';
+  StrCFPPipeElevationI = 'CFP pipe elevation is not assigned at the following' +
+  ' cells.';
 
 { TModflowCfpWriter }
 
@@ -225,6 +237,12 @@ var
   ACell2: TCellAssignment;
 begin
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTooManyConduitsAt);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrCFPDiameterIsNot);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrCFPTortuosityIsNo);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrCFPRoughnessHeight);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrCFPLowerCriticalR);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrCFPUpperCriticalR);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrCFPPipeElevationI);
   frmErrorsAndWarnings.RemoveWarningGroup(Model, StrTheFollowingObject);
   FUseCOC := False;
   if FConduitFlowProcess.PipesUsed then
@@ -304,28 +322,48 @@ begin
                 and (Abs(ACell1.Layer - ACell2.Layer) <= 1))
                 then
               begin
-                Assert(Diameter.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]);
-                Assert(Diameter.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column]);
+                if not Diameter.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]
+                  or not Diameter.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column] then
+                begin
+                  frmErrorsAndWarnings.AddError(Model, StrCFPDiameterIsNot, AScreenObject.Name);
+                  Break;
+                end;
                 PipeDiameter := (Diameter.RealData[ACell1.Layer, ACell1.Row, ACell1.Column]
                   + Diameter.RealData[ACell2.Layer, ACell2.Row, ACell2.Column])/2;
 
-                Assert(Tortuosity.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]);
-                Assert(Tortuosity.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column]);
+                if not Tortuosity.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]
+                  or not Tortuosity.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column] then
+                begin
+                  frmErrorsAndWarnings.AddError(Model, StrCFPTortuosityIsNo, AScreenObject.Name);
+                  Break;
+                end;
                 TortuosityValue := (Tortuosity.RealData[ACell1.Layer, ACell1.Row, ACell1.Column]
                   + Tortuosity.RealData[ACell2.Layer, ACell2.Row, ACell2.Column])/2;
 
-                Assert(RoughnessHeight.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]);
-                Assert(RoughnessHeight.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column]);
+                if not RoughnessHeight.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]
+                  or not RoughnessHeight.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column] then
+                begin
+                  frmErrorsAndWarnings.AddError(Model, StrCFPRoughnessHeight, AScreenObject.Name);
+                  Break;
+                end;
                 RoughnessHeightValue := (RoughnessHeight.RealData[ACell1.Layer, ACell1.Row, ACell1.Column]
                   + RoughnessHeight.RealData[ACell2.Layer, ACell2.Row, ACell2.Column])/2;
 
-                Assert(LowerCriticalR.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]);
-                Assert(LowerCriticalR.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column]);
+                if not LowerCriticalR.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]
+                  or not LowerCriticalR.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column] then
+                begin
+                  frmErrorsAndWarnings.AddError(Model, StrCFPLowerCriticalR, AScreenObject.Name);
+                  Break;
+                end;
                 LowerCriticalRValue := (LowerCriticalR.RealData[ACell1.Layer, ACell1.Row, ACell1.Column]
                   + LowerCriticalR.RealData[ACell2.Layer, ACell2.Row, ACell2.Column])/2;
 
-                Assert(UpperCriticalR.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]);
-                Assert(UpperCriticalR.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column]);
+                if not UpperCriticalR.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]
+                  or not UpperCriticalR.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column] then
+                begin
+                  frmErrorsAndWarnings.AddError(Model, StrCFPUpperCriticalR, AScreenObject.Name);
+                  Break;
+                end;
                 UpperCriticalRValue := (UpperCriticalR.RealData[ACell1.Layer, ACell1.Row, ACell1.Column]
                   + UpperCriticalR.RealData[ACell2.Layer, ACell2.Row, ACell2.Column])/2;
 
@@ -402,7 +440,12 @@ begin
 
         if FConduitFlowProcess.CfpElevationChoice = cecIndividual then
         begin
-          Assert(PipeElevation.IsValue[ANode.FLayer, ANode.FRow, ANode.FColumn]);
+          if not PipeElevation.IsValue[ANode.FLayer, ANode.FRow, ANode.FColumn] then
+          begin
+            frmErrorsAndWarnings.AddError(Model, StrCFPPipeElevationI,
+              Format(StrLayerRowCol, [ANode.FLayer+1, ANode.FRow+1, ANode.FColumn+1]));
+            Break;
+          end;
           ANode.FElevation := PipeElevation.RealData[ANode.FLayer, ANode.FRow, ANode.FColumn];
         end;
 

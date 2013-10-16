@@ -35,10 +35,10 @@ C     ******************************************************************
           ICHKSTRBOT = 1
         END IF
       END IF
-      IF ( self%IFLAG.GT.0 .AND. self%IRCHNUM.EQ.NSTRM ) THEN
-        WRITE(self%IUNIT,*)' MODEL STOPPING DUE TO REACH ALTITUDE ERROR'
-        CALL USTOP(' ')
-      END IF
+!      IF ( self%IFLAG.GT.0 .AND. self%IRCHNUM.EQ.NSTRM ) THEN
+!        WRITE(self%IUNIT,*)' MODEL STOPPING DUE TO REACH ALTITUDE ERROR'
+!        CALL USTOP(' ')
+!      END IF
   100 FORMAT(5I7,2F15.7)
       END FUNCTION ICHKSTRBOT
       END MODULE ICHKSTRBOT_MODULE
@@ -191,10 +191,10 @@ C
 C3------READ ISFROPT FLAGS WHEN NSTRM IS LESS THAN ZERO.
       IF ( IRFG.GT.0 ) THEN
         IF ( NSFRPAR.GT.0 ) THEN
-!          WRITE(IOUT, 9002)
-! 9002  FORMAT (//, 'KEYWORD "REACHINPUT" IS SPECIFIED AND NSFRPAR IS ',
-!     +  'GREATER THAN  ZERO ', /1X , ' ALTERNATE SFR7 OPTIONS DO NOT ',
-!     +  'SUPPORT PARAMETERS--PROGRAM STOPPING ',/)
+          WRITE(IOUT, 9002)
+ 9002  FORMAT (//, 'KEYWORD "REACHINPUT" IS SPECIFIED AND NSFRPAR IS ',
+     +  'GREATER THAN  ZERO ', /1X , ' ALTERNATE SFR7 OPTIONS DO NOT ',
+     +  'SUPPORT PARAMETERS--PROGRAM STOPPING ',/)
           CALL USTOP(' ')
         END IF
 !        NSTRM = ABS(NSTRM)
@@ -485,18 +485,18 @@ C11-----READ AND WRITE DATA FOR EACH REACH ON BASIS OF ISFROPT.
           ELSEIF ( Iunithuf.GT.0 ) THEN
             Ltyp = LTHUF(krch)
           END IF
-          IF ( Ltyp.GT.0  .AND. IBOUND(jrch,irch,krch).GT.0 ) THEN 
-            IF ( STRM(4, ii).LT.BOTM(jrch,irch,krch) ) THEN
-              write(iout,*)
-              write(iout,*)'Streambed has lower altitude than ',
-     +                      'GW cell bottom. Model stopping '
-              write(iout,*)'Segment: ',jseg,' Reach: ',ireach
-              write(iout,*)'Layer: ',krch,' Row: ',irch,' Col: ',jrch
-              write(iout,*)'Streambed bottom altitude: ',STRM(4, ii)
-              write(iout,*)'Cell bottom altitude: ',BOTM(jrch,irch,krch)
-              CALL USTOP('')
-            END IF
-          END IF
+!          IF ( Ltyp.GT.0  .AND. IBOUND(jrch,irch,krch).GT.0 ) THEN 
+!            IF ( STRM(4, ii).LT.BOTM(jrch,irch,krch) ) THEN
+!              write(iout,*)
+!              write(iout,*)'Streambed has lower altitude than ',
+!     +                      'GW cell bottom. Model stopping '
+!              write(iout,*)'Segment: ',jseg,' Reach: ',ireach
+!              write(iout,*)'Layer: ',krch,' Row: ',irch,' Col: ',jrch
+!              write(iout,*)'Streambed bottom altitude: ',STRM(4, ii)
+!              write(iout,*)'Cell bottom altitude: ',BOTM(jrch,irch,krch)
+!              CALL USTOP('')
+!            END IF
+!          END IF
           IF ( STRM(2, ii).LE.0.0 ) THEN
             WRITE (IOUT, 9017) jseg, ireach
             CALL USTOP(' ')
@@ -521,18 +521,18 @@ C11-----READ AND WRITE DATA FOR EACH REACH ON BASIS OF ISFROPT.
           ELSEIF ( Iunithuf.GT.0 ) THEN
             Ltyp = LTHUF(krch)
           END IF
-          IF ( Ltyp.GT.0  .AND. IBOUND(jrch,irch,krch).GT.0 ) THEN
-            IF ( STRM(4, ii).LT.BOTM(jrch,irch,krch) ) THEN
-              write(iout,*)
-              write(iout,*)'Streambed has lower altitude than ',
-     +                    'GW cell bottom. Model stopping '
-              write(iout,*)'Segment: ',jseg,' Reach: ',ireach
-              write(iout,*)'Layer: ',krch,' Row: ',irch,' Col: ',jrch
-              write(iout,*)'Streambed bottom altitude: ',STRM(4, ii)
-              write(iout,*)'Cell bottom altitude: ',BOTM(jrch,irch,krch)
-              CALL USTOP('')
-            END IF
-          END IF
+!          IF ( Ltyp.GT.0  .AND. IBOUND(jrch,irch,krch).GT.0 ) THEN
+!            IF ( STRM(4, ii).LT.BOTM(jrch,irch,krch) ) THEN
+!              write(iout,*)
+!              write(iout,*)'Streambed has lower altitude than ',
+!     +                    'GW cell bottom. Model stopping '
+!              write(iout,*)'Segment: ',jseg,' Reach: ',ireach
+!              write(iout,*)'Layer: ',krch,' Row: ',irch,' Col: ',jrch
+!              write(iout,*)'Streambed bottom altitude: ',STRM(4, ii)
+!              write(iout,*)'Cell bottom altitude: ',BOTM(jrch,irch,krch)
+!              CALL USTOP('')
+!            END IF
+!          END IF
           IF ( STRM(2, ii).LE.0.0 ) THEN
             WRITE (IOUT, 9017) jseg, ireach
             CALL USTOP(' ')
@@ -557,18 +557,18 @@ C11-----READ AND WRITE DATA FOR EACH REACH ON BASIS OF ISFROPT.
           ELSEIF ( Iunithuf.GT.0 ) THEN
             Ltyp = LTHUF(krch)
           END IF
-          IF ( Ltyp.GT.0 .AND. IBOUND(jrch,irch,krch).GT.0 ) THEN
-            IF ( STRM(4, ii).LT.BOTM(jrch,irch,krch) ) THEN
-              write(iout,*)
-              write(iout,*)'Streambed has lower altitude than ',
-     +                      'GW cell bottom. Model stopping '
-              write(iout,*)'Segment: ',jseg,' Reach: ',ireach
-              write(iout,*)'Layer: ',krch,' Row: ',irch,' Col: ',jrch
-              write(iout,*)'Streambed bottom altitude: ',STRM(4, ii)
-              write(iout,*)'Cell bottom altitude: ',BOTM(jrch,irch,krch)
-              CALL USTOP('')
-            END IF
-          END IF
+!          IF ( Ltyp.GT.0 .AND. IBOUND(jrch,irch,krch).GT.0 ) THEN
+!            IF ( STRM(4, ii).LT.BOTM(jrch,irch,krch) ) THEN
+!              write(iout,*)
+!              write(iout,*)'Streambed has lower altitude than ',
+!     +                      'GW cell bottom. Model stopping '
+!              write(iout,*)'Segment: ',jseg,' Reach: ',ireach
+!              write(iout,*)'Layer: ',krch,' Row: ',irch,' Col: ',jrch
+!              write(iout,*)'Streambed bottom altitude: ',STRM(4, ii)
+!              write(iout,*)'Cell bottom altitude: ',BOTM(jrch,irch,krch)
+!              CALL USTOP('')
+!            END IF
+!          END IF
           IF ( STRM(2, ii).LE.0.0 ) THEN
             WRITE (IOUT, 9017) jseg, ireach
             CALL USTOP(' ')
@@ -1244,20 +1244,20 @@ C19-----COMPUTE VARIABLES NEEDED FOR STREAM LEAKAGE.
               ELSEIF ( Iunithuf.GT.0 ) THEN
                 Ltyp = LTHUF(krck)
               END IF
-              IF ( Ltyp.GT.0 .AND. IBOUND(jrck,irck,krck).GT.0 ) THEN
-                IF ( STRM(4, irch).LT.BOTM(jrck,irck,krck) ) THEN
-                  write(iout,*)'Streambed has lower altitude than ',
-     +                      'GW cell bottom. Model stopping '
-                  write(iout,*)'Segment: ',nseg,' Reach: ',ireachck
-                  write(iout,*)'Layer: ',krck,' Row: ',irck,' Col: ',
-     +                          jrck
-                  write(iout,*)'Streambed bottom altitude: ',
-     +                          STRM(4, irch)
-                  write(iout,*)'Cell bottom altitude: ',
-     +                        BOTM(jrck,irck,krck)
-                  CALL USTOP('')
-                END IF
-              END IF
+!              IF ( Ltyp.GT.0 .AND. IBOUND(jrck,irck,krck).GT.0 ) THEN
+!                IF ( STRM(4, irch).LT.BOTM(jrck,irck,krck) ) THEN
+!                  write(iout,*)'Streambed has lower altitude than ',
+!     +                      'GW cell bottom. Model stopping '
+!                  write(iout,*)'Segment: ',nseg,' Reach: ',ireachck
+!                  write(iout,*)'Layer: ',krck,' Row: ',irck,' Col: ',
+!     +                          jrck
+!                  write(iout,*)'Streambed bottom altitude: ',
+!     +                          STRM(4, irch)
+!                  write(iout,*)'Cell bottom altitude: ',
+!     +                        BOTM(jrck,irck,krck)
+!                  CALL USTOP('')
+!                END IF
+!              END IF
               STRM(6, irch) = avhc
               STRM(8, irch) = avthk 
 C20-----COMPUTE STREAMBED ELEVATION AND STREAM WIDTH FOR BEGINNING

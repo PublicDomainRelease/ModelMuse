@@ -15,7 +15,8 @@ uses
   EdgeDisplayUnit, CommDlg, RbwDataGrid4, Spin, Windows, Forms, SysUtils, Types,
   Classes, Graphics, Controls, Dialogs, StdCtrls, Grids, HtmlHelpViewer,
   JvSpin, VirtualTrees, DataSetUnit, ClassificationUnit, GLWin32Viewer,
-  RbwStringTreeCombo, Mask, JvExMask, Generics.Collections;
+  RbwStringTreeCombo, Mask, JvExMask, Generics.Collections, JvExStdCtrls,
+  JvCombobox, JvListComb;
 
 type
   TEdgeDisplayEdit = class(TObject)
@@ -1145,12 +1146,16 @@ begin
   end;
   if Control <> nil then
   begin
-    Control.Left := Rect.Left + ControlOffSet;
+    Control.Left := Grid.Left + Rect.Left + ControlOffSet;
     Control.Width := Grid.ColWidths[Column] - ControlOffSet;
+    if Control.Visible and (Control is TJvImageComboBox) then
+    begin
+      TJvImageComboBox(Control).DroppedWidth := Control.Width;
+    end;
   end;
   if ALabel <> nil then
   begin
-    ALabel.Left := Rect.Left;
+    ALabel.Left := Grid.Left + Rect.Left;
     ALabel.Width := Grid.ColWidths[Column];
   end;
 end;

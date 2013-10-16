@@ -3111,6 +3111,7 @@ begin
   begin
     frmMeshInformation.GetData
   end;
+  frmGoPhast.PhastModel.UpdateDataSetDimensions;
 end;
 
 constructor TUndoChangeMesh.Create;

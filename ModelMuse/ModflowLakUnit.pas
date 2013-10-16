@@ -169,12 +169,12 @@ type
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary(AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
-    // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+    // See @link(TCustomListArrayBoundColl.AssignArrayCellValues
+    // TCustomListArrayBoundColl.AssignArrayCellValues)
+    procedure AssignArrayCellValues(DataSets: TList; ItemIndex: Integer;
       AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
-    // TCustomMF_ArrayBoundColl.InitializeTimeLists)
+    // See @link(TCustomListArrayBoundColl.InitializeTimeLists
+    // TCustomListArrayBoundColl.InitializeTimeLists)
     procedure InitializeTimeLists(ListOfTimeLists: TList;
       AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
@@ -214,6 +214,10 @@ type
   end;
 
   TLakeTable = class(TPhastCollection)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   private
     function GetItems(Index: integer): TLakeTableItem;
     procedure SetItems(Index: integer; const Value: TLakeTableItem);
@@ -222,11 +226,16 @@ type
     property Items[Index: integer]: TLakeTableItem read GetItems
       write SetItems; default;
     function Add: TLakeTableItem;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
   end;
 
   TLakeTableChoice = (lctInternal, lctExternal);
 
   TExternalLakeTable = class(TGoPhastPersistent)
+  strict private
+    FModel: TBaseModel;
   private
     FLakeTableChoice: TLakeTableChoice;
     FLakeTable: TLakeTable;
@@ -237,7 +246,12 @@ type
     function GetLakeTableFileName: string;
     procedure SetLakeTableFileName(const Value: string);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    property Model: TBaseModel read FModel;
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     property FullLakeTableFileName: string read FFullLakeTableFileName
@@ -864,7 +878,7 @@ begin
   AddBoundary(TLakStorage.Create(AModel));
 end;
 
-procedure TLakCollection.AssignCellValues(DataSets: TList;
+procedure TLakCollection.AssignArrayCellValues(DataSets: TList;
   ItemIndex: Integer; AModel: TBaseModel);
 var
   MinimumStageArray: TDataArray;
@@ -1696,8 +1710,19 @@ begin
 end;
 
 constructor TLakeTable.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
-  inherited Create(TLakeTableItem, Model);
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(TLakeTableItem, InvalidateModelEvent);
 end;
 
 function TLakeTable.GetItems(Index: integer): TLakeTableItem;
@@ -1732,7 +1757,16 @@ end;
 
 constructor TExternalLakeTable.Create(Model: TBaseModel);
 begin
-  inherited;
+  if Model = nil then
+  begin
+    inherited Create(nil);
+  end
+  else
+  begin
+    inherited Create(Model.Invalidate);
+  end;
+  Assert((Model = nil) or (Model is TCustomModel));
+  FModel := Model;
   FLakeTable := TLakeTable.Create(Model);
   FLakeTableChoice := lctInternal;
 end;

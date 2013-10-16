@@ -10,11 +10,15 @@ uses
 type
   TModelMessages = class(TObject)
   private
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FModel: TBaseModel;
     FChildNodes: TList;
     FNode: PVirtualNode;
     FMessages: TStringList;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
   end;
@@ -22,10 +26,14 @@ type
   TModelMessageList = class(TObject)
   private
     FList: TList;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetModelMessages(Model: TBaseModel): TModelMessages;
   public
     Constructor Create;
     Destructor Destroy; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property ModelMessages[Model: TBaseModel]: TModelMessages
       read GetModelMessages;
     procedure Clear;
@@ -94,7 +102,7 @@ type
     // to which the warning messages apply.
     FWarningModels: TStringList;
     FWarningModelMessageList: TModelMessageList;
-
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name is used to add an error or warning to @classname.
     // It first creates RootNode if it does not exist and associates
     // RootList with it.  Then if checks if an error message like
@@ -108,10 +116,14 @@ type
       const TypeOfErrorOrWarning, ErrorOrWarning: string;
       var RootNode: PVirtualNode; Children: TList;
       ModelMessageList: TModelMessageList);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure RemoveWarningOrErrorGroup(Model: TBaseModel;
       const TypeOfErrorOrWarning: string;
       RootList: TStringList; Children: TList;
       ModelMessageList: TModelMessageList);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure CheckDeleteRootNode(Model: TBaseModel; var Node: PVirtualNode;
       RootList: TStringList; ModelMessageList: TModelMessageList);
     procedure GetErrorsAndWarnings(ErrorsAndWarings: TStringList);
@@ -122,10 +134,12 @@ type
     { Private declarations }
   public
     function HasMessages: boolean;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name is used to add a new error message to @classname.
     // Root is the type of error, Error is the specific cell to which the
     // error applies.
     Procedure AddError(Model: TBaseModel; const Root, Error: string);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name is used to add a new warning message to @classname.
     // Root is the type of warning, Warning is the specific cell to which the
     // warning applies.
@@ -133,7 +147,11 @@ type
     // @name deletes the warning and error messages and clears
     // @link(vstWarningsAndErrors).
     Procedure Clear;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure RemoveWarningGroup(Model: TBaseModel; const TypeOfWarning: string);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure RemoveErrorGroup(Model: TBaseModel; const TypeOfError: string);
     procedure ShowAfterDelay;
     procedure BeginUpdate;

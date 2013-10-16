@@ -90,8 +90,11 @@ type
 procedure AddGIS_Functions(const Parser: TRbwParser;
   ModelSelection: TModelSelection; EvalAt: TEvaluatedAt);
 
+{ TODO -cRefactor : Consider replacing Model with an interface. }
+//
 procedure UpdateCurrentModel(const AModel: TBaseModel);
 
+    { TODO -cRefactor : Consider replacing Model with an interface. }
 // @name updates a series of global values related to location.
 procedure UpdateGlobalLocations(const Col, Row, Layer: integer;
   const EvaluatedAt: TEvaluatedAt; Model: TBaseModel);
@@ -160,6 +163,8 @@ function GetLayerPosition(const Lay, Row, Col: Integer;
   var InvalidIndex: boolean): Double;
 function GetLayerCenter(const Lay, Row, Col:  integer): double;
 
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
 function CurrentModel: TBaseModel;
 
 implementation
@@ -189,8 +194,8 @@ resourcestring
   StrBecauseHorizontalH = 'Because horizontal hyraulic conductivity is zero ' +
   'in the following cells (Layer, Row, Column), vertical conductivity can no' +
   't be calculated. (This message can be ignored for inactive cells.)';
-  StrTheSFunctionDoes = 'The %s function does not apply to locations that ar' +
-  'e not intersected by an object.';
+  StrTheSFunctionDoes = 'The %s function does not apply to locations that are' +
+  ' not intersected by an object.';
   StrProblemEvaluating = 'Problem evaluating %s';
   StrThereAreTooFewIm = 'There are too few imported values for %0:s in %1:s.';
 
@@ -210,6 +215,8 @@ type
     GlobalCurrentScreenObject: TScreenObject;
     GlobalCurrentSegment: TCellElementSegment;
     GlobalSection: integer;
+    { TODO -cRefactor : Consider replacing GlobalCurrentModel with an interface. }
+    //
     GlobalCurrentModel: TBaseModel;
     GlobalEvaluatedAt: TEvaluatedAt;
   end;
@@ -219,6 +226,8 @@ var
   NodeDistancesSet: boolean;
   FNodeDistances: array of double;
 
+    { TODO -cRefactor : Consider replacing GlobalCurrentModel with an interface. }
+    //
   GlobalCurrentModel: TBaseModel;
   GlobalX, GlobalY, GlobalZ: real;
   GlobalXPrime, GlobalYPrime: real;
@@ -279,6 +288,7 @@ var
   FractionOfObjectLengthFunction: TFunctionRecord;
   NodeCountFunction: TFunctionRecord;
   InterpolationedValuesFunction: TFunctionRecord;
+  VertexValuesFunction: TFunctionRecord;
 
   ListRealValueFunction: TFunctionRecord;
   ListIntegerValueFunction: TFunctionRecord;
@@ -487,6 +497,7 @@ begin
   AddItem(ImportedValuesBFunction, True);
   AddItem(ImportedValuesTFunction, True);
   AddItem(InterpolationedValuesFunction, True);
+  AddItem(VertexValuesFunction, True);
   AddItem(GridNumberFunction, True);
   AddItem(GridNameFunction, True);
   AddItem(ParentLayerFunction, True);
@@ -1109,6 +1120,152 @@ begin
         if Index >= 0 then
         begin
           result := Item.Values[Index];
+        end;
+      end;
+    end;
+  end;
+end;
+
+function _VertexValue(Values: array of pointer): double;
+var
+  VertexValueName: string;
+  DefaultValue: double;
+  LocalPPV: TPointPositionValues;
+  Index: Integer;
+  Item: TPointValuesItem;
+  VVIndex: Integer;
+  AValue: Double;
+  Point1: TPoint2D;
+  CurrentSegmentStartPoint: TPoint2D;
+  LocalEpsilon: double;
+  Point2: TPoint2D;
+  CurrentSegmentEndPoint: TPoint2D;
+  SegmentPosition: Integer;
+  SegmentStart: Integer;
+  Segments: TCellElementSegmentList;
+  ASegment: TCellElementSegment;
+  SegmentEnd: Integer;
+  SegmentIndex: Integer;
+  function NearlyTheSame(const A, B: real): boolean;
+  begin
+    result := A = B;
+    if not result then
+    begin
+      result := Abs(A - B) < LocalEpsilon;
+    end;
+  end;
+begin
+  Assert(Length(Values) >= 2);
+  VertexValueName := PString(Values[0])^;
+  DefaultValue := PDouble(Values[1])^;
+  result := DefaultValue;
+  if (GlobalCurrentSegment = nil) or (GlobalCurrentScreenObject = nil)
+    or (GlobalCurrentScreenObject.PointPositionValues = nil) then
+  begin
+    Exit;
+  end
+  else
+  begin
+    Segments := GlobalCurrentScreenObject.Segments[GlobalCurrentModel];
+    SegmentPosition := -1;
+    for SegmentIndex := 0 to Segments.Count - 1 do
+    begin
+      ASegment := Segments[SegmentIndex];
+      if GlobalCurrentSegment.IsSame(ASegment) then
+      begin
+        SegmentPosition := SegmentIndex;
+        Break;
+      end;
+    end;
+//    SegmentPosition := Segments.IndexOf(GlobalCurrentSegment);
+    Assert(SegmentPosition >= 0);
+    SegmentStart := SegmentPosition;
+    for SegmentIndex := SegmentPosition-1 downto 0 do
+    begin
+      ASegment := Segments[SegmentIndex];
+      if (ASegment.Col = GlobalCurrentSegment.Col)
+        and (ASegment.Row = GlobalCurrentSegment.Row)
+        and (ASegment.Layer = GlobalCurrentSegment.Layer)
+        then
+      begin
+        SegmentStart := SegmentIndex;
+      end
+      else
+      begin
+        Break;
+      end;
+    end;
+
+    SegmentEnd := SegmentPosition;
+    for SegmentIndex := SegmentPosition +1 to Segments.Count - 1 do
+    begin
+      ASegment := Segments[SegmentIndex];
+      if (ASegment.Col = GlobalCurrentSegment.Col)
+        and (ASegment.Row = GlobalCurrentSegment.Row)
+        and (ASegment.Layer = GlobalCurrentSegment.Layer)
+        then
+      begin
+        SegmentEnd := SegmentIndex;
+      end
+      else
+      begin
+        Break;
+      end;
+    end;
+
+    LocalEpsilon := GlobalCurrentSegment.SegmentLength/100000;
+    LocalPPV := GlobalCurrentScreenObject.PointPositionValues;
+    for Index := LocalPPV.Count - 1 downto 0 do
+    begin
+      Item := LocalPPV.Items[Index] as TPointValuesItem;
+      VVIndex := Item.IndexOfName(VertexValueName);
+      if VVIndex >= 0 then
+      begin
+        AValue := Item.Value[VVIndex];
+        for SegmentIndex := SegmentEnd downto SegmentStart do
+        begin
+          ASegment := Segments[SegmentIndex];
+          if Item.Position = ASegment.VertexIndex+1 then
+          begin
+            Point2 := GlobalCurrentScreenObject.Points[
+              ASegment.VertexIndex+1];
+            CurrentSegmentEndPoint.X := ASegment.X2;
+            CurrentSegmentEndPoint.Y := ASegment.Y2;
+            if frmGoPhast.Grid <> nil then
+            begin
+              CurrentSegmentEndPoint := frmGoPhast.Grid.
+                RotateFromGridCoordinatesToRealWorldCoordinates(CurrentSegmentEndPoint);
+            end;
+            if NearlyTheSame(CurrentSegmentEndPoint.X, Point2.X)
+              and NearlyTheSame(CurrentSegmentEndPoint.Y, Point2.Y) then
+            begin
+               result := AValue;
+               Exit;
+            end;
+          end;
+        end;
+
+        for SegmentIndex := SegmentEnd downto SegmentStart do
+        begin
+          ASegment := Segments[SegmentIndex];
+          if Item.Position = ASegment.VertexIndex then
+          begin
+            Point1 := GlobalCurrentScreenObject.Points[
+              ASegment.VertexIndex];
+            CurrentSegmentStartPoint.X := ASegment.X1;
+            CurrentSegmentStartPoint.Y := ASegment.Y1;
+            if frmGoPhast.Grid <> nil then
+            begin
+              CurrentSegmentStartPoint := frmGoPhast.Grid.
+                RotateFromGridCoordinatesToRealWorldCoordinates(CurrentSegmentStartPoint);
+            end;
+            if NearlyTheSame(CurrentSegmentStartPoint.X, Point1.X)
+              and NearlyTheSame(CurrentSegmentStartPoint.Y, Point1.Y) then
+            begin
+              result := AValue;
+              Exit;
+            end;
+          end;
         end;
       end;
     end;
@@ -5192,6 +5349,18 @@ initialization
   InterpolationedValuesFunction.Prototype := StrObject+''
     + StrInterpolatedVertexValues + '(Key)';
   InterpolationedValuesFunction.Hidden := False;
+
+  VertexValuesFunction.ResultType := rdtDouble;
+  VertexValuesFunction.RFunctionAddr := _VertexValue;
+  SetLength(VertexValuesFunction.InputDataTypes, 2);
+  VertexValuesFunction.InputDataTypes[0] := rdtString;
+  VertexValuesFunction.InputDataTypes[1] := rdtDouble;
+  VertexValuesFunction.OptionalArguments := 0;
+  VertexValuesFunction.CanConvertToConstant := False;
+  VertexValuesFunction.Name := 'VertexValue';
+  VertexValuesFunction.Prototype := StrObject+''
+    + 'VertexValue' + '(Key, DefaultValue)';
+  VertexValuesFunction.Hidden := False;
 
   NodeCountFunction.ResultType := rdtInteger;
   NodeCountFunction.IFunctionAddr := _ObjectNodeCount;

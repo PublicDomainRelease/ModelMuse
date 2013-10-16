@@ -701,16 +701,18 @@ var
   ScreenObjectName: string;
   ErrorMessage: string;
 begin
-  Assert(Length(FTimeValues) > 0);
-  result := FTimeValues[0];
-  for Index := 0 to Length(FTimeValues) - 1 do
+  if Length(FTimeValues) > 0 then
   begin
-    if (FTimeValues[Index].StartingTime <= StartTime) then
+    result := FTimeValues[0];
+    for Index := 0 to Length(FTimeValues) - 1 do
     begin
-      result := FTimeValues[Index];
-      if (FTimeValues[Index].EndingTime > StartTime) then
+      if (FTimeValues[Index].StartingTime <= StartTime) then
       begin
-        Exit;
+        result := FTimeValues[Index];
+        if (FTimeValues[Index].EndingTime > StartTime) then
+        begin
+          Exit;
+        end;
       end;
     end;
   end;

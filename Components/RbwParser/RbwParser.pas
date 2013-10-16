@@ -2002,6 +2002,7 @@ resourcestring
   StrErrorSIsIlleg3 = 'Error: "%s" is illegal.  Variable names may only inclu' +
   'de letters, digits, or the underscore symbol. The first character may not be a digit.';
   StrErrorAVariableNa = 'Error: A Variable named "%s" already exists.';
+  StrErrorCreatingVariable = 'Error creating variable: A Variable named "%s" already exists. New display name = "%s". Existing display name = "%s".';
   StrEmptyFormula = 'empty formula';
   StrErrorUnterminated = 'Error: Unterminated string';
   StrErrorUnmatchedPar = 'Error: Unmatched parentheses';
@@ -2543,14 +2544,21 @@ end;
 function TRbwParser.CreateVariable(const Name, Classification: string;
   const Value: integer; VariableClass: TIntegerVariableClass; const NameToDisplay: string)
   : TIntegerVariable;
+var
+  VarIndex: Integer;
 begin
-  if FVariables.IndexOf(Trim(UpperCase(Name))) >= 0 then
+  VarIndex := FVariables.IndexOf(Trim(UpperCase(Name)));
+  if VarIndex >= 0 then
   begin
-    raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [Name]), 1);
+    raise ErbwParserError.CreateMode(Format(StrErrorCreatingVariable,
+      [Name, NameToDisplay, Variables[VarIndex].DecompileDisplay]), 1);
   end;
-  if (NameToDisplay <> '') and (FVariables.IndexOf(Trim(UpperCase(NameToDisplay))) >= 0) then
+  VarIndex := FVariables.IndexOf(Trim(UpperCase(NameToDisplay)));
+  if (NameToDisplay <> '') and (AnsiCompareText(NameToDisplay, Name) <> 0)
+    and (VarIndex >= 0) then
   begin
-    raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [NameToDisplay]), 1);
+    raise ErbwParserError.CreateMode(Format(StrErrorCreatingVariable,
+      [Name, NameToDisplay, Variables[VarIndex].DecompileDisplay]), 1);
   end;
   result := VariableClass.Create(Name, NameToDisplay);
   result.Classification := Classification;
@@ -2572,14 +2580,21 @@ end;
 function TRbwParser.CreateVariable(const Name, Classification: string;
   const Value: boolean; VariableClass: TBooleanVariableClass; const NameToDisplay: string):
   TBooleanVariable;
+var
+  VarIndex: Integer;
 begin
-  if FVariables.IndexOf(Trim(UpperCase(Name))) >= 0 then
+  VarIndex := FVariables.IndexOf(Trim(UpperCase(Name)));
+  if VarIndex >= 0 then
   begin
-    raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [Name]), 1);
+    raise ErbwParserError.CreateMode(Format(StrErrorCreatingVariable,
+      [Name, NameToDisplay, Variables[VarIndex].DecompileDisplay]), 1);
   end;
-  if (NameToDisplay <> '') and (FVariables.IndexOf(Trim(UpperCase(NameToDisplay))) >= 0) then
+  VarIndex := FVariables.IndexOf(Trim(UpperCase(NameToDisplay)));
+  if (NameToDisplay <> '') and (AnsiCompareText(NameToDisplay, Name) <> 0)
+    and (VarIndex >= 0) then
   begin
-    raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [NameToDisplay]), 1);
+    raise ErbwParserError.CreateMode(Format(StrErrorCreatingVariable,
+      [Name, NameToDisplay, Variables[VarIndex].DecompileDisplay]), 1);
   end;
   result := VariableClass.Create(Name, NameToDisplay);
   result.Classification := Classification;
@@ -2602,14 +2617,21 @@ end;
 function TRbwParser.CreateVariable(const Name, Classification: string;
   const Value: string; VariableClass: TStringVariableClass; const NameToDisplay: string):
   TStringVariable;
+var
+  VarIndex: Integer;
 begin
-  if FVariables.IndexOf(Trim(UpperCase(Name))) >= 0 then
+  VarIndex := FVariables.IndexOf(Trim(UpperCase(Name)));
+  if VarIndex >= 0 then
   begin
-    raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [Name]), 1);
+    raise ErbwParserError.CreateMode(Format(StrErrorCreatingVariable,
+      [Name, NameToDisplay, Variables[VarIndex].DecompileDisplay]), 1);
   end;
-  if (NameToDisplay <> '') and (FVariables.IndexOf(Trim(UpperCase(NameToDisplay))) >= 0) then
+  VarIndex := FVariables.IndexOf(Trim(UpperCase(NameToDisplay)));
+  if (NameToDisplay <> '') and (AnsiCompareText(NameToDisplay, Name) <> 0)
+    and (VarIndex >= 0) then
   begin
-    raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [NameToDisplay]), 1);
+    raise ErbwParserError.CreateMode(Format(StrErrorCreatingVariable,
+      [Name, NameToDisplay, Variables[VarIndex].DecompileDisplay]), 1);
   end;
   result := VariableClass.Create(Name, NameToDisplay);
   result.Classification := Classification;
@@ -2637,14 +2659,21 @@ end;
 function TRbwParser.CreateVariable(const Name, Classification: string;
   const Value: double; VariableClass: TRealVariableClass; const NameToDisplay: string):
   TRealVariable;
+var
+  VarIndex: Integer;
 begin
-  if FVariables.IndexOf(Trim(UpperCase(Name))) >= 0 then
+  VarIndex := FVariables.IndexOf(Trim(UpperCase(Name)));
+  if VarIndex >= 0 then
   begin
-    raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [Name]), 1);
+    raise ErbwParserError.CreateMode(Format(StrErrorCreatingVariable,
+      [Name, NameToDisplay, Variables[VarIndex].DecompileDisplay]), 1);
   end;
-  if (NameToDisplay <> '') and (FVariables.IndexOf(Trim(UpperCase(NameToDisplay))) >= 0) then
+  VarIndex := FVariables.IndexOf(Trim(UpperCase(NameToDisplay)));
+  if (NameToDisplay <> '') and (AnsiCompareText(NameToDisplay, Name) <> 0)
+    and (VarIndex >= 0) then
   begin
-    raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [NameToDisplay]), 1);
+    raise ErbwParserError.CreateMode(Format(StrErrorCreatingVariable,
+      [Name, NameToDisplay, Variables[VarIndex].DecompileDisplay]), 1);
   end;
   result := VariableClass.Create(Name, NameToDisplay);
   result.Classification := Classification;

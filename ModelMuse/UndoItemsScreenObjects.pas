@@ -36,6 +36,7 @@ type
     property OwnScreenObject: boolean read FOwnScreenObject
       write SetOwnScreenObject;
     property Items[Index: integer]: TScreenObjectEditItem read GetItems; default;
+    function IndexOfScreenObjectName(AScreenObjectName: string): integer;
   end;
 
   TCustomUpdateScreenObjectDisplayUndo =  class(TCustomUndo)
@@ -267,7 +268,6 @@ type
     FSectionStarts: TValueArrayStorage;
     FChildModelName: string;
     FOldChildModelScreenObjects: TList;
-//    FChildModel: TBaseModel;
     procedure WarnSfrLengthProblem;
     procedure DisplayScreenObject;
   protected
@@ -2639,6 +2639,7 @@ var
   CurrentEnd: integer;
   TempIndex: integer;
   InnerVertexIndex: Integer;
+  NextStart: Integer;
 begin
   frmGoPhast.CanDraw := False;
   try
@@ -2662,27 +2663,34 @@ begin
             PointCount := 0;
             SectionIndex := AScreenObject.SectionCount -1;
             NextEnd := AScreenObject.SectionEnd[SectionIndex];
+            NextStart := AScreenObject.SectionStart[SectionIndex];
             NewSection := False;
             ClosedSection := AScreenObject.SectionClosed[SectionIndex];
             for VertexIndex := AScreenObject.Count - 1 downto 0 do
             begin
+              // Test if you have reached the end of a section in the object.
+              // If so, start a new section.
               NextPart := VertexIndex = NextEnd;
               if NextPart then
               begin
+                // Test whether the previous section was closed.
                 ClosedSection := AScreenObject.SectionClosed[SectionIndex];
                 NewSection := True;
                 Dec(SectionIndex);
                 if SectionIndex >= 0  then
                 begin
+                  // mark the end of the next section
                   NextEnd := AScreenObject.SectionEnd[SectionIndex];
+                  NextStart := AScreenObject.SectionStart[SectionIndex];
                 end;
               end;
               if AScreenObject.SelectedVertices[VertexIndex] then
               begin
                 TempIndex := TempScreenObject.SectionCount-1;
-                if ClosedSection and not
-                  TempScreenObject.SectionClosed[TempIndex]
-                  and (TempScreenObject.SectionLength[TempIndex] > 2) then
+                if ClosedSection
+                  and not TempScreenObject.SectionClosed[TempIndex]
+                  and (TempScreenObject.SectionLength[TempIndex] > 2)
+                  and (VertexIndex = NextStart) then
                 begin
                   TempIndex := TempScreenObject.SectionStart[TempIndex];
                   LastPoint := TempScreenObject.Points[TempIndex];
@@ -2944,6 +2952,22 @@ function TScreenObjectEditCollection.GetItems(
   Index: integer): TScreenObjectEditItem;
 begin
   result := inherited Items[Index] as TScreenObjectEditItem;
+end;
+
+function TScreenObjectEditCollection.IndexOfScreenObjectName(
+  AScreenObjectName: string): integer;
+var
+  index: Integer;
+begin
+  result := -1;
+  for index := 0 to Count - 1 do
+  begin
+    if Items[index].ScreenObject.Name = AScreenObjectName then
+    begin
+      Result := index;
+      Exit;
+    end;
+  end;
 end;
 
 procedure TScreenObjectEditCollection.SetOwnScreenObject(const Value: boolean);

@@ -68,7 +68,7 @@ type
     procedure Initialize; overload;
   public
     procedure Assign(Source: TPersistent); override;
-    constructor Create(Model: TBaseModel);
+    constructor Create(InvalidateModelEvent: TNotifyEvent);
     destructor Destroy; override;
     // SCALT
     // Scale factor to be applied to each time value in the list.
@@ -197,7 +197,7 @@ type
     function GetItem(Index: integer): TSutraTimeScheduleItem;
     procedure SetItem(Index: integer; const Value: TSutraTimeScheduleItem);
   public
-    constructor Create(Model: TBaseModel; SutraTime: TSutraTimeOptions);
+    constructor Create(InvalidateModelEvent: TNotifyEvent; SutraTime: TSutraTimeOptions);
     function Add: TSutraTimeScheduleItem;
     property Items[Index: integer]: TSutraTimeScheduleItem read GetItem
       write SetItem; default;
@@ -218,7 +218,7 @@ type
     function GetSchedules: TSutraTimeSchedules;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TBaseModel);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
     destructor Destroy; override;
     procedure Initialize;
     procedure CalculateAllTimes;
@@ -282,9 +282,9 @@ begin
   end;
 end;
 
-constructor TSutraTimeSchedule.Create(Model: TBaseModel);
+constructor TSutraTimeSchedule.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited;
+  inherited Create(InvalidateModelEvent);
   FTimeMultiplierStored := TRealStorage.Create;
   FTimeMultiplierStored.OnChange := ValueChanged;
 
@@ -306,8 +306,8 @@ begin
   FScaleFactorStored := TRealStorage.Create;
   FScaleFactorStored.OnChange := ValueChanged;
 
-  FTimes := TRealCollection.Create(Model);
-  FSteps := TIntegerCollection.Create(Model);
+  FTimes := TRealCollection.Create(InvalidateModelEvent);
+  FSteps := TIntegerCollection.Create(InvalidateModelEvent);
 end;
 
 destructor TSutraTimeSchedule.Destroy;
@@ -668,10 +668,10 @@ begin
   result := inherited Add as TSutraTimeScheduleItem;
 end;
 
-constructor TSutraTimeSchedules.Create(Model: TBaseModel; SutraTime: TSutraTimeOptions);
+constructor TSutraTimeSchedules.Create(InvalidateModelEvent: TNotifyEvent; SutraTime: TSutraTimeOptions);
 begin
   Assert(SutraTime <> nil);
-  inherited Create(TSutraTimeScheduleItem, Model);
+  inherited Create(TSutraTimeScheduleItem, InvalidateModelEvent);
   FSutraTime := SutraTime;
 end;
 
@@ -721,7 +721,7 @@ end;
 constructor TSutraTimeScheduleItem.Create(Collection: TCollection);
 begin
   inherited;
-  FSchedule := TSutraTimeSchedule.Create(Model);
+  FSchedule := TSutraTimeSchedule.Create(OnInvalidateModel);
   FSchedule.Initialize(Index);
 end;
 
@@ -880,8 +880,14 @@ begin
   end;
   for TimeIndex := FAllTimes.Count - 1 downto 1 do
   begin
-    AValue1 := FAllTimes[TimeIndex];
-    AValue2 := FAllTimes[TimeIndex-1];
+    try
+      AValue1 := FAllTimes[TimeIndex];
+      AValue2 := FAllTimes[TimeIndex-1];
+    except on EOverflow Do
+      begin
+        Continue;
+      end;
+    end;
     if AValue1 = AValue2 then
     begin
       FAllTimes.Delete(TimeIndex);
@@ -889,10 +895,10 @@ begin
   end;
 end;
 
-constructor TSutraTimeOptions.Create(Model: TBaseModel);
+constructor TSutraTimeOptions.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited;
-  FSchedules := TSutraTimeSchedules.Create(Model, self);
+  inherited Create(InvalidateModelEvent);
+  FSchedules := TSutraTimeSchedules.Create(InvalidateModelEvent, self);
   FAllTimes := TRealList.Create;
   Initialize;
 end;

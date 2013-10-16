@@ -135,6 +135,18 @@ const
   StrSWI_Obs = 'SWI_Obs';
   StrSWI_Zeta = 'SWI_Zeta';
 
+  StrSWR = 'SWR';
+  StrSwrReachGroupStage = 'SWR_ReachGroupStage';
+  StrSwrReachStage = 'SWR_ReachStage';
+  StrSwrReachExchange = 'SWR_ReachExchange';
+  StrSwrLateral = 'SWR_Lateral';
+  StrSwrStructure = 'SWR_Structure';
+  StrSwrTimeSteps = 'SWR_TimeSteps';
+  StrSwrRiver = 'SWR_RIV';
+  StrSwrObs = 'SWR_OBS';
+  StrSwrDirectRunoff = 'SWR_DirectRunoff';
+  StrSwrConvergenceHistory = 'SWR_ConvergenceHistory';
+
   Solvers: array[0..5] of string = (StrPCG, StrPCGN, StrGMG, StrSIP, StrDE4, StrNWT);
   FlowPackages: array[0..3] of string = (StrLPF, StrHUF2, StrBCF, StrUPW);
 
@@ -190,12 +202,24 @@ type
   // unit number and description. The unit numbers can be used when
   // exporting MODFLOW input files.
   TUnitNumbers = class(TCustomUnitNumbers)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
+    FSequentialUnitNumber: integer;
   private
     procedure CreateDefaultItems;
     procedure RemoveObsoleteItems;
   public
+    procedure Initialize;
+    function SequentialUnitNumber: Integer;
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
   end;
 
   // @name stores instances of @link(TExternalFileItem).
@@ -204,8 +228,17 @@ type
   // the names that will be used for external files that will
   // be included in the name file.
   TExternalFiles = class(TCustomUnitNumbers)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
   end;
 
 const
@@ -240,7 +273,7 @@ const
 
   FMP2 uses unit numbers 1001-1009
 
-  CFp uses unit number 999 and consecutive unit numbers beginning at 201
+  CFP uses unit number 999 and consecutive unit numbers beginning at 201
 }
   CellFlowsUnitNumber = 9;
   // @name is the unit number in MODFLOW
@@ -403,6 +436,17 @@ const
   SWI_Unit = 168;
   SWI_Obs_Unit = 169;
   SWI_Zeta_Unit = 170;
+  SWR_Unit = 171;
+  SWR_ReachGroupStage_Unit = 172;
+  SWR_ReachStage_Unit = 173;
+  SWR_ReachExchange_Unit = 174;
+  SWR_Lateral_Unit = 175;
+  SWR_Structure_Unit = 176;
+  SWR_TimeSteps_Unit = 177;
+  SWR_River_Unit = 178;
+  SWR_Obs_Unit = 179;
+  SWR_DirectRunoff_Unit = 180;
+  SWR_ConvergenceHistory_Unit = 181;
 
   GageOutputStartUnit = 20205;
 
@@ -419,8 +463,19 @@ begin
 end;
 
 constructor TUnitNumbers.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
-  inherited Create(TUnitNumberItem, Model);
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(TUnitNumberItem, InvalidateModelEvent);
   CreateDefaultItems;
 end;
 
@@ -580,9 +635,25 @@ begin
   AddItem(StrSWI, SWI_Unit);
   AddItem(StrSWI_Obs, SWI_Obs_Unit);
   AddItem(StrSWI_Zeta, SWI_Zeta_Unit);
+  AddItem(StrSWR, SWR_Unit);
+  AddItem(StrSwrReachGroupStage, SWR_ReachGroupStage_Unit);
+  AddItem(StrSwrReachStage, SWR_ReachStage_Unit);
+  AddItem(StrSwrReachExchange, SWR_ReachExchange_Unit);
+  AddItem(StrSwrLateral, SWR_Lateral_Unit);
+  AddItem(StrSwrStructure, SWR_Structure_Unit);
+  AddItem(StrSwrTimeSteps, SWR_TimeSteps_Unit);
+  AddItem(StrSwrRiver, SWR_River_Unit);
+  AddItem(StrSwrObs, SWR_Obs_Unit);
+  AddItem(StrSwrDirectRunoff, SWR_DirectRunoff_Unit);
+  AddItem(StrSwrConvergenceHistory, SWR_ConvergenceHistory_Unit);
 
 
 
+end;
+
+procedure TUnitNumbers.Initialize;
+begin
+  FSequentialUnitNumber := -1;
 end;
 
 procedure TUnitNumbers.RemoveObsoleteItems;
@@ -598,6 +669,19 @@ procedure TUnitNumbers.RemoveObsoleteItems;
   end;
 begin
   // Currently there are no obsolete items so none are removed.
+end;
+
+function TUnitNumbers.SequentialUnitNumber: Integer;
+begin
+  if FSequentialUnitNumber < 0 then
+  begin
+    FSequentialUnitNumber := UnitNumber(StrUNIT);
+  end
+  else
+  begin
+    Inc(FSequentialUnitNumber);
+  end;
+  result := FSequentialUnitNumber;
 end;
 
 { TCustomUnitNumberItem }
@@ -658,8 +742,19 @@ end;
 { TExternalFiles }
 
 constructor TExternalFiles.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
-  inherited Create(TExternalFileItem, Model);
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(TExternalFileItem, InvalidateModelEvent);
 end;
 
 { TExternalFileItem }

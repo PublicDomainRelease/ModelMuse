@@ -56,6 +56,7 @@ inherited frameSutraBoundary: TframeSutraBoundary
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -78,6 +79,7 @@ inherited frameSutraBoundary: TframeSutraBoundary
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end
         item
@@ -100,6 +102,7 @@ inherited frameSutraBoundary: TframeSutraBoundary
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -122,6 +125,7 @@ inherited frameSutraBoundary: TframeSutraBoundary
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end>
       OnEndUpdate = rdgSutraFeatureEndUpdate

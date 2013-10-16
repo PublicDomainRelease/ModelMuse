@@ -222,6 +222,8 @@ type
     procedure InvalidatePData(Sender: TObject);
     procedure InvalidateCellToWellConductanceData(Sender: TObject);
     procedure InvalidatePartialPenetrationData(Sender: TObject);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetPhastModel: TBaseModel;
     procedure InvalidateWellRadius;
     procedure InvalidateSkinRadius;
@@ -233,7 +235,7 @@ type
     procedure InvalidatePartialPenetration;
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+    procedure AssignArrayCellValues(DataSets: TList; ItemIndex: Integer;
       AModel: TBaseModel); override;
     procedure InitializeTimeLists(ListOfTimeLists: TList;
       AModel: TBaseModel); override;
@@ -390,7 +392,7 @@ type
     function StoreTargetCell: Boolean;
     function StoreTargetLocation: Boolean;
   public
-    Constructor Create(Model: TBaseModel);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
     Destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
   published
@@ -516,6 +518,8 @@ type
       AModel: TBaseModel); override;
     procedure InvalidateDisplay; override;
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
     Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     destructor Destroy; override;
     function Used: boolean; override;
@@ -954,7 +958,7 @@ begin
   AddBoundary(TMnw2Storage.Create(AModel));
 end;
 
-procedure TMnw2SpatialCollection.AssignCellValues(DataSets: TList;
+procedure TMnw2SpatialCollection.AssignArrayCellValues(DataSets: TList;
   ItemIndex: Integer; AModel: TBaseModel);
 var
   WellRadiusArray: TDataArray;
@@ -1952,12 +1956,22 @@ begin
 end;
 
 constructor TMnw2Boundary.Create(Model: TBaseModel; ScreenObject: TObject);
+var
+  OnInvalidateModelEvent: TNotifyEvent;
 begin
+  if Model = nil then
+  begin
+    OnInvalidateModelEvent := nil;
+  end
+  else
+  begin
+    OnInvalidateModelEvent := Model.Invalidate;
+  end;
   inherited;
   FLossType := mltThiem;
   FTimeValues := TMnw2TimeCollection.Create(self, Model, ScreenObject);
   FLiftValues := TLiftCollection.Create(Model);
-  FPumpCellTarget := TTarget.Create(Model);
+  FPumpCellTarget := TTarget.Create(OnInvalidateModelEvent);
   FVerticalScreens := TVerticalScreenCollection.Create(self, Model, ScreenObject);
 end;
 
@@ -3189,11 +3203,12 @@ begin
   end;
 end;
 
-constructor TTarget.Create(Model: TBaseModel);
+constructor TTarget.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  FTargetObject:= TTargetObject.Create(Model);
-  FTargetCell:= TTargetCell.Create(Model);
-  FTargetLocation:= TTargetLocation.Create(Model);
+  inherited;
+  FTargetObject:= TTargetObject.Create(InvalidateModelEvent);
+  FTargetCell:= TTargetCell.Create(InvalidateModelEvent);
+  FTargetLocation:= TTargetLocation.Create(InvalidateModelEvent);
   FTargetType := ttNone;
 end;
 

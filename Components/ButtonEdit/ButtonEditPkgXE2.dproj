@@ -3,7 +3,7 @@
 			<ProjectGuid>{70D0166B-665E-41B9-8092-1AC37D498B07}</ProjectGuid>
 			<MainSource>ButtonEditPkgXE2.dpk</MainSource>
 			<Base>True</Base>
-			<Config Condition="'$(Config)'==''">Debug</Config>
+			<Config Condition="'$(Config)'==''">Release</Config>
 			<AppType>Package</AppType>
 			<FrameworkType>VCL</FrameworkType>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
@@ -35,6 +35,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
 			<DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
 			<VerInfo_Locale>1033</VerInfo_Locale>
 			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
@@ -58,7 +59,7 @@
 			<Icon_MainIcon>ButtonEditPkgXE_Icon2.ico</Icon_MainIcon>
 			<DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
 			<VerInfo_Locale>1033</VerInfo_Locale>
-			<DCC_UsePackage>vcl;VirtualTreesR;ButtonEditPkgXE2;$(DCC_UsePackage)</DCC_UsePackage>
+			<DCC_UsePackage>vcl;VirtualTreesR;$(DCC_UsePackage)</DCC_UsePackage>
 			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
@@ -134,7 +135,8 @@
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Excluded_Packages>
-						<Excluded_Packages Name="C:\Documents and Settings\rbwinst-pr\My Documents\Borland Studio Projects\Bpl\ZoomBox2Pkg.bpl">RBW Zoombox - convert between screen and real-world coordinates</Excluded_Packages>
+						<Excluded_Packages Name="$(BDSBIN)\dcloffice2k160.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="$(BDSBIN)\dclofficexp160.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
 					</Excluded_Packages>
 				</Delphi.Personality>
 				<Platforms>

@@ -44,6 +44,7 @@ type
     procedure UpdateZoneName(const NewRoot: string);
     // @name is the @link(TModflowSteadyParameters) that owns this @classname.
     function Collection: TModflowSteadyParameters;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name is used to update @link(MultiplierArrayName)
     // and @link(ZoneArrayName).
     procedure FillArrayNameList(List: TStringList; const ArrayTypeID: string;
@@ -72,6 +73,7 @@ type
     // and @link(MultiplierArrayName) are the same as in the source item.
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
   published
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name lists the multiplier array names exported to MODFLOW.
     function MultiplierArrayName(ModflowLayer: integer; AModel: TBaseModel): string;
     // @name is the name of the @link(TDataArray) used to define
@@ -85,6 +87,7 @@ type
     // @name is the name of the @link(TDataArray) used to define
     // MODFLOW zone arrays.
     property ZoneName: string read FZoneName write SetZoneName;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name lists the zone array names exported to MODFLOW.
     function ZoneArrayName(ModflowLayer: integer; AModel: TBaseModel): string;
   end;
@@ -120,6 +123,7 @@ type
     // @name copies the source @link(TModflowSteadyParameters) this this
     // @classname.
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname.
     Constructor Create(Model: TBaseModel);
     // @name destroys this instance of @classname.

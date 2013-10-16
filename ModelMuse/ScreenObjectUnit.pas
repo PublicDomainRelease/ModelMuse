@@ -39,7 +39,9 @@ uses
   Mt3dmsTobUnit, SutraBoundariesUnit, SutraMeshUnit, SubPolygonUnit,
   ModflowStrUnit, ModflowFhbUnit, ModflowFmpFarmUnit, ModflowFmpWellUnit,
   ModflowFmpPrecipitationUnit, ModflowFmpEvapUnit, ModflowFmpCropSpatialUnit,
-  ModflowCfpPipeUnit, ModflowCfpFixedUnit, ModflowCfpRechargeUnit;
+  ModflowCfpPipeUnit, ModflowCfpFixedUnit, ModflowCfpRechargeUnit,
+  ModflowSwrUnit, ModflowSwrDirectRunoffUnit, ModflowSwrReachUnit,
+  ObjectLabelUnit;
 
 type
   //
@@ -104,6 +106,7 @@ type
     FValue: double;
     procedure SetName(const Value: string);
     procedure SetValue(const Value: double);
+    procedure InvalidateSwrReach;
   public
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
     procedure Assign(Source: TPersistent); override;
@@ -112,8 +115,11 @@ type
     property Value: double read FValue write SetValue;
   end;
 
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
   TPointValues = class(TEnhancedOrderedCollection)
     constructor Create(Model: TBaseModel);
+    function Add: TPointValue;
   end;
 
   TPointValuesItem = class(TOrderedItem)
@@ -137,10 +143,14 @@ type
   end;
 
   TPointPositionValues = class(TEnhancedOrderedCollection)
+  public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     function IndexOfPosition(APosition: integer): integer;
     function GetItemByPosition(APosition: integer): TPointValuesItem;
     procedure Sort;
+    function Add: TPointValuesItem;
   end;
 
   TLineSegment = class(TObject)
@@ -248,6 +258,7 @@ type
     property SectionIndex: integer read FSectionIndex write FSectionIndex;
     property LgrEdge: boolean read FLgrEdge write FLgrEdge;
     constructor Create(ScreenObject: TScreenObject);
+    function IsSame(AnotherSegment: TCellElementSegment): boolean;
   end;
 
   TCellElementLeaf = class(TRangeTreeLeaf)
@@ -293,6 +304,7 @@ type
     FStartPoints: TRbwQuadTree;
     FEndPoints: TRbwQuadTree;
     FScreenObject: TScreenObject;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name is a @link(TPhastModel) or nil.
     FModel: TBaseModel;
     // See @link(UpToDate).
@@ -326,6 +338,7 @@ type
     // @name is used to access the @link(TCellElementSegment)s in the list.
     property Items[Index: Integer]: TCellElementSegment read GetSegment
       write SetSegment; default;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname and assigns Model
     // to @link(FModel).
     constructor Create(Model: TBaseModel; ScreenObject: TScreenObject);
@@ -343,12 +356,16 @@ type
     FList: TList;
     FScreenObject: TScreenObject;
     FCachedValue: TCellElementSegmentList;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetSegmentList(Model: TBaseModel): TCellElementSegmentList;
     function GetItem(Index: integer): TCellElementSegmentList;
   public
     Constructor Create(ScreenObject: TScreenObject);
     Destructor Destroy; override;
-    property AssociatedSegmentList[FModel: TBaseModel]: TCellElementSegmentList
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    property AssociatedSegmentList[Model: TBaseModel]: TCellElementSegmentList
       read GetSegmentList;
     function Count: integer;
     property Items[Index: integer]: TCellElementSegmentList
@@ -376,78 +393,6 @@ type
 
   TIntersectionArray = array of TIntersection;
 
-  { TODO : Make TScreenObject.EvaluateSubPolygon a method of TSubPolygon. }
-
-  // @abstract(@name is used to make determining whether a point is inside
-  // a @link(TScreenObject) faster and to make finding the nearest point
-  // on a line faster.)
-  // @Seealso(TScreenObject.EvaluateSubPolygon)
-  // @Seealso(TScreenObject.IsAnyPointCloser)
-{
-  TSubPolygon = class(TObject)
-  private
-    FOriginalCount: integer;
-    // @name is the number of points used by the @classname.
-    FCount: integer;
-    // @name is the maximum X value of any
-    // of the points used by the @classname.
-    FMaxX: real;
-    // @name is the maximum Y value of any
-    // of the points used by the @classname.
-    FMaxY: real;
-    // @name is the minimum X value of any
-    // of the points used by the @classname.
-    FMinX: real;
-    // @name is the minimum Y value of any
-    // of the points used by the @classname.
-    FMinY: real;
-    // @name is the index of the first point used by the @classname.
-    FStart: integer;
-    // @name represents the @classname used to
-    // process the first half of the points if
-    // the number of points exceeds a threshold.
-    FSubPolygon1: TSubPolygon;
-    // @name represents the @classname used to
-    // process the second half of the points if
-    // the number of points exceeds a threshold.
-    FSubPolygon2: TSubPolygon;
-    FPoints: TRealPointArray;
-    FSectionIndex: integer;
-    procedure CreateSubPolygons(const Points: TRealPointArray;
-      const Count, Start, Section: Integer);
-    procedure SetMaxAndMinWhenNoSubPolygons(const Count, Start: Integer;
-      const Points: TRealPointArray);
-    procedure SetMaxAndMinFromSubPolygons;
-    procedure InternalBoxIntersect(SubPolygons: TList;
-      const BoxMinX, BoxMaxX, BoxMinY, BoxMaxY: Double);
-    procedure EvaluateSubPolygon(
-      const X, Y: real; var IsInside: boolean);
-  public
-    // @name creates an instance of TSubPolygon.
-    // If Count is large enough, it will create @link(FSubPolygon1)
-    // and @link(FSubPolygon2) to handle what it needs to do.
-    // @param(Points is the array of TPoint2Ds
-    // to be used by @classname.)
-    // @param(Count is the number of TPoint2Ds
-    // in Points to be used by @classname.)
-    // @param(Start is the index of the  first TPoint2Ds
-    // in Points to be used by @classname.)
-    // @param(Section indicates the part of the @link(TScreenObject) that
-    // this @name represents.)
-
-    constructor Create(const Points: TRealPointArray;
-      const Count, Start, Section: integer);
-    // @name destroys the current instance of @classname.
-    // Do not call @name directly. Call Free instead.
-    destructor Destroy; override;
-    procedure GrowByOne;
-    Procedure BoxIntersect(const Point1, Point2: TPoint2D; SubPolygons: TList);
-    // If @name is created for a part of a @link(TScreenObject),
-    // @name indicates which part of the @link(TScreenObject) it represents.
-    property SectionIndex: integer read FSectionIndex;
-    function IsPointInside(const X, Y: real): boolean;
-  end;
-}
               
   TAssignmentMethod = (amEnclose, amIntersect);
 
@@ -536,8 +481,12 @@ type
 
   TCellListsModelAssociation = class(TObject)
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FModel: TBaseModel;
     FCachedLists: TCachedCellArray;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
   end;
@@ -545,11 +494,15 @@ type
   TCMList = class(TObject)
   private
     FList: TList;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FCachedModel: TBaseModel;
     FCachedResult:TCellListsModelAssociation;
   public
     Constructor Create;
     Destructor Destroy; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetCachedLists(Model: TBaseModel; var result: TCellListsModelAssociation);
     procedure Invalidate;
   end;
@@ -560,10 +513,14 @@ type
     FEvalAt: TEvaluatedAt;
     FOrientation: TDataSetOrientation;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function RestoreFromCache(CellList: TCellAssignmentList;
       EvalAt: TEvaluatedAt; Orientation: TDataSetOrientation;
       AssignmentLocation: TAssignmentLocation; const EncloseAnnotation,
       IntersectAnnotation: string; AModel: TBaseModel): boolean;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure UpdateCache(CellList: TCellAssignmentList;
       EvalAt: TEvaluatedAt; Orientation: TDataSetOrientation;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
@@ -581,11 +538,13 @@ type
   protected
     // See @link(ModelSelection).
     FModelSelection: TModelSelection;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name is the @link(TPhastModel) that is being used.
     FModel: TBaseModel;
     // @name is the @link(TScreenObject) for which this
     // @classname will be used.
     FScreenObject: TScreenObject;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name initializes variables needed by the formula for the
     // @link(TDataArray) and then assigns values to the data set based
     // on that formula for intersected and enclosed cells or elements.
@@ -596,6 +555,7 @@ type
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment;
       AssignmentLocation: TAssignmentLocation = alAll); virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name initializes variables needed by the formula for the
     // @link(TDataArray) and then assigns values to the data set based
     // on that formula for intersected and enclosed cells or elements.
@@ -606,6 +566,7 @@ type
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment;
       AssignmentLocation: TAssignmentLocation = alAll); virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name initializes variables needed by the formula for the
     // @link(TDataArray) and then assigns values to the data set based
     // on that formula for intersected and enclosed cells or elements.
@@ -615,12 +576,14 @@ type
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment;
       AssignmentLocation: TAssignmentLocation = alAll); virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     //@name updates the contents of
     // @link(FScreenObject).(TScreenObject.Segments) when
     // @link(FScreenObject).(TScreenObject.ViewDirection)
     // = @link(TViewDirection vdFront).
     procedure UpdateFrontSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     //@name updates the contents of
     // @link(FScreenObject).(TScreenObject.Segments) when when
     // @link(FScreenObject).(TScreenObject.ViewDirection)
@@ -628,6 +591,7 @@ type
     procedure UpdateSideSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt); virtual;abstract;
     function GetCompiler(const Orientation: TDataSetOrientation): TRbwParser;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     {@name fills CellList with instances of @link(TCellAssignment) on the front
     view of the model.}
     procedure GetFrontCellsToAssign(
@@ -635,6 +599,7 @@ type
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
       virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     {@name fills CellList with instances of @link(TCellAssignment) on the side
     view of the model.}
     procedure GetSideCellsToAssign(
@@ -642,6 +607,7 @@ type
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
       virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     {@name fills CellList with instances of @link(TCellAssignment) on the top
     view of the model.}
     procedure GetTopCellsToAssign(
@@ -676,6 +642,7 @@ type
     // type of boundary condition,
     // if any, are specified by this @classname.
     function BoundaryType: integer; virtual;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name returns @true if DataSet is a
     // @link(TSparseArrayPhastInterpolationDataSet)
     // @name also returns @true if DataSet is a @link(TCustomPhastDataSet)
@@ -738,6 +705,7 @@ type
     // @name is used to record the cells that are enclosed or intersected by
     // the @link(TScreenObject).
     property SelectedCells: TSelectedCells read FSelectedCells;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name sets @link(SelectedCells) to @true for each cells that is
     // enclosed or intersected by the @link(TScreenObject).
     procedure AssignSelectedCells(AModel: TBaseModel); virtual; abstract;
@@ -782,6 +750,10 @@ type
     The series define how one aspect of a boundary condition changes
     with time.)}
   TCustomPhastBoundaryCollection = class(TPhastCollection)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   private
     // See @link(ScreenObject).
     FScreenObject: TScreenObject;
@@ -807,6 +779,9 @@ type
     procedure UpdateMixtureExpression;
     procedure UpdateFormulaExpression;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    constructor Create(ItemClass: TCollectionItemClass; Model: TBaseModel);
     // @name removes all of the @classname items and invalidates
     // @link(TimeList).
     procedure Clear;
@@ -819,6 +794,9 @@ type
     // @name is the @link(TScreenObject) that owns this @classname.
     property ScreenObject: TScreenObject read FScreenObject write
       FScreenObject;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
   end;
 
   {@abstract(@name stores a collection of
@@ -829,6 +807,7 @@ type
     // represents a real number.
     function GetDatatype: TRbwDataType; override;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname and sets the type of
     // @link(TCustomPhastBoundaryCondition) used by the @classname to be
     // @link(TRealPhastBoundaryCondition).
@@ -843,6 +822,7 @@ type
     // represents an integer.
     function GetDatatype: TRbwDataType; override;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname and sets the type of
     // @link(TCustomPhastBoundaryCondition) used by the @classname to be
     // @link(TIntegerPhastBoundaryCondition).
@@ -853,12 +833,17 @@ type
     define all aspects of one type of boundary condition for one
     @link(TScreenObject) including those aspects that vary with time.)}
   TCustomPhastBoundary = class(TPersistent)
+  strict private
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   private
     // See @link(ScreenObject).
     FScreenObject: TScreenObject;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure SetModel(const Value: TBaseModel);
   protected
-    FModel: TBaseModel;
     procedure InvalidateModel;
     // @name clears all the @link(TCustomPhastBoundaryCollection)s that are
     // part of the @classname.
@@ -879,7 +864,11 @@ type
     procedure UpdateMixtureExpression; virtual; abstract;
     procedure UpdateFormulaExpression; virtual; abstract;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property Model: TBaseModel read FModel write SetModel;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(ScreenObject: TScreenObject; Model: TBaseModel);
     // @name is the @link(TScreenObject) that owns this @classname.
     property ScreenObject: TScreenObject read FScreenObject write
@@ -914,6 +903,7 @@ type
     // @name clears @link(Solution) and
     // @link(BoundaryValue).
     procedure Clear; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname.
     constructor Create(ScreenObject: TScreenObject; Model: TBaseModel);
     // @name destroys the current instance of @classname.
@@ -965,6 +955,7 @@ type
     // See @link(TCustomPhastBoundary.ScreenObject).
     procedure SetScreenObject(const Value: TScreenObject); override;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname.
     constructor Create(ScreenObject: TScreenObject; Model: TBaseModel);
   published
@@ -1011,6 +1002,7 @@ type
     // If Source is a @classname, @name copies @link(Solution),
     // @link(BoundaryValue), @link(HydraulicConductivity), and @link(Thickness).
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname.
     constructor Create(ScreenObject: TScreenObject; Model: TBaseModel);
     // If Source is a @classname, @name copies @link(Solution), and
@@ -1088,6 +1080,7 @@ type
     // @link(BedHydraulicConductivity), @link(BedThickness), @link(Depth),
     // @link(Description), @link(Head), and @link(Width).
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname.
     constructor Create(ScreenObject: TScreenObject; Model: TBaseModel);
     // @name returns true if all the published properties have been set
@@ -1149,6 +1142,7 @@ type
     // If Source is a @classname, @name copies @link(Solution),
     // @link(BoundaryValue), and @link(SolutionType).
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname.
     constructor Create(ScreenObject: TScreenObject; Model: TBaseModel);
   published
@@ -1182,6 +1176,8 @@ type
   public
     procedure Assign(Source: TPersistent); override;
     procedure Clear; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(ScreenObject: TScreenObject; Model: TBaseModel);
     destructor Destroy; override;
   published
@@ -1225,7 +1221,7 @@ type
   public
     // @name creates an instance of @classname and the type of the
     // Items to be @link(TWellInterval).
-    constructor Create(ScreenObject: TScreenObject; Model: TBaseModel);
+    constructor Create(ScreenObject: TScreenObject; InvalidateModelEvent: TNotifyEvent);
     property ScreenObject: TScreenObject read FScreenObject;
   end;
 
@@ -1270,6 +1266,7 @@ type
     // @name clears @link(InjectionOrPumpingRate) and
     // @link(Solution).
     procedure Clear; override;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
     // @name creates an instance of @classname.
     constructor Create(ScreenObject: TScreenObject; Model: TBaseModel);
     // @name destroys the current instance of @classname.
@@ -1318,24 +1315,6 @@ type
       FBoundaryValue write SetBoundaryValue;
   end;
 
-//  TIntegerItem = class(TCollectionItem)
-//  private
-//    FValue: integer;
-//  public
-//    procedure Assign(Source: TPersistent); override;
-//  published
-//    property Value: integer read FValue write FValue;
-//  end;
-//
-//  TIntegerCollection = class(TPhastCollection)
-//  private
-//    function GetValue(Index: integer): integer;
-//    procedure SetValue(Index: integer; const Value: integer);
-//  published
-//  public
-//    constructor Create(Model: TBaseModel);
-//    property Values[Index: integer]: integer read GetValue write SetValue;
-//  end;
 
   { TODO : Allow the user to control visibility of TScreenObject via selected
   col, row, layer. }
@@ -1420,7 +1399,15 @@ view. }
     FCfpPipes: TCfpPipeBoundary;
     FCfpFixedHeads: TCfpFixedBoundary;
     FCfpRchFraction: TCfpRchFractionBoundary;
+    FSwrRain: TSwrRainBoundary;
+    FSwrEvap: TSwrEvapBoundary;
+    FSwrLatInflow: TSwrLatInflowBoundary;
+    FSwrStage: TSwrStageBoundary;
+    FSwrDirectRunoff: TSwrDirectRunoffBoundary;
+    FSwrReaches: TSwrReachBoundary;
   public
+    procedure Invalidate;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name removes a link between a @link(TPhastModel) or @link(TChildModel)
     // and a @link(TModflowBoundary)
     procedure RemoveModelLink(AModel: TBaseModel);
@@ -1487,37 +1474,77 @@ view. }
       write FCfpFixedHeads;
     property CfpRchFraction: TCfpRchFractionBoundary read FCfpRchFraction
       write FCfpRchFraction;
+
+    property SwrRain: TSwrRainBoundary read FSwrRain write FSwrRain;
+    property SwrEvap: TSwrEvapBoundary read FSwrEvap write FSwrEvap;
+    property SwrLatInflow: TSwrLatInflowBoundary read FSwrLatInflow
+      write FSwrLatInflow;
+    property SwrStage: TSwrStageBoundary read FSwrStage write FSwrStage;
+    property SwrDirectRunoff: TSwrDirectRunoffBoundary read FSwrDirectRunoff
+      write FSwrDirectRunoff;
+    property SwrReaches: TSwrReachBoundary read FSwrReaches write FSwrReaches;
+
+  // Be sure to update Invalidate, TScreenObject.Invalidate
+  // and StopTalkingToAnyone when adding a new property.
+
     procedure Assign(Source: TModflowBoundaries);
+    procedure StopTalkingToAnyone;
   end;
 
   TUsedWithModelItem = class(TPhastCollectionItem)
   private
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FUsedModel: TBaseModel;
     FModelName: string;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure SetUsedModel(const Value: TBaseModel);
     procedure SetModelName(const Value: string);
     function GetModelName: string;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetUsedModel: TBaseModel;
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property UsedModel: TBaseModel read GetUsedModel write SetUsedModel;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    function Model: TBaseModel;
   published
     property ModelName: string read GetModelName write SetModelName;
   end;
 
   TUsedWithModelCollection = class(TPhastCollection)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   private
     FUsedWithAllModels: boolean;
     procedure SetUsedWithAllModels(const Value: boolean);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function UsesModel(AModel: TBaseModel): boolean;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AddModel(AModel: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure RemoveModel(AModel: TBaseModel);
   published
     property UsedWithAllModels: boolean read FUsedWithAllModels
       write SetUsedWithAllModels default True;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
   end;
 
   TModflowDelegate = class;
@@ -1579,6 +1606,8 @@ view. }
       const SubPolygon: TSubPolygon): boolean;
   private
     FCanInvalidateModel: boolean;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FModel: TBaseModel;
     // @name holds all the subscriptions related to
     // mixtures for @link(TDataArray)s.
@@ -1783,8 +1812,14 @@ view. }
     FPointPositionValues: TPointPositionValues;
     FChildModelName: string;
     FChildModelDiscretization: integer;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FChildModel: TBaseModel;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FPriorObjectSectionIntersectLengthModel: TBaseModel;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FPriorObjectIntersectLengthModel: TBaseModel;
     FUsedModels: TUsedWithModelCollection;
     FFullObjectIntersectLength: Boolean;
@@ -1794,6 +1829,7 @@ view. }
     FSutraBoundaries: TSutraBoundaries;
     FDuplicatesAllowed: Boolean;
     FSfrSegmentNumber: integer;
+    FObjectLabel: TObjectLabel;
     procedure CreateLastSubPolygon;
     procedure DestroyLastSubPolygon;
     function GetSubPolygonCount: integer;
@@ -1874,8 +1910,11 @@ view. }
       const Grid: TCustomModelGrid; const PreviousPoint, APoint: TEdgePoint;
       var TempPoints1: TEdgePointArray; var Count: integer;
       const Position: TEdgePosition);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure Assign3DElevations(Formula: string;
       const SparseArray: T3DSparseRealArray; AModel: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     {@name fills @link(T3DSparseRealArray SparseArray)  with values based on
      Compiler.CurrentExpression.  Only cells
      whose values ought to be set by the @classname will be set.
@@ -1888,6 +1927,7 @@ view. }
      }
     procedure Assign3DElevationsFromFront(const Compiler: TRbwParser;
       const SparseArray: T3DSparseRealArray; AModel: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     {@name fills @link(T3DSparseRealArray SparseArray)  with values based on
      Compiler.CurrentExpression.  Only cells
      whose values ought to be set by the @classname will be set.
@@ -1899,11 +1939,13 @@ view. }
      will be set.)}
     procedure Assign3DElevationsFromSide(const Compiler: TRbwParser;
       const SparseArray: T3DSparseRealArray; AModel: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     {@name fills @link(TCellElementSegmentList.FHigher3DElevations)
     with values based on either
     @link(HigherElevationFormula) or @link(ElevationFormula) depending on
     @link(ElevationCount).}
     procedure AssignHigher3DElevations(AModel: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     {@name fills @link(TCellElementSegmentList.FLower3DElevations)
     with values based on
     @link(LowerElevationFormula).}
@@ -2068,11 +2110,13 @@ view. }
     function GetEdgePoints(const Index: integer): TEdgePoint;
     // See @link(FillColor).
     function GetFillColor: TColor;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name sets XMin, XMax, YMin, and YMax to be the positions
     // of the grid cell or element specified by Col, Row, and Layer.
     // Which is used depends on @link(EvaluatedAt).
     procedure GetGridCellOrElementLimits(const Col, Row, Layer: integer;
       out XMin, XMax, YMin, YMax: double; AModel: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name  calls @link(UpdateHigher3DElevations).  Then it returns
     // @link(TCellElementSegmentList.FHigher3DElevations).
     function GetHigher3DElevations(AModel: TBaseModel): T3DSparseRealArray;
@@ -2097,6 +2141,7 @@ view. }
       out FirstLayer, LastLayer: integer);
     // See @link(LineColor).
     function GetLineColor: TColor;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name calls @link(UpdateLower3DElevations).  Then it returns
     // @link(TCellElementSegmentList.FLower3DElevations).
     function GetLower3DElevations(AModel: TBaseModel): T3DSparseRealArray;
@@ -2237,14 +2282,17 @@ view. }
       Const EpsilonX: real = 0; Const EpsilonY: real = 0);
     // @name updates @link(MinX), @link(MaxX), @link(MinY), and @link(MaxY).  
     procedure UpdateBox;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name calls @link(Delegate).@link(TCustomScreenObjectDelegate.
     // UpdateFrontSegments).
     procedure UpdateFrontSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name calls @link(Delegate).@link(TCustomScreenObjectDelegate.
     // UpdateSideSegments).
     procedure UpdateSideSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     //@name updates the contents of @link(Segments) when
     // @link(ViewDirection) = @link(TViewDirection vdTop).
     procedure UpdateTopSegments(
@@ -2253,6 +2301,7 @@ view. }
     // @name is used when accessing vertices to raise an exception if
     // Index is invalid.
     procedure ValidateIndex(const Index: integer); inline;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name returns false if Col, Row, Layer refer to an invalid
     // cell.  Only two of the three are checked.  The ones that are
     // checked depend on @link(ViewDirection)
@@ -2260,27 +2309,12 @@ view. }
       Model: TBaseModel): boolean;
     // See @link(SetValuesOfEnclosedCells).
     function Get_SetValuesOfEnclosedCells: boolean;
-    // On input, Sorter contains a series of pointers to TPoint2Ds
-    // that are on a straight line and
-    // Point1 and Point2 are points defining the endpoints of the line.
-    // On exit the contents of Sorter will be rearranged so that they
-    // are in order from Point1 toward Point2.
-//    procedure SortPointsInCorrectDirection(Sorter: TList;
-//      const Point1, Point2: TPoint2D);
-    // @name is used to specify the intersection of a segment of @classname
-    // with the box defined by XMin, XMax, YMin, YMax.
-    //
-    // On exit, Point1 and Point2 are the points of the segment;
-    // TempPoints will contain the intersection points; and
-    // PointCount will contain the number of points of intersection.
-//    procedure GetPointsOnLineSegment(const RotatedPoints: TRealPointArray;
-//      const XMin, XMax, YMin, YMax: Double; const Index: Integer;
-//      out Point1, Point2: TPoint2D; out TempPoints: T2DRealPointArray6;
-//      out PointCount: Integer);
-
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name returns the proper @link(TCustomScreenObjectDelegate) for
     // the active @link(TPhastModel.ModelSelection TPhastModel.ModelSelection).
     procedure UpdateHigher3DElevations(AModel: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure UpdateLower3DElevations(AModel: TBaseModel);
     // @name is used to assign data to a particular cell when PHAST-style
     // interpolation is used  and the data is integer data.
@@ -2343,11 +2377,15 @@ view. }
     procedure GetInterpDistance(const InterpValue: TInterpValuesItem;
       var Distance: Double; const DataSet: TDataArray;
       const LayerIndex, RowIndex, ColIndex: Integer);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignTopDataSetValues(
       Expression: TExpression; const DataSetFunction: string;
       Compiler: TRbwParser; UsedVariables: TStringList;
       OtherData: TObject; const DataSet: TDataArray; AModel: TBaseModel;
       AssignmentLocation: TAssignmentLocation = alAll);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetSegments(AModel: TBaseModel): TCellElementSegmentList;
     function GetSectionCount: integer;
     function GetSectionEnd(const Index: integer): integer;
@@ -2380,6 +2418,8 @@ view. }
       UpperBoundary: double);
     function GetModflowUzfBoundary: TUzfBoundary;
     procedure SetModflowUzfBoundary(const Value: TUzfBoundary);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure Draw1ElevModflow(const Direction: TViewDirection;
       const Bitmap32: TBitmap32; const DrawAsSelected: Boolean; AModel: TBaseModel);
     function GetModflowHeadObservations: THobBoundary;
@@ -2395,6 +2435,7 @@ view. }
     function GetImportedHigherSectionElevations: TValueArrayStorage;
     function GetImportedLowerSectionElevations: TValueArrayStorage;
     function GetImportedSectionElevations: TValueArrayStorage;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     {@name fills @link(T2DSparseRealArray SparseArray) with values based on
      Compiler.CurrentExpression.  Only cells
      whose values ought to be set by the @classname will be set.
@@ -2460,11 +2501,16 @@ view. }
     procedure SetModflowHydmodData(const Value: THydmodData);
     function StoreModflowHydmodData: Boolean;
     procedure SetChildModelName(const Value: string);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetChildModel: TBaseModel;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure SetChildModel(const Value: TBaseModel);
     function GetChildModelName: string;
     procedure SetUsedModels(const Value: TUsedWithModelCollection);
     procedure RemoveLakeID_Connection;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // When a @link(TCellElementSegment) at a cell in the parent model
     // is at the interface with a child model, @name adds subsegments
     // that are in the unshared part of the cell.
@@ -2488,6 +2534,8 @@ view. }
     procedure SetCanInvalidateModel(const Value: boolean);
     procedure EliminateHoleCells(CellList: TCellAssignmentList);
     procedure SetDuplicatesAllowed(const Value: Boolean);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure EliminateDuplicates(CellList: TCellAssignmentList;
       AModel: TBaseModel);
     function GetModflowStrBoundary: TStrBoundary;
@@ -2526,6 +2574,25 @@ view. }
     function GetModflowCfpRchFraction: TCfpRchFractionBoundary;
     procedure SetModfloCfpRchFraction(const Value: TCfpRchFractionBoundary);
     function StoreModflowCfpRchFraction: Boolean;
+    function GetModflowSwrRain: TSwrRainBoundary;
+    procedure SetModflowSwrRain(const Value: TSwrRainBoundary);
+    function StoreModflowSwrRain: Boolean;
+    function GetModflowSwrEvap: TSwrEvapBoundary;
+    procedure SetModflowSwrEvap(const Value: TSwrEvapBoundary);
+    function StoreModflowSwrEvap: Boolean;
+    function GetModflowSwrLatInflow: TSwrLatInflowBoundary;
+    function GetModflowSwrStage: TSwrStageBoundary;
+    procedure SetModflowSwrLatInflow(const Value: TSwrLatInflowBoundary);
+    procedure SetModflowSwrStage(const Value: TSwrStageBoundary);
+    function StoreModflowSwrLatInflow: Boolean;
+    function StoreModflowSwrStage: Boolean;
+    function GetModflowSwrDirectRunoff: TSwrDirectRunoffBoundary;
+    procedure SetModflowSwrDirectRunoff(const Value: TSwrDirectRunoffBoundary);
+    function StoreModflowSwrDirectRunoff: Boolean;
+    function GetModflowSwrReaches: TSwrReachBoundary;
+    procedure SetModflowSwrReaches(const Value: TSwrReachBoundary);
+    function StoreModflowSwrReaches: Boolean;
+    procedure SetObjectLabel(const Value: TObjectLabel);
     property SubPolygonCount: integer read GetSubPolygonCount;
     property SubPolygons[Index: integer]: TSubPolygon read GetSubPolygon;
     procedure DeleteExtraSections;
@@ -2541,6 +2608,8 @@ view. }
     procedure CreateBoundaryDataSetFormulas;
     procedure CreateBoundaryDataSetSubscriptions;
     procedure CreateBoundaryDataSets;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure Draw2ElevModflow(const Direction: TViewDirection;
       const Bitmap32: TBitmap32; AModel: TBaseModel);
     procedure Draw2ElevPhast(const Direction: TViewDirection;
@@ -2727,21 +2796,28 @@ view. }
     procedure RestoreSubscriptionToList(List: TList; const AName: string;
       Sender: TObject; Subscriptions: TObjectList);
     function GetTestDataArray(const DataSet: TDataArray): TDataArray;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AddTopGridSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt; LowerElevDataSets: TList;
       HigherElevExpression: TExpression; LayerLimit: Integer;
       HigherElevDataSets: TList; LowerElevVariables: TList;
       const PointsRotated: Boolean; HigherElevVariables: TList;
       var RotatedPoints: TEdgePointArray; LowerElevExpression: TExpression);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AddTopMeshSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt; LowerElevDataSets: TList;
       HigherElevExpression: TExpression; LayerLimit: Integer;
       HigherElevDataSets: TList; LowerElevVariables: TList;
       HigherElevVariables: TList; LowerElevExpression: TExpression);
+    procedure DrawLabel(const Bitmap32: TBitmap32);
   protected
     {
      @name is true during @link(TScreenObjectItem.UpdateScreenObject).}
     FIsUpdating: boolean;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure UpdateModel(Model: TBaseModel);
     procedure InvalidateModel;
     // @name indicates what sort of PHAST boundary (if any) is specified
@@ -2776,16 +2852,19 @@ view. }
       const DataSet: TDataArray; LayerIndex, RowIndex, ColIndex: integer;
       const Compiler: TRbwParser; const Annotation: string;
       var Expression: TExpression; const OtherData: TObject);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name calls (Delegate).@link(TCustomScreenObjectDelegate.
     // AssignValuesToFrontDataSet).
     procedure AssignValuesToFrontDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name calls (Delegate).@link(TCustomScreenObjectDelegate.
     // AssignValuesToSideDataSet).
     procedure AssignValuesToSideDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name initializes variables needed by the formula for the
     // @link(TDataArray) and then assigns values to the data set based
     // on that formula for intersected and enclosed cells or elements.
@@ -2799,6 +2878,7 @@ view. }
     function BoundaryType: integer;
     // @name returns @True if DataSet can be added to the @classname.
     function CanAddDataSet(const DataSet: TDataArray): boolean;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     {
      @name returns @true if
 
@@ -2903,6 +2983,7 @@ view. }
     // this problem.
     procedure OtherIndex(const LayerOrRow, RowOrColumn: integer;
       out First, Last: integer; const DataSet: TDataArray);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name sets RotatedPoints to be Points rotated to the grid coordinate
     // system. TempMinX, TempMinY, TempMaxX, TempMaxY are set to the minimum
     // and maximum X and Y coordinates of any of the points in the @classname
@@ -2988,22 +3069,32 @@ view. }
     // @name determines whether @link(LeakyBoundary) is stored.
     function StoreLeaky: boolean;
     property ModflowBoundaries: TModflowBoundaries read GetModflowBoundaries;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name contains a set of higher elevations for points that
     // could be in the @classname.  It is indexed by [Layer, Row, Column].
     property Higher3DElevations[AModel: TBaseModel]: T3DSparseRealArray
       read GetHigher3DElevations;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function IsHigher3DElevationAssigned(Col, Row, Layer: integer;
       Model: TBaseModel): boolean;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name contains a set of lower elevations for points that
     // could be in the @classname.  It is indexed by [Layer, Row, Column].
     property Lower3DElevations[AModel: TBaseModel]: T3DSparseRealArray
       read GetLower3DElevations;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function IsLower3DElevationAssigned(Col, Row, Layer: integer;
       Model: TBaseModel): boolean;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetCellsToAssign(const Grid: TCustomModelGrid;
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); overload;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetCellsToAssign(const Mesh: TSutraMesh3D;
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
@@ -3016,6 +3107,8 @@ view. }
     procedure CacheSegments;
     procedure BeginUpdate;
     procedure EndUpdate;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetModpathCellList(CellList: TCellAssignmentList;
       AModel: TBaseModel);
     property ElevSubscription: TObserver read GetElevSubscription;
@@ -3023,6 +3116,8 @@ view. }
     property BottomElevSubscription: TObserver read GetBottomElevSubscription;
 
     function Delegate: TCustomScreenObjectDelegate;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignNumericValueToDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; Value: double; AModel: TBaseModel);
     procedure CreateChdBoundary;
@@ -3057,6 +3152,14 @@ view. }
     procedure CreateCfpBoundary;
     procedure CreateCfpFixedHeads;
     procedure CreateCfpRchFraction;
+    procedure CreateSwrRainBoundary;
+    procedure CreateSwrEvapBoundary;
+    procedure CreateSwrLatInflowBoundary;
+    procedure CreateSwrStageBoundary;
+    procedure CreateSwrDirectRunoffBoundary;
+    procedure CreateSwrReachesBoundary;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function ModflowDataSetUsed(DataArray: TDataArray; AModel: TBaseModel): boolean;
     property SectionCount: integer read GetSectionCount;
     property SectionStart[const Index: integer]: integer read GetSectionStart;
@@ -3116,12 +3219,16 @@ view. }
     // In @name, if Source is a @classname, its properties are copied into
     // the current @classname.
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignValuesToModflowDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; const Formula: string; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignValuesToSutraDataSet(const Mesh: TSutraMesh3D;
       const DataSet: TDataArray; const Formula: string; AModel: TBaseModel);
-
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name is a key method of @classname.  It is used
     // to assign values to a data set based on the function for that data
     // set. @name first checks whether it should set the values
@@ -3201,6 +3308,7 @@ view. }
     property Count: integer read GetCount write SetCount;
     // @name creates a @classname.
     constructor Create(AnOwner: TComponent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates a @classname, assigns it a name and if
     // UndoAble is true, creates a TUndoCreateScreenObject that may be used to
     // undo or redo creation of the @classname.
@@ -3334,16 +3442,21 @@ having them take care of the subscriptions. }
     property MinX: real read GetMinX;
     // @name is the smallest Y coordinate of any of the points in @Link(Points).
     property MinY: real read GetMinY;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name is nil or the @link(TPhastModel) that owns this @classname.
     Property Model: TBaseModel read FModel;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name returns the 2D area of intersection between an
     // object and an individual cell or element.
     function ObjectIntersectArea(const Col, Row, Layer: integer;
       AModel: TBaseModel): real;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name returns the 2D length of intersection between an
     // object and an individual cell or element.
     function ObjectIntersectLength(const Col, Row, Layer: integer;
       AModel: TBaseModel): real;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function ObjectSectionIntersectLength(const Col, Row, Layer,
       Section: integer; AModel: TBaseModel): real;
     // @name gives the real-world coordinates of the vertices of the
@@ -3386,6 +3499,7 @@ having them take care of the subscriptions. }
     // @name is the 2D length of the object.  Its value is stored and
     // is only recalculated when it is no longer up-to-date.
     function ScreenObjectLength: real;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name is a list of the cell or element segments of the object.
     // Each segment is the intersection of one segment of the object with an
     // individual cell or element in the grid.
@@ -3432,6 +3546,7 @@ having them take care of the subscriptions. }
       var Distance: real; out ClosestLocation: TPoint2D; var SectionIndex: integer;
       const Anisotropy: real): boolean;
     function GetMfBoundary(ParamType: TParameterType): TModflowParamBoundary;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name returns a MODFLOW cell where @classname is located.
     // The cell numbers in the @link(TCellLocation) will be 1 based.
     // If the @link(TCellLocation.Layer TCellLocation.Layer) = 0,
@@ -3443,22 +3558,31 @@ having them take care of the subscriptions. }
     property CurrentValues: TValueArrayStorage read FCurrentValues;
     procedure UpdateImportedValues(DataArray: TDataArray);
     procedure ReverseDirection;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function RestoreCellsFromCache(CellList: TCellAssignmentList;
       EvalAt: TEvaluatedAt; Orientation: TDataSetOrientation;
       AssignmentLocation: TAssignmentLocation; const EncloseAnnotation,
       IntersectAnnotation: string; AModel: TBaseModel): boolean;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure UpdateCellCache(CellList: TCellAssignmentList;
       EvalAt: TEvaluatedAt; Orientation: TDataSetOrientation;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
     procedure CreateHydmodData;
     procedure CacheValueArrays;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property ChildModel: TBaseModel read GetChildModel write SetChildModel;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure RemoveModelLink(AModel: TBaseModel);
     // @name is measured in radians.
     property SutraAngle: Double read GetSutraAngle write SetSutraAngle;
     procedure InvalidateCachedCells;
     property SfrSegmentNumber: integer read FSfrSegmentNumber
       write FSfrSegmentNumber;
+    procedure StopTalkingToAnyone; override;
   published
     // @name is deprecated.
     property ChildModelDiscretization: integer read FChildModelDiscretization
@@ -3666,6 +3790,19 @@ having them take care of the subscriptions. }
     property ModflowCfpRchFraction: TCfpRchFractionBoundary read GetModflowCfpRchFraction
       write SetModfloCfpRchFraction stored StoreModflowCfpRchFraction;
 
+    property ModflowSwrRain: TSwrRainBoundary read GetModflowSwrRain
+      write SetModflowSwrRain stored StoreModflowSwrRain;
+    property ModflowSwrEvap: TSwrEvapBoundary read GetModflowSwrEvap
+      write SetModflowSwrEvap stored StoreModflowSwrEvap;
+    property ModflowSwrLatInflow: TSwrLatInflowBoundary read GetModflowSwrLatInflow
+      write SetModflowSwrLatInflow stored StoreModflowSwrLatInflow;
+    property ModflowSwrStage: TSwrStageBoundary read GetModflowSwrStage
+      write SetModflowSwrStage stored StoreModflowSwrStage;
+    property ModflowSwrDirectRunoff: TSwrDirectRunoffBoundary
+      read GetModflowSwrDirectRunoff write SetModflowSwrDirectRunoff
+      stored StoreModflowSwrDirectRunoff;
+    property ModflowSwrReaches: TSwrReachBoundary read GetModflowSwrReaches
+      write SetModflowSwrReaches stored StoreModflowSwrReaches;
 
     property Mt3dmsConcBoundary: TMt3dmsConcBoundary read GetMt3dmsConcBoundary
       write SetMt3dmsConcBoundary stored StoreMt3dmsConcBoundary;
@@ -3723,6 +3860,8 @@ SectionStarts.}
     // at the same location are not allowed.
     property DuplicatesAllowed: Boolean read FDuplicatesAllowed
       write SetDuplicatesAllowed default True;
+    // Name is used to display a label near an @classname.
+    property ObjectLabel: TObjectLabel read FObjectLabel write SetObjectLabel;
   end;
 
   TScreenObjectList = class(TObject)
@@ -3740,6 +3879,7 @@ SectionStarts.}
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
+    function IndexOf(AScreenObject: TScreenObject): Integer;
   end;
 
   // @abstract(@name provides functionality used in storing multiple values
@@ -3880,7 +4020,7 @@ SectionStarts.}
   public
     // @name creates and instance of @classname.
     constructor Create(ItemClass: TCollectionItemClass; const ScreenObject:
-      TScreenObject; Model: TBaseModel);
+      TScreenObject; InvalidateModelEvent: TNotifyEvent);
     // @name is the TScreenObject with which the data is associated.
     property ScreenObject: TScreenObject read FScreenObject;
     // @name returns the TCustomDataListItem
@@ -3893,7 +4033,7 @@ SectionStarts.}
   TRealDataListCollection = class(TDataListCollection)
     // @name creates an instance of @classname.
     // See @link(TRealDataListItem).
-    constructor Create(const ScreenObject: TScreenObject; Model: TBaseModel);
+    constructor Create(const ScreenObject: TScreenObject; InvalidateModelEvent: TNotifyEvent);
   end;
 
   // @abstract(@name is a descendant of @link(TDataListCollection)
@@ -3901,7 +4041,7 @@ SectionStarts.}
   TIntegerDataListCollection = class(TDataListCollection)
     // @name creates an instance of @classname.
     // See @link(TIntegerDataListItem).
-    constructor Create(const ScreenObject: TScreenObject; Model: TBaseModel);
+    constructor Create(const ScreenObject: TScreenObject; InvalidateModelEvent: TNotifyEvent);
   end;
 
   //@abstract(@name is used in creating descendants of @link(TScreenObject)
@@ -4112,19 +4252,27 @@ SectionStarts.}
       const Compiler: TRbwParser; const Annotation: string;
       var Expression: TExpression; const OtherData: TObject;
       SectionIndex: integer; ShouldZero: boolean); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignValuesToFrontDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment;
       AssignmentLocation: TAssignmentLocation = alAll);override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignValuesToSideDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment;
       AssignmentLocation: TAssignmentLocation = alAll); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignValuesToTopDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment;
       AssignmentLocation: TAssignmentLocation = alAll); override;
     function BoundaryType: integer; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function DataSetUsed(const DataSet: TDataArray;
       var OtherData: TObject; AModel: TBaseModel): boolean; override;
     function EncloseAnnotation(const DataSetFormula: string;
@@ -4133,28 +4281,42 @@ SectionStarts.}
       const OtherData: TObject): string; override;
     procedure OtherIndex(const LayerOrRow, RowOrColumn: integer;
       out First, Last: integer; const DataSet: TDataArray); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure UpdateFrontSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure UpdateSideSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);override;
   protected
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetSideCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetFrontCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetTopCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const EvaluatedAt: TEvaluatedAt; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignSelectedCells(AModel: TBaseModel); override;
     procedure InitializeExpression(out Compiler: TRbwParser;
       out DataSetFormula: string; out Expression: TExpression;
@@ -4179,6 +4341,7 @@ SectionStarts.}
     procedure AssignColAndRowIndicies(
       var ColIndex, RowIndex, LayerIndex : Integer;
       const HorizontalIndex1, HorizontalIndex2, PerpendicularIndex: Integer);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     {@name returns the extent of the grid that should be searched for
     enclosed or intersected cells.}
     procedure AssignParallellLimits(AModel: TBaseModel;
@@ -4246,6 +4409,8 @@ SectionStarts.}
       Grid: TCustomModelGrid;
       out SectionIndex: integer): boolean;
     function GetPerpendiularLimit(const Grid: TCustomModelGrid): integer;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignValuesToDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
@@ -4254,6 +4419,7 @@ SectionStarts.}
       const HorizontalIndex, HorizontalLimit: Integer;
       const APoint, PreviousPoint: TEdgePoint);
   private
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name assigns values to FTopElevation and FBottomElevation
     // based on the cell specified by ColIndex, RowIndex, and LayerIndex.
     function AssignElevations(Const ColIndex, RowIndex,
@@ -4263,27 +4429,41 @@ SectionStarts.}
       const RowIndex: integer): boolean;
     function GetCellOutlines(const Grid: TCustomModelGrid;
       const RowOrCol: integer): T2DRealPointArray;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure UpdateSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const EvaluatedAt: TEvaluatedAt; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; Orientation: TDataSetOrientation;
       AModel: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AddFrontSideSubSegments(var ASegment: TCellElementSegment;
       AModel: TBaseModel; const CellOutlines: T2DRealPointArray);
   strict protected
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function DataSetUsed(const DataSet: TDataArray;
       var OtherData: TObject; AModel: TBaseModel): boolean; override;
   protected
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetFrontCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetSideCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetTopCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
@@ -4292,22 +4472,31 @@ SectionStarts.}
     procedure InitializeExpression(out Compiler: TRbwParser;
       out DataSetFunction: string; out Expression: TExpression;
       const DataSet: TDataArray; const OtherData: TObject); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignSelectedCells(AModel: TBaseModel); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // See @link(AssignValuesToDataSet).
     procedure AssignValuesToFrontDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // See @link(AssignValuesToDataSet).
     procedure AssignValuesToSideDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // See @link(AssignValuesToDataSet).
     procedure AssignValuesToTopDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(ScreenObject: TScreenObject); override;
     procedure UpdateFrontSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure UpdateSideSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);override;
     destructor Destroy; override;
@@ -4337,38 +4526,58 @@ SectionStarts.}
 
   TSutraDelegate = class(TCustomScreenObjectDelegate)
   private
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const EvaluatedAt: TEvaluatedAt; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function AssignElevations(Const ColIndex, RowIndex,
       LayerIndex: integer; AModel: TBaseModel): boolean;
     procedure ShowWarningNoCells(CellList: TCellAssignmentList);
   protected
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignValuesToFrontDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment;
       AssignmentLocation: TAssignmentLocation = alAll); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignValuesToSideDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment;
       AssignmentLocation: TAssignmentLocation = alAll); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignValuesToTopDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment;
       AssignmentLocation: TAssignmentLocation = alAll); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure UpdateFrontSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure UpdateSideSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetFrontCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetSideCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetTopCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
@@ -4376,8 +4585,6 @@ SectionStarts.}
     procedure AssignSelectedCells(AModel: TBaseModel); override;
     procedure OtherIndex(const LayerOrRow, RowOrColumn: integer;
       out First, Last: integer; const DataSet: TDataArray); override;
-//    function DataSetUsed(const DataSet: TDataArray;
-//      var OtherData: TObject; AModel: TBaseModel): boolean; override;
   public
     constructor Create(ScreenObject: TScreenObject); override;
     procedure InitializeExpression(out Compiler: TRbwParser;
@@ -4639,8 +4846,11 @@ SectionStarts.}
     from or writing them to a file or the clipboard.)}
   TScreenObjectCollection = class(TCollection)
   private
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FModel: TBaseModel;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname.
     constructor Create(Model: TBaseModel);
     // @name calls @link(TScreenObjectItem.UpdateScreenObject) for
@@ -4657,6 +4867,8 @@ SectionStarts.}
     destructor Destroy; override;
     property ScreenObjects: TScreenObjectCollection read FScreenObjects
       write SetScreenObjects;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure UpdateModel(Model: TBaseModel);
   end;
 
@@ -4665,7 +4877,7 @@ SectionStarts.}
 procedure ResetScreenObjectFunction(const DataSetIndex: integer;
   const ScreenObject: TScreenObject; const Compiler: TRbwParser;
   const DataSetDataType: TRbwDataType; const ErrorMessage: string;
-  const IsBoundary: boolean);
+  const IsBoundary: boolean; const ErrorFormula: string);
 
   // @abstract(Point1 and Point2 define a non-horizontal line.
   // Given Y, @name returns the
@@ -4688,6 +4900,7 @@ function YIntersection(const Point1, Point2: TPoint2D;
 // root name.
 function ScreenObjectCompare(Item1, Item2: Pointer): Integer;
 
+    { TODO -cRefactor : Consider replacing Model with an interface. }
 // result.Column and result.Row must have already been set when @name is called.
 procedure GetLayerFromZ(Z: Double; var CellLocation: TCellLocation;
   Grid: TModflowGrid; Model: TBaseModel);
@@ -4925,21 +5138,29 @@ begin
   end;
 end;
 
-procedure ResetScreenObjectFunction(const DataSetIndex: integer; const
-  ScreenObject:
-  TScreenObject; const Compiler: TRbwParser; const DataSetDataType:
-    TRbwDataType;
-  const ErrorMessage: string; const IsBoundary: boolean);
+procedure ResetScreenObjectFunction(const DataSetIndex: integer;
+  const ScreenObject: TScreenObject; const Compiler: TRbwParser;
+  const DataSetDataType: TRbwDataType; const ErrorMessage: string;
+  const IsBoundary: boolean; const ErrorFormula: string);
 var
   ScreenObjectFunction: string;
 begin
   if IsBoundary then
   begin
-    ScreenObjectFunction :=
-      ScreenObject.BoundaryDataSetFormulas[DataSetIndex];
-    frmFormulaErrors.AddFormulaError(ScreenObject.Name,
-      ScreenObject.BoundaryDataSets[DataSetIndex].Name,
-      ScreenObjectFunction, ErrorMessage);
+    if DataSetIndex >= 0 then
+    begin
+      ScreenObjectFunction :=
+        ScreenObject.BoundaryDataSetFormulas[DataSetIndex];
+      frmFormulaErrors.AddFormulaError(ScreenObject.Name,
+        ScreenObject.BoundaryDataSets[DataSetIndex].Name,
+        ScreenObjectFunction, ErrorMessage);
+    end
+    else
+    begin
+      ScreenObjectFunction := ErrorFormula;
+      frmFormulaErrors.AddFormulaError(ScreenObject.Name,
+        '', ScreenObjectFunction, ErrorMessage);
+    end;
   end
   else
   begin
@@ -4967,8 +5188,11 @@ begin
   end;
   if IsBoundary then
   begin
-    ScreenObject.BoundaryDataSetFormulas[DataSetIndex] :=
-      ScreenObjectFunction;
+    if DataSetIndex >= 0 then
+    begin
+      ScreenObject.BoundaryDataSetFormulas[DataSetIndex] :=
+        ScreenObjectFunction;
+    end;
   end
   else
   begin
@@ -5469,245 +5693,6 @@ begin
   end;
 end;
 
-{ TSubPolygon }
-
-{
-procedure TSubPolygon.BoxIntersect(const Point1, Point2: TPoint2D;
-  SubPolygons: TList);
-var
-  BoxMaxX, BoxMinX, BoxMaxY, BoxMinY: double;
-begin
-  if Point1.x > Point2.x then
-  begin
-    BoxMaxX := Point1.x;
-    BoxMinX := Point2.x;
-  end
-  else
-  begin
-    BoxMaxX := Point2.x;
-    BoxMinX := Point1.x;
-  end;
-  if Point1.Y > Point2.Y then
-  begin
-    BoxMaxY := Point1.Y;
-    BoxMinY := Point2.Y;
-  end
-  else
-  begin
-    BoxMaxY := Point2.Y;
-    BoxMinY := Point1.Y;
-  end;
-  InternalBoxIntersect(SubPolygons, BoxMinX, BoxMaxX, BoxMinY, BoxMaxY);
-end;
-
-procedure TSubPolygon.InternalBoxIntersect(SubPolygons: TList;
-  const BoxMinX, BoxMaxX, BoxMinY, BoxMaxY: Double);
-begin
-  if (BoxMaxX >= FMinX) and (BoxMinX <= FMaxX)
-    and (BoxMaxY >= FMinY) and (BoxMinY <= FMaxY) then
-  begin
-    if FSubPolygon1 = nil then
-    begin
-      SubPolygons.Add(self);
-    end
-    else
-    begin
-      FSubPolygon1.InternalBoxIntersect(SubPolygons,
-        BoxMinX, BoxMaxX, BoxMinY, BoxMaxY);
-      FSubPolygon2.InternalBoxIntersect(SubPolygons,
-        BoxMinX, BoxMaxX, BoxMinY, BoxMaxY);
-    end;
-  end;
-end;
-
-function TSubPolygon.IsPointInside(const X, Y: real): boolean;
-begin
-  Result := False;
-  if (FPoints[0].x <> FPoints[Length(FPoints)-1].x)
-    or (FPoints[0].y <> FPoints[Length(FPoints)-1].y) then
-  begin
-    Exit;
-  end;
-  EvaluateSubPolygon(X, Y, Result);
-end;
-
-procedure TSubPolygon.SetMaxAndMinFromSubPolygons;
-begin
-  // Determine the Maximum Y value, Minimum Y value and
-  // Maximum X value by comparing those of the two subpolygons.
-  FMaxY := Max(FSubPolygon1.FMaxY, FSubPolygon2.FMaxY);
-  FMinY := Min(FSubPolygon1.FMinY, FSubPolygon2.FMinY);
-  FMaxX := Max(FSubPolygon1.FMaxX, FSubPolygon2.FMaxX);
-  FMinX := Min(FSubPolygon1.FMinX, FSubPolygon2.FMinX);
-end;
-
-//constructor TSubPolygon.Copy(Source: TSubPolygon);
-//begin
-//  Copy(Source, True);
-//end;
-
-//constructor TSubPolygon.Copy(Source: TSubPolygon; New: boolean);
-//begin
-//  inherited Create;
-//  FOriginalCount := Source.FOriginalCount;
-//  FCount := Source.FCount;
-//  FMaxX := Source.FMaxX;
-//  FMaxY := Source.FMaxY;
-//  FMinX := Source.FMinX;
-//  FMinY := Source.FMinY;
-//  FStart := Source.FStart;
-//  FPoints := Source.FPoints;
-//  if New then
-//  begin
-//    SetLength(FPoints, Length(FPoints));
-//  end;
-//  FSectionIndex := Source.FSectionIndex;
-//  if Source.FSubPolygon1 <> nil then
-//  begin
-//    FSubPolygon1 := Copy(Source.FSubPolygon1, False);
-//    FSubPolygon2 := Copy(Source.FSubPolygon2, False);
-//  end;
-//end;
-
-constructor TSubPolygon.Create(const Points: TRealPointArray;
-  const Count, Start, Section: integer);
-begin
-  FSectionIndex := Section;
-  FOriginalCount := Count;
-  Assert(Start + Count -1 < Length(Points));
-  // Each subpolygon must store where in the array its data starts,
-  // how many points it has and the Maximum Y value, Minimum Y value and
-  // Maximum X value.
-  // Store it's starting point and count.
-  FStart := Start;
-  FCount := Count;
-  FPoints := Points;
-  if Count > MaxPointsInSubPolygon then
-  begin
-    CreateSubPolygons(Points, Count, Start, Section);
-  end
-  else
-  begin
-    SetMaxAndMinWhenNoSubPolygons(Count, Start, Points);
-  end;
-end;
-
-destructor TSubPolygon.Destroy;
-begin
-  // Destroy the subpolygons if they exist.
-  FSubPolygon1.Free;
-  FSubPolygon2.Free;
-  inherited;
-end;
-
-procedure TSubPolygon.EvaluateSubPolygon(
-  const X, Y: real; var IsInside: boolean);
-var
-  VertexIndex: integer;
-  APoint, AnotherPoint: TPoint2D;
-begin
-  if (Y < FMinY) or (Y > FMaxY)
-    or (X > FMaxX) then
-    Exit;
-  if FSubPolygon1 <> nil then
-  begin
-    FSubPolygon1.EvaluateSubPolygon(X, Y, IsInside);
-    FSubPolygon2.EvaluateSubPolygon(X, Y, IsInside);
-  end
-  else
-  begin
-    for VertexIndex := 0 to self.FCount - 2 do
-    begin
-      APoint := FPoints[self.FStart + VertexIndex];
-      AnotherPoint := FPoints[self.FStart + VertexIndex + 1];
-      if ((Y <= APoint.Y) = (Y > AnotherPoint.Y)) and
-        (X - APoint.X - (Y - APoint.Y) *
-        (AnotherPoint.X - APoint.X) /
-        (AnotherPoint.Y - APoint.Y) < 0) then
-      begin
-        IsInside := not IsInside;
-      end;
-    end;
-  end;
-end;
-
-procedure TSubPolygon.GrowByOne;
-begin
-  Inc(FCount);
-  if (FCount > MaxPointsInSubPolygon) then
-  begin
-    if FSubPolygon2 = nil then
-    begin
-      FOriginalCount := FCount;
-      CreateSubPolygons(FPoints, FCount, FStart, FSectionIndex);
-    end
-    else if (FCount > 2*FOriginalCount)
-      or (FSubPolygon1.FCount*2 < FSubPolygon2.FCount) then
-    begin
-      FSubPolygon1.Free;
-      FSubPolygon2.Free;
-      FOriginalCount := FCount;
-      CreateSubPolygons(FPoints, FCount, FStart, FSectionIndex);
-    end
-    else
-    begin
-      FSubPolygon2.GrowByOne;
-      SetMaxAndMinFromSubPolygons;
-    end;
-  end
-  else
-  begin
-    SetMaxAndMinWhenNoSubPolygons(FCount, FStart, FPoints);
-  end;
-end;
-
-procedure TSubPolygon.SetMaxAndMinWhenNoSubPolygons(const Count, Start: Integer;
-  const Points: TRealPointArray);
-var
-  Index: Integer;
-  Temp: Real;
-begin
-  // If the subpolygons are small enough, determine the Maximum Y value,
-  // Minimum Y value and Maximum X values directly.
-  FMaxX := Points[Start].X;
-  FMinX := FMaxX;
-  FMaxY := Points[Start].Y;
-  FMinY := FMaxY;
-  for Index := 1 to Count - 1 do
-  begin
-    Temp := Points[Start + Index].Y;
-    if Temp > FMaxY then
-    begin
-      FMaxY := Temp;
-    end
-    else if Temp < FMinY then
-    begin
-      FMinY := Temp;
-    end;
-    Temp := Points[Start + Index].X;
-    if Temp > FMaxX then
-    begin
-      FMaxX := Temp;
-    end
-    else if Temp < FMinX then
-    begin
-      FMinX := Temp;
-    end;
-  end;
-end;
-
-procedure TSubPolygon.CreateSubPolygons(const Points: TRealPointArray;
-  const Count, Start, Section: Integer);
-begin
-  // If the number of points is too big, create additional subpolygons
-  // that each store half the points.  The two subpolygons overlap at
-  // one vertext.
-  FSubPolygon1 := TSubPolygon.Create(Points, Count div 2 + 1, Start, Section);
-  FSubPolygon2 := TSubPolygon.Create(Points, Count - FSubPolygon1.FCount + 1,
-    Start + FSubPolygon1.FCount - 1, Section);
-  SetMaxAndMinFromSubPolygons;
-end;
-}
 
 { TScreenObject }
 
@@ -6001,6 +5986,7 @@ begin
     FModel := AScreenObject.FModel;
   end;
 
+  ObjectLabel := AScreenObject.ObjectLabel;
   // copy the data of the other screen object.
   ChildModelName := AScreenObject.ChildModelName;
 //  ChildModelDiscretization := AScreenObject.ChildModelDiscretization;
@@ -6101,10 +6087,10 @@ begin
     FluxBoundary.Clear;
   end;
 
-  AssignModelToBoundary := (LeakyBoundary.FModel = nil);
+  AssignModelToBoundary := (LeakyBoundary.Model = nil);
   if AssignModelToBoundary then
   begin
-    LeakyBoundary.FModel := AScreenObject.LeakyBoundary.FModel;
+    LeakyBoundary.Model := AScreenObject.LeakyBoundary.Model;
   end;
   if AScreenObject.EvaluatedAt = eaNodes then
   begin
@@ -6116,13 +6102,13 @@ begin
   end;
   if AssignModelToBoundary then
   begin
-    LeakyBoundary.FModel := nil;
+    LeakyBoundary.Model := nil;
   end;
 
-  AssignModelToBoundary := (RiverBoundary.FModel = nil);
+  AssignModelToBoundary := (RiverBoundary.Model = nil);
   if AssignModelToBoundary then
   begin
-    RiverBoundary.FModel := AScreenObject.RiverBoundary.FModel;
+    RiverBoundary.Model := AScreenObject.RiverBoundary.Model;
   end;
   if AScreenObject.EvaluatedAt = eaNodes then
   begin
@@ -6134,13 +6120,13 @@ begin
   end;
   if AssignModelToBoundary then
   begin
-    RiverBoundary.FModel := nil;
+    RiverBoundary.Model := nil;
   end;
 
-  AssignModelToBoundary := (SpecifiedHeadBoundary.FModel = nil);
+  AssignModelToBoundary := (SpecifiedHeadBoundary.Model = nil);
   if AssignModelToBoundary then
   begin
-    SpecifiedHeadBoundary.FModel := AScreenObject.SpecifiedHeadBoundary.FModel;
+    SpecifiedHeadBoundary.Model := AScreenObject.SpecifiedHeadBoundary.Model;
   end;
   if AScreenObject.EvaluatedAt = eaNodes then
   begin
@@ -6152,7 +6138,7 @@ begin
   end;
   if AssignModelToBoundary then
   begin
-    SpecifiedHeadBoundary.FModel := nil;
+    SpecifiedHeadBoundary.Model := nil;
   end;
 
   if AScreenObject.EvaluatedAt = eaNodes then
@@ -6211,6 +6197,12 @@ begin
   ModflowCfpPipes := AScreenObject.ModflowCfpPipes;
   ModflowCfpFixedHeads := AScreenObject.ModflowCfpFixedHeads;
   ModflowCfpRchFraction := AScreenObject.ModflowCfpRchFraction;
+  ModflowSwrRain := AScreenObject.ModflowSwrRain;
+  ModflowSwrEvap := AScreenObject.ModflowSwrEvap;
+  ModflowSwrLatInflow := AScreenObject.ModflowSwrLatInflow;
+  ModflowSwrStage := AScreenObject.ModflowSwrStage;
+  ModflowSwrDirectRunoff := AScreenObject.ModflowSwrDirectRunoff;
+  ModflowSwrReaches := AScreenObject.ModflowSwrReaches;
 
   SutraBoundaries := AScreenObject.SutraBoundaries;
 
@@ -7610,6 +7602,7 @@ begin
       end;
     end;
   end;
+  DrawLabel(Bitmap32);
 end;
 
 function TScreenObject.GetCanvasCoordinates: TPointArray;
@@ -7957,7 +7950,8 @@ procedure TScreenObject.InvalidateModel;
 begin
   if FCanInvalidateModel and (FModel <> nil) then
   begin
-    FModel.Invalidate;
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent. }
+    FModel.Invalidate(self);
   end;
 end;
 
@@ -7980,6 +7974,63 @@ end;
 procedure TScreenObject.InvalidateCachedCells;
 begin
   FCachedCells.Invalidate;
+end;
+
+procedure TScreenObject.DrawLabel(const Bitmap32: TBitmap32);
+var
+  LineIndex: Integer;
+  StartPoint: TPoint;
+  CaptionLines: TStringList;
+  YHeight: Integer;
+  ACaptionLine: string;
+  AZoomBox: TQRbwZoomBox2;
+  CoordIndex: Integer;
+  ExistingFont: TFont;
+begin
+  if ObjectLabel.Visible then
+  begin
+    for CoordIndex := 0 to Length(CanvasCoordinates) - 1 do
+    begin
+      StartPoint := CanvasCoordinates[CoordIndex];
+      AZoomBox := ZoomBox(ViewDirection);
+      if (StartPoint.X >= 0) and (StartPoint.Y >= 0)
+        and (StartPoint.X < AZoomBox.Image32.Width)
+        and (StartPoint.Y < AZoomBox.Image32.Height) then
+      begin
+        StartPoint.X := StartPoint.X + ObjectLabel.OffSet.X;
+        StartPoint.Y := StartPoint.Y - ObjectLabel.OffSet.Y;
+        ExistingFont := TFont.Create;
+        try
+          ExistingFont.Assign(Bitmap32.Font);
+          Bitmap32.Font := ObjectLabel.Font;
+          CaptionLines := TStringList.Create;
+          try
+            if ObjectLabel.Caption = '' then
+            begin
+              CaptionLines.Text := Name;
+            end
+            else
+            begin
+              CaptionLines.Text := ObjectLabel.Caption;
+            end;
+            YHeight := Bitmap32.TextHeight('M');
+            for LineIndex := 0 to CaptionLines.Count - 1 do
+            begin
+              ACaptionLine := CaptionLines[LineIndex];
+              Bitmap32.Textout(StartPoint.X, StartPoint.Y, ACaptionLine);
+              StartPoint.Y := StartPoint.Y + YHeight;
+            end;
+          finally
+            CaptionLines.Free;
+          end;
+          Bitmap32.Font := ExistingFont;
+        finally
+          ExistingFont.Free;
+        end;
+        break;
+      end;
+    end;
+  end;
 end;
 
 procedure TScreenObject.InvalidateCoordinates;
@@ -8277,10 +8328,94 @@ begin
     begin
       ModflowUzfBoundary.InvalidateDisplay;
     end;
+//    if ModflowHeadObservations <> nil then
+//    begin
+//      ModflowHeadObservations.InvalidateDisplay;
+//    end;
+//    if ModflowStreamGage <> nil then
+//    begin
+//      ModflowStreamGage.InvalidateDisplay;
+//    end;
+    if ModflowFhbHeadBoundary <> nil then
+    begin
+      ModflowFhbHeadBoundary.InvalidateDisplay;
+    end;
+    if ModflowFhbFlowBoundary <> nil then
+    begin
+      ModflowFhbFlowBoundary.InvalidateDisplay;
+    end;
+  {$IFDEF FMP}
+//    if ModflowFmpFarm <> nil then
+//    begin
+//      ModflowFmpFarm.InvalidateDisplay;
+//    end;
+    if ModflowFmpWellBoundary <> nil then
+    begin
+      ModflowFmpWellBoundary.InvalidateDisplay;
+    end;
+    if ModflowFmpPrecip <> nil then
+    begin
+      ModflowFmpPrecip.InvalidateDisplay;
+    end;
+    if ModflowFmpRefEvap <> nil then
+    begin
+      ModflowFmpRefEvap.InvalidateDisplay;
+    end;
+    if ModflowFmpCropID <> nil then
+    begin
+      ModflowFmpCropID.InvalidateDisplay;
+    end;
+  {$ENDIF}
+//    if ModflowCfpPipes <> nil then
+//    begin
+//      ModflowCfpPipes.InvalidateDisplay;
+//    end;
+//    if ModflowCfpFixedHeads <> nil then
+//    begin
+//      ModflowCfpFixedHeads.InvalidateDisplay;
+//    end;
+    if ModflowCfpRchFraction <> nil then
+    begin
+      ModflowCfpRchFraction.InvalidateDisplay;
+    end;
+    if ModflowSwrRain <> nil then
+    begin
+      ModflowSwrRain.InvalidateDisplay;
+    end;
+    if ModflowSwrEvap <> nil then
+    begin
+      ModflowSwrEvap.InvalidateDisplay;
+    end;
+    if ModflowSwrLatInflow <> nil then
+    begin
+      ModflowSwrLatInflow.InvalidateDisplay;
+    end;
+    if ModflowSwrStage <> nil then
+    begin
+      ModflowSwrStage.InvalidateDisplay;
+    end;
+    if ModflowSwrDirectRunoff <> nil then
+    begin
+      ModflowSwrDirectRunoff.InvalidateDisplay;
+    end;
+    if ModflowSwrReaches <> nil then
+    begin
+      ModflowSwrReaches.InvalidateDisplay;
+    end;
+    if Mt3dmsConcBoundary <> nil then
+    begin
+      Mt3dmsConcBoundary.InvalidateDisplay;
+    end;
+//    if Mt3dmsTransObservations <> nil then
+//    begin
+//      Mt3dmsTransObservations.InvalidateDisplay;
+//    end;
+
     if not (FModel as TPhastModel).ImportingModel then
     begin
       FModflowBoundaries.FreeUnusedBoundaries;
     end;
+
 //    if ModflowHfbBoundary <> nil then
 //    begin
 //      // causes access violations when creating new objects
@@ -9785,8 +9920,12 @@ begin
 end;
 
 constructor TScreenObject.Create(AnOwner: TComponent);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
   inherited Create(nil);
+  FObjectLabel := TObjectLabel.Create;
+  FObjectLabel.OnChange := RefreshGui;
   FDuplicatesAllowed := True;
   FPriorObjectIntersectLengthCol := -1;
   FPriorObjectIntersectLengthRow := -1;
@@ -9794,6 +9933,14 @@ begin
   FCachedCells:= TCachedCells.Create;
   Assert((AnOwner = nil) or (AnOwner is TPhastModel));
   FModel := TBaseModel(AnOwner);
+  if FModel = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := FModel.Invalidate;
+  end;
   FCanInvalidateModel := (FModel <> nil);
 
   FGlListCreated := False;
@@ -9845,12 +9992,12 @@ begin
 
   FDataSetMixtureSubscriptions := TObjectList.Create;
 
-  FInterpValues := TInterpValuesCollection.Create(FModel);
+  FInterpValues := TInterpValuesCollection.Create(InvalidateModelEvent);
   FIFACE := iInternal;
   FModpathParticles := TParticleStorage.Create(Model);
   FUsedModels := TUsedWithModelCollection.Create(Model);
   FStoredSutraAngle := TRealStorage.Create;
-  FStoredSutraAngle.OnChange := InvalidateModelEvent;
+  FStoredSutraAngle.OnChange := self.InvalidateModelEvent;
 
   FSutraBoundaries := TSutraBoundaries.Create(Model, self);
 end;
@@ -12400,6 +12547,112 @@ begin
   end;
 end;
 
+procedure TScreenObject.SetModflowSwrDirectRunoff(
+  const Value: TSwrDirectRunoffBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FSwrDirectRunoff <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FSwrDirectRunoff);
+  end
+  else
+  begin
+    CreateSwrDirectRunoffBoundary;
+    ModflowBoundaries.FSwrDirectRunoff.Assign(Value);
+  end;
+
+end;
+
+procedure TScreenObject.SetModflowSwrEvap(const Value: TSwrEvapBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FSwrEvap <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FSwrEvap);
+  end
+  else
+  begin
+    CreateSwrEvapBoundary;
+    ModflowBoundaries.FSwrEvap.Assign(Value);
+  end;
+end;
+
+procedure TScreenObject.SetModflowSwrLatInflow(
+  const Value: TSwrLatInflowBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FSwrLatInflow <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FSwrLatInflow);
+  end
+  else
+  begin
+    CreateSwrLatInflowBoundary;
+    ModflowBoundaries.FSwrLatInflow.Assign(Value);
+  end;
+end;
+
+procedure TScreenObject.SetModflowSwrRain(const Value: TSwrRainBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FSwrRain <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FSwrRain);
+  end
+  else
+  begin
+    CreateSwrRainBoundary;
+    ModflowBoundaries.FSwrRain.Assign(Value);
+  end;
+end;
+
+procedure TScreenObject.SetModflowSwrReaches(const Value: TSwrReachBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FSwrReaches <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FSwrReaches);
+  end
+  else
+  begin
+    CreateSwrReachesBoundary;
+    ModflowBoundaries.FSwrReaches.Assign(Value);
+  end;
+end;
+
+procedure TScreenObject.SetModflowSwrStage(const Value: TSwrStageBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FSwrStage <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FSwrStage);
+  end
+  else
+  begin
+    CreateSwrStageBoundary;
+    ModflowBoundaries.FSwrStage.Assign(Value);
+  end;
+end;
+
+
 procedure TScreenObject.SetModflowUzfBoundary(const Value: TUzfBoundary);
 begin
   if (Value = nil) or not Value.Used then
@@ -13232,6 +13485,11 @@ begin
   InvalidateModel;
 end;
 
+procedure TScreenObject.SetObjectLabel(const Value: TObjectLabel);
+begin
+  FObjectLabel.Assign(Value);
+end;
+
 procedure TScreenObject.ResetSubscriptions;
 begin
   ResetBoundaryDataSetSubscriptions;
@@ -13733,6 +13991,54 @@ begin
     SubPolygon := TSubPolygon.Create(FPoints, SectionLength[Index],
       SectionStart[Index], Index);
     FSubPolygons.Add(SubPolygon);
+  end;
+end;
+
+procedure TScreenObject.CreateSwrDirectRunoffBoundary;
+begin
+  if (ModflowBoundaries.FSwrDirectRunoff = nil) then
+  begin
+    ModflowBoundaries.FSwrDirectRunoff := TSwrDirectRunoffBoundary.Create(FModel, self);
+  end;
+end;
+
+procedure TScreenObject.CreateSwrEvapBoundary;
+begin
+  if (ModflowBoundaries.FSwrEvap = nil) then
+  begin
+    ModflowBoundaries.FSwrEvap := TSwrEvapBoundary.Create(FModel, self);
+  end;
+end;
+
+procedure TScreenObject.CreateSwrLatInflowBoundary;
+begin
+  if (ModflowBoundaries.FSwrLatInflow = nil) then
+  begin
+    ModflowBoundaries.FSwrLatInflow := TSwrLatInflowBoundary.Create(FModel, self);
+  end;
+end;
+
+procedure TScreenObject.CreateSwrRainBoundary;
+begin
+  if (ModflowBoundaries.FSwrRain = nil) then
+  begin
+    ModflowBoundaries.FSwrRain := TSwrRainBoundary.Create(FModel, self);
+  end;
+end;
+
+procedure TScreenObject.CreateSwrReachesBoundary;
+begin
+  if (ModflowBoundaries.FSwrReaches = nil) then
+  begin
+    ModflowBoundaries.FSwrReaches := TSwrReachBoundary.Create(FModel, self);
+  end;
+end;
+
+procedure TScreenObject.CreateSwrStageBoundary;
+begin
+  if (ModflowBoundaries.FSwrStage = nil) then
+  begin
+    ModflowBoundaries.FSwrStage := TSwrStageBoundary.Create(FModel, self);
   end;
 end;
 
@@ -16075,10 +16381,10 @@ var
     begin
       IsBoundary := True;
       DI := IndexOfBoundaryDataSet(DataSet);
-      Assert(DI >= 0);
+//      Assert(DI >= 0);
     end;
     ResetScreenObjectFunction(DI, self, Compiler, DataSet.DataType,
-      E.Message, IsBoundary);
+      E.Message, IsBoundary, Expression.Decompile);
     Expression := Compiler.CurrentExpression;
     Expression.Evaluate;
   end;
@@ -16199,7 +16505,7 @@ begin
     end;
   end;
 
-  FModflowBoundaries.Free;
+  FreeAndNil(FModflowBoundaries);
 
   FInterpValues.Free;
   FFluxBoundary.Free;
@@ -16267,6 +16573,7 @@ begin
   FDataSetMixtureSubscriptions.Free;
   FImportedValues.Free;
   FCachedCells.Free;
+  FObjectLabel.Free;
 end;
 
 procedure TScreenObject.DestroyLastSubPolygon;
@@ -16524,6 +16831,12 @@ begin
   begin
     ModflowBoundaries.FModflowHydmodData.Loaded;
   end;
+
+  if ModflowBoundaries.SwrReaches <> nil then
+  begin
+    ModflowBoundaries.SwrReaches.Loaded;
+  end;
+
   UpdateUzfGage1and2;
   UpdateUzfGage3;
 
@@ -17107,7 +17420,8 @@ end;
 
 procedure TScreenObject.NotifyGuiOfChange(Sender: TObject);
 begin
-  if (FModel <> nil) and FCanInvalidateModel then
+  if not (csDestroying in ComponentState)
+    and (FModel <> nil) and FCanInvalidateModel then
   begin
     (FModel as TPhastModel).ScreenObjectsChanged(Sender);
   end;
@@ -19467,6 +19781,12 @@ begin
       begin
         LocalModel.InvalidateMfHobHeads (self);
       end;
+
+      if FModflowBoundaries <> nil then
+      begin
+        FModflowBoundaries.Invalidate;
+      end;
+
       if ChildModel <> nil then
       begin
         LocalChild := ChildModel as TChildModel;
@@ -20618,6 +20938,22 @@ begin
   end;
 end;
 
+function TCellElementSegment.IsSame(
+  AnotherSegment: TCellElementSegment): boolean;
+begin
+  result := (Col = AnotherSegment.Col)
+    and (EndPosition = AnotherSegment.EndPosition)
+    and (Layer = AnotherSegment.Layer)
+    and (VertexIndex = AnotherSegment.VertexIndex)
+    and (Row = AnotherSegment.Row)
+    and (StartPosition = AnotherSegment.StartPosition)
+    and (X1 = AnotherSegment.X1)
+    and (X2 = AnotherSegment.X2)
+    and (Y1 = AnotherSegment.Y1)
+    and (Y2 = AnotherSegment.Y2)
+    and (SectionIndex = AnotherSegment.SectionIndex)
+end;
+
 function TCellElementSegment.SegmentLength: double;
 var
   SubIndex: Integer;
@@ -20808,9 +21144,9 @@ end;
 { TDataListCollection }
 
 constructor TDataListCollection.Create(ItemClass: TCollectionItemClass; const
-  ScreenObject: TScreenObject; Model: TBaseModel);
+  ScreenObject: TScreenObject; InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited create(ItemClass, Model);
+  inherited create(ItemClass, InvalidateModelEvent);
   FScreenObject := ScreenObject;
   PriorIndex := -1;
 end;
@@ -20852,17 +21188,17 @@ end;
 { TRealDataListCollection }
 
 constructor TRealDataListCollection.Create(const ScreenObject: TScreenObject;
-  Model: TBaseModel);
+  InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(TRealDataListItem, ScreenObject, Model);
+  inherited Create(TRealDataListItem, ScreenObject, InvalidateModelEvent);
 end;
 
 { TIntegerDataListCollection }
 
 constructor TIntegerDataListCollection.Create(const ScreenObject:
-  TScreenObject; Model: TBaseModel);
+  TScreenObject; InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(TIntegerDataListItem, ScreenObject, Model);
+  inherited Create(TIntegerDataListItem, ScreenObject, InvalidateModelEvent);
 end;
 
 { TCustomDataListItem }
@@ -21206,6 +21542,7 @@ var
   ResultTypeOK: boolean;
   DI: integer;
   IsBoundary: boolean;
+  ErrorFunction: string;
 begin
   Compiler := GetCompiler(DataSet.Orientation);
   DI := FScreenObject.IndexOfDataSet(DataSet);
@@ -21222,12 +21559,13 @@ begin
     DataSetFunction := FScreenObject.BoundaryDataSetFormulas[DI];
   end;
 
+  ErrorFunction := DataSetFunction;
   try
     Compiler.Compile(DataSetFunction);
   except on E: ERbwParserError do
     begin
       ResetScreenObjectFunction(DI, FScreenObject, Compiler,
-        DataSet.DataType, E.Message, IsBoundary);
+        DataSet.DataType, E.Message, IsBoundary, ErrorFunction);
     end;
   end;
   Expression := Compiler.CurrentExpression;
@@ -27953,6 +28291,7 @@ procedure TScreenObject.InitializeExpression(out Compiler: TRbwParser;
     DI: integer;
     IsBoundary: boolean;
     TestDataArray: TDataArray;
+    ErrorFunction: string;
   begin
     Compiler := GetCompiler(DataSet.Orientation);
 
@@ -27972,12 +28311,13 @@ procedure TScreenObject.InitializeExpression(out Compiler: TRbwParser;
       DataSetFormula := BoundaryDataSetFormulas[DI];
     end;
 
+    ErrorFunction := DataSetFormula;
     try
       Compiler.Compile(DataSetFormula);
     except on E: ERbwParserError do
       begin
         ResetScreenObjectFunction(DI, self, Compiler,
-          DataSet.DataType, E.Message, IsBoundary);
+          DataSet.DataType, E.Message, IsBoundary, ErrorFunction);
       end;
     end;
     Expression := Compiler.CurrentExpression;
@@ -28369,6 +28709,15 @@ begin
 end;
 
 
+procedure TScreenObject.StopTalkingToAnyone;
+begin
+  inherited;
+  if FModflowBoundaries <> nil then
+  begin
+    FModflowBoundaries.StopTalkingToAnyone;
+  end;
+end;
+
 function TScreenObject.StoreFlux: boolean;
 begin
   result := (FFluxBoundary <> nil) and
@@ -28564,6 +28913,41 @@ function TScreenObject.StoreModflowStreamGage: Boolean;
 begin
   result := (FModflowBoundaries <> nil)
     and (ModflowStreamGage <> nil) and ModflowStreamGage.Used;
+end;
+
+function TScreenObject.StoreModflowSwrDirectRunoff: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowSwrDirectRunoff <> nil) and ModflowSwrDirectRunoff.Used;
+end;
+
+function TScreenObject.StoreModflowSwrEvap: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowSwrEvap <> nil) and ModflowSwrEvap.Used;
+end;
+
+function TScreenObject.StoreModflowSwrLatInflow: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowSwrLatInflow <> nil) and ModflowSwrLatInflow.Used;
+end;
+
+function TScreenObject.StoreModflowSwrRain: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowSwrRain <> nil) and ModflowSwrRain.Used;
+end;
+function TScreenObject.StoreModflowSwrReaches: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowSwrReaches <> nil) and ModflowSwrReaches.Used;
+end;
+
+function TScreenObject.StoreModflowSwrStage: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowSwrStage <> nil) and ModflowSwrStage.Used;
 end;
 
 function TScreenObject.StoreModflowUzfBoundary: Boolean;
@@ -29437,6 +29821,108 @@ begin
   end;
 end;
 
+function TScreenObject.GetModflowSwrDirectRunoff: TSwrDirectRunoffBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateSwrDirectRunoffBoundary;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FSwrDirectRunoff;
+  end;
+end;
+
+function TScreenObject.GetModflowSwrEvap: TSwrEvapBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateSwrEvapBoundary;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FSwrEvap;
+  end;
+end;
+
+function TScreenObject.GetModflowSwrLatInflow: TSwrLatInflowBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateSwrLatInflowBoundary;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FSwrLatInflow;
+  end;
+end;
+
+function TScreenObject.GetModflowSwrRain: TSwrRainBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateSwrRainBoundary;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FSwrRain;
+  end;
+end;
+
+function TScreenObject.GetModflowSwrReaches: TSwrReachBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateSwrReachesBoundary;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FSwrReaches;
+  end;
+end;
+
+function TScreenObject.GetModflowSwrStage: TSwrStageBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateSwrStageBoundary;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FSwrStage;
+  end;
+end;
+
 function TScreenObject.GetModflowUzfBoundary: TUzfBoundary;
 begin
   if (FModel = nil)
@@ -29849,6 +30335,8 @@ begin
 end;
 
 procedure TScreenObject.EliminateHoleCells(CellList: TCellAssignmentList);
+const
+  MaxSections = 1000;
 var
   SO_Polygon: TGpcPolygonClass;
   ClosedSections: TIntegerList;
@@ -29866,6 +30354,8 @@ var
   ACell: TCellAssignment;
   SectionIndex: integer;
   HasHoles: Boolean;
+  NewIntersectionPolygon: TGpcPolygonClass;
+  PolySectionIndex: Integer;
   function HoleSection(ACell: TCellAssignment): Boolean;
   var
     ContourIndex: Integer;
@@ -29876,8 +30366,10 @@ var
       Exit;
     end;
     ContourIndex := TranslationIndices.IndexOf(ACell.Section);
-    Assert(ContourIndex >= 0);
-    result := SO_Polygon.Holes[ContourIndex];
+    if (ContourIndex >= 0) then
+    begin
+      result := SO_Polygon.Holes[ContourIndex];
+    end;
   end;
 begin
   SO_Polygon := nil;
@@ -29907,13 +30399,15 @@ begin
           SearchQuad.YMin := MinY;
           SearchQuad.YMax := MaxY;
 
+          IntersectionPolygon := nil;
           SO_Polygon := TGpcPolygonClass.Create;
-          SO_Polygon.NumberOfContours := ClosedSections.Count;
+          SO_Polygon.NumberOfContours := Min(MaxSections, ClosedSections.Count);
           for SectionIndex := 0 to ClosedSections.Count - 1 do
           begin
             ASection := ClosedSections[SectionIndex];
             Assert(SectionClosed[ASection]);
-            SO_Polygon.VertexCount[ASection] :=
+            PolySectionIndex := SectionIndex mod MaxSections;
+            SO_Polygon.VertexCount[PolySectionIndex] :=
               SectionLength[ASection]-1;
             StartIndex := SectionStart[ASection];
             for PointIndex := StartIndex to
@@ -29921,16 +30415,51 @@ begin
             begin
               VertexIndex := PointIndex-StartIndex;
               APoint := Points[PointIndex];
-              SO_Polygon.Vertices[ASection, VertexIndex] := APoint;
+              SO_Polygon.Vertices[PolySectionIndex, VertexIndex] := APoint;
               SearchQuad.AddPoint(APoint.x, APoint.y, Pointer(ASection));
+            end;
+            if ((SectionIndex + 1) mod MaxSections) = 0 then
+            begin
+              if IntersectionPolygon = nil then
+              begin
+                NewIntersectionPolygon := TGpcPolygonClass.CreateFromOperation(
+                  GPC_DIFF, SO_Polygon, EmptyPolygon);
+              end
+              else
+              begin
+                NewIntersectionPolygon := TGpcPolygonClass.CreateFromOperation(
+                  GPC_DIFF, SO_Polygon, IntersectionPolygon);
+              end;
+              IntersectionPolygon.Free;
+              IntersectionPolygon := NewIntersectionPolygon;
+              SO_Polygon.NumberOfContours := Min(MaxSections,
+                ClosedSections.Count - SectionIndex -1);
             end;
           end;
 
-          IntersectionPolygon := nil;
-          try
-            IntersectionPolygon := TGpcPolygonClass.CreateFromOperation(
-              GPC_DIFF, SO_Polygon, EmptyPolygon);
-          finally
+          if (ClosedSections.Count mod MaxSections) <> 0 then
+          begin
+            if IntersectionPolygon = nil then
+            begin
+              try
+                IntersectionPolygon := TGpcPolygonClass.CreateFromOperation(
+                  GPC_DIFF, SO_Polygon, EmptyPolygon);
+              finally
+                SO_Polygon.Free;
+                SO_Polygon := IntersectionPolygon;
+              end;
+            end
+            else
+            begin
+              NewIntersectionPolygon := TGpcPolygonClass.CreateFromOperation(
+                GPC_DIFF, SO_Polygon, IntersectionPolygon);
+              IntersectionPolygon.Free;
+              SO_Polygon.Free;
+              SO_Polygon := NewIntersectionPolygon;
+            end;
+          end
+          else
+          begin
             SO_Polygon.Free;
             SO_Polygon := IntersectionPolygon;
           end;
@@ -30005,7 +30534,10 @@ begin
   end;
   if DuplicatesAllowed then
   begin
-    EliminateHoleCells(CellList);
+    if SetValuesOfEnclosedCells then
+    begin
+      EliminateHoleCells(CellList);
+    end;
   end
   else
   begin
@@ -33334,10 +33866,22 @@ begin
 end;
 
 procedure TScreenObject.CreateGagBoundary;
+var
+  OnInvalidateModelEvent: TNotifyEvent;
 begin
   if (ModflowBoundaries.FModflowGage = nil) then
   begin
-    ModflowBoundaries.FModflowGage := TStreamGage.Create(FModel, self);
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    if FModel = nil then
+    begin
+      OnInvalidateModelEvent := nil;
+    end
+    else
+    begin
+      OnInvalidateModelEvent := FModel.Invalidate;
+    end;
+    ModflowBoundaries.FModflowGage :=
+      TStreamGage.Create(OnInvalidateModelEvent, self);
   end;
 end;
 
@@ -33808,7 +34352,7 @@ var
   UseIndex: Integer;
   UsedVariables: TStringList;
 begin
-  Model := (Collection as TPhastCollection).Model as TPhastModel;
+  Model := (Collection as TCustomPhastBoundaryCollection).Model as TPhastModel;
   if Model = nil then
   begin
     Exit;
@@ -34221,30 +34765,30 @@ end;
 
 procedure TFluxBoundary.SetOrientation(const Value: TViewDirection);
 var
-  Model: TPhastModel;
+  LocalModel: TPhastModel;
 begin
   inherited;
-  if (FModel <> nil) and (FBoundaryValue <> nil) and (FSolution <> nil) then
+  if (Model <> nil) and (FBoundaryValue <> nil) and (FSolution <> nil) then
   begin
-    Model := FModel as TPhastModel;
+    LocalModel := Model as TPhastModel;
     case Value of
       vdTop:
         begin
-          FBoundaryValue.TimeList := Model.TopFluxBoundaryFlux;
+          FBoundaryValue.TimeList := LocalModel.TopFluxBoundaryFlux;
           FSolution.TimeList :=
-            Model.TopFluxBoundaryChemistry;
+            LocalModel.TopFluxBoundaryChemistry;
         end;
       vdFront:
         begin
-          FBoundaryValue.TimeList := Model.FrontFluxBoundaryFlux;
+          FBoundaryValue.TimeList := LocalModel.FrontFluxBoundaryFlux;
           FSolution.TimeList :=
-            Model.FrontFluxBoundaryChemistry;
+            LocalModel.FrontFluxBoundaryChemistry;
         end;
       vdSide:
         begin
-          FBoundaryValue.TimeList := Model.SideFluxBoundaryFlux;
+          FBoundaryValue.TimeList := LocalModel.SideFluxBoundaryFlux;
           FSolution.TimeList :=
-            Model.SideFluxBoundaryChemistry;
+            LocalModel.SideFluxBoundaryChemistry;
         end;
     else
       Assert(False);
@@ -34292,7 +34836,7 @@ var
 begin
   if (BoundaryValue.Count > 0) or (Solution.Count > 0) then
   begin
-    if (ScreenObject <> nil) and (FModel <> nil) then
+    if (ScreenObject <> nil) and (Model <> nil) then
     begin
       case Orientation of
         vdTop:
@@ -34327,7 +34871,7 @@ var
 begin
   if (BoundaryValue.Count > 0) or (Solution.Count > 0) then
   begin
-    if (ScreenObject <> nil) and (FModel <> nil) then
+    if (ScreenObject <> nil) and (Model <> nil) then
     begin
       case Orientation of
         vdTop:
@@ -34412,30 +34956,30 @@ end;
 
 procedure TLeakyBoundary.SetOrientation(const Value: TViewDirection);
 var
-  Model: TPhastModel;
+  LocalModel: TPhastModel;
 begin
   inherited;
-  if FModel <> nil then
+  if Model <> nil then
   begin
-    Model := FModel as TPhastModel;
+    LocalModel := Model as TPhastModel;
     case Value of
       vdTop:
         begin
           FSolution.TimeList :=
-            Model.TopLeakyAssociatedSolution;
-          FBoundaryValue.TimeList := Model.TopLeakyHead;
+            LocalModel.TopLeakyAssociatedSolution;
+          FBoundaryValue.TimeList := LocalModel.TopLeakyHead;
         end;
       vdFront:
         begin
           FSolution.TimeList :=
-            Model.FrontLeakyAssociatedSolution;
-          FBoundaryValue.TimeList := Model.FrontLeakyHead;
+            LocalModel.FrontLeakyAssociatedSolution;
+          FBoundaryValue.TimeList := LocalModel.FrontLeakyHead;
         end;
       vdSide:
         begin
           FSolution.TimeList :=
-            Model.SideLeakyAssociatedSolution;
-          FBoundaryValue.TimeList := Model.SideLeakyHead;
+            LocalModel.SideLeakyAssociatedSolution;
+          FBoundaryValue.TimeList := LocalModel.SideLeakyHead;
         end;
     else
       Assert(False);
@@ -34510,7 +35054,7 @@ function TRiverBoundary.GetBedHydraulicConductivity: string;
 begin
   if (BoundaryValue.Count > 0) or (Solution.Count > 0) then
   begin
-    if (ScreenObject <> nil) and (FModel <> nil) then
+    if (ScreenObject <> nil) and (Model <> nil) then
     begin
       Result := BoundaryDataSetFormula(rsRiverHydraulicConductivity);
     end
@@ -34529,7 +35073,7 @@ function TRiverBoundary.GetBedThickness: string;
 begin
   if (BoundaryValue.Count > 0) or (Solution.Count > 0) then
   begin
-    if (ScreenObject <> nil) and (FModel <> nil) then
+    if (ScreenObject <> nil) and (Model <> nil) then
     begin
       Result := BoundaryDataSetFormula(rsRiverBedThickness);
     end
@@ -34548,7 +35092,7 @@ function TRiverBoundary.GetDepth: string;
 begin
   if (BoundaryValue.Count > 0) or (Solution.Count > 0) then
   begin
-    if (ScreenObject <> nil) and (FModel <> nil) then
+    if (ScreenObject <> nil) and (Model <> nil) then
     begin
       Result := BoundaryDataSetFormula(rsRiverDepth);
     end
@@ -34567,7 +35111,7 @@ function TRiverBoundary.GetWidth: string;
 begin
   if (BoundaryValue.Count > 0) or (Solution.Count > 0) then
   begin
-    if (ScreenObject <> nil) and (FModel <> nil) then
+    if (ScreenObject <> nil) and (Model <> nil) then
     begin
       Result := BoundaryDataSetFormula(rsRiverWidth);
     end
@@ -34586,7 +35130,7 @@ function TRiverBoundary.IsBoundary: boolean;
 begin
   result := (BoundaryValue.Count > 0) and (Width <> '') and (Depth <> '')
     and (BedThickness <> '') and (BedHydraulicConductivity <> '');
-  if result and (FModel as TPhastModel).SoluteTransport then
+  if result and (Model as TPhastModel).SoluteTransport then
   begin
     result := (Solution.Count > 0)
   end;
@@ -34803,6 +35347,23 @@ begin
 end;
 
 
+constructor TCustomPhastBoundaryCollection.Create(
+  ItemClass: TCollectionItemClass; Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
+begin
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(ItemClass, InvalidateModelEvent);
+end;
+
 function TCustomPhastBoundaryCollection.GetDataSet(
   const ATime: double): TSparseArrayPhastInterpolationDataSet;
 var
@@ -34810,7 +35371,7 @@ var
   AnArray: TSparseArrayPhastInterpolationDataSet;
   Model: TPhastModel;
 begin
-  Model := FModel as TPhastModel;
+  Model := self.Model as TPhastModel;
   TimeIndex := TimeList.IndexOf(ATime);
   if TimeIndex < 0 then
   begin
@@ -34902,10 +35463,20 @@ end;
 
 constructor TWellBoundary.Create(ScreenObject: TScreenObject;
   Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
   inherited Create(ScreenObject, Model);
   FAllocateByPressureAndMobility := true;
-  FIntervals := TWellIntervals.Create(ScreenObject, Model);
+  FIntervals := TWellIntervals.Create(ScreenObject, InvalidateModelEvent);
 
   if Model = nil then
   begin
@@ -34929,7 +35500,7 @@ end;
 function TWellBoundary.IsBoundary: boolean;
 begin
   result := (BoundaryValue.Count > 0) and (Intervals.Count > 0);
-  if result and (FModel as TPhastModel).SoluteTransport then
+  if result and (Model as TPhastModel).SoluteTransport then
   begin
     result := (Solution.Count > 0)
   end;
@@ -35052,9 +35623,9 @@ end;
 { TWellIntervals }
 
 constructor TWellIntervals.Create(ScreenObject: TScreenObject;
-  Model: TBaseModel);
+  InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(TWellInterval, Model);
+  inherited Create(TWellInterval, InvalidateModelEvent);
   FScreenObject := ScreenObject;
 end;
 
@@ -35287,10 +35858,20 @@ begin
 end;
 
 constructor TMultiValueScreenObject.Create(AnOwner: TComponent);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
   inherited;
-  FRealValues := TRealDataListCollection.Create(self, Model);
-  FIntegerValues := TIntegerDataListCollection.Create(self, Model);
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  FRealValues := TRealDataListCollection.Create(self, InvalidateModelEvent);
+  FIntegerValues := TIntegerDataListCollection.Create(self, InvalidateModelEvent);
 end;
 
 destructor TMultiValueScreenObject.Destroy;
@@ -35511,6 +36092,11 @@ end;
 function TScreenObjectList.GetItems(Index: integer): TScreenObject;
 begin
   result := FList[Index];
+end;
+
+function TScreenObjectList.IndexOf(AScreenObject: TScreenObject): Integer;
+begin
+  result := FList.IndexOf(AScreenObject);
 end;
 
 procedure TScreenObjectList.SetCapacity(const Value: integer);
@@ -35958,11 +36544,95 @@ begin
     FCfpRchFraction.Assign(Source.FCfpRchFraction);
   end;
 
+  if Source.FSwrRain = nil then
+  begin
+    FreeAndNil(FSwrRain);
+  end
+  else
+  begin
+    if FSwrRain = nil then
+    begin
+      FSwrRain := TSwrRainBoundary.Create(nil, nil);
+    end;
+    FSwrRain.Assign(Source.FSwrRain);
+  end;
+
+  if Source.FSwrEvap = nil then
+  begin
+    FreeAndNil(FSwrEvap);
+  end
+  else
+  begin
+    if FSwrEvap = nil then
+    begin
+      FSwrEvap := TSwrEvapBoundary.Create(nil, nil);
+    end;
+    FSwrEvap.Assign(Source.FSwrEvap);
+  end;
+
+  if Source.FSwrLatInflow = nil then
+  begin
+    FreeAndNil(FSwrLatInflow);
+  end
+  else
+  begin
+    if FSwrLatInflow = nil then
+    begin
+      FSwrLatInflow := TSwrLatInflowBoundary.Create(nil, nil);
+    end;
+    FSwrLatInflow.Assign(Source.FSwrLatInflow);
+  end;
+
+  if Source.FSwrStage = nil then
+  begin
+    FreeAndNil(FSwrStage);
+  end
+  else
+  begin
+    if FSwrStage = nil then
+    begin
+      FSwrStage := TSwrStageBoundary.Create(nil, nil);
+    end;
+    FSwrStage.Assign(Source.FSwrStage);
+  end;
+
+  if Source.FSwrDirectRunoff = nil then
+  begin
+    FreeAndNil(FSwrDirectRunoff);
+  end
+  else
+  begin
+    if FSwrDirectRunoff = nil then
+    begin
+      FSwrDirectRunoff := TSwrDirectRunoffBoundary.Create(nil, nil);
+    end;
+    FSwrDirectRunoff.Assign(Source.FSwrDirectRunoff);
+  end;
+
+  if Source.FSwrReaches = nil then
+  begin
+    FreeAndNil(FSwrReaches);
+  end
+  else
+  begin
+    if FSwrReaches = nil then
+    begin
+      FSwrReaches := TSwrReachBoundary.Create(nil, nil);
+    end;
+    FSwrReaches.Assign(Source.FSwrReaches);
+  end;
+
   FreeUnusedBoundaries;
 end;
 
 destructor TModflowBoundaries.Destroy;
 begin
+  FSwrRain.Free;
+  FSwrEvap.Free;
+  FSwrStage.Free;
+  FSwrLatInflow.Free;
+  FSwrDirectRunoff.Free;
+  FSwrReaches.Free;
   FCfpRchFraction.Free;
   CfpFixedHeads.Free;
   CfpPipes.Free;
@@ -36123,7 +36793,230 @@ begin
   begin
     FreeAndNil(FCfpRchFraction);
   end;
+  if (FSwrRain <> nil) and not FSwrRain.Used then
+  begin
+    FreeAndNil(FSwrRain);
+  end;
+  if (FSwrEvap <> nil) and not FSwrEvap.Used then
+  begin
+    FreeAndNil(FSwrEvap);
+  end;
+  if (FSwrLatInflow <> nil) and not FSwrLatInflow.Used then
+  begin
+    FreeAndNil(FSwrLatInflow);
+  end;
+  if (FSwrStage <> nil) and not FSwrStage.Used then
+  begin
+    FreeAndNil(FSwrStage);
+  end;
+  if (FSwrDirectRunoff <> nil) and not FSwrDirectRunoff.Used then
+  begin
+    FreeAndNil(FSwrDirectRunoff);
+  end;
+  if (FSwrReaches <> nil) and not FSwrReaches.Used then
+  begin
+    FreeAndNil(FSwrReaches);
+  end;
+end;
 
+procedure TModflowBoundaries.Invalidate;
+begin
+  if FModflowChdBoundary <> nil then
+  begin
+    FModflowChdBoundary.Invalidate;
+  end;
+
+  if FModflowEtsBoundary <> nil then
+  begin
+    FModflowEtsBoundary.Invalidate;
+  end;
+
+  if FModflowEvtBoundary <> nil then
+  begin
+    FModflowEvtBoundary.Invalidate;
+  end;
+
+  if FModflowDrnBoundary <> nil then
+  begin
+    FModflowDrnBoundary.Invalidate;
+  end;
+
+  if FModflowDrtBoundary <> nil then
+  begin
+    FModflowDrtBoundary.Invalidate;
+  end;
+
+  if FModflowGhbBoundary <> nil then
+  begin
+    FModflowGhbBoundary.Invalidate;
+  end;
+
+  if FModflowLakBoundary <> nil then
+  begin
+    FModflowLakBoundary.Invalidate;
+  end;
+
+  if FModflowRchBoundary <> nil then
+  begin
+    FModflowRchBoundary.Invalidate;
+  end;
+
+  if FModflowResBoundary <> nil then
+  begin
+    FModflowResBoundary.Invalidate;
+  end;
+
+  if FModflowRivBoundary <> nil then
+  begin
+    FModflowRivBoundary.Invalidate;
+  end;
+
+  if FModflowSfrBoundary <> nil then
+  begin
+    FModflowSfrBoundary.Invalidate;
+  end;
+
+  if FModflowSfrBoundary <> nil then
+  begin
+    FModflowSfrBoundary.Invalidate;
+  end;
+
+  if FModflowStrBoundary <> nil then
+  begin
+    FModflowStrBoundary.Invalidate;
+  end;
+
+  if FModflowWellBoundary <> nil then
+  begin
+    FModflowWellBoundary.Invalidate;
+  end;
+
+  if FModflowUzfBoundary <> nil then
+  begin
+    FModflowUzfBoundary.Invalidate;
+  end;
+
+  if FModflowHeadObservations <> nil then
+  begin
+    FModflowHeadObservations.Invalidate;
+  end;
+
+  if FModflowHfbBoundary <> nil then
+  begin
+    FModflowHfbBoundary.Invalidate;
+  end;
+
+//  if FModflowGage <> nil then
+//  begin
+//    FModflowGage.Invalidate;
+//  end;
+
+  if FModflowMnw2Boundary <> nil then
+  begin
+    FModflowMnw2Boundary.Invalidate;
+  end;
+
+  if FModflowHydmodData <> nil then
+  begin
+    FModflowHydmodData.Invalidate;
+  end;
+
+  if FMt3dmsConcBoundary <> nil then
+  begin
+    FMt3dmsConcBoundary.Invalidate;
+  end;
+
+  if FMt3dmsTransObservations <> nil then
+  begin
+    FMt3dmsTransObservations.Invalidate;
+  end;
+
+  if FModflowFhbHeadBoundary <> nil then
+  begin
+    FModflowFhbHeadBoundary.Invalidate;
+  end;
+
+  if FModflowFhbFlowBoundary <> nil then
+  begin
+    FModflowFhbFlowBoundary.Invalidate;
+  end;
+
+  {$IFDEF FMP}
+  if FModflowFarm <> nil then
+  begin
+    FModflowFarm.Invalidate;
+  end;
+
+  if FFmpWellBoundary <> nil then
+  begin
+    FFmpWellBoundary.Invalidate;
+  end;
+
+  if FFmpPrecipBoundary <> nil then
+  begin
+    FFmpPrecipBoundary.Invalidate;
+  end;
+
+  if FFmpRefEvapBoundary <> nil then
+  begin
+    FFmpRefEvapBoundary.Invalidate;
+  end;
+
+  if FFmpRefEvapBoundary <> nil then
+  begin
+    FFmpRefEvapBoundary.Invalidate;
+  end;
+
+  if FFmpCropIDBoundary <> nil then
+  begin
+    FFmpCropIDBoundary.Invalidate;
+  end;
+  {$ENDIF}
+
+  if FCfpPipes <> nil then
+  begin
+    FCfpPipes.Invalidate;
+  end;
+
+  if FCfpFixedHeads <> nil then
+  begin
+    FCfpFixedHeads.Invalidate;
+  end;
+
+  if FCfpRchFraction <> nil then
+  begin
+    FCfpRchFraction.Invalidate;
+  end;
+
+  if FSwrRain <> nil then
+  begin
+    FSwrRain.Invalidate;
+  end;
+
+  if FSwrEvap <> nil then
+  begin
+    FSwrEvap.Invalidate;
+  end;
+
+  if FSwrLatInflow <> nil then
+  begin
+    FSwrLatInflow.Invalidate;
+  end;
+
+  if FSwrStage <> nil then
+  begin
+    FSwrStage.Invalidate;
+  end;
+
+  if FSwrDirectRunoff <> nil then
+  begin
+    FSwrDirectRunoff.Invalidate;
+  end;
+
+  if FSwrReaches <> nil then
+  begin
+    FSwrReaches.Invalidate;
+  end;
 end;
 
 procedure TModflowBoundaries.RemoveModelLink(AModel: TBaseModel);
@@ -36255,6 +37148,231 @@ begin
 //  begin
 //    FCfpFixedHeads.RemoveModelLink(AModel);
 //  end;
+
+  if FSwrRain <> nil then
+  begin
+    FSwrRain.RemoveModelLink(AModel);
+  end;
+  if FSwrEvap <> nil then
+  begin
+    FSwrEvap.RemoveModelLink(AModel);
+  end;
+  if FSwrLatInflow <> nil then
+  begin
+    FSwrLatInflow.RemoveModelLink(AModel);
+  end;
+  if FSwrStage <> nil then
+  begin
+    FSwrStage.RemoveModelLink(AModel);
+  end;
+  if FSwrDirectRunoff <> nil then
+  begin
+    FSwrDirectRunoff.RemoveModelLink(AModel);
+  end;
+  if FSwrReaches <> nil then
+  begin
+    FSwrReaches.RemoveModelLink(AModel);
+  end;
+end;
+
+procedure TModflowBoundaries.StopTalkingToAnyone;
+begin
+  if FModflowChdBoundary <> nil then
+  begin
+    FModflowChdBoundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowEtsBoundary <> nil then
+  begin
+    FModflowEtsBoundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowEvtBoundary <> nil then
+  begin
+    FModflowEvtBoundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowDrnBoundary <> nil then
+  begin
+    FModflowDrnBoundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowDrtBoundary <> nil then
+  begin
+    FModflowDrtBoundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowGhbBoundary <> nil then
+  begin
+    FModflowGhbBoundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowLakBoundary <> nil then
+  begin
+    FModflowLakBoundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowRchBoundary <> nil then
+  begin
+    FModflowRchBoundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowResBoundary <> nil then
+  begin
+    FModflowResBoundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowRivBoundary <> nil then
+  begin
+    FModflowRivBoundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowSfrBoundary <> nil then
+  begin
+    FModflowSfrBoundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowSfrBoundary <> nil then
+  begin
+    FModflowSfrBoundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowStrBoundary <> nil then
+  begin
+    FModflowStrBoundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowWellBoundary <> nil then
+  begin
+    FModflowWellBoundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowUzfBoundary <> nil then
+  begin
+    FModflowUzfBoundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowHeadObservations <> nil then
+  begin
+    FModflowHeadObservations.StopTalkingToAnyone;
+  end;
+
+  if FModflowHfbBoundary <> nil then
+  begin
+    FModflowHfbBoundary.StopTalkingToAnyone;
+  end;
+
+//  if FModflowGage <> nil then
+//  begin
+//    FModflowGage.StopTalkingToAnyone;
+//  end;
+
+  if FModflowMnw2Boundary <> nil then
+  begin
+    FModflowMnw2Boundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowHydmodData <> nil then
+  begin
+    FModflowHydmodData.StopTalkingToAnyone;
+  end;
+
+  if FMt3dmsConcBoundary <> nil then
+  begin
+    FMt3dmsConcBoundary.StopTalkingToAnyone;
+  end;
+
+  if FMt3dmsTransObservations <> nil then
+  begin
+    FMt3dmsTransObservations.StopTalkingToAnyone;
+  end;
+
+  if FModflowFhbHeadBoundary <> nil then
+  begin
+    FModflowFhbHeadBoundary.StopTalkingToAnyone;
+  end;
+
+  if FModflowFhbFlowBoundary <> nil then
+  begin
+    FModflowFhbFlowBoundary.StopTalkingToAnyone;
+  end;
+
+  {$IFDEF FMP}
+  if FModflowFarm <> nil then
+  begin
+    FModflowFarm.StopTalkingToAnyone;
+  end;
+
+  if FFmpWellBoundary <> nil then
+  begin
+    FFmpWellBoundary.StopTalkingToAnyone;
+  end;
+
+  if FFmpPrecipBoundary <> nil then
+  begin
+    FFmpPrecipBoundary.StopTalkingToAnyone;
+  end;
+
+  if FFmpRefEvapBoundary <> nil then
+  begin
+    FFmpRefEvapBoundary.StopTalkingToAnyone;
+  end;
+
+  if FFmpRefEvapBoundary <> nil then
+  begin
+    FFmpRefEvapBoundary.StopTalkingToAnyone;
+  end;
+
+  if FFmpCropIDBoundary <> nil then
+  begin
+    FFmpCropIDBoundary.StopTalkingToAnyone;
+  end;
+  {$ENDIF}
+
+  if FCfpPipes <> nil then
+  begin
+    FCfpPipes.StopTalkingToAnyone;
+  end;
+
+  if FCfpFixedHeads <> nil then
+  begin
+    FCfpFixedHeads.StopTalkingToAnyone;
+  end;
+
+  if FCfpRchFraction <> nil then
+  begin
+    FCfpRchFraction.StopTalkingToAnyone;
+  end;
+
+  if FSwrRain <> nil then
+  begin
+    FSwrRain.StopTalkingToAnyone;
+  end;
+
+  if FSwrEvap <> nil then
+  begin
+    FSwrEvap.StopTalkingToAnyone;
+  end;
+
+  if FSwrLatInflow <> nil then
+  begin
+    FSwrLatInflow.StopTalkingToAnyone;
+  end;
+
+  if FSwrStage <> nil then
+  begin
+    FSwrStage.StopTalkingToAnyone;
+  end;
+
+  if FSwrDirectRunoff <> nil then
+  begin
+    FSwrDirectRunoff.StopTalkingToAnyone;
+  end;
+
+  if FSwrReaches <> nil then
+  begin
+    FSwrReaches.StopTalkingToAnyone;
+  end;
 end;
 
 { TSelectedCells }
@@ -36813,12 +37931,12 @@ end;
 function TCustomInterpolatedBoundary.BoundaryDataSetFormula(DataSetName: string): string;
 var
   BoundaryPosition: Integer;
-  Model: TPhastModel;
+  LocalModel: TPhastModel;
   DataArray: TDataArray;
 begin
-  Model := (FModel as TPhastModel);
-  BoundaryPosition := Model.DataArrayManager.IndexOfBoundaryDataSet(DataSetName);
-  DataArray := Model.DataArrayManager.BoundaryDataSets[BoundaryPosition];
+  LocalModel := (Model as TPhastModel);
+  BoundaryPosition := LocalModel.DataArrayManager.IndexOfBoundaryDataSet(DataSetName);
+  DataArray := LocalModel.DataArrayManager.BoundaryDataSets[BoundaryPosition];
   BoundaryPosition := ScreenObject.IndexOfBoundaryDataSet(DataArray);
   result := ScreenObject.BoundaryDataSetFormulas[BoundaryPosition];
 end;
@@ -36884,6 +38002,23 @@ begin
   inherited;
 end;
 
+procedure TPointValue.InvalidateSwrReach;
+var
+  LocalModel: TCustomModel;
+  SwrReachNumberArray: TDataArray;
+begin
+  LocalModel := Model as TCustomModel;
+  if LocalModel <> nil then
+  begin
+    SwrReachNumberArray := LocalModel.DataArrayManager.
+      GetDataSetByName(KSwrReach);
+    if SwrReachNumberArray <> nil then
+    begin
+      SwrReachNumberArray.Invalidate;
+    end;
+  end;
+end;
+
 function TPointValue.IsSame(AnotherItem: TOrderedItem): boolean;
 var
   AnotherPointValue: TPointValue;
@@ -36899,15 +38034,35 @@ end;
 
 procedure TPointValue.SetName(const Value: string);
 begin
+  if FName <> Value then
+  begin
+    if (AnsiCompareText(FName, KReachString) = 0)
+      or (AnsiCompareText(Value, KReachString) = 0) then
+    begin
+      InvalidateSwrReach;
+    end;
+  end;
   SetCaseInsensitiveStringProperty(FName, Value);
 end;
 
 procedure TPointValue.SetValue(const Value: double);
 begin
+  if FValue <> Value then
+  begin
+    if (AnsiCompareText(FName, KReachString) = 0) then
+    begin
+      InvalidateSwrReach;
+    end;
+  end;
   SetRealProperty(FValue, Value);
 end;
 
 { TPointValues }
+
+function TPointValues.Add: TPointValue;
+begin
+  result := inherited Add as TPointValue;
+end;
 
 constructor TPointValues.Create(Model: TBaseModel);
 begin
@@ -36993,6 +38148,11 @@ begin
 end;
 
 { TPointPositionValues }
+
+function TPointPositionValues.Add: TPointValuesItem;
+begin
+  result := inherited Add as TPointValuesItem;
+end;
 
 constructor TPointPositionValues.Create(Model: TBaseModel);
 begin
@@ -37383,6 +38543,11 @@ begin
   end;
 end;
 
+function TUsedWithModelItem.Model: TBaseModel;
+begin
+  result := (Collection as TUsedWithModelCollection).Model;
+end;
+
 procedure TUsedWithModelItem.SetUsedModel(const Value: TBaseModel);
 var
   NewModelName: string;
@@ -37464,8 +38629,19 @@ begin
 end;
 
 constructor TUsedWithModelCollection.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
-  inherited Create(TUsedWithModelItem, Model);
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(TUsedWithModelItem, InvalidateModelEvent);
   FUsedWithAllModels := True;
 end;
 

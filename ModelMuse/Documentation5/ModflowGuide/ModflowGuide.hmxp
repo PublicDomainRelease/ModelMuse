@@ -108,9 +108,9 @@
         <config-value name="MODFLOW-FMP2">MODFLOW-FMP2</config-value>
       </config-group>
       <config-value name="imageshortcuts_includebaggage">1</config-value>
-      <config-value name="make0include">CHM,ALLMODELS,OPT_ATOC,OPT_BREADTRAIL,OPT_COMMENTS,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_TOGGLE,OPT_TOGTOC</config-value>
+      <config-value name="make0include">CHM,ALLMODELS,INSIDE-MODFLOW,OPT_ATOC,OPT_BREADTRAIL,OPT_COMMENTS,OPT_FB,OPT_PRINT,OPT_SORTABLE,OPT_TOGGLE,OPT_TOGTOC</config-value>
       <config-value name="make0status">*</config-value>
-      <config-value name="make3include">HTML,ALLMODELS,INSIDE-MODFLOW,OPT_ATOC,OPT_BREADTRAIL,OPT_FB,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC</config-value>
+      <config-value name="make3include">HTML,ALLMODELS,INSIDE-MODFLOW,OPT_ATOC,OPT_BREADTRAIL,OPT_COMMENTS,OPT_FB,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
       <config-value name="make3status">*</config-value>
     </config-group>
     <config-group name="hlp">
@@ -414,9 +414,9 @@
     <file href="Topics/*.xml" build="ALL" filetype="topic">
       <file-mod href="Parameter_Value_File.xml" build="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-LGR,MODFLOW-NWT"/>
       <file-mod href="UZF_Unsaturated-Zone_Flow_Pack.xml" build="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-LGR,MODFLOW-NWT"/>
-      <file-mod href="BFH_-_Boundary_Flow_and_Head_P.xml" build="ALLMODELS,MODFLOW-LGR"/>
-      <file-mod href="LGR_Control_File.xml" build="MODFLOW-LGR"/>
-      <file-mod href="PCGN.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005"/>
+      <file-mod href="BFH_-_Boundary_Flow_and_Head_P.xml" build="ALLMODELS,MODFLOW-FMP2,MODFLOW-LGR"/>
+      <file-mod href="LGR_Control_File.xml" build="ALLMODELS,MODFLOW-FMP2,MODFLOW-LGR"/>
+      <file-mod href="PCGN.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-FMP2"/>
       <file-mod href="SOR.xml" build="ALLMODELS,MODFLOW-2000"/>
       <file-mod href="ADV2.xml" build="ALLMODELS,MODFLOW-2000"/>
       <file-mod href="OBS.xml" build="ALLMODELS,MODFLOW-2000"/>
@@ -432,23 +432,22 @@
       <file-mod href="CRCH.xml" build="ALLMODELS,MODFLOW-CFP"/>
       <file-mod href="COC.xml" build="ALLMODELS,MODFLOW-CFP"/>
       <file-mod href="GMG.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-FMP2,MODFLOW-LGR"/>
-      <file-mod href="MNWI.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/>
       <file-mod href="LMG.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005"/>
       <file-mod href="Suggestions_on_Compiling.xml" build="MODFLOW-2000"/>
-      <file-mod href="UPW_Upstream_Weighting_Package.xml" build="ALLMODELS,MODFLOW-NWT"/>
-      <file-mod href="NWT_Newton_Solver.xml" build="ALLMODELS,MODFLOW-NWT"/>
-      <file-mod href="Suggested_input_values_for_the.xml" build="ALLMODELS,MODFLOW-NWT"/>
+      <file-mod href="UPW_Upstream_Weighting_Package.xml" build="ALLMODELS,MODFLOW-FMP2,MODFLOW-NWT"/>
+      <file-mod href="NWT_Newton_Solver.xml" build="ALLMODELS,MODFLOW-FMP2,MODFLOW-NWT"/>
+      <file-mod href="Suggested_input_values_for_the.xml" build="ALLMODELS,MODFLOW-FMP2,MODFLOW-NWT"/>
       <file-mod href="Inside_MODFLOW.xml" build="INSIDE-MODFLOW"/>
       <file-mod href="Basic_Package_Internal.xml" build="INSIDE-MODFLOW"/>
       <file-mod href="Hydrogeologic_Unit_Flow_Package_Internal.xml" build="INSIDE-MODFLOW"/>
       <file-mod href="Layer_Property_Flow_Package_Internal.xml" build="INSIDE-MODFLOW"/>
       <file-mod href="Stream_Flow_Routing_Package_Internal.xml" build="INSIDE-MODFLOW"/>
       <file-mod href="Unsaturated_Zone_Flow_Package.xml" build="INSIDE-MODFLOW"/>
-      <file-mod href="Lake_Bathymetry_File.xml" build="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/>
-      <file-mod href="SSWRLSTRD.xml" build="ALLMODELS,MODFLOW-NWT"/>
-      <file-mod href="SSWR_RDTABDATA.xml" build="ALLMODELS,MODFLOW-NWT"/>
-      <file-mod href="SWR.xml" build="ALLMODELS,MODFLOW-NWT"/>
-      <file-mod href="SWI2_Seawater_Intrusion_Pack.xml" build="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/>
+      <file-mod href="Lake_Bathymetry_File.xml" build="ALLMODELS,MODFLOW-2005,MODFLOW-FMP2,MODFLOW-NWT"/>
+      <file-mod href="SSWRLSTRD.xml" build="ALLMODELS,MODFLOW-FMP2,MODFLOW-NWT"/>
+      <file-mod href="SSWR_RDTABDATA.xml" build="ALLMODELS,MODFLOW-FMP2,MODFLOW-NWT"/>
+      <file-mod href="SWR.xml" build="ALLMODELS,MODFLOW-FMP2,MODFLOW-NWT"/>
+      <file-mod href="SWI2_Seawater_Intrusion_Pack.xml" build="ALLMODELS,MODFLOW-2005,MODFLOW-FMP2,MODFLOW-NWT"/>
       <file-mod href="Farm_4_22.xml"/>
       <file-mod href="Farm_4_22_xyz.xml"/>
       <file-mod href="Farm_Stream.xml"/>
@@ -462,8 +461,15 @@
       <file-mod href="Farm_19_32.xml"/>
       <file-mod href="Farm_Process.xml" build="ALLMODELS,MODFLOW-FMP2"/>
       <file-mod href="Farm_Process_List_Reading_Util.xml" build="ALLMODELS,MODFLOW-FMP2"/>
-      <file-mod href="MNW2.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/>
-      <file-mod href="SWR1_Direct_Runoff_Subroutine_.xml" build="ALLMODELS,MODFLOW-NWT"/>
+      <file-mod href="SWR1_Direct_Runoff_Subroutine_.xml" build="ALLMODELS,MODFLOW-FMP2,MODFLOW-NWT"/>
+      <file-mod href="Farm_6_26_FID.xml"/>
+      <file-mod href="HFB_Layer2.xml"/>
+      <file-mod href="Tabfile1.xml"/>
+      <file-mod href="Tabfile2.xml"/>
+      <file-mod href="Tabfile3.xml"/>
+      <file-mod href="Tabfile4.xml"/>
+      <file-mod href="RIP_Riparian_Evapotranspiratio.xml" build="ALLMODELS,MODFLOW-FMP2"/>
+      <file-mod href="STOB.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/>
     </file>
     <file href="Topics/Invisible/*.xml" build="ALL" filetype="topic">
       <file-mod href="Daflow_linkage.xml" build="ALLMODELS,MODFLOW-2000"/>

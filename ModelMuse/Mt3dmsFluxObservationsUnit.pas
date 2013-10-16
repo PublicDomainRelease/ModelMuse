@@ -39,7 +39,7 @@ type
   public
     // If Source is a @classname, @name copies the contents
     // of @classname from the source.
-    constructor Create(Model: TBaseModel);
+    constructor Create(InvalidateModelEvent: TNotifyEvent);
     // @name provides read and write access to the @link(TMt3dmsFluxObservation)s
     // stored in @classname.
     property Items[Index: integer]: TMt3dmsFluxObservation read GetItems
@@ -83,6 +83,10 @@ type
 
   // @name is a collection of @link(TFluxObservationGroup)s.
   TMt3dmsFluxObservationGroups = class(TCustomFluxObservationGroups)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   private
     FFluxObservationType: TMt3dmsFluxObsType;
     // See @link(Items).
@@ -102,6 +106,9 @@ type
     // @name calls @link(TMt3dmsFluxObservationGroup.CheckObservationTimes)
     // for each @link(TMt3dmsFluxObservationGroup) in @link(Items).
     procedure CheckObservationTimes(ErrorRoots, ErrorMessages: TStringList);
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
   end;
 
   TMt3dFluxGroupList = TList<TMt3dmsFluxObservationGroups>;
@@ -258,9 +265,9 @@ begin
   result := inherited Add as TMt3dmsFluxObservation
 end;
 
-constructor TMt3dmsFluxObservations.Create(Model: TBaseModel);
+constructor TMt3dmsFluxObservations.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(TMt3dmsFluxObservation, Model);
+  inherited Create(TMt3dmsFluxObservation, InvalidateModelEvent);
 end;
 
 function TMt3dmsFluxObservations.GetItems(
@@ -460,9 +467,8 @@ end;
 
 constructor TMt3dmsFluxObservationGroup.Create(Collection: TCollection);
 begin
-  FObservationTimes := TMt3dmsFluxObservations.Create(
-    (Collection as TPhastCollection).Model);
   inherited;
+  FObservationTimes := TMt3dmsFluxObservations.Create(OnInvalidateModel);
 end;
 
 destructor TMt3dmsFluxObservationGroup.Destroy;
@@ -526,7 +532,18 @@ begin
 end;
 
 constructor TMt3dmsFluxObservationGroups.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
   inherited Create(TMt3dmsFluxObservationGroup, Model);
 end;
 

@@ -87,6 +87,7 @@ inherited frmImportModflow: TfrmImportModflow
     Filter = 
       'Name files (*.nam, *.mfn, *.modflow.in)|*.nam;*.mfn;*.modflow.in' +
       '|All Files (*.*)|*.*'
+    Anchors = [akLeft, akTop, akRight]
     TabOrder = 3
     OnChange = edNameFileChange
   end

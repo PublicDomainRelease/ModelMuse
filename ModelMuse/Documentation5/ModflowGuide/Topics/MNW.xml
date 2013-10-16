@@ -93,19 +93,19 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
-          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
           </list>
-          <list id="25" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
-            <li styleclass="Normal"><text styleclass="Normal" translate="true">MF2005-FMP2</text></li>
+          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-OWHM</text></li>
           </list>
         </td>
       </tr>
@@ -122,7 +122,7 @@
     <para styleclass="Normal"><text styleclass="Normal" translate="true">Input for the multi-node, drawdown-limited well package (MNW Package) is initiated by specifying in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">NAME</link><text styleclass="Normal" translate="true"> file (Harbaugh and McDonald, 1996). Data are read from MNW Package input files as 256-character-wide, alphanumeric records to facilitate the addition of comments within the model input files and the use of keys to identify input variables. All integer, real, and character variables are read from the alphanumeric records. The records are initially read by the subroutine NCREAD. Records that begin with a ‘#’ sign in the first column are treated as comment records, are not passed to any other routines, and are discarded. Once NCREAD has acquired a valid data record, the record is checked for a ‘!!’ sign that designates the beginning of any in-line comments on a data-input record. If a ‘!!’ sign is detected, the ‘!!’ sign and all text to the right of the ‘!!’ sign are removed from the record before passing it to any other routines.</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">Alphanumeric strings are used in the MNW Package to identify variables (keys) and make logical decisions (flags). Specification of these keys and flags is case insensitive because all letters are capitalized before performing any logical tests. Keys precede the variable to be read, which is acquired by identifying the key and reading the first value that follows the key. Logical decisions are based on the presence (true) or absence (false) of a flag. In this report, bold, upper-case letters are used to denote the part of the key that is tested. Key:data pairs that are not delimited by parentheses are mandatory and must be included, and Key:data pairs that are delimited within parentheses and are optional because default values are used if they are not specified by the user.</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The MNW Package reads input data for each simulation and for each stress period as follows:</text></para>
-    <para styleclass="Normal"><table rowcount="11" colcount="2" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Normal"><table rowcount="10" colcount="2" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td colspan="2">
           <para styleclass="Normal"><text styleclass="Normal" translate="true">FOR EACH SIMULATION:</text></para>
@@ -152,7 +152,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">IWL2CB is a flag and a unit number.</text></para>
-                      <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IWL2CB &gt; 0, it is the unit number on which cell-by-cell flow terms will be recorded whenever </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" anchor="ICBCFL" styleclass="Normal" translate="true">ICBCFL</link><text styleclass="Normal" translate="true"> is set &#160;</text><text styleclass="New Materials" translate="true">or &quot;Save Budget&quot; is specified</text><text styleclass="Normal" translate="true"> in </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" styleclass="Normal" translate="true">Output Control</link><text styleclass="Normal" translate="true">.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IWL2CB = 0, cell-by-cell flow terms will not be printed or recorded.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IWL2CB &lt; 0, </text><text styleclass="New Materials" translate="true">The absolute value of IWL2CB is the unit number on which cell-by-cell flow terms will be recorded whenever </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" anchor="ICBCFL" styleclass="New Materials" translate="true">ICBCFL</link><text styleclass="New Materials" translate="true"> is set or &quot;Save Budget&quot; is specified and</text><text styleclass="Normal" translate="true"> well recharge, water-levels in the well and cell, drawdown in the well, and the flow-rate-weighted water-quality value of the IQWGRP will be printed whenever ICBCFL is set </text><text styleclass="New Materials" translate="true">or &quot;Save Budget&quot; is specified</text><text styleclass="Normal" translate="true">.</text></li>
@@ -172,7 +172,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Flow in MNW wells will not be calculated after NOMITER iterations.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Flow in MNW wells will not be calculated after NOMOITER iterations.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -205,7 +205,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="LOSSTYPE" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">LOSSTYPE is a flag to determine the user-specified model for well loss.</text></para>
-                      <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If LOSSTYPE is set to SKIN, head loss is defined with skin. Model is linear.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If LOSSTYPE is set to LINEAR, head loss is defined with coefficient B. Model is linear.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If LOSSTYPE is set to NONLINEAR, head loss is defined with coefficients B and C. Model is nonlinear.</text></li>
@@ -228,7 +228,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set Unnumbered a</text></para>
+          <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set Unnumbered</text></para>
         </td>
         <td>
           <para styleclass="Normal"><text styleclass="Keywords" translate="true">PREFIX:</text><text styleclass="New Materials" translate="true">MNWNAME (Optional record)</text></para>
@@ -237,20 +237,12 @@
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">Prefix name of file for outputting time series data from MNW</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Prefix name of file for outputting time series data from MNW. </text><text styleclass="New Materials" translate="true">MNWNAME may be up to 200 characters in length. MNWNAME may not contain the space character.</text></para>
+                <para styleclass="Normal"><text styleclass="New Materials" translate="true">If MNWNAME is given as </text><text styleclass="Keywords" translate="true">FILEPREFIX</text><text styleclass="New Materials" translate="true">, the prefix name of the file for outputting time series data from MNW1 will be the same as the prefix name of the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="New Materials" translate="true">Name File</link><text styleclass="New Materials" translate="true">.</text></para>
+                <para styleclass="Normal"><text styleclass="New Materials" translate="true">If this record is omitted, the prefix name of the file for outputting time series data from MNW1 will be the &quot;OUTput_MNW.&quot;</text></para>
               </td>
             </tr>
           </table></para>
-        </td>
-      </tr>
-      <tr style="vertical-align:top">
-        <td>
-          <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set Unnumbered b</text></para>
-        </td>
-        <td>
-          <para styleclass="Normal"><text styleclass="Keywords" translate="true">FILEPREFIX: </text><text styleclass="New Materials" translate="true">(Optional record)</text></para>
-          <para styleclass="Normal"><text styleclass="New Materials" translate="true">Format: Alphanumeric header record</text></para>
-          <para styleclass="Normal"><text styleclass="New Materials" translate="true">The prefix name of file for outputting time series data from MNW will be the same as the prefix name of the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="New Materials" translate="true">Name File</link><text styleclass="New Materials" translate="true">.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -372,7 +364,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">ITMP is a flag.</text></para>
-                      <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ITMP &lt; 0, wells from previous stress period will be reused and input from item 5 will not be read.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ITMP =, 0 no wells will be simulated and input from item 5 will not be read.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ITMP &gt; 0, is the number of records of drawdown-limited well data that will be read for the current stress period. If the key ADD is not detected on record 4, the maximum number of drawdown-limited wells for the current stress period will be ITMP. If the key ADD is detected on record 4, ITMP wells will be added to the existing list of drawdown-limited wells.</text></li>
@@ -398,7 +390,7 @@
           <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 5</text></para>
         </td>
         <td>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">Layer Row Column Qdes []</text><text styleclass="Keywords" translate="true">MN</text><text styleclass="Normal" translate="true"> or </text><text styleclass="Keywords" translate="true">MULTI</text><text styleclass="Normal" translate="true">] QWval Rw Skin &#160;Hlim Href [</text><text styleclass="Keywords" translate="true">DD</text><text styleclass="Normal" translate="true">] Iwgrp </text><text styleclass="Keywords" translate="true">Cp</text><text styleclass="Normal" translate="true">: C [</text><text styleclass="Keywords" translate="true">QCUT</text><text styleclass="Normal" translate="true"> or </text><text styleclass="Keywords" translate="true">Q-%CUT</text><text styleclass="Normal" translate="true">: Qfrcmn Qfrcmx] </text><text styleclass="Keywords" translate="true">DEFAULT &#160; SITE:</text><text styleclass="Normal" translate="true"> MNWsite</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Layer Row Column Qdes [</text><text styleclass="Keywords" translate="true">MN</text><text styleclass="Normal" translate="true"> or </text><text styleclass="Keywords" translate="true">MULTI</text><text styleclass="Normal" translate="true">] QWval Rw Skin &#160;Hlim Href [</text><text styleclass="Keywords" translate="true">DD</text><text styleclass="Normal" translate="true">] Iwgrp </text><text styleclass="Keywords" translate="true">Cp</text><text styleclass="Normal" translate="true">: C [</text><text styleclass="Keywords" translate="true">QCUT</text><text styleclass="Normal" translate="true"> or </text><text styleclass="Keywords" translate="true">Q-%CUT</text><text styleclass="Normal" translate="true">: Qfrcmn Qfrcmx] </text><text styleclass="Keywords" translate="true">DEFAULT &#160; SITE:</text><text styleclass="Normal" translate="true"> MNWsite</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Format I10 I10 I10 F10.0 Flag Real Real Real Real Real Flag Integer Real Real Real Flag Alphanumeric header record</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">NOTE: The first four values in data item 5 for the variables Layer, Row, Column, and Qdes are read initially as a free format. If this fails, the four values are read as fixed format entries from the first 40 columns. In all instances these values must be specified. The following eight values for the remaining variables are optional, space-delimited or comma-delimited entries but must be entered in the sequence specified for item 5. The alphanumeric flags MN and DD can appear anywhere between columns 41 and 256, inclusive. Input item 5 normally consists of one record for each well cell defined or modified. If ITMP is 0 or less, item 5 is not read and should not be specified.</text></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
@@ -433,7 +425,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Qdes is the desired volumetric pumping or recharge rate. A positive value indicates recharge and a negative value indicates discharge. The actual volumetric recharge rate will range from 0 to Qdes and is not allowed to switch directions between discharge and recharge conditions during any stress period.</text></para>
+                      <para styleclass="Normal"><anchor id="Qdes" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Qdes is the desired volumetric pumping or recharge rate. A positive value indicates recharge and a negative value indicates discharge. The actual volumetric recharge rate will range from 0 to Qdes and is not allowed to switch directions between discharge and recharge conditions during any stress period.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -465,7 +457,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">QWval is the water-quality value that is to be flow-rate averaged amongst wells in the same Iqwgrp. Negative water-quality values and positive flow terms are not averaged. Water-quality values can be respecified for each stress period.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">QWval is the water-quality value that is to be flow-rate averaged amongst wells in the same </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW" anchor="Iqwgrp" styleclass="Normal" translate="true">Iqwgrp</link><text styleclass="Normal" translate="true">. Negative water-quality values and positive flow terms are not averaged. Water-quality values can be respecified for each stress period.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -473,8 +465,8 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Rw is a flag and a variable used to define the cell-to-well conductance.</text></para>
-                      <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <para styleclass="Normal"><anchor id="Rw" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Rw is a flag and a variable used to define the cell-to-well conductance.</text></para>
+                      <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If Rw &gt; 0, The variable represents the radius of the well and the cell-to-well conductance is calculated with eq. 5 as formulated by Peaceman (1983).</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If Rw = 0, the head in the cell is assumed to be equivalent to the head in the well and the cell-to-well conductance is set to 1,000 times the transmissivity of the cell. The cell is NOT allowed to be part of a multi-node well.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If Rw &lt; 0, the absolute value of the variable is the cell-to-well conductance.</text></li>
@@ -486,7 +478,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Skin defines the friction losses to the well owing to the screen and to formation damage. The variable is either a skin or the coefficient B depending on the LOSSTYPE, and is used in eq. 5 when Rw &gt; 0.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Skin defines the friction losses to the well owing to the screen and to formation damage. The variable is either a skin or the coefficient B depending on the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW" anchor="LOSSTYPE" styleclass="Normal" translate="true">LOSSTYPE</link><text styleclass="Normal" translate="true">, and is used in eq. 5 when </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW" anchor="Rw" styleclass="Normal" translate="true">Rw</link><text styleclass="Normal" translate="true"> &gt; 0.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -494,7 +486,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Hlim is the limiting water level, which is a minimum for discharging wells and a maximum for recharging wells. If the flag </text><text styleclass="Keywords" translate="true">DD</text><text styleclass="Normal" translate="true"> is set, the value of Hlim read is a drawdown from the reference elevation. For Qdes &lt; 0, Hlim = Href - Hlim and for Qdes &gt; 0, Hlim = Href + Hlim.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Hlim is the limiting water level, which is a minimum for discharging wells and a maximum for recharging wells. If the flag </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW" anchor="DD" styleclass="Keywords" translate="true">DD</link><text styleclass="Normal" translate="true"> is set, the value of Hlim read is a drawdown from the reference elevation. For </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW" anchor="Qdes" styleclass="Normal" translate="true">Qdes</link><text styleclass="Normal" translate="true"> &lt; 0, Hlim = Href - Hlim and for </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW" anchor="Qdes" styleclass="Normal" translate="true">Qdes</link><text styleclass="Normal" translate="true"> &gt; 0, Hlim = </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW" anchor="Href" styleclass="Normal" translate="true">Href</link><text styleclass="Normal" translate="true"> + Hlim.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -502,7 +494,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Href is the reference elevation. If the value of Href read is greater than the maximum water level from the HNEW matrix at the beginning of the stress period </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW" anchor="kspref" styleclass="Normal" translate="true">kspref</link><text styleclass="Normal" translate="true">, Href is set to the simulated water level at the location of the drawdown-limited well.</text></para>
+                      <para styleclass="Normal"><anchor id="Href" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Href is the reference elevation. If the value of Href read is greater than the maximum water level from the HNEW matrix at the beginning of the stress period </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW" anchor="kspref" styleclass="Normal" translate="true">kspref</link><text styleclass="Normal" translate="true">, Href is set to the simulated water level at the location of the drawdown-limited well.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -510,7 +502,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Keywords" translate="true">DD</text><text styleclass="Normal" translate="true"> a flag that indicates the value of Hlim read is a drawdown or build-up from the reference elevation.</text></para>
+                      <para styleclass="Normal"><anchor id="DD" styleclass="Keywords"></anchor><text styleclass="Keywords" translate="true">DD</text><text styleclass="Normal" translate="true"> a flag that indicates the value of Hlim read is a drawdown or build-up from the reference elevation.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -518,7 +510,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Iqwgrp is a water-quality group identifier. Flow-rate averaged water-quality values are reported for each group of wells with the same lqwgrp and Qwval entries that are not negative.</text></para>
+                      <para styleclass="Normal"><anchor id="Iqwgrp" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Iqwgrp is a water-quality group identifier. Flow-rate averaged water-quality values are reported for each group of wells with the same lqwgrp and Qwval entries that are not negative.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -534,7 +526,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">QCUT a flag that indicates pumping limits will be specified as a rate (L 3 /T).</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">QCUT a flag that indicates pumping limits will be specified as a rate (L</text><text styleclass="Normal" style="font-size:8pt; vertical-align:super;" translate="true">3</text><text styleclass="Normal" translate="true"> /T).</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -550,7 +542,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Qfrcmn minimum pumping rate that a well must exceed to remain active.</text></para>
+                      <para styleclass="Normal"><anchor id="Qfrcmn" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Qfrcmn minimum pumping rate that a well must exceed to remain active.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -558,7 +550,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Qfrcmx minimum potential pumping rate that must be exceeded to reactivate a well.</text></para>
+                      <para styleclass="Normal"><anchor id="Qfrcmx" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Qfrcmx minimum potential pumping rate that must be exceeded to reactivate a well.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -566,7 +558,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">DEFAULT a flag that sets this entry of Qfrcmn and Qfrcmx as the new default values.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">DEFAULT a flag that sets this entry of </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW" anchor="Qfrcmn" styleclass="Normal" translate="true">Qfrcmn</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW" anchor="Qfrcmx" styleclass="Normal" translate="true">Qfrcmx</link><text styleclass="Normal" translate="true"> as the new default values.</text></para>
                     </td>
                   </tr>
                 </table></para>

@@ -112,6 +112,7 @@ begin
     frmGoPhast.PhastModel.SutraTimeOptions.InitialTime, Schedules);
   PickList := rdgSutraFeature.Columns[0].PickList;
   PickList.Clear;
+  PickList.Capacity := Length(Times);
   for index := 0 to Length(Times) - 1 do
   begin
     PickList.Add(FloatToStr(Times[index]));

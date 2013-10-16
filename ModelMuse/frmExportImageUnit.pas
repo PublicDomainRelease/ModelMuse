@@ -1056,7 +1056,8 @@ begin
       LocalModel.DrawHeadObservations(FModelImage, frmGoPhast.frameTopView.ZoomBox);
       LocalModel.DrawSfrStreamLinkages(FModelImage, frmGoPhast.frameTopView.ZoomBox);
       LocalModel.DrawStrStreamLinkages(FModelImage, frmGoPhast.frameTopView.ZoomBox);
-      if LocalModel.LgrUsed then
+      LocalModel.DrawSwrReachConnections(FModelImage, frmGoPhast.frameTopView.ZoomBox);
+        if LocalModel.LgrUsed then
       begin
         for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
         begin
@@ -1064,6 +1065,7 @@ begin
           ChildModel.DrawHeadObservations(FModelImage, frmGoPhast.frameTopView.ZoomBox);
           ChildModel.DrawSfrStreamLinkages(FModelImage, frmGoPhast.frameTopView.ZoomBox);
           ChildModel.DrawStrStreamLinkages(FModelImage, frmGoPhast.frameTopView.ZoomBox);
+          ChildModel.DrawSwrReachConnections(FModelImage, frmGoPhast.frameTopView.ZoomBox);
         end;
       end;
     end;
@@ -2989,7 +2991,7 @@ begin
     end;
   end;
   frmExportImage := nil;
-  Release;
+//  Release;
 end;
 
 procedure TfrmExportImage.FormCreate(Sender: TObject);

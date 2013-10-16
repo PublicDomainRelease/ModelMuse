@@ -24,7 +24,8 @@ uses
   frmRunPhastUnit, ModelMateClassesUnit, SyncObjs, frmRunModpathUnit,
   frmRunZoneBudgetUnit, RbwModelCube, frmRunModelMateUnit, Mask, JvExMask,
   JvSpin, JvHint, frmRunMt3dmsUnit, JvExControls, JvArrowButton,
-  frmExportModpathShapefileUnit, SutraMeshUnit;
+  frmExportModpathShapefileUnit, SutraMeshUnit, frmSwrObservationsUnit,
+  JvExStdCtrls, JvCombobox, JvListComb;
 
   { TODO : 
 Consider making CurrentTool a property of TframeView instead of 
@@ -423,6 +424,21 @@ type
     acHeadObsToShapefile: TAction;
     miHeadObsToShapefile: TMenuItem;
     dlgSaveHeadObsToShapefile: TSaveDialog;
+    acSWR_Tabfiles: TAction;
+    miSWR_Tabfiles: TMenuItem;
+    acSWR_ReachGeometry: TAction;
+    miSWR_ReachGeometry: TMenuItem;
+    acSwrStructures: TAction;
+    miSwrStructures: TMenuItem;
+    acSwrObservations: TAction;
+    miSwrObservations: TMenuItem;
+    acImportGriddedDataFiles: TAction;
+    miImportGriddedDataFiles: TMenuItem;
+    acImportSutraMesh: TAction;
+    dlgOpenImportSutraMesh: TOpenDialog;
+    miImportSutraMesh: TMenuItem;
+    miSWR: TMenuItem;
+    tmrImportErrors: TTimer;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -571,6 +587,13 @@ type
     procedure miUseOnlineHelpClick(Sender: TObject);
     procedure acRunModflowCfpExecute(Sender: TObject);
     procedure acHeadObsToShapefileExecute(Sender: TObject);
+    procedure acSWR_TabfilesExecute(Sender: TObject);
+    procedure acSWR_ReachGeometryExecute(Sender: TObject);
+    procedure acSwrStructuresExecute(Sender: TObject);
+    procedure acSwrObservationsExecute(Sender: TObject);
+    procedure acImportGriddedDataFilesExecute(Sender: TObject);
+    procedure acImportSutraMeshExecute(Sender: TObject);
+    procedure tmrImportErrorsTimer(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -610,6 +633,7 @@ type
     FExportModpathShapefileForm: TfrmExportModpathShapefile;
     FExportModpathShapeFileModelChoice: Integer;
     FRenumberMethod: integer;
+    FAlreadyShown: Boolean;
     procedure SetCreateArchive(const Value: Boolean);
     property CreateArchive: Boolean read FCreateArchive write SetCreateArchive;
     procedure WMMenuSelect(var Msg: TWMMenuSelect); message WM_MENUSELECT;
@@ -1644,6 +1668,7 @@ type
     procedure AdjustSutraBoundaries;
     function GetHelpFormat: THelpFormat;
     procedure CrossSectionChanged(Sender: TObject);
+    procedure EnableSwrObs;
     { Private declarations }
   protected
     // @name is used to specify the format of the files that
@@ -1661,6 +1686,7 @@ type
     procedure InvalidateImage32AllViews;
     procedure EnableHufMenuItems;
     procedure EnableMt3dmsMenuItems;
+    procedure EnableSwrActions;
     property ChangingSelection: boolean read FChangingSelection
       write SetChangingSelection;
     procedure EnableManageFlowObservations;
@@ -1873,7 +1899,8 @@ uses
   CuthillMcKeeRenumbering, MeshRenumberingTypes, frmCropPropertiesUnit,
   frmSoilPropertiesUnit, frmClimateUnit, AdjustSutraBoundaryValuesUnit,
   SutraTimeScheduleUnit, frmFarmAllotmentUnit, frmHelpVersionUnit,
-  ModflowCfpWriterUnit;
+  ModflowCfpWriterUnit, frmSwrTabfilesUnit, frmSwrReachGeometryUnit,
+  frmSwrStructuresUnit, frmImportMultipleGriddedDataFilesUnit, ImportQuadMesh;
 
 const
   StrDisplayOption = 'DisplayOption';
@@ -1995,6 +2022,13 @@ resourcestring
   StrTheBandwidthHasCh = 'The bandwidth has changed from %0:d to %1:d.';
   StrNowMightBeAGood = 'Now might be a good time to activate the Upstream We' +
   'ighting (UPW) package in MODFLOW-NWT.';
+  StrAnErrorOccuredWhe = 'An error occured when trying to convert the model ' +
+  'data from a binary format to a text format. Try saving in a different for' +
+  'mat such as a ModelMuse binary file (.gpb).';
+  StrYouMustCloseTheD = 'You must close the Data Sets dialog box before open' +
+  'ing the Global Variables dialog box.';
+  StrYouMustCloseTheG = 'You must close the Global Variables dialog box befo' +
+  're opening the Data Sets dialog box.';
 
 
 {$R *.dfm}
@@ -2320,6 +2354,8 @@ begin
     FreeAndNil(frmDisplayData);
     FreeAndNil(frmGridValue);
     FreeAndNil(frmMeshInformation);
+    FreeAndNil(frmGlobalVariables);
+    FreeAndNil(frmDataSets);
     FreeFrmSelectedObjects;
 //    FreeAndNil(frmGridColor);
 //    FreeAndNil(frmContourData);
@@ -2800,19 +2836,6 @@ begin
     Height := 600 ;
   end;
 
-//  {$IFNDEF SUTRA}
-////  tlbMesh.Visible := False;
-//  acSutraActive.Visible := False;
-//  acSutraLayers.Visible := False;
-//  acSutraOptions.Visible := False;
-//  acSutraTimes.Visible := False;
-//  acRunSutra.Visible := False;
-//  acSutraOutputControl.Visible := False;
-//  acSutraProgramLocations.Visible := False;
-//  miCustomizeSutraMesh.Visible := False;
-//  acImportSutraModelResults.Visible := False;
-//  {$ENDIF}
-
 {$IFNDEF FMP}
   acFarmCrops.Visible := False;
   acFarmSoils.Visible := False;
@@ -3136,6 +3159,12 @@ begin
     timTimer.Interval := 1000;
     timTimer.Enabled := True;
   end;
+  if not FAlreadyShown then
+  begin
+    FAlreadyShown := True;
+    frmFormulaErrors.DelayShowing := False;
+    tmrImportErrors.Enabled := True;
+  end;
 end;
 
 procedure TfrmGoPhast.tbPanClick(Sender: TObject);
@@ -3297,6 +3326,7 @@ end;
 procedure TfrmGoPhast.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(frmGridValue);
+  FreeAndNil(frmDisplayData);
 //  OutputDebugString('SAMPLING ON');
   WriteIniFile;
   IniFile.Free;
@@ -3547,7 +3577,8 @@ begin
         btnRunModel.DropDown := nil;
         miExportShapefile.Caption := StrGridDataToShapef;
         acGenerateGrid.Caption := '&Generate Grid...';
-        acGenerateGrid.Hint := 'Generate grid'
+        acGenerateGrid.Hint := 'Generate grid';
+        frameTopView.ZoomBox.Exaggeration := 1;
       end;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
       {$IFDEF FMP}, msModflowFmp {$ENDIF}
@@ -3563,7 +3594,8 @@ begin
         btnRunModel.DropDown := pmExportModel;
         miExportShapefile.Caption := StrGridDataToShapef;
         acGenerateGrid.Caption := '&Generate Grid...';
-        acGenerateGrid.Hint := 'Generate grid'
+        acGenerateGrid.Hint := 'Generate grid';
+        frameTopView.ZoomBox.Exaggeration := 1;
       end;
     msSutra22:
       begin
@@ -3606,6 +3638,8 @@ begin
   acShowTopMesh.Visible := PhastModel.ModelSelection = msSutra22;
   acShowFrontMesh.Visible := PhastModel.ModelSelection = msSutra22;
 
+  miSWR.Visible := ModelSelection in [msModflowNWT{$IFDEF FMP}, msModflowFmp {$ENDIF}];
+
   {$IFDEF FMP}
   // Make these actions permanently visible when FMP support is released.
   acFarmCrops.Visible := PhastModel.ModelSelection = msModflowFmp;
@@ -3642,8 +3676,11 @@ begin
     PhastModel.ModelSelection = msSutra22;
   miGriddedData.Enabled :=
     PhastModel.ModelSelection <> msSutra22;
+  acImportGriddedDataFiles.Enabled :=
+    PhastModel.ModelSelection <> msSutra22;
   tlbMesh.Visible := PhastModel.ModelSelection = msSutra22;
   tlb3dViewMesh.Visible := PhastModel.ModelSelection = msSutra22;
+  acImportSutraMesh.Enabled := PhastModel.ModelSelection = msSutra22;
 
   if tbarEditGrid.Visible then
   begin
@@ -3727,6 +3764,7 @@ begin
   miPrintInitial.Enabled := PhastModel.ModelSelection = msPhast;
   miPrintFrequency.Enabled := PhastModel.ModelSelection = msPhast;
   miPHASTProgramLocation.Enabled := PhastModel.ModelSelection = msPhast;
+  EnableSwrActions;
   UpdateModelCubeBreaks;
 
   ControlList := TList<TComponent>.Create;
@@ -3750,12 +3788,14 @@ begin
     ControlList.Add(acRunModflowLgr);
     ControlList.Add(acRunModflowNwt);
   {$IFDEF FMP}
+    { TODO -cFMP : This should only be shown for programs that support FMP }
     ControlList.Add(acRunModflowFMP);
   {$ENDIF}
     ControlList.Add(acRunModflowCfp);
     ControlList.Add(acExportModpath);
     ControlList.Add(acExportZoneBudget);
     ControlList.Add(acRunMt3dms);
+
     ShowControls := PhastModel.ModelSelection in ModflowSelection;
     for ControlIndex := 0 to ControlList.Count - 1 do
     begin
@@ -4593,6 +4633,32 @@ begin
   ShowAForm(TfrmSutraTimes);
 end;
 
+procedure TfrmGoPhast.acSwrObservationsExecute(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmSwrObservations);
+end;
+
+procedure TfrmGoPhast.acSwrStructuresExecute(Sender: TObject);
+begin
+  inherited;
+  TfrmSwrStructures.AddNewStructure := False;
+  TfrmSwrStructures.SelectedStructureIndex := 0;
+  ShowAForm(TfrmSwrStructures);
+end;
+
+procedure TfrmGoPhast.acSWR_ReachGeometryExecute(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmSwrReachGeometry);
+end;
+
+procedure TfrmGoPhast.acSWR_TabfilesExecute(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmSwrTabfiles);
+end;
+
 procedure TfrmGoPhast.acDisplayDataExecute(Sender: TObject);
 begin
   inherited;
@@ -4751,7 +4817,14 @@ begin
             MemStream.WriteComponent(PhastModel);
             PhastModel.ClearScreenObjectCollection;
             MemStream.Position := 0;
-            ObjectBinaryToText(MemStream, FileStream);
+            try
+              ObjectBinaryToText(MemStream, FileStream);
+            except on EAccessViolation do
+              begin
+                Beep;
+                MessageDlg(StrAnErrorOccuredWhe, mtError, [mbOK], 0);
+              end;
+            end;
             if not FSizeWarningDisplayed and (FileStream.Size > FiveMB) then
             begin
               FSizeWarningDisplayed := True;
@@ -5097,6 +5170,41 @@ begin
   acRunMt3dms.Enabled :=
     (PhastModel.ModelSelection in ModflowSelection)
     and PhastModel.ModflowPackages.Mt3dBasic.IsSelected
+end;
+
+procedure TfrmGoPhast.EnableSwrObs;
+var
+  ShouldEnable: Boolean;
+  ChildIndex: Integer;
+  SwrPackage: TSwrPackage;
+begin
+  ShouldEnable := acSWR_Tabfiles.Enabled;
+  if ShouldEnable then
+  begin
+    SwrPackage := PhastModel.ModflowPackages.SwrPackage;
+    ShouldEnable := SwrPackage.IsSelected
+      and (SwrPackage.SaveObs in [ssoSaveObs, ssoSaveObsAll]);
+    if not ShouldEnable and PhastModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+      begin
+        SwrPackage := PhastModel.ChildModels[ChildIndex].ChildModel.ModflowPackages.SwrPackage;
+        ShouldEnable := SwrPackage.IsSelected
+          and (SwrPackage.SaveObs in [ssoSaveObs, ssoSaveObsAll]);
+        if ShouldEnable then
+        begin
+          break;
+        end;
+      end;
+    end;
+  end;
+  acSwrObservations.Enabled := ShouldEnable;
+end;
+
+procedure TfrmGoPhast.EnableSwrActions;
+begin
+  miSWR.Visible := ModelSelection in [msModflowNWT{$IFDEF FMP}, msModflowFmp {$ENDIF}];
+  EnableSwrObs;
 end;
 
 procedure TfrmGoPhast.EnableVisualization;
@@ -5572,6 +5680,20 @@ begin
   end;
 end;
 
+procedure TfrmGoPhast.tmrImportErrorsTimer(Sender: TObject);
+begin
+  inherited;
+  if frameTopView.FHasDrawn then
+  begin
+    if frmErrorsAndWarnings.HasMessages then
+    begin
+      frmErrorsAndWarnings.Show;
+      frmErrorsAndWarnings.BringToFront;
+    end;
+    tmrImportErrors.Enabled := False;
+  end;
+end;
+
 function TfrmGoPhast.TestMt3dmsLocationOK(Model: TCustomModel): Boolean;
 begin
   result := True;
@@ -5720,7 +5842,9 @@ procedure TfrmGoPhast.EnableLinkStreams;
 begin
   miLinkSFRStreams.Enabled :=
     (PhastModel.ModelSelection in ModflowSelection)
-    and (PhastModel.SfrIsSelected or PhastModel.StrIsSelected);
+    and (PhastModel.SfrIsSelected or PhastModel.StrIsSelected
+    or PhastModel.SwrIsSelected
+    );
 end;
 
 procedure TfrmGoPhast.ShowOrHideAllScreenObjects(ShowAll: Boolean);
@@ -6882,7 +7006,7 @@ begin
     end;
     InvalidateViewOfModel;
     ReDrawAllViews(nil);
-    PhastModel.Invalidate;
+    PhastModel.Invalidate(self);
   end;
   EnableDeleteImage;
 end;
@@ -7393,7 +7517,17 @@ end;
 procedure TfrmGoPhast.miEditGlobalVariablesClick(Sender: TObject);
 begin
   inherited;
-  ShowAForm(TfrmGlobalVariables);
+  if frmDataSets <> nil then
+  begin
+    Beep;
+    MessageDlg(StrYouMustCloseTheD, mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  if frmGlobalVariables = nil then
+  begin
+    frmGlobalVariables := TfrmGlobalVariables.Create(nil);
+  end;
+  frmGlobalVariables.Show;
 end;
 
 procedure TfrmGoPhast.EditScreenObjects;
@@ -7454,10 +7588,13 @@ end;
 
 procedure TfrmGoPhast.UpdateDisplay(Sender: TObject);
 begin
-  TopScreenObjectsChanged := True;
-  FrontScreenObjectsChanged := True;
-  SideScreenObjectsChanged := True;
-  Invalidate3DView(nil);
+  if not (csDestroying in ComponentState) then
+  begin
+    TopScreenObjectsChanged := True;
+    FrontScreenObjectsChanged := True;
+    SideScreenObjectsChanged := True;
+    Invalidate3DView(nil);
+  end;
 end;
 
 procedure TfrmGoPhast.UpdateFrontCubeForSutraCrossSection(Sender: TObject);
@@ -7537,6 +7674,12 @@ end;
 
 procedure TfrmGoPhast.acEditDataSetsExecute(Sender: TObject);
 begin
+  if frmGlobalVariables <> nil then
+  begin
+    Beep;
+    MessageDlg(StrYouMustCloseTheG, mtWarning, [mbOK], 0);
+    Exit;
+  end;
   if frmDataSets = nil then
   begin
     frmDataSets := TfrmDataSets.Create(nil);
@@ -8307,7 +8450,10 @@ end;
 
 procedure TfrmGoPhast.Invalidate3DView(Sender: TObject);
 begin
-  frame3DView.glWidModelView.Invalidate;
+  if not (csDestroying in ComponentState) then
+  begin
+    frame3DView.glWidModelView.Invalidate;
+  end;
 end;
 
 procedure TfrmGoPhast.InvalidateAllViews;
@@ -8332,7 +8478,8 @@ end;
 
 procedure TfrmGoPhast.ScreenObjectsChanged(Sender: TObject);
 begin
-  if (Sender = nil) or not (Sender as TObserver).UpToDate then
+  if not (csDestroying in ComponentState)
+    and ((Sender = nil) or not (Sender as TObserver).UpToDate) then
   begin
     PhastGrid.NeedToRecalculateCellColors;
     ModflowGrid.NeedToRecalculateCellColors;
@@ -8725,6 +8872,7 @@ var
   Index: Integer;
   DataArrayManager: TDataArrayManager;
   WarningMessage: string;
+  ChildIndex: integer;
 //  AValue: Boolean;
 begin
   Result := False;
@@ -8820,6 +8968,7 @@ begin
         PhastModel.ClearExpressionsAndVariables;
         PhastModel.BeginScreenObjectUpdate;
         ClearFormulaErrors;
+        frmFormulaErrors.DelayShowing := True;
         try
           DecompressionStream := nil;
           TempStream := TMemoryStream.Create;
@@ -8881,6 +9030,11 @@ begin
           PhastModel.UpdateDataSets;
           PhastModel.ChildModels.Loaded;
           PhastModel.UpdateScreenObjects;
+          PhastModel.SwrTabFiles.Loaded;
+          for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+          begin
+            PhastModel.ChildModels[ChildIndex].ChildModel.SwrTabFiles.Loaded;
+          end;
           PhastModel.LayerStructure.Loaded;
           PhastModel.SutraLayerStructure.Loaded;
           PhastModel.UpdateSutraTimeListNames;
@@ -9087,11 +9241,16 @@ begin
 
     EnableDeleteImage;
     EnableFarmMenuItems;
+    EnableSwrActions;
 
     WriteIniFile;
     acRestoreDefaultViewExecute(nil);
   finally
     MenuItemsSetEnabled(True);
+  end;
+  if frmGoPhast.Visible then
+  begin
+    frmFormulaErrors.DelayShowing := False;
   end;
 end;
 
@@ -9350,6 +9509,7 @@ end;
 
 procedure TfrmGoPhast.miShowFormulaErrorsClick(Sender: TObject);
 begin
+  frmFormulaErrors.Handle;
   frmFormulaErrors.Show;
 end;
 
@@ -10442,6 +10602,12 @@ begin
 //  HelpRouter.HelpContent;
 end;
 
+procedure TfrmGoPhast.acImportGriddedDataFilesExecute(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmImportMultipleGriddedDataFiles);
+end;
+
 procedure TfrmGoPhast.acImportModelMateExecute(Sender: TObject);
 var
   Project: TProject;
@@ -10467,6 +10633,15 @@ begin
 //    PhastModel.ModelMateProjectFileName := odModelMate.FileName;
     PhastModel.ModelMateProjectFileName :=
       ExtractRelativePath(sdSaveDialog.FileName, odModelMate.FileName);
+  end;
+end;
+
+procedure TfrmGoPhast.acImportSutraMeshExecute(Sender: TObject);
+begin
+  inherited;
+  if dlgOpenImportSutraMesh.Execute then
+  begin
+    ImportSutraMeshFromFile(dlgOpenImportSutraMesh.FileName);
   end;
 end;
 
@@ -10586,7 +10761,8 @@ procedure TfrmGoPhast.InvalidateModel;
 begin
   if PhastModel <> nil then
   begin
-    PhastModel.Invalidate;
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    PhastModel.Invalidate(self);
   end;
 end;
 
@@ -11755,8 +11931,8 @@ end;
 
 initialization
   Mf2005Date := EncodeDate(2013,8,1);
-  ModelMateDate := EncodeDate(2012,6,4);
-  MfNwtDate := EncodeDate(2013,9,26);
+  ModelMateDate := EncodeDate(2013,6,4);
+  MfNwtDate := EncodeDate(2014,6,23);
   Modpath6Date := EncodeDate(2012,8,28);
   MfLgr2Date := EncodeDate(2013, 9, 19);
 {$IFDEF FMP}

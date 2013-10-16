@@ -45,7 +45,7 @@ type
 implementation
 
 uses
-  ModflowSfrUnit;
+  ModflowSfrUnit, ModflowSfrParamIcalcUnit;
 
 {$R *.dfm}
 
@@ -273,6 +273,7 @@ begin
     SfrBoundary := List[index].ScreenObject.ModflowSfrBoundary;
     if SfrBoundary <> nil then
     begin
+
       ChannelValues := FChannelValuesList[index];
       while SfrBoundary.ChannelValues.Count < ChannelValues.Count do
       begin
@@ -280,7 +281,14 @@ begin
       end;
       while SfrBoundary.ChannelValues.Count > ChannelValues.Count do
       begin
-        SfrBoundary.ChannelValues.Last.Free;
+        if (SfrBoundary.ParamIcalc.Last as TSfrParamIcalcItem).ICalc = 2 then
+        begin
+          SfrBoundary.ChannelValues.Last.Free;
+        end
+        else
+        begin
+          break;
+        end;
       end;
       for ItemIndex := 0 to ChannelValues.Count - 1 do
       begin

@@ -103,6 +103,13 @@ type
 
     FvstModflowCfpRechargeNode: PVirtualNode;
 
+    FvstModflowSwrReachNode: PVirtualNode;
+    FvstModflowSwrRainNode: PVirtualNode;
+    FvstModflowSwrEvapNode: PVirtualNode;
+    FvstModflowSwrInflowNode: PVirtualNode;
+    FvstModflowSwrStageNode: PVirtualNode;
+    FvstModflowSwrDirectRunoffNode: PVirtualNode;
+
     FvstModflowUzfNode: PVirtualNode;
     FvstMt3dmsSsm: PVirtualNode;
     FvstMt3dmsTob: PVirtualNode;
@@ -208,6 +215,14 @@ type
     FEtsList: TList;
     FEvtList: TList;
     FFarmList: TList;
+
+    FSwrReachList: TList;
+    FSwrRainList: TList;
+    FSwrEvapList: TList;
+    FSwrInflowList: TList;
+    FSwrStageList: TList;
+    FSwrDirectRunoffList: TList;
+
     FFarmWellList: TList;
     FFarmPrecipList: TList;
     FFarmRefEvtList: TList;
@@ -332,6 +347,12 @@ resourcestring
   StrHeadsInS = 'Heads in %s';
   StrFlowsInS = 'Flows in %s';
   StrConduitRechargeFra = 'CRCH: Conduit Recharge';
+  StrReachesInS = 'Reaches in %s';
+  StrRainInS = 'Rain in %s';
+  StrEvaporationInS = 'Evaporation in %s';
+  StrLateralInflowInS = 'Lateral Inflow in %s';
+  StrStageInS = 'Stage in %s';
+  StrDirectRunoffInS = 'Direct Runoff in %s';
 
 {$R *.dfm}
 procedure TfrmCustomSelectObjects.vstObjectsInitNode(Sender: TBaseVirtualTree;
@@ -556,6 +577,38 @@ begin
       Data.Caption := Packages.HfbPackage.PackageIdentifier;
       Node.CheckType := ctTriStateCheckBox;
     end
+
+    else if Node = FvstModflowSwrReachNode then
+    begin
+      Data.Caption := Format(StrReachesInS, [Packages.SwrPackage.PackageIdentifier]);
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstModflowSwrRainNode then
+    begin
+      Data.Caption := Format(StrRainInS, [Packages.SwrPackage.PackageIdentifier]);
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstModflowSwrEvapNode then
+    begin
+      Data.Caption := Format(StrEvaporationInS, [Packages.SwrPackage.PackageIdentifier]);
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstModflowSwrInflowNode then
+    begin
+      Data.Caption := Format(StrLateralInflowInS, [Packages.SwrPackage.PackageIdentifier]);
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstModflowSwrStageNode then
+    begin
+      Data.Caption := Format(StrStageInS, [Packages.SwrPackage.PackageIdentifier]);
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstModflowSwrDirectRunoffNode then
+    begin
+      Data.Caption := Format(StrDirectRunoffInS, [Packages.SwrPackage.PackageIdentifier]);
+      Node.CheckType := ctTriStateCheckBox;
+    end
+
     else if Node = FvstModflowFarmNode then
     begin
       Data.Caption := Format(StrFarmsIn, [Packages.FarmProcess.PackageIdentifier]);
@@ -755,6 +808,12 @@ begin
     if FvstSizeNode = Node.Parent then
     begin
       CellText := CellText + ', ' + FloatToStr(AScreenObject.CellSize);
+    end;
+
+    if FvstModflowHobNode = Node.Parent then
+    begin
+      CellText := CellText + ', '
+        + AScreenObject.ModflowHeadObservations.ObservationName;
     end;
 
     If (ParentNode <> nil) and (ParentNode.Parent = FvstDataSetRootNode) then
@@ -1016,6 +1075,38 @@ begin
       InitializeData(FvstModflowDrtNode);
     end;
 
+    if (AScreenObject.ModflowSwrReaches <> nil)
+      and AScreenObject.ModflowSwrReaches.Used then
+    begin
+      InitializeData(FvstModflowSwrReachNode);
+    end;
+    if (AScreenObject.ModflowSwrRain <> nil)
+      and AScreenObject.ModflowSwrRain.Used then
+    begin
+      InitializeData(FvstModflowSwrRainNode);
+    end;
+    if (AScreenObject.ModflowSwrEvap <> nil)
+      and AScreenObject.ModflowSwrEvap.Used then
+    begin
+      InitializeData(FvstModflowSwrEvapNode);
+    end;
+    if (AScreenObject.ModflowSwrLatInflow <> nil)
+      and AScreenObject.ModflowSwrLatInflow.Used then
+    begin
+      InitializeData(FvstModflowSwrInflowNode);
+    end;
+    if (AScreenObject.ModflowSwrStage <> nil)
+      and AScreenObject.ModflowSwrStage.Used then
+    begin
+      InitializeData(FvstModflowSwrStageNode);
+    end;
+    if (AScreenObject.ModflowSwrDirectRunoff <> nil)
+      and AScreenObject.ModflowSwrDirectRunoff.Used then
+    begin
+      InitializeData(FvstModflowSwrDirectRunoffNode);
+    end;
+
+
   {$IFDEF FMP}
     if (AScreenObject.ModflowFmpFarm <> nil)
       and AScreenObject.ModflowFmpFarm.Used then
@@ -1252,6 +1343,14 @@ begin
   vstCheckDeleteNode(FvstModflowUzfNode);
   vstCheckDeleteNode(FvstModflowHobNode);
   vstCheckDeleteNode(FvstModflowHfbNode);
+
+  vstCheckDeleteNode(FvstModflowSwrReachNode);
+  vstCheckDeleteNode(FvstModflowSwrRainNode);
+  vstCheckDeleteNode(FvstModflowSwrEvapNode);
+  vstCheckDeleteNode(FvstModflowSwrInflowNode);
+  vstCheckDeleteNode(FvstModflowSwrStageNode);
+  vstCheckDeleteNode(FvstModflowSwrDirectRunoffNode);
+
   vstCheckDeleteNode(FvstModflowFarmNode);
   vstCheckDeleteNode(FvstModflowFarmWellNode);
   vstCheckDeleteNode(FvstModflowFarmPrecipNode);
@@ -1568,6 +1667,14 @@ begin
   InitializeMF_BoundaryNode(FvstModflowWellNode, PriorNode, FMfWellList);
   InitializeMF_BoundaryNode(FvstModflowHobNode, PriorNode, FHobList);
   InitializeMF_BoundaryNode(FvstModflowHfbNode, PriorNode, FHfbList);
+
+  InitializeMF_BoundaryNode(FvstModflowSwrReachNode, PriorNode, FSwrReachList);
+  InitializeMF_BoundaryNode(FvstModflowSwrRainNode, PriorNode, FSwrRainList);
+  InitializeMF_BoundaryNode(FvstModflowSwrEvapNode, PriorNode, FSwrEvapList);
+  InitializeMF_BoundaryNode(FvstModflowSwrInflowNode, PriorNode, FSwrInflowList);
+  InitializeMF_BoundaryNode(FvstModflowSwrStageNode, PriorNode, FSwrStageList);
+  InitializeMF_BoundaryNode(FvstModflowSwrDirectRunoffNode, PriorNode, FSwrDirectRunoffList);
+
   InitializeMF_BoundaryNode(FvstModflowFarmNode, PriorNode, FFarmList);
   InitializeMF_BoundaryNode(FvstModflowFarmWellNode, PriorNode, FFarmWellList);
   InitializeMF_BoundaryNode(FvstModflowFarmPrecipNode, PriorNode, FFarmPrecipList);
@@ -1617,14 +1724,6 @@ begin
         try
           ClassifyListedObjects(SortedClassifiedDataSets, ClassificationObjects,
             [LayerGroupList, HufDataArrays]);
-//          for DataSetIndex := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
-//          begin
-//            DataSet := frmGoPhast.PhastModel.DataSets[DataSetIndex];
-//            SortedClassifiedDataSets.AddObject(
-//              DataSet.FullClassification + '|' + DataSet.Name, DataSet);
-//          end;
-//          SortedClassifiedDataSets.CustomSort(CompareStrings);
-
 
           for DataSetIndex := 0 to SortedClassifiedDataSets.Count - 1 do
           begin
@@ -1720,6 +1819,14 @@ begin
   FUzfList.Free;
   FHobList.Free;
   FHfbList.Free;
+
+  FSwrReachList.Free;
+  FSwrRainList.Free;
+  FSwrEvapList.Free;
+  FSwrInflowList.Free;
+  FSwrStageList.Free;
+  FSwrDirectRunoffList.Free;
+
   FFarmList.Free;
   FFarmWellList.Free;
   FFarmPrecipList.Free;
@@ -1775,6 +1882,14 @@ begin
   FStrList := TList.Create;
   FSfrGagList := TList.Create;
   FUzfList := TList.Create;
+
+  FSwrReachList := TList.Create;
+  FSwrRainList := TList.Create;
+  FSwrEvapList := TList.Create;
+  FSwrInflowList := TList.Create;
+  FSwrStageList := TList.Create;
+  FSwrDirectRunoffList := TList.Create;
+
   FFarmList := TList.Create;
   FFarmWellList := TList.Create;
   FFarmPrecipList := TList.Create;
@@ -1845,6 +1960,14 @@ begin
   FvstModflowUzfNode := nil;
   FvstModflowHobNode := nil;
   FvstModflowHfbNode := nil;
+
+  FvstModflowSwrReachNode := nil;
+  FvstModflowSwrRainNode := nil;
+  FvstModflowSwrEvapNode := nil;
+  FvstModflowSwrInflowNode := nil;
+  FvstModflowSwrStageNode := nil;
+  FvstModflowSwrDirectRunoffNode := nil;
+
   FvstModflowFarmNode := nil;
   FvstModflowFarmWellNode := nil;
   FvstModflowFarmPrecipNode := nil;
@@ -1970,6 +2093,14 @@ begin
   FHfbList.Sort(ScreenObjectCompare);
   FSsmList.Sort(ScreenObjectCompare);
   FTobList.Sort(ScreenObjectCompare);
+
+  FSwrReachList.Sort(ScreenObjectCompare);
+  FSwrRainList.Sort(ScreenObjectCompare);
+  FSwrEvapList.Sort(ScreenObjectCompare);
+  FSwrInflowList.Sort(ScreenObjectCompare);
+  FSwrStageList.Sort(ScreenObjectCompare);
+  FSwrDirectRunoffList.Sort(ScreenObjectCompare);
+
   FFarmList.Sort(ScreenObjectCompare);
   FFarmWellList.Sort(ScreenObjectCompare);
   FFarmPrecipList.Sort(ScreenObjectCompare);

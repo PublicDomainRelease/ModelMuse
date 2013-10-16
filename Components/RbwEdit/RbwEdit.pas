@@ -20,8 +20,10 @@ type
     Constructor Create(AnOwner: TComponent); override;
     { Public declarations }
   published
-    property DisabledColor: TColor read FDisabledColor write SetDisabledColor default clBtnFace;
-    property EnabledColor: TColor read FEnabledColor write SetEnabledColor default clWindow;
+    property DisabledColor: TColor read FDisabledColor write SetDisabledColor
+      default clBtnFace;
+    property EnabledColor: TColor read FEnabledColor write SetEnabledColor
+      default clWindow;
     { Published declarations }
   end;
 

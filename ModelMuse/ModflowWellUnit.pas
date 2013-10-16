@@ -77,9 +77,9 @@ type
     function BoundaryFormulaCount: integer; override;
   public
     Destructor Destroy; override;
-  published
     // @name copies Source to this @classname.
     procedure Assign(Source: TPersistent);override;
+  published
     // @name is the formula used to set the pumping rate
     // or the pumping rate multiplier of this boundary.
     property PumpingRate: string read GetPumpingRate write SetPumpingRate;
@@ -117,7 +117,7 @@ type
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
     procedure InvalidateModel; override;
-    procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
+    procedure AssignListCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
       BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
@@ -197,16 +197,16 @@ type
     // Those represent parameter boundary conditions.
     procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
       AModel: TBaseModel); override;
-    // ultimately make this virtual;
-    procedure GetCellListValues(ValueTimeList: TList; ParamList: TStringList;
-      AModel: TBaseModel);
     procedure InvalidateDisplay; override;
   end;
 
+resourcestring
+  StrWellFormulaError = 'Pumping rate set to zero because of a math error';
+
 implementation
 
-uses ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit, TempFiles, 
-  frmGoPhastUnit, GIS_Functions;
+uses ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit, TempFiles,
+  frmGoPhastUnit, GIS_Functions, frmErrorsAndWarningsUnit;
 
 resourcestring
   StrPumpingRateMultip = ' pumping rate multiplier';
@@ -255,7 +255,7 @@ end;
 function TWellItem.GetBoundaryFormula(Index: integer): string;
 begin
   case Index of
-    0: result := PumpingRate;
+    PumpingRatePosition: result := PumpingRate;
     else Assert(False);
   end;
 end;
@@ -308,7 +308,7 @@ procedure TWellItem.SetBoundaryFormula(Index: integer; const Value: string);
 begin
   inherited;
   case Index of
-    0: PumpingRate := Value;
+    PumpingRatePosition: PumpingRate := Value;
     else Assert(False);
   end;
 end;
@@ -334,6 +334,7 @@ var
   CellList: TCellAssignmentList;
   Index: Integer;
   ACell: TCellAssignment;
+  LocalScreenObject: TScreenObject;
 begin
   Assert(BoundaryFunctionIndex = 0);
   Assert(Expression <> nil);
@@ -343,18 +344,34 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
-    UpdataRequiredData(DataSets, Variables, ACell, AModel);
+    UpdateRequiredListData(DataSets, Variables, ACell, AModel);
     // 2. update locations
-    Expression.Evaluate;
-    with WellStorage.WellArray[Index] do
-    begin
-      PumpingRate := Expression.DoubleResult;
-      PumpingRateAnnotation := ACell.Annotation;
+    try
+      Expression.Evaluate;
+      with WellStorage.WellArray[Index] do
+      begin
+        PumpingRate := Expression.DoubleResult;
+        PumpingRateAnnotation := ACell.Annotation;
+      end;
+    except on E: EMathError do
+      begin
+        with WellStorage.WellArray[Index] do
+        begin
+          PumpingRate := 0;
+          PumpingRateAnnotation := StrWellFormulaError;
+        end;
+        LocalScreenObject := ScreenObject as TScreenObject;
+
+        frmErrorsAndWarnings.AddError(AModel, StrWellFormulaError,
+          Format(StrObject0sLayerError,
+          [LocalScreenObject.Name, ACell.Layer+1, ACell.Row+1,
+          ACell.Column+1, E.Message]));
+      end;
     end;
   end;
 end;
 
-procedure TWellCollection.AssignCellLocation(
+procedure TWellCollection.AssignListCellLocation(
   BoundaryStorage: TCustomBoundaryStorage; ACellList: TObject);
 var
   WellStorage: TWellStorage;
@@ -742,57 +759,6 @@ end;
 class function TMfWellBoundary.BoundaryCollectionClass: TMF_BoundCollClass;
 begin
   result := TWellCollection;
-end;
-
-//procedure TMfWellBoundary.EvaluateCellListBoundaries;
-//begin
-//  Parameters.EvaluateListBoundaries;
-//  Values.EvaluateListBoundaries;
-//end;
-
-procedure TMfWellBoundary.GetCellListValues(ValueTimeList: TList;
-  ParamList: TStringList; AModel: TBaseModel);
-var
-  ValueIndex: Integer;
-  BoundaryStorage: TWellStorage;
-  ParamIndex: Integer;
-  Param: TModflowParamItem;
-  Times: TList;
-  Position: integer;
-  ParamName: string;
-begin
-  EvaluateListBoundaries(AModel);
-  for ValueIndex := 0 to Values.Count - 1 do
-  begin
-    if ValueIndex < Values.BoundaryCount[AModel] then
-    begin
-      BoundaryStorage := Values.Boundaries[ValueIndex, AModel] as TWellStorage;
-      AssignCells(BoundaryStorage, ValueTimeList, AModel);
-    end;
-  end;
-  for ParamIndex := 0 to Parameters.Count - 1 do
-  begin
-    Param := Parameters[ParamIndex];
-    ParamName := Param.Param.ParamName;
-    Position := ParamList.IndexOf(ParamName);
-    if Position < 0 then
-    begin
-      Times := TObjectList.Create;
-      ParamList.AddObject(ParamName, Times);
-    end
-    else
-    begin
-      Times := ParamList.Objects[Position] as TList;
-    end;
-    for ValueIndex := 0 to Param.Param.Count - 1 do
-    begin
-      if ValueIndex < Param.Param.BoundaryCount[AModel] then
-      begin
-        BoundaryStorage := Param.Param.Boundaries[ValueIndex, AModel] as TWellStorage;
-        AssignCells(BoundaryStorage, Times, AModel);
-      end;
-    end;
-  end;
 end;
 
 procedure TMfWellBoundary.GetCellValues(ValueTimeList: TList;

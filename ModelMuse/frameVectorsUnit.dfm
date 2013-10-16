@@ -2,7 +2,7 @@ object frameVectors: TframeVectors
   Left = 0
   Top = 0
   Width = 320
-  Height = 413
+  Height = 437
   HelpType = htKeyword
   HelpKeyword = 'Vectors_Pane'
   TabOrder = 0
@@ -227,5 +227,13 @@ object frameVectors: TframeVectors
     Max = 1.000000000000000000
     CheckMin = True
     ChangeDisabledColor = True
+  end
+  object cbLogTransform: TCheckBox
+    Left = 3
+    Top = 402
+    Width = 190
+    Height = 17
+    Caption = 'Log transform'
+    TabOrder = 14
   end
 end

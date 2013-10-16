@@ -10,7 +10,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
     Top = 0
     Width = 561
     Height = 506
-    ActivePage = tabTime
+    ActivePage = tabChannel
     Align = alClient
     TabOrder = 0
     object tabBasic: TTabSheet
@@ -20,13 +20,13 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
       ImageIndex = 4
       DesignSize = (
         553
-        475)
+        478)
       object Label1: TLabel
         AlignWithMargins = True
         Left = 65
         Top = 35
-        Width = 144
-        Height = 16
+        Width = 118
+        Height = 13
         Caption = 'Segment number (NSEG)'
       end
       object rdeSegmentNumber: TRbwDataEntry
@@ -54,71 +54,71 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         object lblStreamTop: TLabel
           Left = 227
           Top = 58
-          Width = 147
-          Height = 16
+          Width = 121
+          Height = 13
           Caption = 'Streambed top (STRTOP)'
         end
         object lblSlope: TLabel
           Left = 227
           Top = 84
-          Width = 127
-          Height = 16
+          Width = 104
+          Height = 13
           Caption = 'Stream slope (SLOPE)'
         end
         object lblStreambedThickness: TLabel
           Left = 227
           Top = 111
-          Width = 192
-          Height = 16
+          Width = 159
+          Height = 13
           Caption = 'Streambed thickness (STRTHICK)'
         end
         object lblStreambedK: TLabel
           Left = 227
           Top = 138
-          Width = 141
-          Height = 16
+          Width = 117
+          Height = 13
           Caption = 'Streambed Kv (STRHC1)'
         end
         object lblSaturatedVolumetricWater: TLabel
           Left = 227
           Top = 165
-          Width = 248
-          Height = 16
+          Width = 207
+          Height = 13
           Caption = 'Saturated volumetric water content (THTS)'
         end
         object lblInitialVolumetricWater: TLabel
           Left = 227
           Top = 192
-          Width = 219
-          Height = 16
+          Width = 183
+          Height = 13
           Caption = 'Initial volumetric water content (THTI)'
         end
         object lblBrooksCoreyExponent: TLabel
           Left = 227
           Top = 219
-          Width = 168
-          Height = 16
+          Width = 143
+          Height = 13
           Caption = 'Brooks-Corey exponent (EPS)'
         end
         object lblMaxUnsaturatedKz: TLabel
           Left = 227
           Top = 246
-          Width = 150
-          Height = 16
+          Width = 128
+          Height = 13
           Caption = 'Max unsaturated Kz (UHC)'
         end
         object lblReachLength: TLabel
           Left = 227
           Top = 32
-          Width = 133
-          Height = 16
+          Width = 113
+          Height = 13
           Caption = 'Reach length (RCHLEN)'
         end
         object jceStreamTop: TJvComboEdit
           Left = 5
           Top = 54
           Width = 218
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -147,7 +147,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 5
           Top = 81
           Width = 218
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -176,7 +176,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 5
           Top = 108
           Width = 218
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -205,7 +205,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 3
           Top = 135
           Width = 218
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -234,7 +234,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 5
           Top = 162
           Width = 218
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -263,7 +263,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 5
           Top = 189
           Width = 218
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -292,7 +292,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 5
           Top = 216
           Width = 218
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -321,7 +321,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 5
           Top = 243
           Width = 218
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -350,7 +350,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 5
           Top = 27
           Width = 218
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -408,16 +408,16 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         object lblParameterChoices: TLabel
           Left = 136
           Top = 5
-          Width = 60
-          Height = 16
+          Width = 50
+          Height = 13
           Alignment = taCenter
           Caption = 'Parameter'
         end
         object lblIcalcChoice: TLabel
           Left = 263
           Top = 5
-          Width = 145
-          Height = 16
+          Width = 122
+          Height = 13
           Alignment = taCenter
           Caption = 'Stage calculation (ICALC)'
         end
@@ -425,7 +425,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 136
           Top = 24
           Width = 57
-          Height = 26
+          Height = 23
           Style = csOwnerDrawVariable
           ButtonStyle = fsLighter
           Color = clBtnFace
@@ -433,7 +433,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Enabled = False
           ImageHeight = 0
           ImageWidth = 0
-          ItemHeight = 20
+          ItemHeight = 17
           ItemIndex = -1
           TabOrder = 0
           OnChange = comboParameterChoicesChange
@@ -443,7 +443,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 263
           Top = 24
           Width = 57
-          Height = 26
+          Height = 23
           Style = csOwnerDrawVariable
           ButtonStyle = fsLighter
           Color = clBtnFace
@@ -451,7 +451,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Enabled = False
           ImageHeight = 0
           ImageWidth = 0
-          ItemHeight = 20
+          ItemHeight = 17
           ItemIndex = -1
           TabOrder = 1
           OnChange = comboIcalcChoiceChange
@@ -487,7 +487,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Left = 0
         Top = 57
         Width = 553
-        Height = 377
+        Height = 380
         Align = alClient
         DefaultColWidth = 50
         FixedCols = 0
@@ -529,6 +529,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -551,6 +552,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -573,6 +575,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -595,6 +598,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -623,8 +627,11 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
+        WordWrapRowCaptions = False
+        ExplicitHeight = 377
         ColWidths = (
           50
           50
@@ -634,19 +641,20 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
       end
       object pnlParamBottom: TPanel
         Left = 0
-        Top = 434
+        Top = 437
         Width = 553
         Height = 41
         Align = alBottom
         TabOrder = 2
+        ExplicitTop = 434
         DesignSize = (
           553
           41)
         object lblParametersCount: TLabel
           Left = 74
           Top = 9
-          Width = 95
-          Height = 16
+          Width = 78
+          Height = 13
           Caption = 'Number of times'
         end
         object seParametersCount: TJvSpinEdit
@@ -740,8 +748,8 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         object lblSegment: TLabel
           Left = 136
           Top = 5
-          Width = 47
-          Height = 16
+          Width = 38
+          Height = 13
           Alignment = taCenter
           Caption = 'Formula'
         end
@@ -761,7 +769,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 199
           Top = 24
           Width = 287
-          Height = 26
+          Height = 23
           Style = csOwnerDrawVariable
           ButtonStyle = fsLighter
           Color = clBtnFace
@@ -769,7 +777,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Enabled = False
           ImageHeight = 0
           ImageWidth = 0
-          ItemHeight = 20
+          ItemHeight = 17
           ItemIndex = 0
           TabOrder = 1
           OnChange = comboMultiIpriorChange
@@ -800,7 +808,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Left = 0
         Top = 57
         Width = 553
-        Height = 418
+        Height = 421
         Align = alClient
         DefaultColWidth = 50
         FixedCols = 0
@@ -841,6 +849,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -863,6 +872,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -886,6 +896,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -909,6 +920,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -936,9 +948,11 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
-        ExplicitHeight = 421
+        WordWrapRowCaptions = False
+        ExplicitHeight = 418
         ColWidths = (
           50
           50
@@ -960,7 +974,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Left = 0
         Top = 57
         Width = 553
-        Height = 418
+        Height = 421
         Align = alClient
         ColCount = 6
         DefaultColWidth = 50
@@ -1002,6 +1016,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -1024,6 +1039,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -1046,6 +1062,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -1068,6 +1085,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -1090,6 +1108,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -1112,9 +1131,11 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
-        ExplicitHeight = 421
+        WordWrapRowCaptions = False
+        ExplicitHeight = 418
       end
       object pnlFlowTop: TPanel
         Left = 0
@@ -1127,8 +1148,8 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         object lblFlowFormula: TLabel
           Left = 136
           Top = 5
-          Width = 47
-          Height = 16
+          Width = 38
+          Height = 13
           Alignment = taCenter
           Caption = 'Formula'
         end
@@ -1216,6 +1237,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -1238,6 +1260,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -1260,6 +1283,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -1282,6 +1306,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -1304,6 +1329,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -1326,6 +1352,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -1348,8 +1375,10 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end>
+          WordWrapRowCaptions = False
         end
         object pnlUpstream: TPanel
           Left = 1
@@ -1364,8 +1393,8 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           object lblUpstreamFormula: TLabel
             Left = 136
             Top = 5
-            Width = 47
-            Height = 16
+            Width = 38
+            Height = 13
             Alignment = taCenter
             Caption = 'Formula'
           end
@@ -1387,14 +1416,15 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Left = 0
         Top = 217
         Width = 553
-        Height = 258
+        Height = 261
         Align = alClient
         TabOrder = 1
+        ExplicitHeight = 258
         object dgDown: TRbwDataGrid4
           Left = 1
           Top = 53
           Width = 551
-          Height = 204
+          Height = 207
           Align = alClient
           ColCount = 7
           DefaultColWidth = 50
@@ -1436,6 +1466,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -1458,6 +1489,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -1480,6 +1512,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -1502,6 +1535,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -1524,6 +1558,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -1546,6 +1581,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -1568,9 +1604,11 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end>
-          ExplicitHeight = 207
+          WordWrapRowCaptions = False
+          ExplicitHeight = 204
         end
         object pnlDownstream: TPanel
           Left = 1
@@ -1585,8 +1623,8 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           object lblDownstreamFormula: TLabel
             Left = 136
             Top = 5
-            Width = 47
-            Height = 16
+            Width = 38
+            Height = 13
             Alignment = taCenter
             Caption = 'Formula'
           end
@@ -1610,15 +1648,11 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
       HelpKeyword = 'Channel_Tab'
       Caption = 'Channel'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Panel5: TPanel
         Left = 0
         Top = 0
         Width = 553
-        Height = 366
+        Height = 369
         Align = alClient
         Caption = 'shouldn'#39't see this'
         TabOrder = 0
@@ -1626,7 +1660,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 378
           Top = 58
           Width = 8
-          Height = 307
+          Height = 310
           Align = alRight
           ExplicitLeft = 1
           ExplicitTop = 360
@@ -1636,7 +1670,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 1
           Top = 58
           Width = 377
-          Height = 307
+          Height = 310
           Align = alClient
           ColCount = 4
           FixedCols = 0
@@ -1677,6 +1711,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -1699,6 +1734,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -1721,6 +1757,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -1743,8 +1780,10 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end>
+          WordWrapRowCaptions = False
         end
         object pnlChannelTop: TPanel
           Left = 1
@@ -1757,8 +1796,8 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           object lblChannelFormula: TLabel
             Left = 136
             Top = 5
-            Width = 47
-            Height = 16
+            Width = 38
+            Height = 13
             Alignment = taCenter
             Caption = 'Formula'
           end
@@ -1779,28 +1818,28 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 386
           Top = 58
           Width = 166
-          Height = 307
+          Height = 310
           Align = alRight
           TabOrder = 2
           TabStop = True
           ExplicitLeft = 386
           ExplicitTop = 58
           ExplicitWidth = 166
-          ExplicitHeight = 307
+          ExplicitHeight = 310
           inherited dg8Point: TRbwDataGrid4
             Width = 166
-            Height = 307
+            Height = 310
             OnSelectCell = frameCrossSection1dg8PointSelectCell
             OnSetEditText = frameCrossSection1dg8PointSetEditText
             OnButtonClick = frameCrossSection1dg8PointButtonClick
             ExplicitWidth = 166
-            ExplicitHeight = 307
+            ExplicitHeight = 310
           end
         end
       end
       object zbChannel: TQRbwZoomBox2
         Left = 0
-        Top = 366
+        Top = 369
         Width = 553
         Height = 109
         Align = alBottom
@@ -1809,7 +1848,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Exaggeration = 1.000000000000000000
         HorizontalDirection = hdRight
         Image32.Left = 0
-        Image32.Top = 68
+        Image32.Top = 0
         Image32.Width = 553
         Image32.Height = 109
         Image32.Anchors = [akLeft, akBottom]
@@ -1820,7 +1859,6 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Image32.Scale = 1.000000000000000000
         Image32.ScaleMode = smNormal
         Image32.TabOrder = 0
-        Image32.ExplicitTop = 0
         ImmediateResize = True
         Magnification = 1.000000000000000000
         VerticalDirection = vdUp
@@ -1842,7 +1880,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Left = 0
         Top = 57
         Width = 553
-        Height = 418
+        Height = 421
         Align = alClient
         ColCount = 6
         FixedCols = 0
@@ -1883,6 +1921,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -1905,6 +1944,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -1927,6 +1967,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -1949,6 +1990,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -1971,6 +2013,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -1993,9 +2036,11 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
-        ExplicitHeight = 421
+        WordWrapRowCaptions = False
+        ExplicitHeight = 418
       end
       object pnlEquationTop: TPanel
         Left = 0
@@ -2008,8 +2053,8 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         object lblEquationFormula: TLabel
           Left = 136
           Top = 5
-          Width = 47
-          Height = 16
+          Width = 38
+          Height = 13
           Alignment = taCenter
           Caption = 'Formula'
         end
@@ -2040,7 +2085,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Left = 218
         Top = 0
         Width = 8
-        Height = 318
+        Height = 321
         Align = alRight
         ExplicitLeft = 386
         ExplicitHeight = 345
@@ -2049,16 +2094,15 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Left = 0
         Top = 0
         Width = 218
-        Height = 318
+        Height = 321
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 216
-        ExplicitHeight = 321
+        ExplicitHeight = 318
         object dgTableTime: TRbwDataGrid4
           Left = 1
           Top = 1
           Width = 216
-          Height = 319
+          Height = 316
           Align = alClient
           ColCount = 2
           FixedCols = 0
@@ -2096,6 +2140,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -2118,14 +2163,15 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end>
-          ExplicitWidth = 214
+          WordWrapRowCaptions = False
         end
       end
       object gpFlowTable: TGridPanel
         Left = 0
-        Top = 318
+        Top = 321
         Width = 553
         Height = 157
         Align = alBottom
@@ -2152,7 +2198,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             Value = 100.000000000000000000
           end>
         TabOrder = 2
-        ExplicitTop = 321
+        ExplicitTop = 318
         object zbFlowDepthTable: TQRbwZoomBox2
           AlignWithMargins = True
           Left = 4
@@ -2220,21 +2266,20 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Left = 226
         Top = 0
         Width = 327
-        Height = 318
+        Height = 321
         Align = alRight
         TabOrder = 1
         TabStop = True
-        ExplicitLeft = 1
-        ExplicitTop = 1
+        ExplicitLeft = 226
         ExplicitWidth = 327
-        ExplicitHeight = 319
+        ExplicitHeight = 318
         inherited lblNumberOfPoints: TLabel
           Top = 261
           ExplicitTop = 155
         end
         inherited seTableCount: TJvSpinEdit
           Top = 258
-          ExplicitTop = 256
+          ExplicitTop = 258
         end
         inherited dgSfrTable: TRbwDataGrid4
           Width = 327
@@ -2243,7 +2288,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           OnSetEditText = frameFlowTable1dgSfrTableSetEditText
           OnButtonClick = frameFlowTable1dgSfrTableButtonClick
           ExplicitWidth = 327
-          ExplicitHeight = 250
+          ExplicitHeight = 252
         end
         inherited btnInsertFlowTableRow: TBitBtn
           Top = 285
@@ -2262,7 +2307,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
       ImageIndex = 5
       DesignSize = (
         553
-        475)
+        478)
       object gbUnsatUpstream: TGroupBox
         Left = 3
         Top = 3
@@ -2274,36 +2319,36 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         object Label6: TLabel
           Left = 243
           Top = 22
-          Width = 255
-          Height = 16
+          Width = 213
+          Height = 13
           Caption = 'Saturated volumetric water content (THTS1)'
         end
         object Label17: TLabel
           Left = 243
           Top = 49
-          Width = 226
-          Height = 16
+          Width = 189
+          Height = 13
           Caption = 'Initial volumetric water content (THTI1)'
         end
         object Label18: TLabel
           Left = 243
           Top = 76
-          Width = 175
-          Height = 16
+          Width = 149
+          Height = 13
           Caption = 'Brooks-Corey exponent (EPS1)'
         end
         object Label19: TLabel
           Left = 243
           Top = 103
-          Width = 157
-          Height = 16
+          Width = 134
+          Height = 13
           Caption = 'Max unsaturated Kz (UHC1)'
         end
         object jceSaturatedVolumetricWaterUpstream: TJvComboEdit
           Left = 3
           Top = 18
           Width = 234
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -2332,7 +2377,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 3
           Top = 45
           Width = 234
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -2361,7 +2406,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 3
           Top = 72
           Width = 234
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -2390,7 +2435,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 3
           Top = 99
           Width = 234
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -2427,36 +2472,36 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         object Label20: TLabel
           Left = 243
           Top = 22
-          Width = 255
-          Height = 16
+          Width = 213
+          Height = 13
           Caption = 'Saturated volumetric water content (THTS2)'
         end
         object Label21: TLabel
           Left = 243
           Top = 49
-          Width = 226
-          Height = 16
+          Width = 189
+          Height = 13
           Caption = 'Initial volumetric water content (THTI2)'
         end
         object Label22: TLabel
           Left = 243
           Top = 76
-          Width = 175
-          Height = 16
+          Width = 149
+          Height = 13
           Caption = 'Brooks-Corey exponent (EPS2)'
         end
         object Label23: TLabel
           Left = 243
           Top = 103
-          Width = 157
-          Height = 16
+          Width = 134
+          Height = 13
           Caption = 'Max unsaturated Kz (UHC2)'
         end
         object jceSaturatedVolumetricWaterDownstream: TJvComboEdit
           Left = 3
           Top = 18
           Width = 234
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -2485,7 +2530,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 3
           Top = 45
           Width = 234
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -2514,7 +2559,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 3
           Top = 72
           Width = 234
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -2543,7 +2588,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 3
           Top = 99
           Width = 234
-          Height = 24
+          Height = 21
           ButtonWidth = 50
           DisabledColor = clBtnFace
           Glyph.Data = {
@@ -2581,17 +2626,17 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Left = 0
         Top = 145
         Width = 553
-        Height = 333
+        Height = 330
         Align = alClient
         Enabled = False
         TabOrder = 1
         ExplicitTop = 145
         ExplicitWidth = 553
-        ExplicitHeight = 333
+        ExplicitHeight = 330
         inherited Panel: TPanel
-          Top = 292
+          Top = 289
           Width = 553
-          ExplicitTop = 292
+          ExplicitTop = 289
           ExplicitWidth = 553
           inherited sbAdd: TSpeedButton
             Left = 288
@@ -2608,7 +2653,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         end
         inherited Grid: TRbwDataGrid4
           Width = 553
-          Height = 292
+          Height = 289
           Color = clBtnFace
           ColCount = 2
           Columns = <
@@ -2632,6 +2677,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -2654,10 +2700,11 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end>
           ExplicitWidth = 553
-          ExplicitHeight = 292
+          ExplicitHeight = 289
         end
       end
       object pnlFlowFile: TPanel
@@ -2670,8 +2717,8 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         object lblExternalFileName: TLabel
           Left = 3
           Top = 95
-          Width = 103
-          Height = 16
+          Width = 86
+          Height = 13
           Caption = 'External file name'
         end
         object rgExternalFlowChoice: TRadioGroup
@@ -2704,7 +2751,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 3
           Top = 111
           Width = 547
-          Height = 21
+          Height = 24
           DisabledColor = clBtnFace
           Filter = 'Text and .sfr_ff (*.txt;*.sfr_ff)|*.txt;*.tab|All Files|*.*'
           Enabled = False
@@ -2721,7 +2768,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
       ExplicitHeight = 0
       DesignSize = (
         553
-        475)
+        478)
       object rgGages: TRadioGroup
         Left = 3
         Top = 3

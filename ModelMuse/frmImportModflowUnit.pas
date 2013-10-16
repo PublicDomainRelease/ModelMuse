@@ -27,8 +27,11 @@ type
     procedure btnOKClick(Sender: TObject);
     procedure edNameFileChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure FormCreate(Sender: TObject); override;
+    procedure FormDestroy(Sender: TObject); override;
   private
     FReadModflowInputProperly: Boolean;
+    FConsoleLines: TStringList;
     procedure HandleModflowConsolLine(const Text: string);
     procedure UpdateStatusBar(const Text: string);
     procedure ShowProgress(Position, Total: integer);
@@ -42,14 +45,14 @@ implementation
 {$R *.dfm}
 
 uses JclSysUtils, Modflow2005ImporterUnit, frmShowHideObjectsUnit,
-  frmDisplayDataUnit, ModelMuseUtilities, StrUtils;
+  frmDisplayDataUnit, ModelMuseUtilities, StrUtils, frmConsoleLinesUnit;
 
 resourcestring
   StrTheMODFLOWNameFil = 'The MODFLOW Name file appears to be invalid';
   StrSWasNotFound = '%s was not found.';
   StrNoLISTFileWasFou = 'No LIST file was found in the MODFLOW Name file.';
   StrThereWasAnErrorR = 'There was an error reading the MODFLOW input files.' +
-  '  Check %s for error messages.';
+  '  Check the console lines below and %s for error messages.';
   StrTheListingFile = 'The listing file, "%s", was not found.';
   StrTheNameOfTheMODF = 'The name of the MODFLOW Name file can not contain a' +
   'ny spaces.';
@@ -175,8 +178,17 @@ begin
     if not FReadModflowInputProperly then
     begin
       Beep;
-      MessageDlg(Format(StrThereWasAnErrorR, [ListFileName]),
-        mtError, [mbOK], 0);
+      frmConsoleLines := TfrmConsoleLines.Create(nil);
+      try
+        frmConsoleLines.lblMessage.Caption :=
+          Format(StrThereWasAnErrorR, [ListFileName]);
+        frmConsoleLines.memoConsoleLines.Lines := FConsoleLines;
+        frmConsoleLines.ShowModal;
+      finally
+        frmConsoleLines.Free;
+      end;
+//      MessageDlg(Format(StrThereWasAnErrorR, [ListFileName]),
+//        mtError, [mbOK], 0);
       Exit;
     end;
     if not FileExists(ListFileName) then
@@ -190,7 +202,7 @@ begin
     FreeAndNil(frmShowHideObjects);
     FreeAndNil(frmDisplayData);
     ImportModflow2005(ListFileName, XOrigin, YOrigin, GridAngle,
-      UpdateStatusBar, ShowProgress, mtParent);
+      UpdateStatusBar, ShowProgress, mtParent, edNameFile.FileName);
 
   finally
     SetCurrentDir(CurrentDir);
@@ -201,6 +213,18 @@ procedure TfrmImportModflow.edNameFileChange(Sender: TObject);
 begin
   inherited;
   btnOK.Enabled := FileExists(edNameFile.FileName);
+end;
+
+procedure TfrmImportModflow.FormCreate(Sender: TObject);
+begin
+  inherited;
+  FConsoleLines := TStringList.Create;
+end;
+
+procedure TfrmImportModflow.FormDestroy(Sender: TObject);
+begin
+  inherited;
+  FConsoleLines.Free;
 end;
 
 procedure TfrmImportModflow.FormShow(Sender: TObject);
@@ -222,6 +246,7 @@ var
   StressPeriod: string;
   SPStart: integer;
 begin
+  FConsoleLines.Add(Text);
   SpPos := Pos(SP, Text);
   TsPos := Pos(TS, Text);
   if (SpPos > 0) and (TsPos > 0) then

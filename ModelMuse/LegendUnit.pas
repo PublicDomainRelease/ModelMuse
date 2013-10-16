@@ -42,11 +42,11 @@ type
     function GetFractions: TValueArrayStorage;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TBaseModel);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
     destructor Destroy; override;
     property ValueSource: TObserver read FValueSource write SetValueSource;
     procedure AutoAssignValues;
-    procedure AssignFractions;
+    function AssignFractions: Boolean;
     procedure Draw(Canvas: TCanvas; StartX, StartY: integer;
       out LegendRect: TRect);
     property Fractions: TValueArrayStorage read GetFractions write SetFractions;
@@ -91,7 +91,7 @@ begin
   end;
 end;
 
-procedure TLegend.AssignFractions;
+function TLegend.AssignFractions: Boolean;
 var
   DataArray: TDataArray;
   Index: Integer;
@@ -107,6 +107,7 @@ var
   AFraction: double;
   Contours: TContours;
 begin
+  result := True;
   Assert(ValueSource <> nil);
   if (ValueSource is TDataArray) then
   begin
@@ -132,6 +133,7 @@ begin
                   Contours := DataArray.Contours;
                   if Contours = nil then
                   begin
+                    result := False;
                     Exit;
 //                    GetRealNumberLimits(MinReal, MaxReal, DataArray);
                   end
@@ -728,7 +730,7 @@ begin
   end;
 end;
 
-constructor TLegend.Create(Model: TBaseModel);
+constructor TLegend.Create(InvalidateModelEvent: TNotifyEvent);
 begin
   inherited;
   FValueSource := nil;

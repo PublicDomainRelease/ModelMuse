@@ -859,16 +859,18 @@ begin
         rdgLegend.EndUpdate;
       end;
 
-      FLegend.AssignFractions;
-      BitMap := TBitMap.Create;
-      try
-        BitMap.Canvas.Font := Font;
-        BitMap.Width := imLegend.Width;
-        BitMap.Height := imLegend.Height;
-        FLegend.Draw(BitMap.Canvas, 10, 10, DummyRect);
-        imLegend.Picture.Assign(BitMap);
-      finally
-        BitMap.Free;
+      if FLegend.AssignFractions then
+      begin
+        BitMap := TBitMap.Create;
+        try
+          BitMap.Canvas.Font := Font;
+          BitMap.Width := imLegend.Width;
+          BitMap.Height := imLegend.Height;
+          FLegend.Draw(BitMap.Canvas, 10, 10, DummyRect);
+          imLegend.Picture.Assign(BitMap);
+        finally
+          BitMap.Free;
+        end;
       end;
     end;
   finally

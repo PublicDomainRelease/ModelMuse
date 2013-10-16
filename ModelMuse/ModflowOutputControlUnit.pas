@@ -30,7 +30,7 @@ type
     procedure Initialize;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TBaseModel);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
     function FullFormat: string;
   published
     property ExtFormatPrefix: TExtFormatPrefix read FExtFormatPrefix
@@ -62,7 +62,7 @@ type
     procedure Initialize;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TBaseModel);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
     Destructor Destroy; override;
     function PrintCode: integer;
     function FormatDefined: boolean;
@@ -106,7 +106,7 @@ type
     procedure SetPrintObservations(const Value: boolean);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TBaseModel);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
     Destructor Destroy; override;
     procedure Initialize;
   published
@@ -148,7 +148,9 @@ type
     procedure SetObservationFrequency(const Value: integer);
     procedure SetSummarizeMassBalance(const Value: boolean);
   public
-    Constructor Create(Model: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
     procedure Initialize;
@@ -207,11 +209,11 @@ begin
   end;
 end;
 
-constructor TModflowOutputControl.Create(Model: TBaseModel);
+constructor TModflowOutputControl.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(Model);
-  FHeadOC := THeadDrawdownOutputControl.Create(Model);
-  FDrawdownOC := THeadDrawdownOutputControl.Create(Model);
+  inherited;
+  FHeadOC := THeadDrawdownOutputControl.Create(InvalidateModelEvent);
+  FDrawdownOC := THeadDrawdownOutputControl.Create(InvalidateModelEvent);
   FComments := TStringList.Create;
   Initialize;
 end;
@@ -359,9 +361,17 @@ begin
   end;
 end;
 
-constructor TExternalFormat.Create(Model: TBaseModel);
+constructor TExternalFormat.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(Model);
+  inherited;
+//  if Model = nil then
+//  begin
+//    inherited Create(nil);
+//  end
+//  else
+//  begin
+//    inherited Create(Model.Invalidate);
+//  end;
   Initialize;
 end;
 
@@ -455,10 +465,10 @@ begin
   end;
 end;
 
-constructor THeadDrawdownOutputControl.Create(Model: TBaseModel);
+constructor THeadDrawdownOutputControl.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(Model);
-  FExternalFormat := TExternalFormat.Create(Model);
+  inherited;
+  FExternalFormat := TExternalFormat.Create(InvalidateModelEvent);
   Initialize;
 end;
 
@@ -594,10 +604,10 @@ begin
   end;
 end;
 
-constructor TMt3dmsOutputControl.Create(Model: TBaseModel);
+constructor TMt3dmsOutputControl.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited;
-  FOutputTimes := TMt3dmsOutputTimeCollection.Create(Model);
+  inherited Create(InvalidateModelEvent);
+  FOutputTimes := TMt3dmsOutputTimeCollection.Create(InvalidateModelEvent);
   Initialize;
 end;
 

@@ -5,7 +5,7 @@ unit ModelMuseUtilities;
 interface
 
 uses
-  Windows, SysUtils, Graphics, OpenGL12x, GoPhastTypes, ColorSchemes;
+  Windows, SysUtils, Classes, Graphics, OpenGL12x, GoPhastTypes, ColorSchemes;
 
 resourcestring
   StrSorryItLooksLike = 'Sorry. It looks like some other program has locked ' +
@@ -80,6 +80,11 @@ function FileLength(fileName : string) : Int64;
 function IsWOW64: Boolean;
 
 procedure CantOpenFileMessage(AFileName: string);
+
+// @name is a function suitable for use in TStringList.CustomSort so that
+// strings that have numbers at the end are sorted in numerical order if the
+// parts before that are identical.
+function CompareNames(List: TStringList; Index1, Index2: Integer): Integer;
 
 implementation
 
@@ -405,6 +410,95 @@ procedure CantOpenFileMessage(AFileName: string);
 begin
   Beep;
   MessageDlg(Format(StrSorryItLooksLike, [AFileName]), mtError, [mbOK], 0);
+end;
+
+function CompareNames(List: TStringList; Index1, Index2: Integer): Integer;
+  procedure ProcessName(var AName, ANumber: string);
+  const
+    Digits = ['0'..'9'];
+  var
+    Index: integer;
+    LastDigit: integer;
+  begin
+    LastDigit := Length(AName) + 1;
+    for Index := Length(AName) downto 1 do
+    begin
+      if CharInSet(AName[Index], Digits) then
+      begin
+        LastDigit := Index;
+      end
+      else
+      begin
+        break;
+      end;
+    end;
+    ANumber := Copy(AName, LastDigit, MAXINT);
+    SetLength(AName, LastDigit-1);
+  end;
+var
+  Name1, Name2: string;
+  Number1, Number2: string;
+  N1, N2: Int64;
+begin
+  Name1 :=  List[Index1];
+  Name2 :=  List[Index2];
+  ProcessName(Name1, Number1);
+  ProcessName(Name2, Number2);
+  result := AnsiCompareText(Name1, Name2);
+  if result = 0 then
+  begin
+    if Number1 = Number2 then
+    begin
+      Exit;
+    end
+    else if Number1 = '' then
+    begin
+      result := -1
+    end
+    else if Number2 = '' then
+    begin
+      result := 1
+    end
+    else
+    begin
+      result := Length(Number1) - Length(Number2);
+      if result = 0 then
+      begin
+        while (not TryStrToInt64(Number1, N1))
+          or (not TryStrToInt64(Number2, N2)) do
+        begin
+          N1 := StrToInt64(Copy(Number1, 1, 15));
+          N2 := StrToInt64(Copy(Number2, 1, 15));
+          result := Sign(N1 - N2);
+          if Result = 0 then
+          begin
+            Number1 := Copy(Number1, 16, MAXINT);
+            Number2 := Copy(Number2, 16, MAXINT);
+            if Number1 = Number2 then
+            begin
+              Result := 0;
+              Exit;
+            end
+            else if Number1 = '' then
+            begin
+              result := -1;
+              Exit;
+            end
+            else if Number2 = '' then
+            begin
+              result := 1;
+              Exit;
+            end
+          end
+          else
+          begin
+            Exit;
+          end;
+        end;
+        result := Sign(N1 - N2);
+      end;
+    end;
+  end
 end;
 
 initialization

@@ -72,12 +72,10 @@ inherited framePackageUZF: TframePackageUZF
       Height = 24
       Style = csDropDownList
       Enabled = False
-      ItemIndex = 0
       TabOrder = 1
-      Text = 'Specify vertical hydraulic conductivity'
       Items.Strings = (
-        'Specify vertical hydraulic conductivity'
-        'Use vertical hydraulic conductivity from flow package')
+        'Specify vertical hydraulic conductivity (1)'
+        'Use vertical hydraulic conductivity from flow package (2)')
     end
     object rdeNumberOfTrailingWaves: TRbwDataEntry
       Left = 16
@@ -130,7 +128,7 @@ inherited framePackageUZF: TframePackageUZF
       Height = 67
       Enabled = False
       Items.Strings = (
-        ' Route discharge to streams and lakes (IRUNFLG)'
+        ' Route discharge to streams, lakes, or SWR reaches (IRUNFLG)'
         'Simulate evapotranspiration (IETFLG)'
         'Print summary of UZF budget terms (IFTUNIT)'
         'Specify residual water content (SPECIFYTHTR)'

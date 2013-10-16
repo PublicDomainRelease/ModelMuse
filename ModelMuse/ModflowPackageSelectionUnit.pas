@@ -26,6 +26,12 @@ Type
   TModflowPackageSelection = class(TPersistent)
   private
     FComments: TStrings;
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    // (FModel as TCustomModel).DischargeRoutingUpdate;
+    // (FModel as TCustomModel).AddTimeList(TimeList);
+    // (FModel as TCustomModel).RemoveTimeList(TimeList);
+    // (FModel as TCustomModel).UpdateDisplayUseList
+    // (FModel as TCustomModel).rpThreeDFormulaCompiler;
     FModel: TBaseModel;
     FPackageIdentifier: string;
     FClassification: string;
@@ -56,6 +62,8 @@ Type
     procedure SetStringProperty(var Field: string; const Value: string);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     // @name is a string used to label items related to the package.
@@ -99,6 +107,8 @@ Type
     procedure SetPublishedPhiRamp(const Value: TRealStorage);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfWellPumpage: TModflowBoundaryDisplayTimeList
@@ -121,6 +131,8 @@ Type
       NewUseList: TStringList);
     procedure InitializeGhbDisplay(Sender: TObject);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfGhbConductance: TModflowBoundaryDisplayTimeList
@@ -140,6 +152,8 @@ Type
     procedure GetMfDrnElevationUseList(Sender: TObject;
       NewUseList: TStringList);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfDrnConductance: TModflowBoundaryDisplayTimeList
@@ -162,6 +176,8 @@ Type
     procedure GetMfDrtReturnFractionUseList(Sender: TObject;
       NewUseList: TStringList);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfDrtConductance: TModflowBoundaryDisplayTimeList
@@ -184,6 +200,8 @@ Type
     procedure GetMfRivStageUseList(Sender: TObject; NewUseList: TStringList);
     procedure GetMfRivBottomUseList(Sender: TObject; NewUseList: TStringList);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfRivConductance: TModflowBoundaryDisplayTimeList
@@ -203,6 +221,8 @@ Type
     procedure GetMfChdEndingHeadUseList(Sender: TObject;
       NewUseList: TStringList);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfChdStartingHead: TModflowBoundaryDisplayTimeList
@@ -283,6 +303,8 @@ Type
   public
     procedure InitializeVariables; override;
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     property MultZoneArraysExported: boolean read FMultZoneArraysExported
@@ -310,6 +332,8 @@ Type
     procedure SetNoParCheck(const Value: Boolean);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure InitializeVariables; override;
@@ -331,6 +355,8 @@ Type
     procedure SetReferenceChoice(const Value: THufReferenceChoice);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     procedure InitializeVariables; override;
   published
@@ -373,6 +399,8 @@ Type
     procedure SetIHCOFADD(const Value: TPcgDryConvertOption);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure InitializeVariables; override;
@@ -435,6 +463,8 @@ Type
     procedure SetUNIT_TS(const Value: boolean);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure InitializeVariables; override;
@@ -526,6 +556,8 @@ Type
     procedure SetRELAX(const Value: TRealStorage);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure InitializeVariables; override;
@@ -564,6 +596,8 @@ Type
     procedure SetWSEED(const Value: TRealStorage);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure InitializeVariables; override;
@@ -599,6 +633,8 @@ Type
     procedure SetMXUP(const Value: integer);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure InitializeVariables; override;
@@ -694,6 +730,8 @@ Type
     procedure SetContinueNWT(const Value: Boolean);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure InitializeVariables; override;
@@ -804,6 +842,8 @@ Type
     FOnLayerChoiceChange: TNotifyEvent;
     procedure SetLayerOption(const Value: TLayerOption);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     procedure Assign(Source: TPersistent); override;
     property OnLayerChoiceChange: TNotifyEvent read FOnLayerChoiceChange
@@ -830,6 +870,8 @@ Type
     procedure SetZoneArrayNames(const Value: TTransientZoneCollection);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
   published
@@ -855,6 +897,8 @@ Type
     procedure UpdateEvtUseList(NewUseList: TStringList;
       ParamType: TParameterType; DataIndex: integer; const DisplayName: string);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure InvalidateAllTimeLists; override;
@@ -880,6 +924,8 @@ Type
     procedure SetAssignmentMethod(const Value: TUpdateMethod);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfRchRate: TModflowBoundaryDisplayTimeList read FMfRchRate;
@@ -914,6 +960,8 @@ Type
       ParamType: TParameterType; DataIndex: integer; const DisplayName: string);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfEtsEvapRate: TModflowBoundaryDisplayTimeList
@@ -942,6 +990,8 @@ Type
     procedure SetTableStages(const Value: integer);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
   published
     property PrintStage: boolean read FPrintStage
@@ -970,6 +1020,8 @@ Type
     procedure SetIsSelected(const Value: boolean); override;
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure InitializeVariables; override;
@@ -1013,6 +1065,8 @@ Type
     function GetItems(Index: integer): TSfrParamInstance;
     procedure SetItems(Index: integer; const Value: TSfrParamInstance);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     property Items[Index: integer]: TSfrParamInstance read GetItems
       write SetItems;
@@ -1061,6 +1115,8 @@ Type
     procedure GetMfStrUseList(Sender: TObject; NewUseList: TStringList);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfStrConductance: TModflowBoundaryDisplayTimeList
@@ -1274,6 +1330,8 @@ Type
     procedure ComputeAverages(List: TModflowBoundListOfTimeLists);
     procedure GetDisplayLists(List: TModflowBoundListOfTimeLists);
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     Function StreamConstant: double;
@@ -1437,6 +1495,8 @@ Type
     procedure SetSpecifyResidualWaterContent(const Value: boolean);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfUzfInfiltration: TModflowBoundaryDisplayTimeList
@@ -1482,6 +1542,8 @@ Type
     procedure SetDryHead(const Value: double);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     procedure InitializeVariables; override;
   published
@@ -1576,6 +1638,8 @@ Type
   protected
     procedure SetIsSelected(const Value: boolean); override;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
@@ -1714,6 +1778,8 @@ Type
     procedure SetZoneName(Value: string);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     function IsSame(AnOrderedCollection: TOrderedCollection): boolean; override;
     property Items[Index: integer]: ZZoneItem read GetItem
@@ -1741,6 +1807,8 @@ Type
     function GetItem(Index: integer): TCompositeZoneItem;
     procedure SetItem(Index: integer; const Value: TCompositeZoneItem);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     property Items[Index: integer]: TCompositeZoneItem read GetItem
       write SetItem; default;
@@ -1758,6 +1826,8 @@ Type
     procedure SetExportZBLST(const Value: boolean);
   public
     procedure InitializeVariables; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
@@ -1807,6 +1877,8 @@ Type
     procedure GetMfMnwPartialPenetrationUseList(Sender: TObject;
       NewUseList: TStringList);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
@@ -1928,6 +2000,8 @@ Type
     function GetItem(Index: integer): TSubPrintItem;
     procedure SetItem(Index: integer; const Value: TSubPrintItem);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     property Items[Index: integer]: TSubPrintItem read GetItem
       write SetItem; default;
@@ -1994,6 +2068,8 @@ Type
   public
     procedure Assign(Source: TPersistent); override;
     procedure InitializeVariables; override;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
   published
@@ -2169,6 +2245,8 @@ Type
     function GetItem(Index: integer): TSwtPrintItem;
     procedure SetItem(Index: integer; const Value: TSwtPrintItem);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel);
     property Items[Index: integer]: TSwtPrintItem read GetItem
       write SetItem; default;
@@ -2339,6 +2417,8 @@ Type
   public
     procedure Assign(Source: TPersistent); override;
     procedure InitializeVariables; override;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
   published
@@ -2376,6 +2456,8 @@ Type
     procedure SetHYDNOH(const Value: double);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property HYDNOH: double read GetHYDNOH write SetHYDNOH;
@@ -2404,6 +2486,8 @@ Type
   public
     procedure Assign(Source: TPersistent); override;
     procedure InitializeVariables; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     property MfFhbHeads: TModflowBoundaryDisplayTimeList read FMfFhbHeads;
@@ -2441,6 +2525,8 @@ Type
     procedure SetIsSelected(const Value: boolean); override;
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure InitializeVariables; override;
@@ -2493,6 +2579,8 @@ Type
     procedure SetRelaxationFactor(const Value: double);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure InitializeVariables; override;
@@ -2580,6 +2668,8 @@ Type
     procedure Changed(Sender: TObject);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure InitializeVariables; override;
@@ -2661,6 +2751,8 @@ Type
     procedure SetIsSelected(const Value: boolean); override;
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     procedure InitializeVariables; override;
   published
@@ -2674,6 +2766,8 @@ Type
     procedure InitializeConcentrationDisplay(Sender: TObject);
     procedure GetConcentrationUseList(Sender: TObject; NewUseList: TStringList);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property Concentrations: TModflowBoundaryDisplayTimeList
@@ -2698,6 +2792,8 @@ Type
     procedure SetIsSelected(const Value: boolean); override;
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     procedure InitializeVariables; override;
   published
@@ -2741,6 +2837,8 @@ Type
     procedure SetMassFluxObsResult(const Value: TMassFluxObsResult);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure InitializeVariables; override;
@@ -2795,9 +2893,6 @@ Type
   TDeficiencyPolicy = (dpWaterStacking, dpDeficitIrrigation, dpNoPolicy,
     dpAcreageOptimization, dpAcreageOptimizationWithConservationPool);
 
-  // ICOST (0, 1 and 2) The Farm process does not allow ICOST to be equal to 0.
-//  TWaterCostCoefficients = (wccLumped, wccByFarm);
-
   // ICCFL (1 and 3, 2 and 4)
   // @name is used in conjunction with @link(TCropConsumptiveLinkage)
   // to specify ICCFL
@@ -2851,7 +2946,7 @@ Type
 
   //  IRRFL 1, -1
   //  IRRFL = 0 can be inferred
-  TRoutedReturn = ({rrNone,} rrNonDiversion, rrAny);
+  TRoutedReturn = (rrNonDiversion, rrAny);
 
   // RECOMP_Q_BD option
   TRecomputeOption = (roNotComputed, roComputed);
@@ -2864,7 +2959,6 @@ Type
     FEfficiencyReset: TEfficiencyReset;
     FSurfaceWaterAllotment: TSurfaceWaterAllotment;
     FFarmBudgetPrintFlags: TFarmBudgetPrintFlags;
-//    FWaterCostCoefficients: TWaterCostCoefficients;
     FPrecipitation: TPrecipitation;
     FConsumptiveUse: TConsumptiveUse;
     FAcerageOptimizationPrintLocation: TAcerageOptimizationPrintLocation;
@@ -2891,7 +2985,6 @@ Type
     FMfFmpFarmID: TModflowBoundaryDisplayTimeList;
     FMfFmpFarmWellPumpIfRequired: TModflowBoundaryDisplayTimeList;
     FPrintRoutingFrequency: TPrintRoutingFrequency;
-//    FWellFieldOption: TWellFieldOption;
     procedure SetAcerageOptimizationPrintChoice(
       const Value: TAcerageOptimizationPrintChoice);
     procedure SetAcerageOptimizationPrintLocation(
@@ -2916,7 +3009,6 @@ Type
     procedure SetSaveWellFlowRates(Value: TSaveWellFlowRates);
     procedure SetSupplyAndDemand(const Value: TSupplyAndDemand);
     procedure SetSurfaceWaterAllotment(const Value: TSurfaceWaterAllotment);
-//    procedure SetWaterCostCoefficients(const Value: TWaterCostCoefficients);
     procedure SetAssignmentMethod(const Value: TUpdateMethod);
     procedure SetRoutedDelivery(const Value: TRoutedDelivery);
     procedure SetRoutedReturn(const Value: TRoutedReturn);
@@ -2925,8 +3017,6 @@ Type
     procedure SetSurfaceWaterClosure(const Value: Double);
     procedure SetFarmBudgetPrintHowMuch(const Value: TFarmBudgetPrintHowMuch);
     procedure SetRecomputeOption(const Value: TRecomputeOption);
-//    procedure GetMfFarmUseList(Sender: TObject; NewUseList: TStringList;
-//      DataIndex: integer);
     procedure GetMfFmpEvapUseList(Sender: TObject; NewUseList: TStringList);
     procedure GetMfFmpPrecipUseList(Sender: TObject; NewUseList: TStringList);
     procedure GetMfFmpCropIDUseList(Sender: TObject; NewUseList: TStringList);
@@ -2941,9 +3031,10 @@ Type
     procedure InitializeFarmCropIdDisplay(Sender: TObject);
     procedure InitializeFarmWellDisplay(Sender: TObject);
     procedure SetPrintRoutingFrequency(const Value: TPrintRoutingFrequency);
-//    procedure SetWellFieldOption(const Value: TWellFieldOption);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure InitializeVariables; override;
@@ -2976,6 +3067,8 @@ Type
     // IIESWFL (0, 1 and 2)
     property FractionOfInefficiencyLosses: TFractionOfInefficiencyLosses
       read FFractionOfInefficiencyLosses write SetFractionOfInefficiencyLosses;
+    property FractionOfInefficiencyLoses: TFractionOfInefficiencyLosses
+      read FFractionOfInefficiencyLosses write SetFractionOfInefficiencyLosses stored False;
     // IEBFL (0 and 1, 2 and 3)
     // @name is used in conjunction with @link(EfficiencyReset)
     // to specify IEBFL.
@@ -2990,9 +3083,6 @@ Type
     // IDEFFL (-2, -1, 0, 1, 2)
     property DeficiencyPolicy: TDeficiencyPolicy read FDeficiencyPolicy
       write SetDeficiencyPolicy;
-    // ICOST (0, 1 and 2) ICOST = 0 is not allowed.
-//    property WaterCostCoefficients: TWaterCostCoefficients
-//      read FWaterCostCoefficients write SetWaterCostCoefficients;
 
     // ICCFL (1 and 3, 2 and 4)
     // @name is used in conjunction with @link(CropConsumptiveLinkage)
@@ -3113,6 +3203,8 @@ Type
     function RechargeFractionUsed (Sender: TObject): boolean;
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure InitializeVariables; override;
@@ -3230,6 +3322,8 @@ Type
     procedure ValuesChanged(Sender: TObject);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure InitializeVariables; override;
@@ -3286,6 +3380,540 @@ Type
       read FZoneDimensionlessDensities write SetZoneDimensionlessDensities;
   end;
 
+  TSwrScaling = (ssNone, ssDiagonal, ssL2Norm);
+  TSwrReordering = (srNone, srUse, srUseIfImproved);
+  TSwrNewtonCorrection = (sncNone, sncImplicit, sncExplicit);
+  TSwrFlowToleranceOption = (rtoNone, rtoFractional, rtoL2Norm);
+  TSwrExchangeTolerance = (etNone, etGlobal, etAbsolute);
+  TSwrPrintOption = (spoNone, spoASCII, spoBinary);
+  TSwrSaveRiver = (ssrNone, ssrSaveActive, ssrSaveAll);
+  TSwrSaveObservations = (ssoNone, ssoSaveObs, ssoSaveObsAll);
+  TSwrObsFormat = (swofAscii, swofBinary);
+  TSwrSolver = (ssCrout, ssBi_CGSTAB, ssGMRES);
+  TSwrPrintConvergence = (spcPrintMaxResidual, spcIterations, spcNone,
+    spcPrintOnFailure);
+  TSwrPreconditioner = (spNone, spJacobi, spIlu, spMilu, spIlut);
+
+  TSwrPackage = class(TModflowPackageSelection)
+  private
+    FExchangeToleranceOption: TSwrExchangeTolerance;
+    FPrintInflowsAndOutflows: TSwrPrintOption;
+    FScaling: TSwrScaling;
+    FFlowToleranceOption: TSwrFlowToleranceOption;
+    FSolver: TSwrSolver;
+    FContinueDespiteNonConvergence: boolean;
+    FLateralInflowSpecification: TSwrSpecificationMethod;
+    FReordering: TSwrReordering;
+    FConvergencePrintoutInterval: integer;
+    FSaveRiver: TSwrSaveRiver;
+    FStoredMaxStageChangePerStep: TRealStorage;
+    FTimeStepIncreaseFrequency: integer;
+    FSaveSwrTimeStepLength: TSwrPrintOption;
+    FStoredMinTimeStepLength: TRealStorage;
+    FStoredMaxInflowChange: TRealStorage;
+    FPreconditioner: TSwrPreconditioner;
+    FStageSpecification: TSwrSpecificationMethod;
+    FStoredTimeStepMultiplier: TRealStorage;
+    FNewtonCorrection: TSwrNewtonCorrection;
+    FUseUpstreamWeightingForDiffusiveWave: Boolean;
+    FStoredExchangeTolerance: TRealStorage;
+    FUseInexactNewton: boolean;
+    FStoredFlowTolerance: TRealStorage;
+    FStoredSaveFrequency: TRealStorage;
+    FPrintReachExchangeAndProperties: TSwrPrintOption;
+    FPrintLineSearchInterval: integer;
+    FPrintStage: TSwrPrintOption;
+    FOnlyUseSWR: boolean;
+    FSaveObs: TSwrSaveObservations;
+    FUseSteadyStateStorage: Boolean;
+    FStoredAlternativeFlowTolerance: TRealStorage;
+    FStoredInitialTimeStepLength: TRealStorage;
+    FUseLinearDepthScaling: Boolean;
+    FStoredTransientDampingFactor: TRealStorage;
+    FStoredMaxRainfallForStepAdjustment: TRealStorage;
+    FMaxOuterIterations: integer;
+    FStoredStageTolerance: TRealStorage;
+    FSaveConvergenceHistory: boolean;
+    FPrintSwrDataToScreen: boolean;
+    FPrintMaxFroude: Boolean;
+    FStoredDropThreshold: TRealStorage;
+    FSaveAverageSimulatedResults: boolean;
+    FPrintConvergence: TSwrPrintConvergence;
+    FPrintStructureFlow: TSwrPrintOption;
+    FRainSpecification: TSwrSpecificationMethod;
+    FMaxLineSearchIterations: integer;
+    FUseLaggedStagesAndFlows: Boolean;
+    FMaxLevels: integer;
+    FMaxInnerIterations: integer;
+    FPrintReachLateralFlow: TSwrPrintOption;
+    FEvapSpecification: TSwrSpecificationMethod;
+    FStoredMaxTimeStepLength: TRealStorage;
+    FStoredMinGradientForDiffusiveFlow: TRealStorage;
+    FStoredSteadyStateDampingFactor: TRealStorage;
+    FStoredMinDepthForOutflow: TRealStorage;
+    FRainAssignmentMethod: TUpdateMethod;
+    FMfRainfall: TModflowBoundaryDisplayTimeList;
+    FEvapAssignmentMethod: TUpdateMethod;
+    FMfEvaporation: TModflowBoundaryDisplayTimeList;
+    FLatInflowAssignmentMethod: TUpdateMethod;
+    FStageAssignmentMethod: TUpdateMethod;
+    FMfStage: TModflowBoundaryDisplayTimeList;
+    FMfLatInflow: TModflowBoundaryDisplayTimeList;
+    FMfDirectRunoffReach: TModflowBoundaryDisplayTimeList;
+    FMfDirectRunoffValue: TModflowBoundaryDisplayTimeList;
+    FObsFormat: TSwrObsFormat;
+    FMfVerticalOffset: TModflowBoundaryDisplayTimeList;
+    FMfBoundaryType: TModflowBoundaryDisplayTimeList;
+    FMfGeometryNumber: TModflowBoundaryDisplayTimeList;
+    procedure SetContinueDespiteNonConvergence(const Value: boolean);
+    procedure SetConvergencePrintoutInterval(const Value: integer);
+    procedure SetStoredDropThreshold(const Value: TRealStorage);
+    procedure SetEvapSpecification(const Value: TSwrSpecificationMethod);
+    procedure SetExchangeToleranceOption(const Value: TSwrExchangeTolerance);
+    procedure SetFlowToleranceOption(const Value: TSwrFlowToleranceOption);
+    procedure SetLateralInflowSpecification(
+      const Value: TSwrSpecificationMethod);
+    procedure SetStoredMaxInflowChange(const Value: TRealStorage);
+    procedure SetMaxInnerIterations(const Value: integer);
+    procedure SetMaxLevels(const Value: integer);
+    procedure SetMaxLineSearchIterations(const Value: integer);
+    procedure SetMaxOuterIterations(const Value: integer);
+    procedure SetStoredMaxStageChangePerStep(const Value: TRealStorage);
+    procedure SetNewtonCorrection(const Value: TSwrNewtonCorrection);
+    procedure SetOnlyUseSWR(const Value: boolean);
+    procedure SetPreconditioner(const Value: TSwrPreconditioner);
+    procedure SetPrintConvergence(const Value: TSwrPrintConvergence);
+    procedure SetPrintInflowsAndOutflows(const Value: TSwrPrintOption);
+    procedure SetPrintLineSearchInterval(const Value: integer);
+    procedure SetPrintMaxFroude(const Value: Boolean);
+    procedure SetPrintReachExchangeAndProperties(const Value: TSwrPrintOption);
+    procedure SetPrintReachLateralFlow(const Value: TSwrPrintOption);
+    procedure SetPrintStage(const Value: TSwrPrintOption);
+    procedure SetPrintStructureFlow(const Value: TSwrPrintOption);
+    procedure SetPrintSwrDataToScreen(const Value: boolean);
+    procedure SetRainSpecification(const Value: TSwrSpecificationMethod);
+    procedure SetReordering(const Value: TSwrReordering);
+    procedure SetSaveAverageSimulatedResults(const Value: boolean);
+    procedure SetSaveConvergenceHistory(const Value: boolean);
+    procedure SetSaveObs(const Value: TSwrSaveObservations);
+    procedure SetSaveRiver(const Value: TSwrSaveRiver);
+    procedure SetSaveSwrTimeStepLength(const Value: TSwrPrintOption);
+    procedure SetScaling(const Value: TSwrScaling);
+    procedure SetSolver(const Value: TSwrSolver);
+    procedure SetStageSpecification(const Value: TSwrSpecificationMethod);
+    procedure SetStoredAlternativeFlowTolerance(const Value: TRealStorage);
+    procedure SetStoredExchangeTolerance(const Value: TRealStorage);
+    procedure SetStoredFlowTolerance(const Value: TRealStorage);
+    procedure SetStoredInitialTimeStepLength(const Value: TRealStorage);
+    procedure SetStoredMaxRainfallForStepAdjustment(const Value: TRealStorage);
+    procedure SetStoredMaxTimeStepLength(const Value: TRealStorage);
+    procedure SetStoredMinDepthForOutflow(const Value: TRealStorage);
+    procedure SetStoredMinGradientForDiffusiveFlow(const Value: TRealStorage);
+    procedure SetStoredMinTimeStepLength(const Value: TRealStorage);
+    procedure SetStoredSaveFrequency(const Value: TRealStorage);
+    procedure SetStoredStageTolerance(const Value: TRealStorage);
+    procedure SetStoredSteadyStateDampingFactor(const Value: TRealStorage);
+    procedure SetStoredTimeStepMultiplier(const Value: TRealStorage);
+    procedure SetStoredTransientDampingFactor(const Value: TRealStorage);
+    procedure SetTimeStepIncreaseFrequency(const Value: integer);
+    procedure SetUseInexactNewton(const Value: boolean);
+    procedure SetUseLaggedStagesAndFlows(const Value: Boolean);
+    procedure SetUseLinearDepthScaling(const Value: Boolean);
+    procedure SetUseSteadyStateStorage(const Value: Boolean);
+    procedure SetUseUpstreamWeightingForDiffusiveWave(const Value: Boolean);
+    function GetAlternativeFlowTolerance: double;
+    function GetDropThreshold: double;
+    function GetExchangeTolerance: double;
+    function GetFlowTolerance: double;
+    function GetInitialTimeStepLength: double;
+    function GetMaxInflowChange: double;
+    function GetMaxRainfallForStepAdjustment: double;
+    function GetMaxStageChangePerStep: double;
+    function GetMaxTimeStepLength: double;
+    function GetMinDepthForOutflow: double;
+    function GetMinGradientForDiffusiveFlow: double;
+    function GetMinTimeStepLength: double;
+    function GetStageTolerance: double;
+    function GetSteadyStateDampingFactor: double;
+    function GetTimeStepMultiplier: double;
+    function GetTransientDampingFactor: double;
+    procedure SetAlternativeFlowTolerance(const Value: double);
+    procedure SetDropThreshold(const Value: double);
+    procedure SetExchangeTolerance(const Value: double);
+    procedure SetFlowTolerance(const Value: double);
+    procedure SetInitialTimeStepLength(const Value: double);
+    procedure SetMaxInflowChange(const Value: double);
+    procedure SetMaxRainfallForStepAdjustment(const Value: double);
+    procedure SetMaxStageChangePerStep(const Value: double);
+    procedure SetMaxTimeStepLength(const Value: double);
+    procedure SetMinDepthForOutflow(const Value: double);
+    procedure SetMinGradientForDiffusiveFlow(const Value: double);
+    procedure SetMinTimeStepLength(const Value: double);
+    procedure SetStageTolerance(const Value: double);
+    procedure SetSteadyStateDampingFactor(const Value: double);
+    procedure SetTimeStepMultiplier(const Value: double);
+    procedure SetTransientDampingFactor(const Value: double);
+    function GetSaveFrequency: Double;
+    procedure SetSaveFrequency(const Value: Double);
+    procedure SetRainAssignmentMethod(const Value: TUpdateMethod);
+    procedure InitializeSwrRainDisplay(Sender: TObject);
+    procedure InitializeSwrEvapDisplay(Sender: TObject);
+    procedure InitializeSwrLatInflowDisplay(Sender: TObject);
+    procedure InitializeSwrStageDisplay(Sender: TObject);
+    procedure InitializeSwrDirectRunoffDisplay(Sender: TObject);
+    procedure InitializeVerticalOffsetDisplay(Sender: TObject);
+    procedure InitializeBoundaryTypeDisplay(Sender: TObject);
+    procedure InitializeGeometryNumberDisplay(Sender: TObject);
+    procedure GetMfRainUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetMfEvapUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetMfLatInflUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetMfStageUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetMfVerticalOffsetUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetEmptyUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetMfDirectRunoffReachUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetMfDirectRunoffValueUseList(Sender: TObject; NewUseList: TStringList);
+    procedure SetEvapAssignmentMethod(const Value: TUpdateMethod);
+    procedure SetLatInflowAssignmentMethod(const Value: TUpdateMethod);
+    procedure SetStageAssignmentMethod(const Value: TUpdateMethod);
+    procedure SaveObsFormat(const Value: TSwrObsFormat);
+  public
+    procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    Constructor Create(Model: TBaseModel);
+    Destructor Destroy; override;
+    procedure InitializeVariables; override;
+    procedure ValuesChanged(Sender: TObject);
+    // Group 2: Time step options
+
+    //  RTINI, Data Set 2
+    property InitialTimeStepLength: double read GetInitialTimeStepLength
+      write SetInitialTimeStepLength;
+    //  RTMIN, Data Set 2
+    property MinTimeStepLength: double read GetMinTimeStepLength
+      write SetMinTimeStepLength;
+    //  RTMAX, Data Set 2
+    property MaxTimeStepLength: double read GetMaxTimeStepLength
+      write SetMaxTimeStepLength;
+    //  RTMULT, Data Set 2
+    property TimeStepMultiplier: double read GetTimeStepMultiplier
+      write SetTimeStepMultiplier;
+    //  DMINGRAD, Data Set 2
+    property MinGradientForDiffusiveFlow: double
+      read GetMinGradientForDiffusiveFlow write SetMinGradientForDiffusiveFlow;
+    //  DMINDPTH, Data Set 2
+    property MinDepthForOutflow: double read GetMinDepthForOutflow
+      write SetMinDepthForOutflow;
+    //  DMAXRAI, Data Set 2
+    property MaxRainfallForStepAdjustment: double
+      read GetMaxRainfallForStepAdjustment write SetMaxRainfallForStepAdjustment;
+    //  DMAXSTG, Data Set 2
+    property MaxStageChangePerStep: double read GetMaxStageChangePerStep
+      write SetMaxStageChangePerStep;
+    //  DMAXINF, Data Set 2
+    property MaxInflowChange: double read GetMaxInflowChange
+      write SetMaxInflowChange;
+    // RTPRN, Data Set 2
+    property SaveFrequency: Double read GetSaveFrequency write SetSaveFrequency;
+    // Group 5: Solver
+
+    // TOLS Data Set 3
+    property StageTolerance: double read GetStageTolerance
+      write SetStageTolerance;
+    // TOLR Data Set 3
+    property FlowTolerance: double read GetFlowTolerance write SetFlowTolerance;
+    // TOLA Data Set 3
+    property ExchangeTolerance: double read GetExchangeTolerance
+      write SetExchangeTolerance;
+    // DAMPSS Data Set 3
+    property SteadyStateDampingFactor: double read GetSteadyStateDampingFactor
+      write SetSteadyStateDampingFactor;
+    // DAMPTR Data Set 3
+    property TransientDampingFactor: double read GetTransientDampingFactor
+      write SetTransientDampingFactor;
+    // DROPTOL Data Set 3
+    property DropThreshold: double read GetDropThreshold write SetDropThreshold;
+    // PTOLR Data Set 3
+    property AlternativeFlowTolerance: double read GetAlternativeFlowTolerance
+      write SetAlternativeFlowTolerance;
+
+    property MfRainfall: TModflowBoundaryDisplayTimeList
+      read FMfRainfall;
+    property MfEvaporation: TModflowBoundaryDisplayTimeList
+      read FMfEvaporation;
+    property MfLatInflow: TModflowBoundaryDisplayTimeList
+      read FMfLatInflow;
+    property MfStage: TModflowBoundaryDisplayTimeList
+      read FMfStage;
+    property MfDirectRunoffReach: TModflowBoundaryDisplayTimeList
+      read FMfDirectRunoffReach;
+    property MfDirectRunoffValue: TModflowBoundaryDisplayTimeList
+      read FMfDirectRunoffValue;
+    property MfVerticalOffset: TModflowBoundaryDisplayTimeList
+      read FMfVerticalOffset;
+    property MfBoundaryType: TModflowBoundaryDisplayTimeList
+      read FMfBoundaryType;
+    property MfGeometryNumber: TModflowBoundaryDisplayTimeList
+      read FMfGeometryNumber;
+  published
+    // Group 1: solution options
+
+    // ISWRONLY Data set 1a
+    property OnlyUseSWR: boolean read FOnlyUseSWR write SetOnlyUseSWR
+      stored True;
+    // CSWROPT USE_NONCONVERGENCE_CONTINUE Data set 1b
+    property ContinueDespiteNonConvergence: boolean
+      read FContinueDespiteNonConvergence write SetContinueDespiteNonConvergence
+      stored True;
+    // CSWROPT USE_UPSTREAM_WEIGHTING Data set 1b
+    property UseUpstreamWeightingForDiffusiveWave: Boolean
+      read FUseUpstreamWeightingForDiffusiveWave
+      write SetUseUpstreamWeightingForDiffusiveWave stored True;
+    // CSWROPT USE_INEXACT_NEWTON Data set 1b
+    property UseInexactNewton: boolean read FUseInexactNewton
+      write SetUseInexactNewton stored True;
+    // CSWROPT USE_STEADYSTATE_STORAGE Data set 1b
+    property UseSteadyStateStorage: Boolean read FUseSteadyStateStorage
+      write SetUseSteadyStateStorage stored True;
+    // CSWROPT USE_LAGGED_OPR_DATA Data set 1b
+    property UseLaggedStagesAndFlows: Boolean read FUseLaggedStagesAndFlows
+      write SetUseLaggedStagesAndFlows stored True;
+    // CSWROPT USE_LINEAR_DEPTH_SCALING Data set 1b
+    property UseLinearDepthScaling: Boolean read FUseLinearDepthScaling
+      write SetUseLinearDepthScaling stored True;
+    // CSWROPT USE_DIAGONAL_SCALING Data set 1b
+    // CSWROPT USE_L2NORM_SCALING Data set 1b
+    property Scaling: TSwrScaling read FScaling write SetScaling stored True;
+    // CSWROPT USE_RCMREORDERING Data set 1b
+    // CSWROPT USE_RCMREORDERING_IF_IMPROVEMENT Data set 1b
+    property Reordering: TSwrReordering read FReordering write SetReordering
+      stored True;
+    // CSWROPT USE_IMPLICIT_NEWTON_CORRECTION Data set 1b
+    // CSWROPT USE_EXPLICIT_NEWTON_CORRECTION Data set 1b
+    property NewtonCorrection: TSwrNewtonCorrection read FNewtonCorrection
+      write SetNewtonCorrection stored True;
+
+    // Group 2: Time step options
+
+    //  RTINI, Data Set 2
+    property StoredInitialTimeStepLength: TRealStorage
+      read FStoredInitialTimeStepLength write SetStoredInitialTimeStepLength;
+    //  RTMIN, Data Set 2
+    property StoredMinTimeStepLength: TRealStorage read FStoredMinTimeStepLength
+      write SetStoredMinTimeStepLength;
+    //  RTMAX, Data Set 2
+    property StoredMaxTimeStepLength: TRealStorage read FStoredMaxTimeStepLength
+      write SetStoredMaxTimeStepLength;
+    //  RTMULT, Data Set 2
+    property StoredTimeStepMultiplier: TRealStorage
+      read FStoredTimeStepMultiplier write SetStoredTimeStepMultiplier;
+    //  NTMULT, Data Set 2
+    property TimeStepIncreaseFrequency: integer read FTimeStepIncreaseFrequency
+      write SetTimeStepIncreaseFrequency stored True;
+    //  DMINGRAD, Data Set 2
+    property StoredMinGradientForDiffusiveFlow: TRealStorage
+      read FStoredMinGradientForDiffusiveFlow
+      write SetStoredMinGradientForDiffusiveFlow;
+    //  DMINDPTH, Data Set 2
+    property StoredMinDepthForOutflow: TRealStorage
+      read FStoredMinDepthForOutflow write SetStoredMinDepthForOutflow;
+    //  DMAXRAI, Data Set 2
+    property StoredMaxRainfallForStepAdjustment: TRealStorage
+      read FStoredMaxRainfallForStepAdjustment
+      write SetStoredMaxRainfallForStepAdjustment;
+    //  DMAXSTG, Data Set 2
+    property StoredMaxStageChangePerStep: TRealStorage
+      read FStoredMaxStageChangePerStep write SetStoredMaxStageChangePerStep;
+    //  DMAXINF, Data Set 2
+    property StoredMaxInflowChange: TRealStorage read FStoredMaxInflowChange
+      write SetStoredMaxInflowChange;
+
+    // Group 3 Methods for specifying data, Data Set 5
+
+    //  Sign of IRDRAI, Data Set 5
+    property RainSpecification: TSwrSpecificationMethod read FRainSpecification
+      write SetRainSpecification stored True;
+    //  Sign of IRDEVP, Data Set 5
+    property EvapSpecification: TSwrSpecificationMethod read FEvapSpecification
+      write SetEvapSpecification stored True;
+    //  Sign of IRDLIN, Data Set 5
+    property LateralInflowSpecification: TSwrSpecificationMethod
+      read FLateralInflowSpecification write SetLateralInflowSpecification
+      stored True;
+    //  Sign of IRDSTG, Data Set 5
+    property StageSpecification: TSwrSpecificationMethod
+      read FStageSpecification write SetStageSpecification stored True;
+
+    // Group 4:   Print flags
+    //
+    //  ISWRPRGF Data Set 1a
+    property PrintInflowsAndOutflows: TSwrPrintOption
+      read FPrintInflowsAndOutflows write SetPrintInflowsAndOutflows
+      stored True;
+    //  ISWRPSTG Data Set 1a
+    property PrintStage: TSwrPrintOption read FPrintStage write SetPrintStage
+      stored True;
+    //  ISWRPQAQ Data Set 1a
+    property PrintReachExchangeAndProperties: TSwrPrintOption
+      read FPrintReachExchangeAndProperties
+      write SetPrintReachExchangeAndProperties stored True;
+    //  ISWRPQM Data Set 1a
+    property PrintReachLateralFlow: TSwrPrintOption read FPrintReachLateralFlow
+      write SetPrintReachLateralFlow stored True;
+    //  ISWRPSTR Data Set 1a
+    property PrintStructureFlow: TSwrPrintOption read FPrintStructureFlow
+      write SetPrintStructureFlow stored True;
+    //  ISWRPFRN Data Set 1a
+    property PrintMaxFroude: Boolean read FPrintMaxFroude
+      write SetPrintMaxFroude stored True;
+    // CSWROPT PRINT_SWR_TO_SCREEN, Data Set 1b
+    property PrintSwrDataToScreen: boolean read FPrintSwrDataToScreen
+      write SetPrintSwrDataToScreen stored True;
+    // CSWROPT SAVE_SWRDT, Data Set 1b
+    property SaveSwrTimeStepLength: TSwrPrintOption read FSaveSwrTimeStepLength
+      write SetSaveSwrTimeStepLength stored True;
+    // CSWROPT SAVE_AVERAGE_RESULTS, Data Set 1b
+    property SaveAverageSimulatedResults: boolean
+      read FSaveAverageSimulatedResults write SetSaveAverageSimulatedResults
+      stored True;
+    // CSWROPT SAVE_CONVERGENCE_HISTORY, Data Set 1b
+    property SaveConvergenceHistory: boolean read FSaveConvergenceHistory
+      write SetSaveConvergenceHistory stored True;
+    // CSWROPT SAVE_RIVER_PACKAGE, SAVE_RIVER_PACKAGE_ALL, Data Set 1b
+    Property SaveRiver: TSwrSaveRiver read FSaveRiver write SetSaveRiver
+      stored True;
+    // CSWROPT SAVE_SWROBSERVATIONS, SAVE_SWROBSERVATIONS_ALL,  Data Set 1b
+    property SaveObs: TSwrSaveObservations read FSaveObs write SetSaveObs
+      stored True;
+    // CSWROPT SAVE_SWROBSERVATIONS, SAVE_SWROBSERVATIONS_ALL,  Data Set 1b
+    property ObsFormat: TSwrObsFormat read FObsFormat Write SaveObsFormat
+      stored True;
+    //  Data Set 2: RTPRN
+    property StoredSaveFrequency: TRealStorage read FStoredSaveFrequency
+      write SetStoredSaveFrequency;
+
+    // Group 5: Solver
+
+    // ISOLVER Data Set 3
+    property Solver: TSwrSolver read FSolver write SetSolver stored True;
+    // NOUTER Data Set 3
+    property MaxOuterIterations: integer read FMaxOuterIterations
+      write SetMaxOuterIterations stored True;
+    // NINNER Data Set 3
+    property MaxInnerIterations: integer read FMaxInnerIterations
+      write SetMaxInnerIterations stored True;
+    // IBT Data Set 3
+    property MaxLineSearchIterations: integer read FMaxLineSearchIterations
+      write SetMaxLineSearchIterations stored True;
+    // TOLS Data Set 3
+    property StoredStageTolerance: TRealStorage read FStoredStageTolerance
+      write SetStoredStageTolerance;
+    // CSWROPT USE_FRACTIONAL_TOLR Data set 1b
+    // CSWROPT USE_L2NORM_TOLR Data set 1b
+    property FlowToleranceOption: TSwrFlowToleranceOption
+      read FFlowToleranceOption write SetFlowToleranceOption stored True;
+    // TOLR Data Set 3
+    property StoredFlowTolerance: TRealStorage read FStoredFlowTolerance
+      write SetStoredFlowTolerance;
+    // CSWROPT USE_GLOBAL_TOLA Data set 1b
+    // CSWROPT USE_ABSOLUTE_TOLA Data set 1b
+    property ExchangeToleranceOption: TSwrExchangeTolerance
+      read FExchangeToleranceOption write SetExchangeToleranceOption
+      stored True;
+    // TOLA Data Set 3
+    property StoredExchangeTolerance: TRealStorage read FStoredExchangeTolerance
+      write SetStoredExchangeTolerance;
+    // DAMPSS Data Set 3
+    property StoredSteadyStateDampingFactor: TRealStorage
+      read FStoredSteadyStateDampingFactor
+      write SetStoredSteadyStateDampingFactor;
+    // DAMPTR Data Set 3
+    property StoredTransientDampingFactor: TRealStorage
+      read FStoredTransientDampingFactor write SetStoredTransientDampingFactor;
+    // IPRSWR Data Set 3
+    property ConvergencePrintoutInterval: integer
+      read FConvergencePrintoutInterval write SetConvergencePrintoutInterval
+      stored True;
+    // MUTSWR Data Set 3
+    property PrintConvergence: TSwrPrintConvergence read FPrintConvergence
+      write SetPrintConvergence stored True;
+    // IPC Data Set 3
+    property Preconditioner: TSwrPreconditioner read FPreconditioner
+      write SetPreconditioner stored True;
+    // NLEVELS Data Set 3
+    property MaxLevels: integer read FMaxLevels write SetMaxLevels stored True;
+    // DROPTOL Data Set 3
+    property StoredDropThreshold: TRealStorage read FStoredDropThreshold
+      write SetStoredDropThreshold;
+    // IBTPRT Data Set 3
+    property PrintLineSearchInterval: integer read FPrintLineSearchInterval
+      write SetPrintLineSearchInterval stored True;
+    // PTOLR Data Set 3
+    property StoredAlternativeFlowTolerance: TRealStorage
+      read FStoredAlternativeFlowTolerance
+      write SetStoredAlternativeFlowTolerance;
+    // other
+    property RainAssignmentMethod: TUpdateMethod read FRainAssignmentMethod
+      write SetRainAssignmentMethod Stored True;
+    property EvapAssignmentMethod: TUpdateMethod read FEvapAssignmentMethod
+      write SetEvapAssignmentMethod Stored True;
+    property LatInflowAssignmentMethod: TUpdateMethod
+      read FLatInflowAssignmentMethod
+      write SetLatInflowAssignmentMethod Stored True;
+    property StageAssignmentMethod: TUpdateMethod read FStageAssignmentMethod
+      write SetStageAssignmentMethod Stored True;
+  end;
+
+{$IFDEF MNW1}
+  TMnw1LossType = (mltSkin, mltLinear, mltNonLinear);
+
+  //  inferred  values
+  //  kspref reference stress period for calculating drawdown.
+  //  IWELPT Print well information
+
+  //
+  TMnw1Package = class(TModflowPackageSelection)
+  private
+    FLossType: TMnw1LossType;
+    FStoredLossExponent: TRealStorage;
+    FMaxMnwIterations: integer;
+    FWellFileName: string;
+    FQSumFileName: string;
+    FByNodeFileName: string;
+    function GetLossExponent: Double;
+    procedure SetByNodeFileName(const Value: string);
+    procedure SetLossExponent(const Value: Double);
+    procedure SetLossType(const Value: TMnw1LossType);
+    procedure SetMaxMnwIterations(const Value: integer);
+    procedure SetQSumFileName(const Value: string);
+    procedure SetStoredLossExponent(const Value: TRealStorage);
+    procedure SetWellFileName(const Value: string);
+  public
+    procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    Constructor Create(Model: TBaseModel);
+    Destructor Destroy; override;
+    procedure InitializeVariables; override;
+    property LossExponent: Double read GetLossExponent write  SetLossExponent;
+  published
+    property MaxMnwIterations: integer read FMaxMnwIterations write SetMaxMnwIterations;
+    property LossType: TMnw1LossType read FLossType write SetLossType;
+    property StoredLossExponent: TRealStorage read FStoredLossExponent write SetStoredLossExponent;
+    property WellFileName: string read FWellFileName write SetWellFileName;
+    property ByNodeFileName: string read FByNodeFileName write SetByNodeFileName;
+    property QSumFileName: string read FQSumFileName write SetQSumFileName;
+  end;
+{$ENDIF}
+
+const
+  KMaxRainfallForStepAdjustment = 0.15;
+  KMaxStageChangePerStep = 0.5;
+  KPreconditioner = spMilu;
+  KMaxLevels = 7;
+  KDropThreshold = 1e-3;
+  KAlternativeFlowTolerance = 100;
+
 implementation
 
 uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
@@ -3303,7 +3931,9 @@ uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
   Mt3dmsSsmWriterUnit, Mt3dmsChemUnit, ModflowStrUnit, ModflowStrWriterUnit,
   ModflowFhbWriterUnit, ModflowFmpEvapUnit, ModflowFmpWriterUnit,
   ModflowFmpPrecipitationUnit, ModflowFmpCropUnit, ModflowFmpCropSpatialUnit,
-  ModflowFmpWellUnit, ModflowCfpWriterUnit, ModflowCfpRechargeUnit;
+  ModflowFmpWellUnit, ModflowCfpWriterUnit, ModflowCfpRechargeUnit,
+  ModflowSwrWriterUnit, ModflowSwrUnit, ModflowSwrDirectRunoffUnit,
+  ModflowSwrReachUnit;
 
 resourcestring
   StrLengthUnitsForMod = 'Length units for model are undefined';
@@ -3333,6 +3963,7 @@ resourcestring
 
 procedure TModflowPackageSelection.AddTimeList(TimeList: TCustomTimeList);
 begin
+  { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
   Assert(FModel <> nil);
   (FModel as TCustomModel).AddTimeList(TimeList);
 end;
@@ -3382,7 +4013,8 @@ procedure TModflowPackageSelection.InvalidateModel;
 begin
   if FModel <> nil then
   begin
-    FModel.Invalidate;
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent. }
+    FModel.Invalidate(self);
   end;
 end;
 
@@ -3393,6 +4025,7 @@ end;
 
 procedure TModflowPackageSelection.RemoveTimeList(TimeList: TCustomTimeList);
 begin
+  { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
   (FModel as TCustomModel).RemoveTimeList(TimeList);
 end;
 
@@ -3428,11 +4061,11 @@ begin
   begin
     InvalidateModel;
     FIsSelected := Value;
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
     if FModel <> nil then
     begin
       InvalidateAllTimeLists;
       UpdateFrmDisplayData;
-//      UpdateFrmContourData;
       UpdateFrmGridValue;
     end;
   end;
@@ -3461,6 +4094,8 @@ end;
 procedure TModflowPackageSelection.UpdateDisplayUseList(NewUseList: TStringList;
   ParamType: TParameterType; DataIndex: integer; const DisplayName: string);
 begin
+  { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+
   (FModel as TCustomModel).UpdateDisplayUseList(NewUseList,
     ParamType, DataIndex, DisplayName);
 end;
@@ -3474,6 +4109,7 @@ var
   ScreenObject: TScreenObject;
   Parser: TRbwParser;
 begin
+  { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
   Parser := (FModel as TCustomModel).rpThreeDFormulaCompiler;
   Formula := Item.BoundaryFormula[DataIndex];
   try
@@ -3505,6 +4141,7 @@ var
   VariableIndex: Integer;
   Parser : TRbwParser;
 begin
+  { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
   Parser := (FModel as TCustomModel).rpTopFormulaCompiler;
   try
     Parser.Compile(Formula);
@@ -3805,6 +4442,7 @@ var
   Boundary: TRchBoundary;
   LocalModel: TCustomModel;
 begin
+  { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
   LocalModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
@@ -3874,6 +4512,7 @@ begin
 
 
   List := TModflowBoundListOfTimeLists.Create;
+  { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
   RchWriter := TModflowRCH_Writer.Create(FModel as TCustomModel, etDisplay);
   try
     List.Add(MfRchRate);
@@ -3914,6 +4553,7 @@ begin
   begin
     FAssignmentMethod := Value;
     InvalidateModel;
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
     if FModel <> nil then
     begin
       MfRchRate.Invalidate;
@@ -8699,10 +9339,20 @@ begin
 end;
 
 constructor TSubPackageSelection.Create(Model: TBaseModel);
+var
+  OnInvalidate: TNotifyEvent;
 begin
+  if Model = nil then
+  begin
+    OnInvalidate := nil;
+  end
+  else
+  begin
+    OnInvalidate := Model.Invalidate;
+  end;
   inherited;
   FPrintChoices := TSubPrintCollection.Create(Model);
-  FPrintFormats := TSubPrintFormats.Create(Model);
+  FPrintFormats := TSubPrintFormats.Create(OnInvalidate);
   InitializeVariables;
 end;
 
@@ -9609,11 +10259,21 @@ begin
 end;
 
 constructor TSwtPackageSelection.Create(Model: TBaseModel);
+var
+  OnInvalidate: TNotifyEvent;
 begin
+  if Model = nil then
+  begin
+    OnInvalidate := nil;
+  end
+  else
+  begin
+    OnInvalidate := Model.Invalidate;
+  end;
   inherited;
   FPrintChoices := TSwtPrintCollection.Create(Model);
-  FInitialPrint := TSwtInitialPrint.Create(Model);
-  FPrintFormats := TSwtPrintFormats.Create(Model);
+  FInitialPrint := TSwtInitialPrint.Create(OnInvalidate);
+  FPrintFormats := TSwtPrintFormats.Create(OnInvalidate);
   InitializeVariables;
 end;
 
@@ -11787,7 +12447,6 @@ begin
     EfficiencyGroundwaterFunction := SourceFarm.EfficiencyGroundwaterFunction;
     EfficiencyReset := SourceFarm.EfficiencyReset;
     DeficiencyPolicy := SourceFarm.DeficiencyPolicy;
-//    WaterCostCoefficients := SourceFarm.WaterCostCoefficients;
     CropConsumptiveConcept := SourceFarm.CropConsumptiveConcept;
     CropConsumptiveLinkage := SourceFarm.CropConsumptiveLinkage;
     SurfaceWaterAllotment := SourceFarm.SurfaceWaterAllotment;
@@ -11899,39 +12558,6 @@ function TFarmProcess.FarmWellsUsed(Sender: TObject): boolean;
 begin
   result := PackageUsed(Sender);
 end;
-
-//procedure TFarmProcess.GetMfFarmUseList(Sender: TObject;
-//  NewUseList: TStringList; DataIndex: integer);
-//var
-//  ScreenObjectIndex: Integer;
-//  ScreenObject: TScreenObject;
-//  Item: TCustomModflowBoundaryItem;
-//  ValueIndex: Integer;
-//  PhastModel: TCustomModel;
-//  Boundary: TFmpRefEvapBoundary;
-//begin
-//  PhastModel := FModel as TCustomModel;
-//  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
-//  begin
-//    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
-//    if ScreenObject.Deleted then
-//    begin
-//      Continue;
-//    end;
-//    Boundary := ScreenObject.ModflowFmpRefEvap;
-//    if (Boundary <> nil) and Boundary.Used then
-//    begin
-////      if Boundary.DataTypeUsed(DataIndex) then
-//      begin
-//        for ValueIndex := 0 to Boundary.Values.Count -1 do
-//        begin
-//          Item := Boundary.Values[ValueIndex] as TCustomModflowBoundaryItem;
-//          UpdateUseList(DataIndex, NewUseList, Item);
-//        end;
-//      end;
-//    end;
-//  end;
-//end;
 
 procedure TFarmProcess.GetMfFmpCropIDUseList(Sender: TObject;
   NewUseList: TStringList);
@@ -12211,7 +12837,6 @@ begin
   EfficiencyGroundwaterFunction := egfDeliveriesVary;
   EfficiencyReset := erStressPeriod;
   DeficiencyPolicy := dpNoPolicy;
-//  WaterCostCoefficients := wccLumped;
   CropConsumptiveConcept := cccConcept1;
   CropConsumptiveLinkage := cclNotLinked;
   SurfaceWaterAllotment := swaNone;
@@ -12501,25 +13126,6 @@ procedure TFarmProcess.SetSurfaceWaterClosure(const Value: Double);
 begin
   StoredSurfaceWaterClosure.Value := Value;
 end;
-
-//procedure TFarmProcess.SetWaterCostCoefficients(
-//  const Value: TWaterCostCoefficients);
-//begin
-//  if FWaterCostCoefficients <> Value then
-//  begin
-//    FWaterCostCoefficients := Value;
-//    InvalidateModel;
-//  end;
-//end;
-
-//procedure TFarmProcess.SetWellFieldOption(const Value: TWellFieldOption);
-//begin
-//  if FWellFieldOption <> Value then
-//  begin
-//    FWellFieldOption := Value;
-//    InvalidateModel;
-//  end;
-//end;
 
 { TConduitFlowProcess }
 
@@ -12846,6 +13452,8 @@ begin
 end;
 
 constructor TSwiPackage.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
   inherited;
   FTipSlope := TRealStorage.Create;
@@ -12871,7 +13479,15 @@ begin
   FAlpha.OnChange := ValuesChanged;
   FBeta.OnChange := ValuesChanged;
 
-  FZoneDimensionlessDensities := TRealCollection.Create(Model);
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  FZoneDimensionlessDensities := TRealCollection.Create(InvalidateModelEvent);
 
   InitializeVariables;
 end;
@@ -13086,5 +13702,1500 @@ procedure TSwiPackage.ValuesChanged(Sender: TObject);
 begin
   InvalidateModel;
 end;
+
+{ TSwrPackage }
+
+procedure TSwrPackage.Assign(Source: TPersistent);
+var
+  SwiSource: TSwrPackage;
+begin
+  if Source is TSwrPackage then
+  begin
+    SwiSource := TSwrPackage(Source);
+    OnlyUseSWR := SwiSource.OnlyUseSWR;
+    ContinueDespiteNonConvergence := SwiSource.ContinueDespiteNonConvergence;
+    UseUpstreamWeightingForDiffusiveWave := SwiSource.UseUpstreamWeightingForDiffusiveWave;
+    UseInexactNewton := SwiSource.UseInexactNewton;
+    UseSteadyStateStorage := SwiSource.UseSteadyStateStorage;
+    UseLaggedStagesAndFlows := SwiSource.UseLaggedStagesAndFlows;
+    UseLinearDepthScaling := SwiSource.UseLinearDepthScaling;
+    Scaling := SwiSource.Scaling;
+    Reordering := SwiSource.Reordering;
+    NewtonCorrection := SwiSource.NewtonCorrection;
+
+    InitialTimeStepLength := SwiSource.InitialTimeStepLength;
+    MinTimeStepLength := SwiSource.MinTimeStepLength;
+    MaxTimeStepLength := SwiSource.MaxTimeStepLength;
+    TimeStepMultiplier := SwiSource.TimeStepMultiplier;
+    TimeStepIncreaseFrequency := SwiSource.TimeStepIncreaseFrequency;
+    MinGradientForDiffusiveFlow := SwiSource.MinGradientForDiffusiveFlow;
+    MinDepthForOutflow := SwiSource.MinDepthForOutflow;
+    MaxRainfallForStepAdjustment := SwiSource.MaxRainfallForStepAdjustment;
+    MaxStageChangePerStep := SwiSource.MaxStageChangePerStep;
+    MaxInflowChange := SwiSource.MaxInflowChange;
+
+    // Group 3 Method3 for specifying data, Data Set 5
+
+    RainSpecification := SwiSource.RainSpecification;
+    EvapSpecification := SwiSource.EvapSpecification;
+    LateralInflowSpecification := SwiSource.LateralInflowSpecification;
+    StageSpecification := SwiSource.StageSpecification;
+
+    // Group 4:   Print flags
+
+    PrintInflowsAndOutflows := SwiSource.PrintInflowsAndOutflows;
+    PrintStage := SwiSource.PrintStage;
+    PrintReachExchangeAndProperties := SwiSource.PrintReachExchangeAndProperties;
+    PrintReachLateralFlow := SwiSource.PrintReachLateralFlow;
+    PrintStructureFlow := SwiSource.PrintStructureFlow;
+    PrintMaxFroude := SwiSource.PrintMaxFroude;
+    PrintSwrDataToScreen := SwiSource.PrintSwrDataToScreen;
+    SaveSwrTimeStepLength := SwiSource.SaveSwrTimeStepLength;
+    SaveAverageSimulatedResults := SwiSource.SaveAverageSimulatedResults;
+    SaveConvergenceHistory := SwiSource.SaveConvergenceHistory;
+    SaveRiver := SwiSource.SaveRiver;
+    SaveObs := SwiSource.SaveObs;
+    ObsFormat := SwiSource.ObsFormat;
+    SaveFrequency := SwiSource.SaveFrequency;
+
+    // Group 5: Solver
+
+    Solver := SwiSource.Solver;
+    MaxOuterIterations := SwiSource.MaxOuterIterations;
+    MaxInnerIterations := SwiSource.MaxInnerIterations;
+    MaxLineSearchIterations := SwiSource.MaxLineSearchIterations;
+    StageTolerance := SwiSource.StageTolerance;
+    FlowToleranceOption := SwiSource.FlowToleranceOption;
+    FlowTolerance := SwiSource.FlowTolerance;
+    ExchangeToleranceOption := SwiSource.ExchangeToleranceOption;
+    ExchangeTolerance := SwiSource.ExchangeTolerance;
+    SteadyStateDampingFactor := SwiSource.SteadyStateDampingFactor;
+    TransientDampingFactor := SwiSource.TransientDampingFactor;
+    ConvergencePrintoutInterval := SwiSource.ConvergencePrintoutInterval;
+    PrintConvergence := SwiSource.PrintConvergence;
+    Preconditioner := SwiSource.Preconditioner;
+    MaxLevels := SwiSource.MaxLevels;
+    DropThreshold := SwiSource.DropThreshold;
+    PrintLineSearchInterval := SwiSource.PrintLineSearchInterval;
+    AlternativeFlowTolerance := SwiSource.AlternativeFlowTolerance;
+
+    RainAssignmentMethod := SwiSource.RainAssignmentMethod;
+    EvapAssignmentMethod := SwiSource.EvapAssignmentMethod;
+    LatInflowAssignmentMethod := SwiSource.LatInflowAssignmentMethod;
+    StageAssignmentMethod := SwiSource.StageAssignmentMethod;
+  end;
+  inherited;
+end;
+
+constructor TSwrPackage.Create(Model: TBaseModel);
+begin
+  inherited;
+
+  FStoredMaxStageChangePerStep := TRealStorage.Create;
+  FStoredMaxStageChangePerStep.OnChange := ValuesChanged;
+
+  FStoredMinTimeStepLength := TRealStorage.Create;
+  FStoredMinTimeStepLength.OnChange := ValuesChanged;
+
+  FStoredMaxInflowChange := TRealStorage.Create;
+  FStoredMaxInflowChange.OnChange := ValuesChanged;
+
+  FStoredTimeStepMultiplier := TRealStorage.Create;
+  FStoredTimeStepMultiplier.OnChange := ValuesChanged;
+
+  FStoredExchangeTolerance := TRealStorage.Create;
+  FStoredExchangeTolerance.OnChange := ValuesChanged;
+
+  FStoredFlowTolerance := TRealStorage.Create;
+  FStoredFlowTolerance.OnChange := ValuesChanged;
+
+  FStoredSaveFrequency := TRealStorage.Create;
+  FStoredSaveFrequency.OnChange := ValuesChanged;
+
+  FStoredAlternativeFlowTolerance := TRealStorage.Create;
+  FStoredAlternativeFlowTolerance.OnChange := ValuesChanged;
+
+  FStoredInitialTimeStepLength := TRealStorage.Create;
+  FStoredInitialTimeStepLength.OnChange := ValuesChanged;
+
+  FStoredTransientDampingFactor := TRealStorage.Create;
+  FStoredTransientDampingFactor.OnChange := ValuesChanged;
+
+  FStoredMaxRainfallForStepAdjustment := TRealStorage.Create;
+  FStoredMaxRainfallForStepAdjustment.OnChange := ValuesChanged;
+
+  FStoredStageTolerance := TRealStorage.Create;
+  FStoredStageTolerance.OnChange := ValuesChanged;
+
+  FStoredDropThreshold := TRealStorage.Create;
+  FStoredDropThreshold.OnChange := ValuesChanged;
+
+  FStoredMaxTimeStepLength := TRealStorage.Create;
+  FStoredMaxTimeStepLength.OnChange := ValuesChanged;
+
+  FStoredMinGradientForDiffusiveFlow := TRealStorage.Create;
+  FStoredMinGradientForDiffusiveFlow.OnChange := ValuesChanged;
+
+  FStoredSteadyStateDampingFactor := TRealStorage.Create;
+  FStoredSteadyStateDampingFactor.OnChange := ValuesChanged;
+
+  FStoredMinDepthForOutflow := TRealStorage.Create;
+  FStoredMinDepthForOutflow.OnChange := ValuesChanged;
+
+  InitializeVariables;
+
+  if Model <> nil then
+  begin
+    FMfRainfall := TModflowBoundaryDisplayTimeList.Create(Model);
+    MfRainfall.OnInitialize := InitializeSwrRainDisplay;
+    MfRainfall.OnGetUseList := GetMfRainUseList;
+    MfRainfall.OnTimeListUsed := PackageUsed;
+    MfRainfall.Name := StrSWR_Rain;
+    MfRainfall.Orientation := dsoTop;
+    AddTimeList(MfRainfall);
+
+    FMfEvaporation := TModflowBoundaryDisplayTimeList.Create(Model);
+    MfEvaporation.OnInitialize := InitializeSwrEvapDisplay;
+    MfEvaporation.OnGetUseList := GetMfEvapUseList;
+    MfEvaporation.OnTimeListUsed := PackageUsed;
+    MfEvaporation.Name := StrSWR_Evap;
+    MfEvaporation.Orientation := dsoTop;
+    AddTimeList(MfEvaporation);
+
+    FMfLatInflow := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfLatInflow.OnInitialize := InitializeSwrLatInflowDisplay;
+    FMfLatInflow.OnGetUseList := GetMfLatInflUseList;
+    FMfLatInflow.OnTimeListUsed := PackageUsed;
+    FMfLatInflow.Name := StrSWR_LatInflow;
+    FMfLatInflow.Orientation := dsoTop;
+    AddTimeList(FMfLatInflow);
+
+    FMfStage := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfStage.OnInitialize := InitializeSwrStageDisplay;
+    FMfStage.OnGetUseList := GetMfStageUseList;
+    FMfStage.OnTimeListUsed := PackageUsed;
+    FMfStage.Name := StrSWR_Stage;
+    FMfStage.Orientation := dsoTop;
+    AddTimeList(FMfStage);
+
+    FMfVerticalOffset := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfVerticalOffset.OnInitialize := InitializeVerticalOffsetDisplay;
+    FMfVerticalOffset.OnGetUseList := GetMfVerticalOffsetUseList;
+    FMfVerticalOffset.OnTimeListUsed := PackageUsed;
+    FMfVerticalOffset.Name := StrSWR_Vertical_Offset;
+    FMfVerticalOffset.Orientation := dsoTop;
+    AddTimeList(FMfVerticalOffset);
+
+    FMfBoundaryType := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfBoundaryType.OnInitialize := InitializeBoundaryTypeDisplay;
+    FMfBoundaryType.OnGetUseList := GetEmptyUseList;
+    FMfBoundaryType.OnTimeListUsed := PackageUsed;
+    FMfBoundaryType.Name := StrSWR_BoundaryType;
+    FMfBoundaryType.Orientation := dsoTop;
+    AddTimeList(FMfBoundaryType);
+
+    FMfDirectRunoffReach := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfDirectRunoffReach.OnInitialize := InitializeSwrDirectRunoffDisplay;
+    FMfDirectRunoffReach.OnGetUseList := GetMfDirectRunoffReachUseList;
+    FMfDirectRunoffReach.OnTimeListUsed := PackageUsed;
+    FMfDirectRunoffReach.Name := StrSWR_DirectRunoffReach;
+    FMfDirectRunoffReach.DataType := rdtInteger;
+    FMfDirectRunoffReach.Orientation := dsoTop;
+    AddTimeList(FMfDirectRunoffReach);
+
+    FMfGeometryNumber := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfGeometryNumber.OnInitialize := InitializeGeometryNumberDisplay;
+    FMfGeometryNumber.OnGetUseList := GetEmptyUseList;
+    FMfGeometryNumber.OnTimeListUsed := PackageUsed;
+    FMfGeometryNumber.Name := StrSWR_GeometryNumber;
+    FMfGeometryNumber.DataType := rdtInteger;
+    FMfGeometryNumber.Orientation := dsoTop;
+    AddTimeList(FMfGeometryNumber);
+
+    FMfDirectRunoffValue := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfDirectRunoffValue.OnInitialize := InitializeSwrDirectRunoffDisplay;
+    FMfDirectRunoffValue.OnGetUseList := GetMfDirectRunoffValueUseList;
+    FMfDirectRunoffValue.OnTimeListUsed := PackageUsed;
+    FMfDirectRunoffValue.Name := StrSWR_DirectRunoffValue;
+    FMfDirectRunoffValue.Orientation := dsoTop;
+    AddTimeList(FMfDirectRunoffValue);
+
+  end;
+
+end;
+
+destructor TSwrPackage.Destroy;
+begin
+  FMfGeometryNumber.Free;
+  FMfBoundaryType.Free;
+  FMfVerticalOffset.Free;
+  FMfDirectRunoffValue.Free;
+  FMfDirectRunoffReach.Free;
+  FMfStage.Free;
+  FMfLatInflow.Free;
+  FMfEvaporation.Free;
+  FMfRainfall.Free;
+
+  FStoredMaxStageChangePerStep.Free;
+  FStoredMinTimeStepLength.Free;
+  FStoredMaxInflowChange.Free;
+  FStoredTimeStepMultiplier.Free;
+  FStoredExchangeTolerance.Free;
+  FStoredFlowTolerance.Free;
+  FStoredSaveFrequency.Free;
+  FStoredAlternativeFlowTolerance.Free;
+  FStoredInitialTimeStepLength.Free;
+  FStoredTransientDampingFactor.Free;
+  FStoredMaxRainfallForStepAdjustment.Free;
+  FStoredStageTolerance.Free;
+  FStoredDropThreshold.Free;
+  FStoredMaxTimeStepLength.Free;
+  FStoredMinGradientForDiffusiveFlow.Free;
+  FStoredSteadyStateDampingFactor.Free;
+  FStoredMinDepthForOutflow.Free;
+
+  inherited;
+end;
+
+function TSwrPackage.GetAlternativeFlowTolerance: double;
+begin
+  result := StoredAlternativeFlowTolerance.Value;
+end;
+
+function TSwrPackage.GetDropThreshold: double;
+begin
+  result := StoredDropThreshold.Value;
+end;
+
+procedure TSwrPackage.GetEmptyUseList(Sender: TObject; NewUseList: TStringList);
+begin
+  NewUseList.Clear;
+end;
+
+function TSwrPackage.GetExchangeTolerance: double;
+begin
+  result := StoredExchangeTolerance.Value;
+end;
+
+function TSwrPackage.GetFlowTolerance: double;
+begin
+  result := StoredFlowTolerance.Value;
+end;
+
+function TSwrPackage.GetInitialTimeStepLength: double;
+begin
+  result := StoredInitialTimeStepLength.Value;
+end;
+
+function TSwrPackage.GetMaxInflowChange: double;
+begin
+  result := StoredMaxInflowChange.Value;
+end;
+
+function TSwrPackage.GetMaxRainfallForStepAdjustment: double;
+begin
+  result := StoredMaxRainfallForStepAdjustment.Value;
+end;
+
+function TSwrPackage.GetMaxStageChangePerStep: double;
+begin
+  result := StoredMaxStageChangePerStep.Value;
+end;
+
+function TSwrPackage.GetMaxTimeStepLength: double;
+begin
+  result := StoredMaxTimeStepLength.Value;
+end;
+
+procedure TSwrPackage.GetMfDirectRunoffReachUseList(Sender: TObject;
+  NewUseList: TStringList);
+var
+  LocalModel: TCustomModel;
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  Boundary: TSwrDirectRunoffBoundary;
+  ValueIndex: Integer;
+  Item: TSwrDirectRunoffItem;
+begin
+  { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+  LocalModel := FModel as TCustomModel;
+  for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
+    if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    Boundary := ScreenObject.ModflowSwrDirectRunoff;
+    if (Boundary <> nil) and Boundary.Used then
+    begin
+      for ValueIndex := 0 to Boundary.Values.Count -1 do
+      begin
+        Item := Boundary.Values[ValueIndex] as TSwrDirectRunoffItem;
+        UpdateUseList(0, NewUseList, Item);
+      end;
+    end;
+  end;
+end;
+
+procedure TSwrPackage.GetMfDirectRunoffValueUseList(Sender: TObject;
+  NewUseList: TStringList);
+var
+  LocalModel: TCustomModel;
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  Boundary: TSwrDirectRunoffBoundary;
+  ValueIndex: Integer;
+  Item: TSwrDirectRunoffItem;
+begin
+  { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+  LocalModel := FModel as TCustomModel;
+  for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
+    if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    Boundary := ScreenObject.ModflowSwrDirectRunoff;
+    if (Boundary <> nil) and Boundary.Used then
+    begin
+      for ValueIndex := 0 to Boundary.Values.Count -1 do
+      begin
+        Item := Boundary.Values[ValueIndex] as TSwrDirectRunoffItem;
+        UpdateUseList(1, NewUseList, Item);
+      end;
+    end;
+  end;
+end;
+
+procedure TSwrPackage.GetMfEvapUseList(Sender: TObject;
+  NewUseList: TStringList);
+var
+  LocalModel: TCustomModel;
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  Boundary: TSwrEvapBoundary;
+  ValueIndex: Integer;
+  Item: TCustomSwrBoundaryItem;
+begin
+  { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+  LocalModel := FModel as TCustomModel;
+  for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
+    if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    Boundary := ScreenObject.ModflowSwrEvap;
+    if (Boundary <> nil) and Boundary.Used then
+    begin
+      for ValueIndex := 0 to Boundary.Values.Count -1 do
+      begin
+        Item := Boundary.Values[ValueIndex] as TCustomSwrBoundaryItem;
+        UpdateUseList(0, NewUseList, Item);
+      end;
+    end;
+  end;
+end;
+
+procedure TSwrPackage.GetMfLatInflUseList(Sender: TObject;
+  NewUseList: TStringList);
+var
+  LocalModel: TCustomModel;
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  Boundary: TSwrLatInflowBoundary;
+  ValueIndex: Integer;
+  Item: TCustomSwrBoundaryItem;
+begin
+  { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+  LocalModel := FModel as TCustomModel;
+  for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
+    if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    Boundary := ScreenObject.ModflowSwrLatInflow;
+    if (Boundary <> nil) and Boundary.Used then
+    begin
+      for ValueIndex := 0 to Boundary.Values.Count -1 do
+      begin
+        Item := Boundary.Values[ValueIndex] as TCustomSwrBoundaryItem;
+        UpdateUseList(0, NewUseList, Item);
+      end;
+    end;
+  end;
+end;
+
+procedure TSwrPackage.GetMfRainUseList(Sender: TObject;
+  NewUseList: TStringList);
+var
+  LocalModel: TCustomModel;
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  Boundary: TSwrRainBoundary;
+  ValueIndex: Integer;
+  Item: TCustomSwrBoundaryItem;
+begin
+  { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+  LocalModel := FModel as TCustomModel;
+  for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
+    if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    Boundary := ScreenObject.ModflowSwrRain;
+    if (Boundary <> nil) and Boundary.Used then
+    begin
+      for ValueIndex := 0 to Boundary.Values.Count -1 do
+      begin
+        Item := Boundary.Values[ValueIndex] as TCustomSwrBoundaryItem;
+        UpdateUseList(0, NewUseList, Item);
+      end;
+    end;
+  end;
+end;
+
+procedure TSwrPackage.GetMfStageUseList(Sender: TObject;
+  NewUseList: TStringList);
+var
+  LocalModel: TCustomModel;
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  StageBoundary: TSwrStageBoundary;
+  ValueIndex: Integer;
+  StageItem: TCustomSwrBoundaryItem;
+  ReachBoundary: TSwrReachBoundary;
+  ReachItem: TSwrTransientReachItem;
+begin
+  { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+  LocalModel := FModel as TCustomModel;
+  for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
+    if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    if LocalModel.ModflowPackages.SwrPackage.StageSpecification = smArray then
+    begin
+      StageBoundary := ScreenObject.ModflowSwrStage;
+      if (StageBoundary <> nil) and StageBoundary.Used then
+      begin
+        for ValueIndex := 0 to StageBoundary.Values.Count -1 do
+        begin
+          StageItem := StageBoundary.Values[ValueIndex] as TCustomSwrBoundaryItem;
+          UpdateUseList(0, NewUseList, StageItem);
+        end;
+      end;
+    end
+    else
+    begin
+      ReachBoundary := ScreenObject.ModflowSwrReaches;
+      if (ReachBoundary <> nil) and ReachBoundary.Used then
+      begin
+        for ValueIndex := 0 to ReachBoundary.Values.Count -1 do
+        begin
+          ReachItem := ReachBoundary.Values[ValueIndex] as TSwrTransientReachItem;
+          UpdateUseList(1, NewUseList, ReachItem);
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TSwrPackage.GetMfVerticalOffsetUseList(Sender: TObject;
+  NewUseList: TStringList);
+var
+  LocalModel: TCustomModel;
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+//  StageBoundary: TSwrStageBoundary;
+  ValueIndex: Integer;
+//  StageItem: TCustomSwrBoundaryItem;
+  ReachBoundary: TSwrReachBoundary;
+  ReachItem: TSwrTransientReachItem;
+begin
+  { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+  LocalModel := FModel as TCustomModel;
+  for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
+    if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    ReachBoundary := ScreenObject.ModflowSwrReaches;
+    if (ReachBoundary <> nil) and ReachBoundary.Used then
+    begin
+      for ValueIndex := 0 to ReachBoundary.Values.Count -1 do
+      begin
+        ReachItem := ReachBoundary.Values[ValueIndex] as TSwrTransientReachItem;
+        UpdateUseList(0, NewUseList, ReachItem);
+      end;
+    end;
+  end;
+end;
+
+function TSwrPackage.GetMinDepthForOutflow: double;
+begin
+  result := StoredMinDepthForOutflow.Value;
+end;
+
+function TSwrPackage.GetMinGradientForDiffusiveFlow: double;
+begin
+  result := StoredMinGradientForDiffusiveFlow.Value;
+end;
+
+function TSwrPackage.GetMinTimeStepLength: double;
+begin
+  result := StoredMinTimeStepLength.Value;
+end;
+
+function TSwrPackage.GetSaveFrequency: Double;
+begin
+  result := StoredSaveFrequency.Value;
+end;
+
+function TSwrPackage.GetStageTolerance: double;
+begin
+  result := StoredStageTolerance.Value;
+end;
+
+function TSwrPackage.GetSteadyStateDampingFactor: double;
+begin
+  result := StoredSteadyStateDampingFactor.Value;
+end;
+
+function TSwrPackage.GetTimeStepMultiplier: double;
+begin
+  result := StoredTimeStepMultiplier.Value;
+end;
+
+function TSwrPackage.GetTransientDampingFactor: double;
+begin
+  result := StoredTransientDampingFactor.Value;
+end;
+
+procedure TSwrPackage.InitializeBoundaryTypeDisplay(Sender: TObject);
+var
+  SwrWriter: TModflowSwrWriter;
+  List: TModflowBoundListOfTimeLists;
+begin
+  MfBoundaryType.CreateDataSets;
+
+  List := TModflowBoundListOfTimeLists.Create;
+  SwrWriter := TModflowSwrWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfBoundaryType);
+    SwrWriter.UpdateBoundaryTypeDisplay(List);
+  finally
+    SwrWriter.Free;
+    List.Free;
+  end;
+  MfBoundaryType.ComputeAverage;
+end;
+
+procedure TSwrPackage.InitializeGeometryNumberDisplay(Sender: TObject);
+var
+  SwrWriter: TModflowSwrWriter;
+  List: TModflowBoundListOfTimeLists;
+begin
+  MfGeometryNumber.CreateDataSets;
+
+  List := TModflowBoundListOfTimeLists.Create;
+  SwrWriter := TModflowSwrWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfGeometryNumber);
+    SwrWriter.UpdateGeometryNumberDisplay(List);
+  finally
+    SwrWriter.Free;
+    List.Free;
+  end;
+  MfGeometryNumber.ComputeAverage;
+end;
+
+procedure TSwrPackage.InitializeSwrDirectRunoffDisplay(Sender: TObject);
+var
+  SwrWriter: TModflowSwrWriter;
+  List: TModflowBoundListOfTimeLists;
+begin
+  MfDirectRunoffReach.CreateDataSets;
+  MfDirectRunoffValue.CreateDataSets;
+
+  List := TModflowBoundListOfTimeLists.Create;
+  SwrWriter := TModflowSwrWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfDirectRunoffReach);
+    List.Add(MfDirectRunoffValue);
+    SwrWriter.UpdateDirectRunoffDisplay(List);
+  finally
+    SwrWriter.Free;
+    List.Free;
+  end;
+  MfDirectRunoffReach.ComputeAverage;
+  MfDirectRunoffValue.ComputeAverage;
+end;
+
+procedure TSwrPackage.InitializeSwrEvapDisplay(Sender: TObject);
+var
+  SwrWriter: TModflowSwrWriter;
+  List: TModflowBoundListOfTimeLists;
+begin
+  MfEvaporation.CreateDataSets;
+
+  List := TModflowBoundListOfTimeLists.Create;
+  SwrWriter := TModflowSwrWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfEvaporation);
+    SwrWriter.UpdateEvapDisplay(List);
+  finally
+    SwrWriter.Free;
+    List.Free;
+  end;
+  if (EvapSpecification = smArray) and (EvapAssignmentMethod = umAdd) then
+  begin
+    MfEvaporation.LabelAsSum;
+  end
+  else
+  begin
+    MfEvaporation.ComputeAverage;
+  end;
+end;
+
+procedure TSwrPackage.InitializeSwrLatInflowDisplay(Sender: TObject);
+var
+  SwrWriter: TModflowSwrWriter;
+  List: TModflowBoundListOfTimeLists;
+begin
+  MfLatInflow.CreateDataSets;
+
+  List := TModflowBoundListOfTimeLists.Create;
+  SwrWriter := TModflowSwrWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfLatInflow);
+    SwrWriter.UpdateLatInflowDisplay(List);
+  finally
+    SwrWriter.Free;
+    List.Free;
+  end;
+  if (LateralInflowSpecification = smArray)
+    and (LatInflowAssignmentMethod = umAdd) then
+  begin
+    MfLatInflow.LabelAsSum;
+  end
+  else
+  begin
+    MfLatInflow.ComputeAverage;
+  end;
+end;
+
+procedure TSwrPackage.InitializeSwrRainDisplay(Sender: TObject);
+var
+  SwrWriter: TModflowSwrWriter;
+  List: TModflowBoundListOfTimeLists;
+begin
+  MfRainfall.CreateDataSets;
+
+  List := TModflowBoundListOfTimeLists.Create;
+  SwrWriter := TModflowSwrWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfRainfall);
+    SwrWriter.UpdateRainDisplay(List);
+  finally
+    SwrWriter.Free;
+    List.Free;
+  end;
+  if (RainSpecification = smArray) and (RainAssignmentMethod = umAdd) then
+  begin
+    MfRainfall.LabelAsSum;
+  end
+  else
+  begin
+    MfRainfall.ComputeAverage;
+  end;
+end;
+
+procedure TSwrPackage.InitializeSwrStageDisplay(Sender: TObject);
+var
+  SwrWriter: TModflowSwrWriter;
+  List: TModflowBoundListOfTimeLists;
+begin
+  MfStage.CreateDataSets;
+
+  List := TModflowBoundListOfTimeLists.Create;
+  SwrWriter := TModflowSwrWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfStage);
+    SwrWriter.UpdateStageDisplay(List);
+  finally
+    SwrWriter.Free;
+    List.Free;
+  end;
+  if (StageSpecification = smArray) and (StageAssignmentMethod = umAdd) then
+  begin
+    MfStage.LabelAsSum;
+  end
+  else
+  begin
+    MfStage.ComputeAverage;
+  end;
+end;
+
+procedure TSwrPackage.InitializeVariables;
+begin
+  inherited;
+  // Group 1
+  OnlyUseSWR := False;
+  ContinueDespiteNonConvergence := False;
+  UseUpstreamWeightingForDiffusiveWave := False;
+  UseInexactNewton := False;
+  UseSteadyStateStorage := False;
+  UseLaggedStagesAndFlows := False;
+  UseLinearDepthScaling := False;
+  Scaling := ssNone;
+  Reordering := srNone;
+  NewtonCorrection := sncExplicit;
+
+  // Group 2: Time step options
+  InitialTimeStepLength := 1e-2;
+  MinTimeStepLength := 1e-4;
+  MaxTimeStepLength := 1e-2;
+  TimeStepMultiplier := 1.01;
+  TimeStepIncreaseFrequency := 10;
+  MinGradientForDiffusiveFlow := 1.0E-12;
+  MinDepthForOutflow := 1.0E-03;
+  MaxRainfallForStepAdjustment := KMaxRainfallForStepAdjustment;
+  MaxStageChangePerStep := KMaxStageChangePerStep;
+  MaxInflowChange := 0;
+
+  // Group 3 Methods for specifying data, Data Set 5
+
+  RainSpecification := smArray;
+  EvapSpecification := smArray;
+  LateralInflowSpecification := smArray;
+  StageSpecification := smObject;
+
+   // Group 4:   Print flags
+  PrintInflowsAndOutflows := spoNone;
+  PrintStage := spoNone;
+  PrintReachExchangeAndProperties := spoNone;
+  PrintReachLateralFlow := spoNone;
+  PrintStructureFlow := spoNone;
+  PrintMaxFroude := False;
+  PrintSwrDataToScreen := False;
+  SaveSwrTimeStepLength := spoNone;
+  SaveAverageSimulatedResults := True;
+  SaveConvergenceHistory := True;
+  SaveRiver := ssrNone;
+  SaveObs := ssoNone;
+  ObsFormat := swofAscii;
+  SaveFrequency := 0;
+
+    // Group 5: Solver
+//  TSwrSolver = (ssCrout, ssBi_CGSTAB, ssGMRES);
+//  TSwrPrintConvergence = (spcPrintMaxResidual, spcIterations, spcNone,
+//    spcPrintOnFailure);
+//  TSwrPreconditioner = (spNone, spJacobi, spIlu, spMilu, spIlut);
+//  TSwrFlowToleranceOption = (rtoNone, rtoFractional, rtoL2Norm);
+//  TSwrExchangeTolerance = (etNone, etGlobal, etAbsolute);
+
+    // ISOLVER Data Set 3
+    Solver := ssBi_CGSTAB;
+    // NOUTER Data Set 3
+    MaxOuterIterations := 31;
+    // NINNER Data Set 3
+    MaxInnerIterations := 100;
+    // IBT Data Set 3
+    MaxLineSearchIterations := 10;
+    // TOLS Data Set 3
+    StageTolerance := 1.0E-09;
+    // CSWROPT USE_FRACTIONAL_TOLR Data set 1b
+    // CSWROPT USE_L2NORM_TOLR Data set 1b
+    FlowToleranceOption := rtoNone;
+    // TOLR Data Set 3
+    FlowTolerance := 100;
+    // CSWROPT USE_GLOBAL_TOLA Data set 1b
+    // CSWROPT USE_ABSOLUTE_TOLA Data set 1b
+    ExchangeToleranceOption := etNone;
+    // TOLA Data Set 3
+    ExchangeTolerance := 0.01;
+    // DAMPSS Data Set 3
+    SteadyStateDampingFactor := 1;
+    // DAMPTR Data Set 3
+    TransientDampingFactor := 1;
+    // IPRSWR Data Set 3
+    ConvergencePrintoutInterval := 1;
+    // MUTSWR Data Set 3
+    PrintConvergence := spcPrintMaxResidual;
+    // IPC Data Set 3
+    Preconditioner := KPreconditioner;
+    // NLEVELS Data Set 3
+    MaxLevels := KMaxLevels;
+    // DROPTOL Data Set 3
+    DropThreshold := KDropThreshold;
+    // IBTPRT Data Set 3
+    PrintLineSearchInterval := 0;
+    // PTOLR Data Set 3
+    AlternativeFlowTolerance := KAlternativeFlowTolerance;
+
+    RainAssignmentMethod := umAssign;
+    EvapAssignmentMethod := umAssign;
+    LatInflowAssignmentMethod := umAssign;
+    StageAssignmentMethod := umAssign;
+end;
+
+procedure TSwrPackage.InitializeVerticalOffsetDisplay(Sender: TObject);
+var
+  SwrWriter: TModflowSwrWriter;
+  List: TModflowBoundListOfTimeLists;
+begin
+  MfVerticalOffset.CreateDataSets;
+
+  List := TModflowBoundListOfTimeLists.Create;
+  SwrWriter := TModflowSwrWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfVerticalOffset);
+    SwrWriter.UpdateVerticalOffsetDisplay(List);
+  finally
+    SwrWriter.Free;
+    List.Free;
+  end;
+  MfVerticalOffset.ComputeAverage;
+end;
+
+procedure TSwrPackage.SaveObsFormat(const Value: TSwrObsFormat);
+begin
+  if FObsFormat <> Value then
+  begin
+    FObsFormat := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetAlternativeFlowTolerance(const Value: double);
+begin
+  StoredAlternativeFlowTolerance.Value := Value;
+end;
+
+procedure TSwrPackage.SetContinueDespiteNonConvergence(const Value: boolean);
+begin
+  SetBooleanProperty(FContinueDespiteNonConvergence, Value);
+end;
+
+procedure TSwrPackage.SetConvergencePrintoutInterval(const Value: integer);
+begin
+  SetIntegerProperty(FConvergencePrintoutInterval, Value);
+end;
+
+procedure TSwrPackage.SetDropThreshold(const Value: double);
+begin
+  StoredDropThreshold.Value := Value;
+end;
+
+procedure TSwrPackage.SetStoredDropThreshold(const Value: TRealStorage);
+begin
+  FStoredDropThreshold.Assign(Value);
+end;
+
+procedure TSwrPackage.SetEvapAssignmentMethod(const Value: TUpdateMethod);
+begin
+  if FEvapAssignmentMethod <> Value then
+  begin
+    FEvapAssignmentMethod := Value;
+    InvalidateModel;
+    if FMfEvaporation <> nil then
+    begin
+      FMfEvaporation.Invalidate;
+    end;
+  end;
+end;
+
+procedure TSwrPackage.SetEvapSpecification(
+  const Value: TSwrSpecificationMethod);
+begin
+  if FEvapSpecification <> Value then
+  begin
+    FEvapSpecification := Value;
+    InvalidateModel;
+    if FMfEvaporation <> nil then
+    begin
+      FMfEvaporation.Invalidate;
+    end;
+  end;
+end;
+
+procedure TSwrPackage.SetExchangeTolerance(const Value: double);
+begin
+  StoredExchangeTolerance.Value := Value;
+end;
+
+procedure TSwrPackage.SetExchangeToleranceOption(
+  const Value: TSwrExchangeTolerance);
+begin
+  if FExchangeToleranceOption <> Value then
+  begin
+    FExchangeToleranceOption := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetFlowTolerance(const Value: double);
+begin
+  StoredFlowTolerance.Value := Value;
+end;
+
+procedure TSwrPackage.SetFlowToleranceOption(
+  const Value: TSwrFlowToleranceOption);
+begin
+  if FFlowToleranceOption <> Value then
+  begin
+    FFlowToleranceOption := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetInitialTimeStepLength(const Value: double);
+begin
+  StoredInitialTimeStepLength.Value := Value;
+end;
+
+procedure TSwrPackage.SetLateralInflowSpecification(
+  const Value: TSwrSpecificationMethod);
+begin
+  if FLateralInflowSpecification <> Value then
+  begin
+    FLateralInflowSpecification := Value;
+    InvalidateModel;
+    if FMfLatInflow <> nil then
+    begin
+      FMfLatInflow.Invalidate;
+    end;
+  end;
+end;
+
+procedure TSwrPackage.SetLatInflowAssignmentMethod(const Value: TUpdateMethod);
+begin
+  if FLatInflowAssignmentMethod <> Value then
+  begin
+    FLatInflowAssignmentMethod := Value;
+    InvalidateModel;
+    if FMfLatInflow <> nil then
+    begin
+      FMfLatInflow.Invalidate;
+    end;
+  end;
+end;
+
+procedure TSwrPackage.SetStoredMaxInflowChange(const Value: TRealStorage);
+begin
+  FStoredMaxInflowChange.Assign(Value);
+end;
+
+procedure TSwrPackage.SetMaxInflowChange(const Value: double);
+begin
+  StoredMaxInflowChange.Value := Value;
+end;
+
+procedure TSwrPackage.SetMaxInnerIterations(const Value: integer);
+begin
+  SetIntegerProperty(FMaxInnerIterations, Value);
+end;
+
+procedure TSwrPackage.SetMaxLevels(const Value: integer);
+begin
+  SetIntegerProperty(FMaxLevels, Value);
+end;
+
+procedure TSwrPackage.SetMaxLineSearchIterations(const Value: integer);
+begin
+  SetIntegerProperty(FMaxLineSearchIterations, Value);
+end;
+
+procedure TSwrPackage.SetMaxOuterIterations(const Value: integer);
+begin
+  SetIntegerProperty(FMaxOuterIterations, Value);
+end;
+
+procedure TSwrPackage.SetMaxRainfallForStepAdjustment(const Value: double);
+begin
+  StoredMaxRainfallForStepAdjustment.Value := Value;
+end;
+
+procedure TSwrPackage.SetMaxStageChangePerStep(const Value: double);
+begin
+  StoredMaxStageChangePerStep.Value := Value;
+end;
+
+procedure TSwrPackage.SetMaxTimeStepLength(const Value: double);
+begin
+  StoredMaxTimeStepLength.Value := Value;
+end;
+
+procedure TSwrPackage.SetMinDepthForOutflow(const Value: double);
+begin
+  StoredMinDepthForOutflow.Value := Value;
+end;
+
+procedure TSwrPackage.SetMinGradientForDiffusiveFlow(const Value: double);
+begin
+  StoredMinGradientForDiffusiveFlow.Value := Value;
+end;
+
+procedure TSwrPackage.SetMinTimeStepLength(const Value: double);
+begin
+  StoredMinTimeStepLength.Value := Value;
+end;
+
+procedure TSwrPackage.SetStoredMaxStageChangePerStep(const Value: TRealStorage);
+begin
+  FStoredMaxStageChangePerStep.Assign(Value);
+end;
+
+procedure TSwrPackage.SetNewtonCorrection(const Value: TSwrNewtonCorrection);
+begin
+  if FNewtonCorrection <> Value then
+  begin
+    FNewtonCorrection := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetOnlyUseSWR(const Value: boolean);
+begin
+  SetBooleanProperty(FOnlyUseSWR, Value);
+end;
+
+procedure TSwrPackage.SetPreconditioner(const Value: TSwrPreconditioner);
+begin
+  if FPreconditioner <> Value then
+  begin
+    FPreconditioner := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetPrintConvergence(const Value: TSwrPrintConvergence);
+begin
+  if FPrintConvergence <> Value then
+  begin
+    FPrintConvergence := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetPrintInflowsAndOutflows(const Value: TSwrPrintOption);
+begin
+  if FPrintInflowsAndOutflows <> Value then
+  begin
+    FPrintInflowsAndOutflows := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetPrintLineSearchInterval(const Value: integer);
+begin
+  SetIntegerProperty(FPrintLineSearchInterval, Value);
+end;
+
+procedure TSwrPackage.SetPrintMaxFroude(const Value: Boolean);
+begin
+  SetBooleanProperty(FPrintMaxFroude,  Value);
+end;
+
+procedure TSwrPackage.SetPrintReachExchangeAndProperties(
+  const Value: TSwrPrintOption);
+begin
+  if FPrintReachExchangeAndProperties <> Value then
+  begin
+    FPrintReachExchangeAndProperties := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetPrintReachLateralFlow(const Value: TSwrPrintOption);
+begin
+  if FPrintReachLateralFlow <> Value then
+  begin
+    FPrintReachLateralFlow := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetPrintStage(const Value: TSwrPrintOption);
+begin
+  if FPrintStage <> Value then
+  begin
+    FPrintStage := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetPrintStructureFlow(const Value: TSwrPrintOption);
+begin
+  if FPrintStructureFlow <> Value then
+  begin
+    FPrintStructureFlow := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetPrintSwrDataToScreen(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintSwrDataToScreen, Value);
+end;
+
+procedure TSwrPackage.SetRainAssignmentMethod(const Value: TUpdateMethod);
+begin
+  if FRainAssignmentMethod <> Value then
+  begin
+    FRainAssignmentMethod := Value;
+    InvalidateModel;
+    if FMfRainfall <> nil then
+    begin
+      FMfRainfall.Invalidate;
+    end;
+  end;
+end;
+
+procedure TSwrPackage.SetRainSpecification(
+  const Value: TSwrSpecificationMethod);
+begin
+  if FRainSpecification <> Value then
+  begin
+    FRainSpecification := Value;
+    InvalidateModel;
+    if FMfRainfall <> nil then
+    begin
+      FMfRainfall.Invalidate;
+    end;
+  end;
+end;
+
+procedure TSwrPackage.SetReordering(const Value: TSwrReordering);
+begin
+  if FReordering <> Value then
+  begin
+    FReordering := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetSaveAverageSimulatedResults(
+  const Value: boolean);
+begin
+  SetBooleanProperty(FSaveAverageSimulatedResults, Value);
+end;
+
+procedure TSwrPackage.SetSaveConvergenceHistory(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveConvergenceHistory, Value);
+end;
+
+procedure TSwrPackage.SetSaveFrequency(const Value: Double);
+begin
+  StoredSaveFrequency.Value := Value;
+end;
+
+procedure TSwrPackage.SetSaveObs(const Value: TSwrSaveObservations);
+begin
+  if FSaveObs <> Value then
+  begin
+    FSaveObs := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetSaveRiver(const Value: TSwrSaveRiver);
+begin
+  if FSaveRiver <> Value then
+  begin
+    FSaveRiver := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetSaveSwrTimeStepLength(const Value: TSwrPrintOption);
+begin
+  if FSaveSwrTimeStepLength <> Value then
+  begin
+    FSaveSwrTimeStepLength := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetScaling(const Value: TSwrScaling);
+begin
+  if FScaling <> Value then
+  begin
+    FScaling := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetSolver(const Value: TSwrSolver);
+begin
+  if FSolver <> Value then
+  begin
+    FSolver := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwrPackage.SetStageAssignmentMethod(const Value: TUpdateMethod);
+begin
+  if FStageAssignmentMethod <> Value then
+  begin
+    FStageAssignmentMethod := Value;
+    InvalidateModel;
+    if FMfStage <> nil then
+    begin
+      FMfStage.Invalidate;
+    end;
+  end;
+  FStageAssignmentMethod := Value;
+end;
+
+procedure TSwrPackage.SetStageSpecification(
+  const Value: TSwrSpecificationMethod);
+begin
+  if FStageSpecification <> Value then
+  begin
+    FStageSpecification := Value;
+    InvalidateModel;
+    if FMfStage <> nil then
+    begin
+      FMfStage.Invalidate;
+    end;
+  end;
+end;
+
+procedure TSwrPackage.SetStageTolerance(const Value: double);
+begin
+  StoredStageTolerance.Value := Value;
+end;
+
+procedure TSwrPackage.SetSteadyStateDampingFactor(const Value: double);
+begin
+  StoredSteadyStateDampingFactor.Value := Value;
+end;
+
+procedure TSwrPackage.SetStoredAlternativeFlowTolerance(
+  const Value: TRealStorage);
+begin
+  FStoredAlternativeFlowTolerance.Assign(Value);
+end;
+
+procedure TSwrPackage.SetStoredExchangeTolerance(const Value: TRealStorage);
+begin
+  FStoredExchangeTolerance.Assign(Value);
+end;
+
+procedure TSwrPackage.SetStoredFlowTolerance(const Value: TRealStorage);
+begin
+  FStoredFlowTolerance.Assign(Value);
+end;
+
+procedure TSwrPackage.SetStoredInitialTimeStepLength(const Value: TRealStorage);
+begin
+  FStoredInitialTimeStepLength.Assign(Value);
+end;
+
+procedure TSwrPackage.SetStoredMaxRainfallForStepAdjustment(
+  const Value: TRealStorage);
+begin
+  FStoredMaxRainfallForStepAdjustment.Assign(Value);
+end;
+
+procedure TSwrPackage.SetStoredMaxTimeStepLength(const Value: TRealStorage);
+begin
+  FStoredMaxTimeStepLength.Assign(Value);
+end;
+
+procedure TSwrPackage.SetStoredMinDepthForOutflow(const Value: TRealStorage);
+begin
+  FStoredMinDepthForOutflow.Assign(Value);
+end;
+
+procedure TSwrPackage.SetStoredMinGradientForDiffusiveFlow(
+  const Value: TRealStorage);
+begin
+  FStoredMinGradientForDiffusiveFlow.Assign(Value);
+end;
+
+procedure TSwrPackage.SetStoredMinTimeStepLength(const Value: TRealStorage);
+begin
+  FStoredMinTimeStepLength.Assign(Value);
+end;
+
+procedure TSwrPackage.SetStoredSaveFrequency(const Value: TRealStorage);
+begin
+  FStoredSaveFrequency.Assign(Value);
+end;
+
+procedure TSwrPackage.SetStoredStageTolerance(const Value: TRealStorage);
+begin
+  FStoredStageTolerance.Assign(Value);
+end;
+
+procedure TSwrPackage.SetStoredSteadyStateDampingFactor(
+  const Value: TRealStorage);
+begin
+  FStoredSteadyStateDampingFactor.Assign(Value);
+end;
+
+procedure TSwrPackage.SetStoredTimeStepMultiplier(const Value: TRealStorage);
+begin
+  FStoredTimeStepMultiplier.Assign(Value);
+end;
+
+procedure TSwrPackage.SetStoredTransientDampingFactor(
+  const Value: TRealStorage);
+begin
+  FStoredTransientDampingFactor.Assign(Value);
+end;
+
+procedure TSwrPackage.SetTimeStepIncreaseFrequency(const Value: integer);
+begin
+  SetIntegerProperty(FTimeStepIncreaseFrequency, Value);
+end;
+
+procedure TSwrPackage.SetTimeStepMultiplier(const Value: double);
+begin
+  StoredTimeStepMultiplier.Value := Value;
+end;
+
+procedure TSwrPackage.SetTransientDampingFactor(const Value: double);
+begin
+  StoredTransientDampingFactor.Value := Value;
+end;
+
+procedure TSwrPackage.SetUseInexactNewton(const Value: boolean);
+begin
+  SetBooleanProperty(FUseInexactNewton, Value);
+end;
+
+procedure TSwrPackage.SetUseLaggedStagesAndFlows(const Value: Boolean);
+begin
+  SetBooleanProperty(FUseLaggedStagesAndFlows, Value);
+end;
+
+procedure TSwrPackage.SetUseLinearDepthScaling(const Value: Boolean);
+begin
+  SetBooleanProperty(FUseLinearDepthScaling, Value);
+end;
+
+procedure TSwrPackage.SetUseSteadyStateStorage(const Value: Boolean);
+begin
+  SetBooleanProperty(FUseSteadyStateStorage, Value);
+end;
+
+procedure TSwrPackage.SetUseUpstreamWeightingForDiffusiveWave(
+  const Value: Boolean);
+begin
+  SetBooleanProperty(FUseUpstreamWeightingForDiffusiveWave, Value);
+end;
+
+procedure TSwrPackage.ValuesChanged(Sender: TObject);
+begin
+  InvalidateModel;
+end;
+
+{ TMnw1Package }
+
+{$IFDEF MNW1}
+procedure TMnw1Package.Assign(Source: TPersistent);
+var
+  MnwSource: TMnw1Package;
+begin
+  if Source is TMnw1Package then
+  begin
+    MnwSource := TMnw1Package(Source);
+    MaxMnwIterations := MnwSource.MaxMnwIterations;
+    LossType := MnwSource.LossType;
+    LossExponent := MnwSource.LossExponent;
+    WellFileName := MnwSource.WellFileName;
+    ByNodeFileName := MnwSource.ByNodeFileName;
+    QSumFileName := MnwSource.QSumFileName;
+  end;
+  inherited;
+end;
+
+constructor TMnw1Package.Create(Model: TBaseModel);
+begin
+  inherited;
+  FStoredLossExponent := TRealStorage.Create;
+  FStoredLossExponent.OnChange := OnValueChanged;
+  InitializeVariables;
+end;
+
+destructor TMnw1Package.Destroy;
+begin
+  FStoredLossExponent.Free;
+  inherited;
+end;
+
+function TMnw1Package.GetLossExponent: Double;
+begin
+  result := FStoredLossExponent.Value;
+end;
+
+procedure TMnw1Package.InitializeVariables;
+begin
+  inherited;
+  LossExponent := 1;
+  MaxMnwIterations := 9999;
+  LossType := mltSkin;
+  WellFileName := '';
+  ByNodeFileName := '';
+  QSumFileName := '';
+end;
+
+procedure TMnw1Package.SetByNodeFileName(const Value: string);
+begin
+  SetStringProperty(FByNodeFileName, Value);
+end;
+
+procedure TMnw1Package.SetLossExponent(const Value: Double);
+begin
+  FStoredLossExponent.Value := Value;
+end;
+
+procedure TMnw1Package.SetLossType(const Value: TMnw1LossType);
+begin
+  if FLossType <> Value then
+  begin
+    FLossType := Value;
+    InvalidateModel;
+  end;
+
+end;
+
+procedure TMnw1Package.SetMaxMnwIterations(const Value: integer);
+begin
+  SetIntegerProperty(FMaxMnwIterations, Value);
+end;
+
+procedure TMnw1Package.SetQSumFileName(const Value: string);
+begin
+  SetStringProperty(FQSumFileName, Value);
+end;
+
+procedure TMnw1Package.SetStoredLossExponent(const Value: TRealStorage);
+begin
+  FStoredLossExponent.Assign(Value);
+end;
+
+procedure TMnw1Package.SetWellFileName(const Value: string);
+begin
+  SetStringProperty(FWellFileName, Value);
+end;
+{$ENDIF}
 
 end.

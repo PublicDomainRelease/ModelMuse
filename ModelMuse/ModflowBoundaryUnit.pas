@@ -24,6 +24,8 @@ type
   // defining where and with what values the boundary condition applies.
   TCustomBoundaryStorage = class(TObject)
   private
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FModel: TBaseModel;
   protected
     FCached: boolean;
@@ -38,7 +40,11 @@ type
     EndingTime: double;
     destructor Destroy; override;
     procedure CacheData;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(AModel: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property Model: TBaseModel read FModel;
   end;
 
@@ -176,7 +182,7 @@ type
     class function ItemClass: TBoundaryItemClass; virtual; abstract;
     // @name deletes any items if the start and end times are identical
     // or if the end time is before the start time.
-    // It is overridden in @link(TFhbCollection) in which items can have the
+    // It is overridden in @link(TFhbHeadCollection) in which items can have the
     // same start and end times.
     procedure DeleteItemsWithZeroDuration; virtual;
   public
@@ -190,6 +196,7 @@ type
     property Items[Index: Integer]: TCustomBoundaryItem read GetItem
       write SetItem; default;
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name is the @link(TScreenObject) for this boundary.
     constructor Create(Boundary: TModflowBoundary;
       Model: TBaseModel; ScreenObject: TObject); virtual;
@@ -200,6 +207,8 @@ type
 
   TTimeListsModelLink = class(TObject)
   private
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FModel: TBaseModel;
     // @name stores a series of @link(TModflowTimeList)s.  They
     // must be in the same order as the order used to access
@@ -214,7 +223,11 @@ type
     procedure CreateTimeLists; virtual; abstract;
   public
     property Boundary: TCustomMF_BoundColl read FBoundary;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property Model: TBaseModel read FModel;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(AModel: TBaseModel; ABoundary: TCustomMF_BoundColl); virtual;
     Destructor Destroy; override;
     property TimeLists: TList read FTimeLists;
@@ -234,7 +247,11 @@ type
   public
     Constructor Create(Boundary: TCustomMF_BoundColl);
     Destructor Destroy; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetLink(AModel: TBaseModel): TTimeListsModelLink;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure RemoveLink(AModel: TBaseModel);
   end;
 
@@ -242,11 +259,17 @@ type
   strict private
     // @name is actually a TObjectList.
     FBoundaries: TList;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FModel: TBaseModel;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(AModel: TBaseModel);
     destructor Destroy; override;
     property Boundaries: TList read FBoundaries;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property Model: TBaseModel read FModel;
   end;
 
@@ -258,6 +281,8 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetLink(AModel: TBaseModel): TBoundaryModelLink;
   end;
 
@@ -289,6 +314,8 @@ type
     FTimeListLink: TTimeListModelLinkList;
 
     // See @link(Boundaries).
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetBoundaries(const Index: integer;
       AModel: TBaseModel): TCustomBoundaryStorage;
     // See @link(ParamName).
@@ -306,14 +333,17 @@ type
     procedure TestIfObservationsPresent(var EndOfLastStressPeriod: Double;
       var StartOfFirstStressPeriod: Double;
       var ObservationsPresent: Boolean); virtual;
-
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // See @link(TimeLists).
     function GetTimeList(Index: integer; AModel: TBaseModel): TModflowTimeList; virtual;
     // @name adds a @link(TCustomBoundaryStorage) to those owned by
     // @classname
     // @Seealso(SetBoundaryCapacity)
     procedure AddBoundary(Value: TCustomBoundaryStorage);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AddSpecificBoundary(AModel: TBaseModel); virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name adds a @link(TModflowTimeList) to those that
     // can be accessed through @link(TimeLists).  The order in which
     // @link(TModflowTimeList)s are added must correspond to the
@@ -321,10 +351,12 @@ type
     // @link(TCustomBoundaryItem.BoundaryFormula
     // TCustomBoundaryItem.BoundaryFormula)s are accessed.
     procedure AddTimeList(List: TModflowTimeList; AModel: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name is the @link(TModflowBoundary) that owns @classname.
     // @name is used to set the capacity of @link(FBoundaries)
     // before calling @link(AddBoundary).
     procedure SetBoundaryCapacity(Value: integer; AModel: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name sets the @link(TCustomBoundaryStorage.StartingTime
     // TCustomBoundaryStorage.StartingTime) and
     // @link(TCustomBoundaryStorage.StartingTime
@@ -338,21 +370,29 @@ type
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer;
       AModel: TBaseModel); virtual;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name clears all the @link(TModflowTimeList)s in @link(TimeLists).
     procedure ClearTimeLists(AModel: TBaseModel);
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure RemoveModelLink(AModel: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name frees all the @link(TCustomBoundaryStorage) owned by
     // @classname.
     procedure ClearBoundaries(AModel: TBaseModel);
     // @name copies @link(ParamName) from Source and calls inherited Assign.
     procedure Assign(Source: TPersistent);override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name provides access to @link(TCustomBoundaryStorage) for different
     // time periods.  In descendants, these @link(TCustomBoundaryStorage)
     // define the locations, values, and times for the boundaries.
     property Boundaries[const Index: integer;
       AModel: TBaseModel]: TCustomBoundaryStorage read GetBoundaries;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     property BoundaryCount[AModel: TBaseModel]: integer read GetBoundaryCount;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname.
     constructor Create(Boundary: TModflowBoundary;
       Model: TBaseModel; ScreenObject: TObject); override;
@@ -366,18 +406,23 @@ type
     // @name is the @link(TModflowTransientListParameter) (if any) of the
     // current @classname.
     property Param: TModflowTransientListParameter read GetParam write SetParam;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name is the number of @link(TModflowTimeList)s that can be accessed
     // in @link(TimeLists).
     function TimeListCount(AModel: TBaseModel): integer; virtual;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name provides access to the @link(TModflowTimeList)s defined in
     // descendants. @name is used in
     // @link(TfrmScreenObjectProperties.InitializeModflowBoundaryFrames
     // TfrmScreenObjectProperties.InitializeModflowBoundaryFrames).
     property TimeLists[Index: integer; AModel: TBaseModel]: TModflowTimeList
       read GetTimeList;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name returns @true if Count > 0.
     function DataSetUsed(DataArray: TDataArray;
       AModel: TBaseModel): boolean; virtual;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetBoundaryByStartTime(StartTime: double;
       AModel: TBaseModel): TCustomBoundaryStorage;
     function GetItemByStartTime(StartTime: Double): TCustomModflowBoundaryItem;
@@ -390,55 +435,46 @@ type
 
   TMF_BoundCollClass = class of TCustomMF_BoundColl;
 
-  // @name is used for boundary conditions in which the boundary conditions
-  // are either in the form of an array of values or where the individual
-  // boundary condition cells are linked into a larger structure.
-  // @name is used for the EVT, ETS, RCH, RES, LAK, SFR, and UZF packages.
-  TCustomMF_ArrayBoundColl = class(TCustomMF_BoundColl)
+  TCustomListArrayBoundColl = class(TCustomMF_BoundColl)
   private
-    procedure AssignCellsWithItem(Item: TCustomModflowBoundaryItem;
-      ItemIndex: Integer; DataSets: TList; ListOfTimeLists: TList; AModel: TBaseModel);
-  protected
+    FListDuplicatesAllowed: Boolean;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    procedure AssignArrayCellsWithItem(Item: TCustomModflowBoundaryItem;
+      ItemIndex: Integer; DataSets: TList; ListOfTimeLists: TList;
+      AModel: TBaseModel);
+  strict protected
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name is a virtual abstract method used to set the values of the
     // cell locations in @link(Boundaries) for a particular time period.
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+    procedure AssignArrayCellValues(DataSets: TList; ItemIndex: Integer;
       AModel: TBaseModel); virtual; abstract;
-    procedure CountBoundaryCells(var BoundaryCount: Integer;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    procedure CountArrayBoundaryCells(var BoundaryCount: Integer;
       DataArray1: TDataArray; DataSets: TList; AModel: TBaseModel); virtual;
     // @name is a virtual abstract method that descendants use to
     // call (TModflowTimeList.Initialize TModflowTimeList.Initialize).
     procedure InitializeTimeLists(ListOfTimeLists: TList; AModel: TBaseModel); virtual; abstract;
-  public
-    // @name determines the locations, times, and values of
-    // the boundary condition associated with @classname.  These boundaries
-    // are first evaluated in @link(TModflowTimeList)s defined by
-    // descedents and accessed through @link(TimeLists). Those data
-    // are then transfered to descendants of @link(TCustomBoundaryStorage)
-    // by calls to @link(AssignCellValues).
-    procedure EvaluateArrayBoundaries(AModel: TBaseModel);
-  end;
-
-  // @name is used for boundary conditions in which each section of an object
-  // is used to define a separate set of boundary conditions.
-  // It is used for the
-  // CHD, DRN, DRT, GHB, RIV, and WEL packages.
-  TCustomMF_ListBoundColl = class(TCustomMF_BoundColl)
-  private
-    FDuplicatesAllowed: Boolean;
-  protected
-    function OkDataTypes(BoundaryIndex: Integer): TRbwDataTypes; virtual;
-    property DuplicatesAllowed: boolean read FDuplicatesAllowed
-      write FDuplicatesAllowed;
+    // @name determines whether or not a single object may define more than
+    // one boundary in the same cell. @name is set to @false in
+    // @link(TChdCollection) because multiple CHD boundaries in the same
+    // cell are added together.
+    property ListDuplicatesAllowed: boolean read FListDuplicatesAllowed
+      write FListDuplicatesAllowed;
+    function OkListDataTypes(BoundaryIndex: Integer): TRbwDataTypes; virtual;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name should be called just before a formula is about
     // to be evaluated to make sure that all the required
     // information is up-to-date.  ACell is a @link(TCellAssignment).
-    procedure UpdataRequiredData(DataSets: TList; Variables: TList;
+    procedure UpdateRequiredListData(DataSets: TList; Variables: TList;
       ACell: TObject; AModel: TBaseModel);
     // @name is called in @link(EvaluateListBoundaries).
     // @name stores the locations of the @link(TCellAssignment)s in ACellList
     // (which is a @link(TCellAssignmentList)) in BoundaryStorage.
-    procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
+    procedure AssignListCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name assigns values to the contents of
     // @link(TCustomBoundaryStorage BoundaryStorage)
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
@@ -449,13 +485,54 @@ type
     function AdjustedFormula(FormulaIndex, ItemIndex: integer): string;
       virtual; abstract;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Boundary: TModflowBoundary;
       Model: TBaseModel; ScreenObject: TObject); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    // @name determines the locations, times, and values of
+    // the boundary condition associated with @classname.  These boundaries
+    // are first evaluated in @link(TModflowTimeList)s defined by
+    // descedents and accessed through @link(TimeLists). Those data
+    // are then transfered to descendants of @link(TCustomBoundaryStorage)
+    // by calls to @link(AssignArrayCellsWithItem).
+    procedure EvaluateArrayBoundaries(AModel: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name determines the locations, times, and values of
     // the boundary condition associated with @classname.
     procedure EvaluateListBoundaries(AModel: TBaseModel);
   end;
 
+  // @name is used for boundary conditions in which the boundary conditions
+  // are either in the form of an array of values or where the individual
+  // boundary condition cells are linked into a larger structure.
+  // @name is used for the EVT, ETS, RCH, RES, LAK, SFR, and UZF packages.
+  TCustomMF_ArrayBoundColl = class(TCustomListArrayBoundColl)
+    // @name is called in @link(EvaluateListBoundaries).
+    // @name stores the locations of the @link(TCellAssignment)s in ACellList
+    // (which is a @link(TCellAssignmentList)) in BoundaryStorage.
+    procedure AssignListCellLocation(BoundaryStorage: TCustomBoundaryStorage;
+      ACellList: TObject); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    // @name assigns values to the contents of
+    // @link(TCustomBoundaryStorage BoundaryStorage)
+    procedure AssignCellList(Expression: TExpression; ACellList: TObject;
+      BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
+      Variables, DataSets: TList; AModel: TBaseModel); override;
+    // @name when the formula assigned by the user needs to be
+    // expanded by the program @name is used to do that.
+    function AdjustedFormula(FormulaIndex, ItemIndex: integer): string;
+      override;
+  end;
+
+  // @name is used for boundary conditions in which each section of an object
+  // is used to define a separate set of boundary conditions.
+  // It is used for the
+  // CHD, DRN, DRT, GHB, RIV, and WEL packages.
+  TCustomMF_ListBoundColl = class(TCustomListArrayBoundColl)
+  protected
+    procedure InitializeTimeLists(ListOfTimeLists: TList; AModel: TBaseModel); override;
+  end;
 
   // @name is used to store a series of @link(TDataArray)s for boundary
   // conditions in MODFLOW.
@@ -476,6 +553,8 @@ type
     procedure SetUpToDate(const Value: boolean); override;
   public
     procedure Invalidate; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Model: TBaseModel; ScreenObject: TObject);
     // @name takes the times and formulas in BoundaryValues and uses them
     // to determine the locations and values for those times.  These
@@ -529,6 +608,8 @@ type
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
     // @name returns @link(TCustomNonSpatialBoundColl.Used Param.Used).
     function Used: boolean;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function DataSetUsed(DataArray: TDataArray; AModel: TBaseModel): boolean; virtual;
   published
     // @name is the @link(TCustomMF_BoundColl) used to store a single
@@ -552,13 +633,17 @@ type
     // See @link(Items).
     procedure SetItem(Index: Integer; const Value: TModflowParamItem);
   public
-    // @name calls @link(TCustomMF_ArrayBoundColl.EvaluateArrayBoundaries
-    // TCustomMF_ArrayBoundColl.EvaluateArrayBoundaries) for each
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    // @name calls @link(TCustomListArrayBoundColl.EvaluateArrayBoundaries
+    // TCustomListArrayBoundColl.EvaluateArrayBoundaries) for each
     // @link(Items)[Index].@link(TCustomMF_ArrayBoundColl Param).
     procedure EvaluateArrayBoundaries(AModel: TBaseModel);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure EvaluateListBoundaries(AModel: TBaseModel);
     // @name adds as new descendant of @link(TModflowParamItem);
     function Add: TModflowParamItem;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname.
     constructor Create(Boundary: TModflowParamBoundary;
       ItemClass: TModflowParamItemClass; Model: TBaseModel; ScreenObject: TObject); virtual;
@@ -585,17 +670,24 @@ type
     // @name returns @true if any @link(TModflowParamItem) in @link(Items)
     // returns @true.
     function Used: boolean;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function DataSetUsed(DataArray: TDataArray; AModel: TBaseModel): boolean; virtual;
   end;
 
   TModflowParametersClass = class of TModflowParameters;
 
   TModflowScreenObjectProperty = class(TPersistent)
-  protected
+  private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
     // See @link(ParentModel).
     FModel: TBaseModel;
+    FBoundaryObserver: TObserver;
+  protected
     // See @link(ScreenObject).
     FScreenObject: TObject;
+    // @name is a TObjectList;
+    FObserverList: TList;
     procedure InvalidateModel;
     procedure GetPropertyObserver(Sender: TObject; List: TList); virtual;
     procedure RemoveSubscription(Sender: TObject; const AName: string);
@@ -603,26 +695,6 @@ type
     procedure AddBoundaryTimes(BoundCol: TCustomNonSpatialBoundColl;
       Times: TRealList; StartTestTime, EndTestTime: double;
       var StartRangeExtended, EndRangeExtended: boolean); virtual;
-  public
-    function Used: boolean; virtual; abstract;
-    // @name is either nil or the the current @link(TPhastModel).
-    property ParentModel: TBaseModel read FModel;
-    // @name is either @nil or the @link(TScreenObject) that owns
-    // this @classname.
-    property ScreenObject: TObject read FScreenObject;
-    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
-  end;
-
-  TModflowSteadyBoundary = class(TModflowScreenObjectProperty)
-  private
-    FBoundaryObserver: TObserver;
-    FUsed: boolean;
-    procedure SetUsed(const Value: boolean);
-  protected
-    FObserverList: TList;
-    FUsedObserver: TObserver;
-    procedure HandleChangedValue(Observer: TObserver); virtual; abstract;
-    function GetUsedObserver: TObserver; virtual; abstract;
     procedure ResetItemObserver(Index: integer);
     procedure UpdateFormulaDependencies(OldFormula: string;
       var NewFormula: string; Observer: TObserver; Compiler: TRbwParser);
@@ -630,18 +702,49 @@ type
       var FormulaObject: TFormulaObject);
     function CreateFormulaObject(Orientation: TDataSetOrientation)
       : TFormulaObject;
-    procedure CreateFormulaObjects; virtual; abstract;
-    procedure CreateObserver(ObserverNameRoot: string;
-      var Observer: TObserver);
+    procedure CreateObserver(ObserverNameRoot: string; var Observer: TObserver);
     function BoundaryObserverPrefix: string; virtual; abstract;
+    procedure CreateBoundaryObserver;
+  public
+    function Used: boolean; virtual; abstract;
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    // @name is either nil or the the current @link(TPhastModel).
+    property ParentModel: TBaseModel read FModel;
+    // @name is either @nil or the @link(TScreenObject) that owns
+    // this @classname.
+    property ScreenObject: TObject read FScreenObject;
+    // @name is used when @classname contains properties that are not transient.
+    // @link(TModflowSteadyBoundary.CreateFormulaObjects), @link(CreateBoundaryObserver)
+    // should be called in @link(Create) if @name will be used.
+    // @seealso(TModflowSteadyBoundary).
+    // @seealso(THfbBoundary).
+    property BoundaryObserver: TObserver read FBoundaryObserver;
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
+    destructor Destroy; override;
+    procedure StopTalkingToAnyone; virtual;
+    procedure Invalidate;
+  end;
+
+  TModflowSteadyBoundary = class(TModflowScreenObjectProperty)
+  private
+    FUsed: boolean;
+    procedure SetUsed(const Value: boolean);
+  protected
+    FUsedObserver: TObserver;
+    procedure HandleChangedValue(Observer: TObserver); virtual; abstract;
+    function GetUsedObserver: TObserver; virtual; abstract;
+    procedure CreateFormulaObjects; virtual; abstract;
     procedure CreateObservers; virtual; abstract;
     property UsedObserver: TObserver read GetUsedObserver;
   public
     Procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     destructor Destroy; override;
     function Used: boolean; override;
-    property BoundaryObserver: TObserver read FBoundaryObserver;
   published
     property IsUsed: boolean read FUsed write SetUsed;
   end;
@@ -659,10 +762,7 @@ type
     procedure SetValues(const Value: TCustomMF_BoundColl);
 
   protected
-//    procedure AddBoundaryTimes(BoundCol: TCustomNonSpatialBoundColl;
-//      Times: TRealList; StartTestTime, EndTestTime: double;
-//      var StartRangeExtended, EndRangeExtended: boolean); virtual;
-
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // In descendants, @name fills ValueTimeList with a series of TObjectLists
     // - one for
     // each stress period.  Each such TObjectList is filled with
@@ -674,22 +774,34 @@ type
     // @name is used in @link(Create) to create @link(FValues).
     class function BoundaryCollectionClass: TMF_BoundCollClass;
       virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure ClearBoundaries(AModel: TBaseModel); virtual;
+    function BoundaryObserverPrefix: string; override;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure RemoveModelLink(AModel: TBaseModel); virtual;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure ClearTimeLists(AModel: TBaseModel); virtual;
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname.
     Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     // @name destroys the current instance of @classname.  Do not call
     // @name directly.  Call Free instead.
     Destructor Destroy; override;
-    // @name calls @link(TCustomMF_ArrayBoundColl.EvaluateArrayBoundaries
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    // @name calls @link(TCustomListArrayBoundColl.EvaluateArrayBoundaries
     // Values.EvaluateArrayBoundaries)
     // Descendents also call @link(TModflowParameters.EvaluateArrayBoundaries
     // Parameters.EvaluateArrayBoundaries).
     procedure EvaluateArrayBoundaries(AModel: TBaseModel); virtual;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure EvaluateListBoundaries(AModel: TBaseModel); virtual;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name fills ValueTimeList via a call to AssignCells for each
     // link  @link(TCustomBoundaryStorage) in
     // @link(TCustomMF_BoundColl.Boundaries Values.Boundaries);
@@ -711,6 +823,8 @@ type
       var StartRangeExtended, EndRangeExtended: boolean); virtual;
     function Used: boolean; override;
     procedure InvalidateDisplay; virtual;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function DataSetUsed(DataArray: TDataArray; AModel: TBaseModel): boolean; virtual;
     procedure Clear; virtual;
   published
@@ -732,13 +846,20 @@ type
     class function ModflowParamItemClass: TModflowParamItemClass;
       virtual; abstract;
     function ParameterType: TParameterType; virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure ClearBoundaries(AModel: TBaseModel); override;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure RemoveModelLink(AModel: TBaseModel); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure ClearTimeLists(AModel: TBaseModel); override;
     // @name copies @link(Values) and @link(Parameters) from the Source
     // @classname to this @classname.
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname.
     Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     // @name destroys the current instance of @classname.  Do not call
@@ -747,17 +868,21 @@ type
     // @name deletes the @link(TModflowParameter) associated with Param from
     // @link(Parameters).
     procedure DeleteParam(Param: TModflowParameter);
-    // @name calls @link(TCustomMF_ArrayBoundColl.EvaluateArrayBoundaries
-    // Values.EvaluateArrayBoundaries) and
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    // @name calls @link(TModflowBoundary.EvaluateArrayBoundaries) and
     // @link(TModflowParameters.EvaluateArrayBoundaries
     // Parameters.EvaluateArrayBoundaries).
     procedure EvaluateArrayBoundaries(AModel: TBaseModel); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure EvaluateListBoundaries(AModel: TBaseModel); override;
       // @name returns @true if either Values.Used is @true
       // or Parameters.Used is @true.
     function Used: boolean; override;
     procedure UpdateTimes(Times: TRealList; StartTestTime, EndTestTime: double;
       var StartRangeExtended, EndRangeExtended: boolean); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function DataSetUsed(DataArray: TDataArray; AModel: TBaseModel): boolean; override;
     procedure Clear; override;
   published
@@ -771,6 +896,11 @@ type
   private
     FFormulaInterpretation: TFormulaInterpretation;
     procedure SetFormulaInterpretation(const Value: TFormulaInterpretation);
+
+  public
+    // @name copies @link(FormulaInterpretation) from the Source
+    // @classname to this @classname and then calls inherited Assign.
+    procedure Assign(Source: TPersistent);override;
   published
     // @name determines whether the a formula represents
     // @unorderedlist(
@@ -780,11 +910,6 @@ type
     // )
     property FormulaInterpretation: TFormulaInterpretation
       read FFormulaInterpretation write SetFormulaInterpretation;
-
-  public
-    // @name copies @link(FormulaInterpretation) from the Source
-    // @classname to this @classname and then calls inherited Assign.
-    procedure Assign(Source: TPersistent);override;
   end;
 
 procedure GlobalRemoveModflowBoundaryItemSubscription(Sender: TObject; Subject: TObject;
@@ -799,17 +924,18 @@ procedure GlobalRemoveMFBoundarySubscription(Sender: TObject; Subject: TObject;
 procedure GlobalRestoreMFBoundarySubscription(Sender: TObject; Subject: TObject;
   const AName: string);
 
-procedure RemoveModflowSteadyBoundarySubscription(Sender: TObject; Subject: TObject;
+procedure RemoveScreenObjectPropertySubscription(Sender: TObject; Subject: TObject;
   const AName: string);
 
-procedure RestoreModflowSteadyBoundarySubscription(Sender: TObject; Subject: TObject;
+procedure RestoreScreenObjectPropertySubscription(Sender: TObject; Subject: TObject;
   const AName: string);
 
 implementation
 
 uses Math, Contnrs, ScreenObjectUnit, PhastModelUnit, ModflowGridUnit,
   frmFormulaErrorsUnit, frmGoPhastUnit, SparseArrayUnit, GlobalVariablesUnit,
-  GIS_Functions, IntListUnit, ModflowCellUnit, frmProgressUnit, Dialogs;
+  GIS_Functions, IntListUnit, ModflowCellUnit, frmProgressUnit, Dialogs,
+  EdgeDisplayUnit;
 
 resourcestring
   StrInvalidResultType = 'Invalid result type';
@@ -1092,584 +1218,59 @@ destructor TCustomMF_BoundColl.Destroy;
 begin
   inherited;
   FBoundaries.Free;
-//  FTimeLists.Free;
   FTimeListLink.Free;
 end;
 
-procedure TCustomMF_ArrayBoundColl.EvaluateArrayBoundaries(AModel: TBaseModel);
-var
-  ItemIndex: integer;
-  Item: TCustomModflowBoundaryItem;
-  ListOfTimeLists: TList;
-  DataSets: TList;
-  EndOfLastStressPeriod: Double;
-  StartOfFirstStressPeriod: Double;
-  ObservationsPresent: Boolean;
-  PriorTime: Double;
-  ItemCount: Integer;
-  ExtraItem: TNoFormulaItem;
-  LocalModel: TCustomModel;
-  FirstUsedTime: Double;
-  LastUsedTime: Double;
-  TimeIndex: Integer;
-  TimeList1: TModflowTimeList;
+function TCustomMF_ArrayBoundColl.AdjustedFormula(FormulaIndex,
+  ItemIndex: integer): string;
 begin
-  if Count = 0 then
-  begin
-    Exit;
-  end;
-  if not (ScreenObject as TScreenObject).UsedModels.UsesModel(AModel) then
-  begin
-    Exit;
-  end;
-
-  LocalModel := AModel as TCustomModel;
-  FirstUsedTime := LocalModel.ModflowFullStressPeriods[0].StartTime;
-  LastUsedTime := LocalModel.ModflowFullStressPeriods[
-    LocalModel.ModflowFullStressPeriods.Count - 1].EndTime;
-
-  Item := Items[0] as TCustomModflowBoundaryItem;
-  if Item.StartTime >= LastUsedTime  then
-  begin
-    Exit;
-  end;
-
-  Item := Items[Count-1] as TCustomModflowBoundaryItem;
-  if Item.EndTime <= FirstUsedTime  then
-  begin
-    Exit;
-  end;
-
-  FirstUsedTime := Max(FirstUsedTime,
-    LocalModel.ModflowStressPeriods[0].StartTime);
-  LastUsedTime := Min(LastUsedTime, LocalModel.ModflowStressPeriods[
-    LocalModel.ModflowStressPeriods.Count - 1].EndTime);
-
-  ListOfTimeLists := TList.Create;
-  DataSets := TList.Create;
-  try
-    InitializeTimeLists(ListOfTimeLists, LocalModel);
-    TestIfObservationsPresent(EndOfLastStressPeriod, StartOfFirstStressPeriod,
-      ObservationsPresent);
-    PriorTime := StartOfFirstStressPeriod;
-    ItemCount := 0;
-    for ItemIndex := 0 to Count - 1 do
-    begin
-      Item := Items[ItemIndex] as TCustomModflowBoundaryItem;
-      if (Item.StartTime > LastUsedTime)
-        or (Item.EndTime < FirstUsedTime) then
-      begin
-        for TimeIndex := 0 to ListOfTimeLists.Count - 1 do
-        begin
-          TimeList1 := ListOfTimeLists[TimeIndex];
-          TimeList1.FreeItem(ItemCount);
-        end;
-        Inc(ItemCount);
-        Continue;
-      end;
-
-      if ObservationsPresent then
-      begin
-        if PriorTime < Item.StartTime then
-        begin
-          ExtraItem := TNoFormulaItem.Create(nil);
-          try
-            ExtraItem.FStartTime := PriorTime;
-            ExtraItem.FEndTime := Item.StartTime;
-            DataSets.Clear;
-            AssignCellsWithItem(ExtraItem, ItemCount, DataSets, ListOfTimeLists, LocalModel);
-            Inc(ItemCount);
-          finally
-            ExtraItem.Free;
-          end;
-        end;
-        PriorTime := Item.EndTime;
-      end;
-      DataSets.Clear;
-      AssignCellsWithItem(Item, ItemCount, DataSets, ListOfTimeLists, LocalModel);
-      Inc(ItemCount);
-      if (ItemIndex = Count - 1) and ObservationsPresent then
-      begin
-        if Item.EndTime < EndOfLastStressPeriod then
-        begin
-          ExtraItem := TNoFormulaItem.Create(nil);
-          try
-            ExtraItem.FStartTime := Item.EndTime;
-            ExtraItem.FEndTime := EndOfLastStressPeriod;
-            DataSets.Clear;
-            AssignCellsWithItem(ExtraItem, ItemCount, DataSets, ListOfTimeLists, LocalModel);
-            Inc(ItemCount);
-          finally
-            ExtraItem.Free;
-          end;
-        end;
-      end;
-    end;
-
-  finally
-    DataSets.Free;
-    ListOfTimeLists.Free;
-  end;
+  // this is only used with cell lists.
+  Assert(False);
 end;
 
-constructor TCustomMF_ListBoundColl.Create(Boundary: TModflowBoundary;
+procedure TCustomMF_ArrayBoundColl.AssignCellList(Expression: TExpression;
+  ACellList: TObject; BoundaryStorage: TCustomBoundaryStorage;
+  BoundaryFunctionIndex: integer; Variables, DataSets: TList;
+  AModel: TBaseModel);
+begin
+  // this is only used with cell lists.
+  Assert(False);
+end;
+
+procedure TCustomMF_ArrayBoundColl.AssignListCellLocation(
+  BoundaryStorage: TCustomBoundaryStorage; ACellList: TObject);
+begin
+  // this is only used with cell lists.
+  Assert(False);
+end;
+
+//procedure TCustomMF_ArrayBoundColl.EvaluateArrayBoundaries(AModel: TBaseModel);
+//begin
+//  inherited;
+//end;
+
+constructor TCustomListArrayBoundColl.Create(Boundary: TModflowBoundary;
   Model: TBaseModel; ScreenObject: TObject);
 begin
   inherited;
-  FDuplicatesAllowed := True;
+  FListDuplicatesAllowed := True;
 end;
 
-function TCustomMF_ListBoundColl.OkDataTypes(BoundaryIndex: Integer): TRbwDataTypes;
+function TCustomListArrayBoundColl.OkListDataTypes(BoundaryIndex: Integer): TRbwDataTypes;
 begin
   result := [rdtDouble, rdtInteger];
 end;
 
-procedure TCustomMF_ListBoundColl.EvaluateListBoundaries(AModel: TBaseModel);
-var
-  ItemIndex: integer;
-//  Item: TCustomModflowBoundaryItem;
-  EndOfLastStressPeriod: Double;
-  StartOfFirstStressPeriod: Double;
-  ObservationsPresent: Boolean;
-  PriorTime: Double;
-  ItemCount: Integer;
-  ExtraItem: TNoFormulaItem;
-  AScreenObject: TScreenObject;
-  LocalModel: TCustomModel;
-  Grid: TModflowGrid;
-  CellList: TCellAssignmentList;
-  BoundaryFunctionIndex: Integer;
-  Formula: string;
-  AnItem: TCustomModflowBoundaryItem;
-  NextItem: TCustomModflowBoundaryItem;
-  Compiler: TRbwParser;
-  Expression: TExpression;
-  UsedVariables: TStringList;
-  VarIndex: Integer;
-  VarName: string;
-  VarPosition: Integer;
-  Variable: TCustomValue;
-  AnotherDataSet: TDataArray;
-  GlobalVariable: TGlobalVariable;
-  CellIndex: Integer;
-  ACell: TCellAssignment;
-  SparseArrays: TList;
-  EliminateIndicies: TIntegerList;
-  SectionIndex: Integer;
-  SparseArray: T3DSparseBooleanArray;
-//  Section: Integer;
-  Index: Integer;
-  Layer: Integer;
-  Variables: TList;
-  DataSets: TList;
-  FirstUsedTime: Double;
-  LastUsedTime: Double;
-  MaxArrays: Integer;
-  ErrorFormula: string;
-  StoredCount: Integer;
-  OKTypes: TRbwDataTypes;
+//procedure TCustomMF_ListBoundColl.EvaluateListBoundaries(AModel: TBaseModel);
+//begin
+//  inherited;
+//end;
+
+procedure TCustomMF_ListBoundColl.InitializeTimeLists(ListOfTimeLists: TList;
+  AModel: TBaseModel);
 begin
-  if Count = 0 then
-  begin
-    Exit;
-  end;
-  AScreenObject := ScreenObject as TScreenObject;
-  if not AScreenObject.UsedModels.UsesModel(AModel) then
-  begin
-    Exit;
-  end;
-
-  LocalModel := AModel as TCustomModel;
-
-  FirstUsedTime := LocalModel.ModflowFullStressPeriods.First.StartTime;
-  LastUsedTime := LocalModel.ModflowFullStressPeriods.Last.EndTime;
-
-  AnItem := Items[0] as TCustomModflowBoundaryItem;
-  if AnItem.StartTime >= LastUsedTime  then
-  begin
-    Exit;
-  end;
-
-  AnItem := Items[Count-1] as TCustomModflowBoundaryItem;
-  if AnItem.EndTime <= FirstUsedTime  then
-  begin
-    Exit;
-  end;
-
-  CellList:= TCellAssignmentList.Create;
-  UsedVariables:= TStringList.Create;
-  EliminateIndicies := TIntegerList.Create;
-  try
-
-    Grid := LocalModel.ModflowGrid;
-    Compiler := LocalModel.rpThreeDFormulaCompiler;
-
-//    FirstUsedTime := Max(FirstUsedTime,
-//      LocalModel.ModflowStressPeriods.First.StartTime);
-//    LastUsedTime := Min(LastUsedTime, LocalModel.ModflowStressPeriods.Last.EndTime);
-
-
-    AScreenObject.GetCellsToAssign(Grid, '0', nil, nil, CellList, alAll, LocalModel);
-
-    // eliminate cells that are at the same location and are part of the same section;
-    SparseArrays := TObjectList.Create;
-    try
-      if FDuplicatesAllowed then
-      begin
-        MaxArrays := AScreenObject.SectionCount;
-      end
-      else
-      begin
-        MaxArrays := 1;
-      end;
-      for SectionIndex := 0 to MaxArrays - 1 do
-      begin
-        SparseArray := T3DSparseBooleanArray.Create(SPASmall);
-        SparseArrays.Add(SparseArray)
-      end;
-      SparseArray := SparseArrays[0];
-      for CellIndex := CellList.Count - 1 downto 0 do
-      begin
-        ACell := CellList[CellIndex];
-        if ACell.LgrEdge then
-        begin
-          EliminateIndicies.Add(CellIndex);
-        end
-        else if LocalModel.IsLayerSimulated(ACell.Layer) then
-        begin
-          if FDuplicatesAllowed then
-          begin
-            SparseArray := SparseArrays[ACell.Section];
-          end;
-          Layer := LocalModel.
-            DataSetLayerToModflowLayer(ACell.Layer);
-          if SparseArray.IsValue[Layer, ACell.Row, ACell.Column] then
-          begin
-            EliminateIndicies.Add(CellIndex);
-          end
-          else
-          begin
-            SparseArray.Items[Layer, ACell.Row, ACell.Column] := True;
-          end;
-        end
-        else
-        begin
-          EliminateIndicies.Add(CellIndex);
-        end;
-      end;
-    finally
-      SparseArrays.Free;
-    end;
-
-    for Index := 0 to EliminateIndicies.Count - 1  do
-    begin
-      CellList.Delete(EliminateIndicies[Index]);
-    end;
-
-    ClearBoundaries(AModel);
-
-
-    TestIfObservationsPresent(EndOfLastStressPeriod, StartOfFirstStressPeriod,
-      ObservationsPresent);
-    PriorTime := StartOfFirstStressPeriod;
-    ItemCount := 0;
-
-    for ItemIndex := 0 to Count - 1 do
-    begin
-      AnItem := Items[ItemIndex] as TCustomModflowBoundaryItem;
-
-      // Skip times earlier than the first time or after
-      // the last time.
-      if (AnItem.StartTime > LastUsedTime)
-        or (AnItem.EndTime <= FirstUsedTime) then
-      begin
-        if ObservationsPresent then
-        begin
-          if PriorTime < AnItem.StartTime then
-          begin
-            AddSpecificBoundary(AModel);
-            Inc(ItemCount);
-          end;
-          Inc(ItemCount);
-          AddSpecificBoundary(AModel);
-          if AnItem.EndTime < EndOfLastStressPeriod then
-          begin
-            Inc(ItemCount);
-            AddSpecificBoundary(AModel);
-          end;
-        end
-        else
-        begin
-          Inc(ItemCount);
-          AddSpecificBoundary(AModel);
-        end;
-        Continue;
-      end;
-
-      //  Add extra items if this boundary skips a stress period.
-      if ObservationsPresent then
-      begin
-        if PriorTime < AnItem.StartTime then
-        begin
-          ExtraItem := TNoFormulaItem.Create(nil);
-          try
-            ExtraItem.FStartTime := PriorTime;
-            ExtraItem.FEndTime := AnItem.StartTime;
-
-            Variables := TList.Create;
-            DataSets := TList.Create;
-            try
-              AddSpecificBoundary(AModel);
-              SetBoundaryStartAndEndTime(CellList.Count, ExtraItem, 0, AModel);
-              AssignCellLocation(Boundaries[0, AModel],  CellList);
-              for BoundaryFunctionIndex := 0 to AnItem.BoundaryFormulaCount - 1 do
-              begin
-                Formula := '0';
-                Compiler.Compile(Formula);
-                Expression := Compiler.CurrentExpression;
-
-                CellList.Clear;
-                AScreenObject.GetCellsToAssign(Grid, Formula, nil, nil, CellList,
-                  alAll, LocalModel);
-                for Index := 0 to EliminateIndicies.Count - 1  do
-                begin
-                  CellList.Delete(EliminateIndicies[Index]);
-                end;
-                UpdateCurrentScreenObject(AScreenObject);
-
-                AssignCellList(Expression, CellList, Boundaries[0, AModel],
-                  BoundaryFunctionIndex, Variables, DataSets, LocalModel);
-
-                LocalModel.DataArrayManager.CacheDataArrays;
-              end;
-            finally
-              Variables.Free;
-              DataSets.Free;
-            end;
-            Inc(ItemCount);
-          finally
-            ExtraItem.Free;
-          end;
-        end;
-        PriorTime := AnItem.EndTime;
-      end;
-
-      AddSpecificBoundary(AModel);
-      SetBoundaryStartAndEndTime(CellList.Count, AnItem, ItemCount, AModel);
-      StoredCount := ItemCount;
-      AssignCellLocation(Boundaries[ItemCount, AModel],  CellList);
-      for BoundaryFunctionIndex := 0 to AnItem.BoundaryFormulaCount - 1 do
-      begin
-        Formula := AdjustedFormula(BoundaryFunctionIndex, ItemIndex);
-        ErrorFormula := Formula;
-        try
-          Compiler.Compile(Formula)
-        except on E: ERbwParserError do
-          begin
-            frmFormulaErrors.AddFormulaError(AScreenObject.Name, '',
-              ErrorFormula, E.Message);
-            Formula := '0';
-            Compiler.Compile(Formula);
-            // send error message
-            AnItem.BoundaryFormula[BoundaryFunctionIndex] := Formula;
-          end;
-        end;
-        Expression := Compiler.CurrentExpression;
-        if Expression = nil then
-        begin
-          Formula := '0';
-          Compiler.Compile(Formula);
-          Expression := Compiler.CurrentExpression;
-        end;
-        OKTypes := OkDataTypes(BoundaryFunctionIndex);
-        if not (Expression.ResultType in OKTypes) then
-        begin
-          frmFormulaErrors.AddFormulaError(AScreenObject.Name, '',
-            ErrorFormula, StrInvalidResultType);
-          if (rdtInteger in OKTypes) or (rdtDouble in OKTypes) then
-          begin
-            Formula := '0';
-          end
-          else if rdtBoolean in OKTypes then
-          begin
-            Formula := 'False';
-          end
-          else if rdtString in OKTypes then
-          begin
-            Formula := '""';
-          end;
-
-          Compiler.Compile(Formula);
-          // send error message
-          AnItem.BoundaryFormula[BoundaryFunctionIndex] := Formula;
-          Expression := Compiler.CurrentExpression;
-        end;
-        CellList.Clear;
-        AScreenObject.GetCellsToAssign(Grid, Formula, nil, nil, CellList,
-          alAll, LocalModel);
-        for Index := 0 to EliminateIndicies.Count - 1  do
-        begin
-          CellList.Delete(EliminateIndicies[Index]);
-        end;
-
-
-
-        Variables := TList.Create;
-        DataSets := TList.Create;
-        try
-          UsedVariables.Assign(Expression.VariablesUsed);
-          for VarIndex := 0 to UsedVariables.Count - 1 do
-          begin
-            VarName := UsedVariables[VarIndex];
-            VarPosition := Compiler.IndexOfVariable(VarName);
-            Variable := Compiler.Variables[VarPosition];
-            AnotherDataSet := LocalModel.DataArrayManager.GetDataSetByName(VarName);
-            if AnotherDataSet <> nil then
-            begin
-              Assert(AnotherDataSet.DataType = Variable.ResultType);
-              AnotherDataSet.Initialize;
-              LocalModel.DataArrayManager.AddDataSetToCache(AnotherDataSet);
-              Variables.Add(Variable);
-              DataSets.Add(AnotherDataSet);
-            end
-            else
-            begin
-              GlobalVariable := LocalModel.GlobalVariables.GetVariableByName(VarName);
-              Assert(GlobalVariable <> nil);
-              Assert(Variable.ResultType = GlobalVariable.Format);
-            end;
-          end;
-
-          UpdateCurrentScreenObject(AScreenObject);
-
-          AssignCellList(Expression, CellList, Boundaries[ItemCount, AModel],
-            BoundaryFunctionIndex, Variables, DataSets, LocalModel);
-        finally
-          Variables.Free;
-          DataSets.Free;
-        end;
-      end;
-      Inc(ItemCount);
-
-      if ObservationsPresent then
-      begin
-        if AnItem.EndTime < EndOfLastStressPeriod then
-        begin
-          if (ItemIndex+1 < Count) then
-          begin
-            NextItem := Items[ItemIndex+1] as TCustomModflowBoundaryItem;
-          end
-          else
-          begin
-            NextItem := nil;
-          end;
-
-          if (NextItem = nil) or (AnItem.EndTime < NextItem.StartTime) then
-          begin
-            ExtraItem := TNoFormulaItem.Create(nil);
-            try
-              ExtraItem.FStartTime := AnItem.EndTime;
-              ExtraItem.FEndTime := EndOfLastStressPeriod;
-
-              Variables := TList.Create;
-              DataSets := TList.Create;
-              try
-                AddSpecificBoundary(AModel);
-                SetBoundaryStartAndEndTime(CellList.Count, ExtraItem, ItemCount, AModel);
-                AssignCellLocation(Boundaries[ItemCount, AModel],  CellList);
-                for BoundaryFunctionIndex := 0 to AnItem.BoundaryFormulaCount - 1 do
-                begin
-                  Formula := '0';
-                  Compiler.Compile(Formula);
-                  Expression := Compiler.CurrentExpression;
-
-                  CellList.Clear;
-                  AScreenObject.GetCellsToAssign(Grid, Formula, nil, nil,
-                    CellList, alAll, LocalModel);
-                  for Index := 0 to EliminateIndicies.Count - 1  do
-                  begin
-                    CellList.Delete(EliminateIndicies[Index]);
-                  end;
-                  UpdateCurrentScreenObject(AScreenObject);
-
-                  AssignCellList(Expression, CellList, Boundaries[ItemCount, AModel],
-                    BoundaryFunctionIndex, Variables, DataSets, LocalModel);
-                end;
-              finally
-                Variables.Free;
-                DataSets.Free;
-              end;
-              Inc(ItemCount);
-            finally
-              ExtraItem.Free;
-            end;
-          end;
-        end;
-        PriorTime := AnItem.EndTime;
-      end;
-      Boundaries[StoredCount, AModel].CacheData;
-    end;
-
-
-
-
-//    InitializeTimeLists(ListOfTimeLists);
-
-{
-
-    TestIfObservationsPresent(EndOfLastStressPeriod, StartOfFirstStressPeriod,
-      ObservationsPresent);
-    PriorTime := StartOfFirstStressPeriod;
-    ItemCount := 0;
-    for ItemIndex := 0 to Count - 1 do
-    begin
-      AnItem := Items[ItemIndex];
-      if ObservationsPresent then
-      begin
-        if PriorTime < AnItem.StartTime then
-        begin
-          ExtraItem := TNoFormulaItem.Create(nil);
-          try
-            ExtraItem.FStartTime := PriorTime;
-            ExtraItem.FEndTime := AnItem.StartTime;
-//            DataSets.Clear;
-//            AssignCellsWithItem(ExtraItem, ItemCount, DataSets, ListOfTimeLists);
-            Inc(ItemCount);
-          finally
-            ExtraItem.Free;
-          end;
-        end;
-        PriorTime := AnItem.EndTime;
-      end;
-//      DataSets.Clear;
-//      AssignCellsWithItem(AnItem, ItemCount, DataSets, ListOfTimeLists);
-      Inc(ItemCount);
-      if (ItemIndex = Count - 1) and ObservationsPresent then
-      begin
-        if AnItem.EndTime < EndOfLastStressPeriod then
-        begin
-          ExtraItem := TNoFormulaItem.Create(nil);
-          try
-            ExtraItem.FStartTime := AnItem.EndTime;
-            ExtraItem.FEndTime := EndOfLastStressPeriod;
-//            DataSets.Clear;
-//            AssignCellsWithItem(ExtraItem, ItemCount, DataSets, ListOfTimeLists);
-            Inc(ItemCount);
-          finally
-            ExtraItem.Free;
-          end;
-        end;
-      end;
-    end;
-    }
-
-  finally
-    EliminateIndicies.Free;
-    UsedVariables.Free;
-    CellList.Free;
-//    DataSets.Free;
-//    ListOfTimeLists.Free;
-  end;
+  // this procedure is only used with arrays.
+  Assert(false);
 end;
 
 function TCustomMF_BoundColl.GetBoundaries(
@@ -1709,108 +1310,6 @@ begin
   end;
   // If the result is nil, either there is a bug or the user has made an error
   // and an appropriate error message should be displayed.
-end;
-
-procedure TCustomMF_ArrayBoundColl.AssignCellsWithItem(
-  Item: TCustomModflowBoundaryItem; ItemIndex: Integer; DataSets: TList;
-  ListOfTimeLists: TList; AModel: TBaseModel);
-var
-  BoundaryCount: Integer;
-  DataArray2: TDataArray;
-  TimeList2: TCustomTimeList;
-  TimeIndex: Integer;
-  DataArray1: TDataArray;
-  TimeList1: TModflowTimeList;
-//  Sections: T3DSparseIntegerArray;
-begin
-  Assert(ListOfTimeLists.Count >= 1);
-  TimeList1 := ListOfTimeLists[0];
-//  Sections := TimeList1.Sections[ItemIndex];
-  DataArray1 := TimeList1[ItemIndex];
-  DataSets.Add(DataArray1);
-  for TimeIndex := 1 to ListOfTimeLists.Count - 1 do
-  begin
-    TimeList2 := ListOfTimeLists[TimeIndex];
-    DataArray2 := TimeList2[ItemIndex];
-    DataSets.Add(DataArray2);
-    Assert(DataArray1.LayerCount = DataArray2.LayerCount);
-    Assert(DataArray1.RowCount = DataArray2.RowCount);
-    Assert(DataArray1.ColumnCount = DataArray2.ColumnCount);
-  end;
-  CountBoundaryCells(BoundaryCount, DataArray1, DataSets, AModel);
-  SetBoundaryStartAndEndTime(BoundaryCount, Item, ItemIndex, AModel);
-  AssignCellValues(DataSets, ItemIndex, AModel);
-  for TimeIndex := 0 to ListOfTimeLists.Count - 1 do
-  begin
-    TimeList1 := ListOfTimeLists[TimeIndex];
-    TimeList1.FreeItem(ItemIndex);
-  end;
-end;
-
-procedure TCustomMF_ArrayBoundColl.CountBoundaryCells(var BoundaryCount: Integer;
-  DataArray1: TDataArray; DataSets: TList; AModel: TBaseModel);
-var
-  DSIndex: Integer;
-  ColIndex: Integer;
-  RowIndex: Integer;
-  LayerIndex: Integer;
-  DataArray2: TDataArray;
-  LocalModel: TCustomModel;
-  LayerMin: Integer;
-  RowMin: Integer;
-  ColMin: Integer;
-  LayerMax: Integer;
-  RowMax: Integer;
-  ColMax: Integer;
-begin
-  LocalModel := AModel as TCustomModel;
-  BoundaryCount := 0;
-  DataArray1.GetMinMaxStoredLimits(LayerMin, RowMin, ColMin,
-      LayerMax, RowMax, ColMax);
-  if LayerMin >= 0 then
-  begin
-    for LayerIndex := LayerMin to LayerMax do
-    begin
-      if LocalModel.IsLayerSimulated(LayerIndex) then
-      begin
-        for RowIndex := RowMin to RowMax do
-        begin
-          for ColIndex := ColMin to ColMax do
-          begin
-            if DataArray1.IsValue[LayerIndex, RowIndex, ColIndex] then
-            begin
-              Inc(BoundaryCount);
-            end;
-          end;
-        end;
-      end;
-    end;
-  end;
-  for DSIndex := 1 to DataSets.Count - 1 do
-  begin
-    DataArray2 := DataSets[DSIndex];
-    if LayerMin >= 0 then
-    begin
-      for LayerIndex := LayerMin to LayerMax do
-      begin
-        if LocalModel.IsLayerSimulated(LayerIndex) then
-        begin
-          for RowIndex := RowMin to RowMax do
-          begin
-            for ColIndex := ColMin to ColMax do
-            begin
-              if DataArray1.IsValue[LayerIndex, RowIndex, ColIndex] then
-              begin
-                Assert(DataArray2.IsValue[LayerIndex, RowIndex, ColIndex]);
-              end;
-            end;
-          end;
-        end;
-      end;
-    end;
-//    DataArray2.CacheData;
-  end;
-//  DataArray1.CacheData;
 end;
 
 function TCustomMF_BoundColl.GetBoundaryCount(AModel: TBaseModel): integer;
@@ -2004,7 +1503,7 @@ begin
       Add(Time, DataArray);
       DataArray.UseLgrEdgeCells := UseLgrEdgeCells;
       DataArray.EvaluatedAt := eaBlocks;
-      DataArray.Orientation := dso3D;
+      DataArray.Orientation := Orientation;
       DataArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
         Grid.ColumnCount);
 
@@ -2095,7 +1594,7 @@ begin
   result := ATimeLists.Count;
 end;
 
-procedure TCustomMF_ListBoundColl.UpdataRequiredData(DataSets, Variables: TList;
+procedure TCustomListArrayBoundColl.UpdateRequiredListData(DataSets, Variables: TList;
   ACell: TObject; AModel: TBaseModel);
 var
   ADataSet: TDataArray;
@@ -2437,7 +1936,7 @@ begin
   end
   else
   begin
-    inherited;
+    inherited EvaluateArrayBoundaries(AModel);
   end;
 end;
 
@@ -2510,6 +2009,12 @@ begin
   end;
 end;
 
+function TModflowBoundary.BoundaryObserverPrefix: string;
+begin
+  result := '';
+  Assert(False);
+end;
+
 procedure TModflowBoundary.Clear;
 begin
   Values.Clear;
@@ -2549,13 +2054,13 @@ end;
 
 procedure TModflowBoundary.EvaluateArrayBoundaries(AModel: TBaseModel);
 begin
-  (Values as TCustomMF_ArrayBoundColl).
+  (Values as TCustomListArrayBoundColl).
     EvaluateArrayBoundaries(AModel);
 end;
 
 procedure TModflowBoundary.EvaluateListBoundaries(AModel: TBaseModel);
 begin
-  (Values as TCustomMF_ListBoundColl).
+  (Values as TCustomListArrayBoundColl).
     EvaluateListBoundaries(AModel);
 end;
 
@@ -2948,16 +2453,16 @@ begin
   end;
 end;
 
-procedure RemoveModflowSteadyBoundarySubscription(Sender: TObject; Subject: TObject;
+procedure RemoveScreenObjectPropertySubscription(Sender: TObject; Subject: TObject;
   const AName: string);
 begin
-  (Subject as TModflowSteadyBoundary).RemoveSubscription(Sender, AName);
+  (Subject as TModflowScreenObjectProperty).RemoveSubscription(Sender, AName);
 end;
 
-procedure RestoreModflowSteadyBoundarySubscription(Sender: TObject; Subject: TObject;
+procedure RestoreScreenObjectPropertySubscription(Sender: TObject; Subject: TObject;
   const AName: string);
 begin
-  (Subject as TModflowSteadyBoundary).RestoreSubscription(Sender, AName);
+  (Subject as TModflowScreenObjectProperty).RestoreSubscription(Sender, AName);
 end;
 
 procedure GlobalRemoveModflowBoundaryItemSubscription(Sender: TObject; Subject: TObject;
@@ -3071,6 +2576,39 @@ begin
   FScreenObject := ScreenObject;
   Assert((Model = nil) or (Model is TPhastModel));
   FModel := Model;
+  FObserverList := TObjectList.Create;
+end;
+
+destructor TModflowScreenObjectProperty.Destroy;
+var
+  LocalScreenObject: TScreenObject;
+  PhastModel: TPhastModel;
+  Index: Integer;
+  Observer: TObserver;
+begin
+  LocalScreenObject := ScreenObject as TScreenObject;
+  if (LocalScreenObject <> nil) then
+  begin
+    PhastModel := FModel as TPhastModel;
+    if (PhastModel <> nil) and not PhastModel.Clearing
+      and not (csDestroying in PhastModel.ComponentState) then
+    begin
+      for Index := 0 to FObserverList.Count - 1 do
+      begin
+        Observer := FObserverList[Index];
+        LocalScreenObject.StopsTalkingTo(Observer);
+      end;
+      if FBoundaryObserver <> nil then
+      begin
+        LocalScreenObject.StopsTalkingTo(FBoundaryObserver);
+      end;
+    end;
+  end;
+
+
+  FBoundaryObserver.Free;
+  FObserverList.Free;
+  inherited;
 end;
 
 procedure TModflowScreenObjectProperty.GetPropertyObserver(Sender: TObject;
@@ -3079,13 +2617,30 @@ begin
   // do nothing
 end;
 
+procedure TModflowScreenObjectProperty.Invalidate;
+var
+  index: Integer;
+  AnObserver: TObserver;
+begin
+  if FObserverList <> nil then
+  begin
+    for index := 0 to FObserverList.Count - 1 do
+    begin
+      AnObserver := FObserverList[index];
+      AnObserver.UpToDate := True;
+      AnObserver.UpToDate := False;
+    end;
+  end;
+end;
+
 procedure TModflowScreenObjectProperty.InvalidateModel;
 begin
   if (ScreenObject <> nil)
       and (ScreenObject as TScreenObject).CanInvalidateModel
       and (FModel <> nil) then
   begin
-    (FModel as TPhastModel).Invalidate
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent. }
+    (FModel as TPhastModel).Invalidate(self)
   end;
 end;
 
@@ -3131,6 +2686,14 @@ begin
     end;
   finally
     Observers.Free;
+  end;
+end;
+
+procedure TModflowScreenObjectProperty.StopTalkingToAnyone;
+begin
+  if FBoundaryObserver <> nil then
+  begin
+    FBoundaryObserver.StopTalkingToAnyone;
   end;
 end;
 
@@ -3302,35 +2865,712 @@ constructor TModflowSteadyBoundary.Create(Model: TBaseModel;
   ScreenObject: TObject);
 begin
   inherited;
-  FObserverList := TObjectList.Create;
   CreateFormulaObjects;
-
-  Assert((ScreenObject = nil) or (ScreenObject is TScreenObject));
-  FModel := Model;
-  if ScreenObject <> nil then
-  begin
-    if TScreenObject(FScreenObject).CanInvalidateModel then
-    begin
-      FBoundaryObserver := TObserver.Create(nil);
-      FBoundaryObserver.UpdateWithName(BoundaryObserverPrefix
-        + TScreenObject(FScreenObject).Name);
-      TScreenObject(FScreenObject).TalksTo(FBoundaryObserver);
-      FBoundaryObserver.UpToDate:= True;
-    end;
-  end;
+  CreateBoundaryObserver;
 
   CreateObservers;
 end;
 
 destructor TModflowSteadyBoundary.Destroy;
 begin
-  FBoundaryObserver.Free;
-  FObserverList.Free;
   FUsedObserver.Free;
   inherited;
 end;
 
-procedure TModflowSteadyBoundary.ResetItemObserver(Index: integer);
+procedure TModflowSteadyBoundary.SetUsed(const Value: boolean);
+var
+  ScreenObject: TScreenObject;
+begin
+  if FUsed <> Value then
+  begin
+    ScreenObject := FScreenObject as TScreenObject;
+    if FScreenObject <> nil then
+    begin
+      if ScreenObject.CanInvalidateModel then
+      begin
+        HandleChangedValue(UsedObserver);
+      end;
+    end;
+    FUsed := Value;
+    InvalidateModel;
+  end;
+end;
+
+function TModflowSteadyBoundary.Used: boolean;
+begin
+  result := IsUsed;
+end;
+{ TCustomListArrayBoundColl }
+
+procedure TCustomListArrayBoundColl.AssignArrayCellsWithItem(
+  Item: TCustomModflowBoundaryItem; ItemIndex: Integer; DataSets,
+  ListOfTimeLists: TList; AModel: TBaseModel);
+var
+  BoundaryCount: Integer;
+  DataArray2: TDataArray;
+  TimeList2: TCustomTimeList;
+  TimeIndex: Integer;
+  DataArray1: TDataArray;
+  TimeList1: TModflowTimeList;
+//  Sections: T3DSparseIntegerArray;
+begin
+  Assert(ListOfTimeLists.Count >= 1);
+  TimeList1 := ListOfTimeLists[0];
+//  Sections := TimeList1.Sections[ItemIndex];
+  DataArray1 := TimeList1[ItemIndex];
+  DataSets.Add(DataArray1);
+  for TimeIndex := 1 to ListOfTimeLists.Count - 1 do
+  begin
+    TimeList2 := ListOfTimeLists[TimeIndex];
+    DataArray2 := TimeList2[ItemIndex];
+    DataSets.Add(DataArray2);
+    Assert(DataArray1.LayerCount = DataArray2.LayerCount);
+    Assert(DataArray1.RowCount = DataArray2.RowCount);
+    Assert(DataArray1.ColumnCount = DataArray2.ColumnCount);
+  end;
+  CountArrayBoundaryCells(BoundaryCount, DataArray1, DataSets, AModel);
+  SetBoundaryStartAndEndTime(BoundaryCount, Item, ItemIndex, AModel);
+  AssignArrayCellValues(DataSets, ItemIndex, AModel);
+  for TimeIndex := 0 to ListOfTimeLists.Count - 1 do
+  begin
+    TimeList1 := ListOfTimeLists[TimeIndex];
+    TimeList1.FreeItem(ItemIndex);
+  end;
+end;
+
+procedure TCustomListArrayBoundColl.CountArrayBoundaryCells(
+  var BoundaryCount: Integer; DataArray1: TDataArray; DataSets: TList;
+  AModel: TBaseModel);
+var
+  DSIndex: Integer;
+  ColIndex: Integer;
+  RowIndex: Integer;
+  LayerIndex: Integer;
+  DataArray2: TDataArray;
+  LocalModel: TCustomModel;
+  LayerMin: Integer;
+  RowMin: Integer;
+  ColMin: Integer;
+  LayerMax: Integer;
+  RowMax: Integer;
+  ColMax: Integer;
+begin
+  LocalModel := AModel as TCustomModel;
+  BoundaryCount := 0;
+  DataArray1.GetMinMaxStoredLimits(LayerMin, RowMin, ColMin,
+      LayerMax, RowMax, ColMax);
+  if LayerMin >= 0 then
+  begin
+    for LayerIndex := LayerMin to LayerMax do
+    begin
+      if LocalModel.IsLayerSimulated(LayerIndex) then
+      begin
+        for RowIndex := RowMin to RowMax do
+        begin
+          for ColIndex := ColMin to ColMax do
+          begin
+            if DataArray1.IsValue[LayerIndex, RowIndex, ColIndex] then
+            begin
+              Inc(BoundaryCount);
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+  for DSIndex := 1 to DataSets.Count - 1 do
+  begin
+    DataArray2 := DataSets[DSIndex];
+    if LayerMin >= 0 then
+    begin
+      for LayerIndex := LayerMin to LayerMax do
+      begin
+        if LocalModel.IsLayerSimulated(LayerIndex) then
+        begin
+          for RowIndex := RowMin to RowMax do
+          begin
+            for ColIndex := ColMin to ColMax do
+            begin
+              if DataArray1.IsValue[LayerIndex, RowIndex, ColIndex] then
+              begin
+                Assert(DataArray2.IsValue[LayerIndex, RowIndex, ColIndex]);
+              end;
+            end;
+          end;
+        end;
+      end;
+    end;
+//    DataArray2.CacheData;
+  end;
+//  DataArray1.CacheData;
+end;
+
+procedure TCustomListArrayBoundColl.EvaluateArrayBoundaries(AModel: TBaseModel);
+var
+  ItemIndex: integer;
+  Item: TCustomModflowBoundaryItem;
+  ListOfTimeLists: TList;
+  DataSets: TList;
+  EndOfLastStressPeriod: Double;
+  StartOfFirstStressPeriod: Double;
+  ObservationsPresent: Boolean;
+  PriorTime: Double;
+  ItemCount: Integer;
+  ExtraItem: TNoFormulaItem;
+  LocalModel: TCustomModel;
+  FirstUsedTime: Double;
+  LastUsedTime: Double;
+  TimeIndex: Integer;
+  TimeList1: TModflowTimeList;
+begin
+  if Count = 0 then
+  begin
+    Exit;
+  end;
+  if not (ScreenObject as TScreenObject).UsedModels.UsesModel(AModel) then
+  begin
+    Exit;
+  end;
+
+  LocalModel := AModel as TCustomModel;
+  FirstUsedTime := LocalModel.ModflowFullStressPeriods[0].StartTime;
+  LastUsedTime := LocalModel.ModflowFullStressPeriods[
+    LocalModel.ModflowFullStressPeriods.Count - 1].EndTime;
+
+  Item := Items[0] as TCustomModflowBoundaryItem;
+  if Item.StartTime >= LastUsedTime  then
+  begin
+    Exit;
+  end;
+
+  Item := Items[Count-1] as TCustomModflowBoundaryItem;
+  if Item.EndTime <= FirstUsedTime  then
+  begin
+    Exit;
+  end;
+
+  FirstUsedTime := Max(FirstUsedTime,
+    LocalModel.ModflowStressPeriods[0].StartTime);
+  LastUsedTime := Min(LastUsedTime, LocalModel.ModflowStressPeriods[
+    LocalModel.ModflowStressPeriods.Count - 1].EndTime);
+
+  ListOfTimeLists := TList.Create;
+  DataSets := TList.Create;
+  try
+    InitializeTimeLists(ListOfTimeLists, LocalModel);
+    TestIfObservationsPresent(EndOfLastStressPeriod, StartOfFirstStressPeriod,
+      ObservationsPresent);
+    PriorTime := StartOfFirstStressPeriod;
+    ItemCount := 0;
+    for ItemIndex := 0 to Count - 1 do
+    begin
+      Item := Items[ItemIndex] as TCustomModflowBoundaryItem;
+      if (Item.StartTime > LastUsedTime)
+        or (Item.EndTime < FirstUsedTime) then
+      begin
+        for TimeIndex := 0 to ListOfTimeLists.Count - 1 do
+        begin
+          TimeList1 := ListOfTimeLists[TimeIndex];
+          TimeList1.FreeItem(ItemCount);
+        end;
+        Inc(ItemCount);
+        Continue;
+      end;
+
+      if ObservationsPresent then
+      begin
+        if PriorTime < Item.StartTime then
+        begin
+          ExtraItem := TNoFormulaItem.Create(nil);
+          try
+            ExtraItem.FStartTime := PriorTime;
+            ExtraItem.FEndTime := Item.StartTime;
+            DataSets.Clear;
+            AssignArrayCellsWithItem(ExtraItem, ItemCount, DataSets, ListOfTimeLists, LocalModel);
+            Inc(ItemCount);
+          finally
+            ExtraItem.Free;
+          end;
+        end;
+        PriorTime := Item.EndTime;
+      end;
+      DataSets.Clear;
+      AssignArrayCellsWithItem(Item, ItemCount, DataSets, ListOfTimeLists, LocalModel);
+      Inc(ItemCount);
+      if (ItemIndex = Count - 1) and ObservationsPresent then
+      begin
+        if Item.EndTime < EndOfLastStressPeriod then
+        begin
+          ExtraItem := TNoFormulaItem.Create(nil);
+          try
+            ExtraItem.FStartTime := Item.EndTime;
+            ExtraItem.FEndTime := EndOfLastStressPeriod;
+            DataSets.Clear;
+            AssignArrayCellsWithItem(ExtraItem, ItemCount, DataSets,
+              ListOfTimeLists, LocalModel);
+            Inc(ItemCount);
+          finally
+            ExtraItem.Free;
+          end;
+        end;
+      end;
+    end;
+
+  finally
+    DataSets.Free;
+    ListOfTimeLists.Free;
+  end;
+end;
+
+procedure TCustomListArrayBoundColl.EvaluateListBoundaries(AModel: TBaseModel);
+var
+  ItemIndex: integer;
+//  Item: TCustomModflowBoundaryItem;
+  EndOfLastStressPeriod: Double;
+  StartOfFirstStressPeriod: Double;
+  ObservationsPresent: Boolean;
+  PriorTime: Double;
+  ItemCount: Integer;
+  ExtraItem: TNoFormulaItem;
+  AScreenObject: TScreenObject;
+  LocalModel: TCustomModel;
+  Grid: TModflowGrid;
+  CellList: TCellAssignmentList;
+  BoundaryFunctionIndex: Integer;
+  Formula: string;
+  AnItem: TCustomModflowBoundaryItem;
+  NextItem: TCustomModflowBoundaryItem;
+  Compiler: TRbwParser;
+  Expression: TExpression;
+  UsedVariables: TStringList;
+  VarIndex: Integer;
+  VarName: string;
+  VarPosition: Integer;
+  Variable: TCustomValue;
+  AnotherDataSet: TDataArray;
+  GlobalVariable: TGlobalVariable;
+  CellIndex: Integer;
+  ACell: TCellAssignment;
+  SparseArrays: TList;
+  EliminateIndicies: TIntegerList;
+  SectionIndex: Integer;
+  SparseArray: T3DSparseBooleanArray;
+//  Section: Integer;
+  Index: Integer;
+  Layer: Integer;
+  Variables: TList;
+  DataSets: TList;
+  FirstUsedTime: Double;
+  LastUsedTime: Double;
+  MaxArrays: Integer;
+  ErrorFormula: string;
+  StoredCount: Integer;
+  OKTypes: TRbwDataTypes;
+begin
+  if Count = 0 then
+  begin
+    Exit;
+  end;
+  AScreenObject := ScreenObject as TScreenObject;
+  if not AScreenObject.UsedModels.UsesModel(AModel) then
+  begin
+    Exit;
+  end;
+
+  LocalModel := AModel as TCustomModel;
+
+  FirstUsedTime := LocalModel.ModflowFullStressPeriods.First.StartTime;
+  LastUsedTime := LocalModel.ModflowFullStressPeriods.Last.EndTime;
+
+  AnItem := Items[0] as TCustomModflowBoundaryItem;
+  if AnItem.StartTime >= LastUsedTime  then
+  begin
+    Exit;
+  end;
+
+  AnItem := Items[Count-1] as TCustomModflowBoundaryItem;
+  if AnItem.EndTime <= FirstUsedTime  then
+  begin
+    Exit;
+  end;
+
+  CellList:= TCellAssignmentList.Create;
+  UsedVariables:= TStringList.Create;
+  EliminateIndicies := TIntegerList.Create;
+  try
+
+    Grid := LocalModel.ModflowGrid;
+    Compiler := LocalModel.rpThreeDFormulaCompiler;
+
+//    FirstUsedTime := Max(FirstUsedTime,
+//      LocalModel.ModflowStressPeriods.First.StartTime);
+//    LastUsedTime := Min(LastUsedTime, LocalModel.ModflowStressPeriods.Last.EndTime);
+
+
+    AScreenObject.GetCellsToAssign(Grid, '0', nil, nil, CellList, alAll, LocalModel);
+
+    // eliminate cells that are at the same location and are part of the same section;
+    SparseArrays := TObjectList.Create;
+    try
+      if FListDuplicatesAllowed then
+      begin
+        MaxArrays := AScreenObject.SectionCount;
+      end
+      else
+      begin
+        MaxArrays := 1;
+      end;
+      for SectionIndex := 0 to MaxArrays - 1 do
+      begin
+        SparseArray := T3DSparseBooleanArray.Create(SPASmall);
+        SparseArrays.Add(SparseArray)
+      end;
+      SparseArray := SparseArrays[0];
+      for CellIndex := CellList.Count - 1 downto 0 do
+      begin
+        ACell := CellList[CellIndex];
+        if ACell.LgrEdge then
+        begin
+          EliminateIndicies.Add(CellIndex);
+        end
+        else if LocalModel.IsLayerSimulated(ACell.Layer) then
+        begin
+          if FListDuplicatesAllowed then
+          begin
+            SparseArray := SparseArrays[ACell.Section];
+          end;
+          Layer := LocalModel.
+            DataSetLayerToModflowLayer(ACell.Layer);
+          if SparseArray.IsValue[Layer, ACell.Row, ACell.Column] then
+          begin
+            EliminateIndicies.Add(CellIndex);
+          end
+          else
+          begin
+            SparseArray.Items[Layer, ACell.Row, ACell.Column] := True;
+          end;
+        end
+        else
+        begin
+          EliminateIndicies.Add(CellIndex);
+        end;
+      end;
+    finally
+      SparseArrays.Free;
+    end;
+
+    for Index := 0 to EliminateIndicies.Count - 1  do
+    begin
+      CellList.Delete(EliminateIndicies[Index]);
+    end;
+
+    ClearBoundaries(AModel);
+
+
+    TestIfObservationsPresent(EndOfLastStressPeriod, StartOfFirstStressPeriod,
+      ObservationsPresent);
+    PriorTime := StartOfFirstStressPeriod;
+    ItemCount := 0;
+
+    for ItemIndex := 0 to Count - 1 do
+    begin
+      AnItem := Items[ItemIndex] as TCustomModflowBoundaryItem;
+
+      // Skip times earlier than the first time or after
+      // the last time.
+      if (AnItem.StartTime > LastUsedTime)
+        or (AnItem.EndTime <= FirstUsedTime) then
+      begin
+        if ObservationsPresent then
+        begin
+          if PriorTime < AnItem.StartTime then
+          begin
+            AddSpecificBoundary(AModel);
+            Inc(ItemCount);
+          end;
+          Inc(ItemCount);
+          AddSpecificBoundary(AModel);
+          if AnItem.EndTime < EndOfLastStressPeriod then
+          begin
+            Inc(ItemCount);
+            AddSpecificBoundary(AModel);
+          end;
+        end
+        else
+        begin
+          Inc(ItemCount);
+          AddSpecificBoundary(AModel);
+        end;
+        Continue;
+      end;
+
+      //  Add extra items if this boundary skips a stress period.
+      if ObservationsPresent then
+      begin
+        if PriorTime < AnItem.StartTime then
+        begin
+          ExtraItem := TNoFormulaItem.Create(nil);
+          try
+            ExtraItem.FStartTime := PriorTime;
+            ExtraItem.FEndTime := AnItem.StartTime;
+
+            Variables := TList.Create;
+            DataSets := TList.Create;
+            try
+              AddSpecificBoundary(AModel);
+              SetBoundaryStartAndEndTime(CellList.Count, ExtraItem, 0, AModel);
+              AssignListCellLocation(Boundaries[0, AModel],  CellList);
+              for BoundaryFunctionIndex := 0 to AnItem.BoundaryFormulaCount - 1 do
+              begin
+                Formula := '0';
+                Compiler.Compile(Formula);
+                Expression := Compiler.CurrentExpression;
+
+                CellList.Clear;
+                AScreenObject.GetCellsToAssign(Grid, Formula, nil, nil, CellList,
+                  alAll, LocalModel);
+                for Index := 0 to EliminateIndicies.Count - 1  do
+                begin
+                  CellList.Delete(EliminateIndicies[Index]);
+                end;
+                UpdateCurrentScreenObject(AScreenObject);
+
+                AssignCellList(Expression, CellList, Boundaries[0, AModel],
+                  BoundaryFunctionIndex, Variables, DataSets, LocalModel);
+
+                LocalModel.DataArrayManager.CacheDataArrays;
+              end;
+            finally
+              Variables.Free;
+              DataSets.Free;
+            end;
+            Inc(ItemCount);
+          finally
+            ExtraItem.Free;
+          end;
+        end;
+        PriorTime := AnItem.EndTime;
+      end;
+
+      AddSpecificBoundary(AModel);
+      SetBoundaryStartAndEndTime(CellList.Count, AnItem, ItemCount, AModel);
+      StoredCount := ItemCount;
+      AssignListCellLocation(Boundaries[ItemCount, AModel],  CellList);
+      for BoundaryFunctionIndex := 0 to AnItem.BoundaryFormulaCount - 1 do
+      begin
+        Formula := AdjustedFormula(BoundaryFunctionIndex, ItemIndex);
+        ErrorFormula := Formula;
+        try
+          Compiler.Compile(Formula)
+        except on E: ERbwParserError do
+          begin
+            frmFormulaErrors.AddFormulaError(AScreenObject.Name, '',
+              ErrorFormula, E.Message);
+            Formula := '0';
+            Compiler.Compile(Formula);
+            // send error message
+            AnItem.BoundaryFormula[BoundaryFunctionIndex] := Formula;
+          end;
+        end;
+        Expression := Compiler.CurrentExpression;
+        if Expression = nil then
+        begin
+          Formula := '0';
+          Compiler.Compile(Formula);
+          Expression := Compiler.CurrentExpression;
+        end;
+        OKTypes := OkListDataTypes(BoundaryFunctionIndex);
+        if not (Expression.ResultType in OKTypes) then
+        begin
+          frmFormulaErrors.AddFormulaError(AScreenObject.Name, '',
+            ErrorFormula, StrInvalidResultType);
+          if (rdtInteger in OKTypes) or (rdtDouble in OKTypes) then
+          begin
+            Formula := '0';
+          end
+          else if rdtBoolean in OKTypes then
+          begin
+            Formula := 'False';
+          end
+          else if rdtString in OKTypes then
+          begin
+            Formula := '""';
+          end;
+
+          Compiler.Compile(Formula);
+          // send error message
+          AnItem.BoundaryFormula[BoundaryFunctionIndex] := Formula;
+          Expression := Compiler.CurrentExpression;
+        end;
+        CellList.Clear;
+        AScreenObject.GetCellsToAssign(Grid, Formula, nil, nil, CellList,
+          alAll, LocalModel);
+        for Index := 0 to EliminateIndicies.Count - 1  do
+        begin
+          CellList.Delete(EliminateIndicies[Index]);
+        end;
+
+
+
+        Variables := TList.Create;
+        DataSets := TList.Create;
+        try
+          UsedVariables.Assign(Expression.VariablesUsed);
+          for VarIndex := 0 to UsedVariables.Count - 1 do
+          begin
+            VarName := UsedVariables[VarIndex];
+            VarPosition := Compiler.IndexOfVariable(VarName);
+            Variable := Compiler.Variables[VarPosition];
+            AnotherDataSet := LocalModel.DataArrayManager.GetDataSetByName(VarName);
+            if AnotherDataSet <> nil then
+            begin
+              Assert(AnotherDataSet.DataType = Variable.ResultType);
+              AnotherDataSet.Initialize;
+              LocalModel.DataArrayManager.AddDataSetToCache(AnotherDataSet);
+              Variables.Add(Variable);
+              DataSets.Add(AnotherDataSet);
+            end
+            else
+            begin
+              GlobalVariable := LocalModel.GlobalVariables.GetVariableByName(VarName);
+              Assert(GlobalVariable <> nil);
+              Assert(Variable.ResultType = GlobalVariable.Format);
+            end;
+          end;
+
+          UpdateCurrentScreenObject(AScreenObject);
+
+          AssignCellList(Expression, CellList, Boundaries[ItemCount, AModel],
+            BoundaryFunctionIndex, Variables, DataSets, LocalModel);
+        finally
+          Variables.Free;
+          DataSets.Free;
+        end;
+      end;
+      Inc(ItemCount);
+
+      if ObservationsPresent then
+      begin
+        if AnItem.EndTime < EndOfLastStressPeriod then
+        begin
+          if (ItemIndex+1 < Count) then
+          begin
+            NextItem := Items[ItemIndex+1] as TCustomModflowBoundaryItem;
+          end
+          else
+          begin
+            NextItem := nil;
+          end;
+
+          if (NextItem = nil) or (AnItem.EndTime < NextItem.StartTime) then
+          begin
+            ExtraItem := TNoFormulaItem.Create(nil);
+            try
+              ExtraItem.FStartTime := AnItem.EndTime;
+              ExtraItem.FEndTime := EndOfLastStressPeriod;
+
+              Variables := TList.Create;
+              DataSets := TList.Create;
+              try
+                AddSpecificBoundary(AModel);
+                SetBoundaryStartAndEndTime(CellList.Count, ExtraItem, ItemCount, AModel);
+                AssignListCellLocation(Boundaries[ItemCount, AModel],  CellList);
+                for BoundaryFunctionIndex := 0 to AnItem.BoundaryFormulaCount - 1 do
+                begin
+                  Formula := '0';
+                  Compiler.Compile(Formula);
+                  Expression := Compiler.CurrentExpression;
+
+                  CellList.Clear;
+                  AScreenObject.GetCellsToAssign(Grid, Formula, nil, nil,
+                    CellList, alAll, LocalModel);
+                  for Index := 0 to EliminateIndicies.Count - 1  do
+                  begin
+                    CellList.Delete(EliminateIndicies[Index]);
+                  end;
+                  UpdateCurrentScreenObject(AScreenObject);
+
+                  AssignCellList(Expression, CellList, Boundaries[ItemCount, AModel],
+                    BoundaryFunctionIndex, Variables, DataSets, LocalModel);
+                end;
+              finally
+                Variables.Free;
+                DataSets.Free;
+              end;
+              Inc(ItemCount);
+            finally
+              ExtraItem.Free;
+            end;
+          end;
+        end;
+        PriorTime := AnItem.EndTime;
+      end;
+      Boundaries[StoredCount, AModel].CacheData;
+    end;
+
+
+
+
+//    InitializeTimeLists(ListOfTimeLists);
+
+{
+
+    TestIfObservationsPresent(EndOfLastStressPeriod, StartOfFirstStressPeriod,
+      ObservationsPresent);
+    PriorTime := StartOfFirstStressPeriod;
+    ItemCount := 0;
+    for ItemIndex := 0 to Count - 1 do
+    begin
+      AnItem := Items[ItemIndex];
+      if ObservationsPresent then
+      begin
+        if PriorTime < AnItem.StartTime then
+        begin
+          ExtraItem := TNoFormulaItem.Create(nil);
+          try
+            ExtraItem.FStartTime := PriorTime;
+            ExtraItem.FEndTime := AnItem.StartTime;
+//            DataSets.Clear;
+//            AssignCellsWithItem(ExtraItem, ItemCount, DataSets, ListOfTimeLists);
+            Inc(ItemCount);
+          finally
+            ExtraItem.Free;
+          end;
+        end;
+        PriorTime := AnItem.EndTime;
+      end;
+//      DataSets.Clear;
+//      AssignCellsWithItem(AnItem, ItemCount, DataSets, ListOfTimeLists);
+      Inc(ItemCount);
+      if (ItemIndex = Count - 1) and ObservationsPresent then
+      begin
+        if AnItem.EndTime < EndOfLastStressPeriod then
+        begin
+          ExtraItem := TNoFormulaItem.Create(nil);
+          try
+            ExtraItem.FStartTime := AnItem.EndTime;
+            ExtraItem.FEndTime := EndOfLastStressPeriod;
+//            DataSets.Clear;
+//            AssignCellsWithItem(ExtraItem, ItemCount, DataSets, ListOfTimeLists);
+            Inc(ItemCount);
+          finally
+            ExtraItem.Free;
+          end;
+        end;
+      end;
+    end;
+    }
+
+  finally
+    EliminateIndicies.Free;
+    UsedVariables.Free;
+    CellList.Free;
+//    DataSets.Free;
+//    ListOfTimeLists.Free;
+  end;
+end;
+
+procedure TModflowScreenObjectProperty.ResetItemObserver(Index: integer);
 var
   Observer: TObserver;
 begin
@@ -3338,8 +3578,9 @@ begin
   Observer.UpToDate := True;
 end;
 
-procedure TModflowSteadyBoundary.UpdateFormulaDependencies(OldFormula: string;
-  var NewFormula: string; Observer: TObserver; Compiler: TRbwParser);
+procedure TModflowScreenObjectProperty.UpdateFormulaDependencies
+  (OldFormula: string; var NewFormula: string; Observer: TObserver;
+  Compiler: TRbwParser);
 var
   OldUses: TStringList;
   NewUses: TStringList;
@@ -3414,7 +3655,8 @@ begin
   end;
 end;
 
-procedure TModflowSteadyBoundary.UpdateFormula(Value: string; Position: integer; var FormulaObject: TFormulaObject);
+procedure TModflowScreenObjectProperty.UpdateFormula(Value: string;
+  Position: integer; var FormulaObject: TFormulaObject);
 var
   LocalModel: TPhastModel;
   Compiler: TRbwParser;
@@ -3435,13 +3677,13 @@ begin
     begin
       frmGoPhast.PhastModel.FormulaManager.ChangeFormula(FormulaObject, Value,
         frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-        RemoveModflowSteadyBoundarySubscription,
-        RestoreModflowSteadyBoundarySubscription, self);
+        RemoveScreenObjectPropertySubscription,
+        RestoreScreenObjectPropertySubscription, self);
     end;
   end;
 end;
 
-function TModflowSteadyBoundary.CreateFormulaObject
+function TModflowScreenObjectProperty.CreateFormulaObject
   (Orientation: TDataSetOrientation): TFormulaObject;
 begin
   result := frmGoPhast.PhastModel.FormulaManager.Add;
@@ -3457,11 +3699,11 @@ begin
   else
     Assert(False);
   end;
-  result.AddSubscriptionEvents(RemoveModflowSteadyBoundarySubscription,
-    RestoreModflowSteadyBoundarySubscription, self);
+  result.AddSubscriptionEvents(RemoveScreenObjectPropertySubscription,
+    RestoreScreenObjectPropertySubscription, self);
 end;
 
-procedure TModflowSteadyBoundary.CreateObserver(ObserverNameRoot: string;
+procedure TModflowScreenObjectProperty.CreateObserver(ObserverNameRoot: string;
   var Observer: TObserver);
 var
   ScreenObject: TScreenObject;
@@ -3481,28 +3723,20 @@ begin
   end;
 end;
 
-procedure TModflowSteadyBoundary.SetUsed(const Value: boolean);
-var
-  ScreenObject: TScreenObject;
+procedure TModflowScreenObjectProperty.CreateBoundaryObserver;
 begin
-  if FUsed <> Value then
+  Assert((ScreenObject = nil) or (ScreenObject is TScreenObject));
+  if ScreenObject <> nil then
   begin
-    ScreenObject := FScreenObject as TScreenObject;
-    if FScreenObject <> nil then
+    if TScreenObject(FScreenObject).CanInvalidateModel then
     begin
-      if ScreenObject.CanInvalidateModel then
-      begin
-        HandleChangedValue(UsedObserver);
-      end;
+      FBoundaryObserver := TObserver.Create(nil);
+      FBoundaryObserver.UpdateWithName(BoundaryObserverPrefix +
+        TScreenObject(FScreenObject).Name);
+      TScreenObject(FScreenObject).TalksTo(FBoundaryObserver);
+      FBoundaryObserver.UpToDate := True;
     end;
-    FUsed := Value;
-    InvalidateModel;
   end;
-end;
-
-function TModflowSteadyBoundary.Used: boolean;
-begin
-  result := IsUsed;
 end;
 
 end.

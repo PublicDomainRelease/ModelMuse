@@ -116,9 +116,13 @@ type
     // See @link(AlwaysAssignForeignId).
     FAlwaysAssignForeignId: boolean;
     FInsertionNeeded: boolean;
-
+    FNewIndex: Integer;
   protected
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function Model: TBaseModel;
+    function GetOnInvalidateModelEvent: TNotifyEvent;
+    property OnInvalidateModelEvent: TNotifyEvent read GetOnInvalidateModelEvent;
     // @name tests whether another @classname is identical to the current one.
     function IsSame(AnotherItem: TOrderedItem): boolean; virtual; abstract;
     // @name invalidates the model.
@@ -157,20 +161,28 @@ type
   // @seealso(TOrderedCollection.Assign)
   TOrderedCollection = class(TCollection)
   private
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // See @link(Model).
     FModel: TBaseModel;
+    function GetCount: Integer;
+    procedure SetCount(const Value: Integer);
   protected
     // @name invalidates the model.
     // @seeAlso(TBaseModel.Invalidate)
     procedure InvalidateModel; virtual;
+    // If @name returns true, @link(Assign) will sort the items
+    // using the same order as in the collection that is being assigned to it.
+    function SortItems: Boolean; virtual;
   public
     function First: TCollectionItem;
     function Last: TCollectionItem;
     // @name tests whether the contents of AnOrderedCollection are the same
     // as the current @classname.
     function IsSame(AnOrderedCollection: TOrderedCollection): boolean; virtual;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
     // @name is a @link(TPhastModel) or nil.
     property Model: TBaseModel read FModel;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
     // @name creates an instance of @classname.
     // @param(ItemClass ItemClass must be a descendant of @link(TOrderedItem).)
     // @param(Model Model must be a @link(TPhastModel) or nil.)
@@ -186,6 +198,8 @@ type
     //     original at the same position.)
     // )
     procedure Assign(Source: TPersistent); override;
+    function FindMatchingItem(AnOrderedItem: TOrderedItem): TOrderedItem;
+    property Count: Integer read GetCount write SetCount;
   end;
 
   // @name extends @link(TOrderedCollection) by adding
@@ -282,7 +296,8 @@ implementation
 
 uses ModflowParameterUnit, LayerStructureUnit, PhastModelUnit, ScreenObjectUnit,
   ModflowBoundaryUnit, ModflowTransientListParameterUnit,
-  ModflowSfrParamIcalcUnit;
+  ModflowSfrParamIcalcUnit, Generics.Collections,
+  Generics.Defaults;
 
 function ParmeterTypeToStr(ParmType: TParameterType): string;
 begin
@@ -322,9 +337,32 @@ begin
   FModel := Model;
 end;
 
+function TOrderedCollection.FindMatchingItem(
+  AnOrderedItem: TOrderedItem): TOrderedItem;
+var
+  Index: Integer;
+  AnItem: TOrderedItem;
+begin
+  result := nil;
+  for Index := 0 to Count - 1 do
+  begin
+    AnItem := Items[Index] as TOrderedItem;
+    if AnItem.ID = AnOrderedItem.FForeignId then
+    begin
+      result := AnItem;
+      Exit;
+    end;
+  end;
+end;
+
 function TOrderedCollection.First: TCollectionItem;
 begin
   result := Items[0];
+end;
+
+function TOrderedCollection.GetCount: Integer;
+begin
+  result := inherited Count;
 end;
 
 function TOrderedCollection.IsSame(
@@ -349,6 +387,29 @@ begin
   result := Items[Count-1];
 end;
 
+procedure TOrderedCollection.SetCount(const Value: Integer);
+var
+  ExistingCount: integer;
+begin
+  Assert(Value >= 0);
+  ExistingCount := inherited Count;
+  while ExistingCount < Value do
+  begin
+    Add;
+    Inc(ExistingCount);
+  end;
+  while ExistingCount > Value do
+  begin
+    Last.Free;
+    Dec(ExistingCount);
+  end;
+end;
+
+function TOrderedCollection.SortItems: Boolean;
+begin
+  result := False;
+end;
+
 procedure TOrderedCollection.Assign(Source: TPersistent);
 var
   Index: integer;
@@ -358,6 +419,7 @@ var
 //  TempList: TList;
   ID_Array: array of integer;
   ItemIndex: Integer;
+  ItemList: TList<TOrderedItem>;
   function FindUnitByForeignId(ForeignId: integer): TOrderedItem;
   var
     Index: integer;
@@ -451,6 +513,29 @@ Make exhaustive tests to see if it is needed.}
 
       // Test to make sure everything seems right.
       Assert(Count = AnotherOrderedCollection.Count);
+
+      if SortItems then
+      begin
+        ItemList := TList<TOrderedItem>.Create;
+        try
+          for Index := 0 to Count - 1 do
+          begin
+            ItemList.Add(Items[Index] as TOrderedItem);
+          end;
+          ItemList.Sort(TComparer<TOrderedItem>.Construct(
+            function (const L, R: TOrderedItem): integer
+            begin
+              result := L.FNewIndex - R.FNewIndex;
+            end)
+            );
+          for index := 0 to ItemList.Count - 1 do
+          begin
+            ItemList[index].Index := index;
+          end;
+        finally
+          ItemList.Free;
+        end;
+      end;
     end;
   end;
 end;
@@ -466,6 +551,7 @@ begin
   begin
     FForeignId := AnotherItem.ID;
   end;
+  FNewIndex := AnotherItem.Index;
 end;
 
 constructor TOrderedItem.Create(Collection: TCollection);
@@ -484,11 +570,27 @@ begin
   result := (Collection as TOrderedCollection).Model;
 end;
 
+function TOrderedItem.GetOnInvalidateModelEvent: TNotifyEvent;
+var
+  LocalModel: TBaseModel;
+begin
+  LocalModel := Model;
+  if LocalModel = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := LocalModel.Invalidate;
+  end;
+end;
+
 procedure TOrderedCollection.InvalidateModel;
 begin
   If (FModel <> nil) then
   begin
-    FModel.Invalidate;
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent. }
+    FModel.Invalidate(self);
   end;
 end;
 

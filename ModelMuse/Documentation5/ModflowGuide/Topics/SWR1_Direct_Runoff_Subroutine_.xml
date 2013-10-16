@@ -12,7 +12,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Purpose</text></para>
         </td>
         <td>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">If </text><text styleclass="Keywords" translate="true">USE_DIRECT_RUNOFF</text><text styleclass="Normal" translate="true"> is specified in Item 1b, the subroutine SSWR_RDDRO reads direct runoff data for each stress period from file unit IOPTUNIT defined immediately after the </text><text styleclass="Keywords" translate="true">USE_DIRECT_RUNOFF</text><text styleclass="Normal" translate="true"> keyword.</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">If </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="USE_DIRECT_RUNOFF" styleclass="Keywords" translate="true">USE_DIRECT_RUNOFF</link><text styleclass="Normal" translate="true"> is specified in Item 1b, the subroutine SSWR_RDDRO reads direct runoff data for each stress period from file unit IOPTUNIT defined immediately after the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="USE_DIRECT_RUNOFF" styleclass="Keywords" translate="true">USE_DIRECT_RUNOFF</link><text styleclass="Normal" translate="true"> keyword.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -36,7 +36,12 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></para>
+          <list id="1" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
+          </list>
+          <list id="0" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-OWHM</text></li>
+          </list>
         </td>
       </tr>
     </table></para>
@@ -85,7 +90,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">IRDMAP—an integer value that defines if reach mapping data are specified for the current MODFLOW stress period. If IRDMAP ≤ 0, reach mapping data from the previous stress period will be used.</text></para>
+                      <para styleclass="Normal"><anchor id="IRDMAP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">IRDMAP—an integer value that defines if reach mapping data are specified for the current MODFLOW stress period. If IRDMAP ≤ 0, reach mapping data from the previous stress period will be used.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -93,7 +98,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">IRDMULT—an integer value that defines if direct runoff multiplier data are specified for the current MODFLOW stress period. If IRDMULT ≤ 0, direct runoff multipler data from the previous stress period will be used.</text></para>
+                      <para styleclass="Normal"><anchor id="IRDMULT" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">IRDMULT—an integer value that defines if direct runoff multiplier data are specified for the current MODFLOW stress period. If IRDMULT ≤ 0, direct runoff multipler data from the previous stress period will be used.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -101,7 +106,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">IRDVAL—an integer value that defines if direct runoff rate data are specified for the current MODFLOW stress period. If IRDVAL ≤ 0, direct runoff rate data from the previous stress period will be used.</text></para>
+                      <para styleclass="Normal"><anchor id="IRDVAL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">IRDVAL—an integer value that defines if direct runoff rate data are specified for the current MODFLOW stress period. If IRDVAL ≤ 0, direct runoff rate data from the previous stress period will be used.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -130,8 +135,8 @@
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">Two-dimensional reach mapping data for current stress period:</text></para>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">DROMAP2D—an integer array used to define the mapping of each cell to a specific SWR1 reach. This array is only specified if IRDMAP &gt; 0. This array is initialized to have values equal to 0, as a result, direct runoff would not be routed to SWR1 reaches until an IRDMAP value &gt; 0 and DROMAP2D values between 1 and NREACHES are specified. Direct runoff is not routed for cells having DROMAP2D values less than 1 or greater than NREACHES.</text></para>
+                <para styleclass="Normal"><anchor id="DROMAP2D" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Two-dimensional reach mapping data for current stress period:</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">DROMAP2D—an integer array used to define the mapping of each cell to a specific SWR1 reach. This array is only specified if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR1_Direct_Runoff_Subroutine_" anchor="IRDMAP" styleclass="Normal" translate="true">IRDMAP</link><text styleclass="Normal" translate="true"> &gt; 0. This array is initialized to have values equal to 0, as a result, direct runoff would not be routed to SWR1 reaches until an </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR1_Direct_Runoff_Subroutine_" anchor="IRDMAP" styleclass="Normal" translate="true">IRDMAP</link><text styleclass="Normal" translate="true"> value &gt; 0 and DROMAP2D values between 1 and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="NREACHES" styleclass="Normal" translate="true">NREACHES</link><text styleclass="Normal" translate="true"> are specified. Direct runoff is not routed for cells having DROMAP2D values less than 1 or greater than </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="NREACHES" styleclass="Normal" translate="true">NREACHES</link><text styleclass="Normal" translate="true">.</text></para>
               </td>
             </tr>
           </table></para>
@@ -152,8 +157,8 @@
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">Two-dimensional direct runoff multiplier data for current stress period:</text></para>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">DROMULT2D—a real array used to define a multipler to apply to the direct runoff rate data (SSWR_RDDRO Item 4). This array is only specified if IRDMULT &gt; 0. This array is initialized to have values equal to 1, as a result, the full direct runoff rate would be routed to SWR1 reaches defined by DROMAP2D values until an IRDMULT value &gt; 0 and DROMAP2D values between 1 and NREACHES are specified.</text></para>
+                <para styleclass="Normal"><anchor id="DROMULT2D" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Two-dimensional direct runoff multiplier data for current stress period:</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">DROMULT2D—a real array used to define a multipler to apply to the direct runoff rate data (SSWR_RDDRO Item 4). This array is only specified if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR1_Direct_Runoff_Subroutine_" anchor="IRDMULT" styleclass="Normal" translate="true">IRDMULT</link><text styleclass="Normal" translate="true"> &gt; 0. This array is initialized to have values equal to 1, as a result, the full direct runoff rate would be routed to SWR1 reaches defined by </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR1_Direct_Runoff_Subroutine_" anchor="DROMAP2D" styleclass="Normal" translate="true">DROMAP2D</link><text styleclass="Normal" translate="true"> values until an </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR1_Direct_Runoff_Subroutine_" anchor="IRDMULT" styleclass="Normal" translate="true">IRDMULT</link><text styleclass="Normal" translate="true"> value &gt; 0 and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR1_Direct_Runoff_Subroutine_" anchor="DROMAP2D" styleclass="Normal" translate="true">DROMAP2D</link><text styleclass="Normal" translate="true"> values between 1 and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="NREACHES" styleclass="Normal" translate="true">NREACHES</link><text styleclass="Normal" translate="true"> are specified.</text></para>
               </td>
             </tr>
           </table></para>
@@ -169,13 +174,14 @@
           <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 4</text></para>
         </td>
         <td>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">[DROVAL2D (NCOL, NROW)] -- U2DREL</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">[DROVAL2D (NCOL, NROW)] -- </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Array_Reading_Utility_Modules" styleclass="Normal" translate="true">U2DREL</link></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[DROVAL2D]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Two-dimensional direct runoff rate data for current stress period:</text></para>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">DROVAL2D—a real array used to define the base direct runoff rate to apply. The actual direct runoff rate for a cell would be the product of DROVAL2D and DROMULT2D. This array is only specified if IRDVAL &gt; 0. This array is initialized to have values equal to 0, as a result, direct runoff would not be routed to SWR1 reaches defined by DROMAP2D values until an IRDVAL value &gt; 0 and DROMAP2D values between 1 and NREACHES are specified.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">DROVAL2D—a real array used to define the base direct runoff rate to apply. The actual direct runoff rate for a cell would be the product of DROVAL2D and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR1_Direct_Runoff_Subroutine_" anchor="DROMULT2D" styleclass="Normal" translate="true">DROMULT2D</link><text styleclass="Normal" translate="true">. This array is only specified if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR1_Direct_Runoff_Subroutine_" anchor="IRDVAL" styleclass="Normal" translate="true">IRDVAL</link><text styleclass="Normal" translate="true"> &gt; 0. This array is initialized to have values equal to 0, as a result, direct runoff would not be routed to SWR1 reaches defined by </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR1_Direct_Runoff_Subroutine_" anchor="DROMAP2D" styleclass="Normal" translate="true">DROMAP2D</link><text styleclass="Normal" translate="true"> values until an </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR1_Direct_Runoff_Subroutine_" anchor="IRDVAL" styleclass="Normal" translate="true">IRDVAL</link><text styleclass="Normal" translate="true"> value &gt; 0 and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR1_Direct_Runoff_Subroutine_" anchor="DROMAP2D" styleclass="Normal" translate="true">DROMAP2D</link><text styleclass="Normal" translate="true"> values between 1 and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="NREACHES" styleclass="Normal" translate="true">NREACHES</link><text styleclass="Normal" translate="true"> are specified.</text></para>
+                <para styleclass="Normal"><text styleclass="New Materials" translate="true">Direct runoff has units of L/T.</text></para>
               </td>
             </tr>
           </table></para>

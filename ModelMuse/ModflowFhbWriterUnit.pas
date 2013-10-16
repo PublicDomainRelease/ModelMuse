@@ -18,6 +18,8 @@ type
     FFlowValues: TList;
     FUnitNumber: integer;
     FPrintInputCellLists: Boolean;
+    NFLW: Integer;
+    NHED: integer;
     procedure FillScreenObjectList;
     procedure GetModelTimes;
     procedure EvaluateHeadBoundaries;
@@ -482,11 +484,10 @@ const
   NFHBX2 = 1;
 var
   NBDTIM: integer;
-  NFLW: Integer;
-  NHED: integer;
   Cells: TFhbCellList;
   IFHBCB: Integer;
 begin
+//  NBDTIM := FTimes.Count-1;
   NBDTIM := FTimes.Count;
 
   if FFlowValues.Count > 0 then
@@ -556,6 +557,7 @@ var
   StartTime: Double;
 begin
   StartTime := Model.ModflowFullStressPeriods.First.StartTime;
+//  for TimeIndex := 0 to FTimes.Count - 2 do
   for TimeIndex := 0 to FTimes.Count - 1 do
   begin
     WriteFloat(FTimes[TimeIndex]-StartTime);
@@ -757,36 +759,42 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 5.');
-    WriteDataSet5;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
+    if NFLW > 0 then
     begin
-      Exit;
+      frmProgressMM.AddMessage('  Writing Data Set 5.');
+      WriteDataSet5;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage('  Writing Data Set 6.');
+      WriteDataSet6;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 6.');
-    WriteDataSet6;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
+    if NHED > 0 then
     begin
-      Exit;
-    end;
+      frmProgressMM.AddMessage('  Writing Data Set 7.');
+      WriteDataSet7;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 7.');
-    WriteDataSet7;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage('  Writing Data Set 8.');
-    WriteDataSet8;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
+      frmProgressMM.AddMessage('  Writing Data Set 8.');
+      WriteDataSet8;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
     end;
 
   finally

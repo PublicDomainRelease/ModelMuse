@@ -5,6 +5,7 @@ interface
 uses
   Generics.Collections, Generics.Defaults, FastGEO;
 
+type
   {
     @name indicates the type of node.
     @value(ntInner The node is in the interior of the mesh and may be moved or
@@ -17,10 +18,9 @@ uses
       It may not be moved or eliminated.)
 
   }
-type
-  TRenumberingAlgorithm = (CuthillMcKee, raSloanRandolph);
-
   TNodeType = (ntInner, ntEdge, ntSubDomain);
+
+  TRenumberingAlgorithm = (CuthillMcKee, raSloanRandolph);
 
   IElement = interface;
 

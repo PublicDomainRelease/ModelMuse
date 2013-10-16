@@ -6,6 +6,10 @@ uses Classes, SysUtils, GLScene, GLObjects, GoPhastTypes, GLColor;
 
 type
   TParticles = class(TPhastCollection)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   private
     FMaxParticleSize: double;
   public
@@ -13,6 +17,9 @@ type
     procedure Assign(Source: TPersistent); override;
     procedure UpdateMaxParticleSize(ParticleSize: Double);
     procedure ClearSpheres;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
   end;
 
   TParticleLocation = class(TCollectionItem)
@@ -73,7 +80,7 @@ type
     procedure InvalidateModel; override;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TBaseModel);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
     property Particles: TParticles read GetParticles;
     Destructor Destroy; override;
   published
@@ -117,7 +124,7 @@ type
     procedure InvalidateModel; override;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TBaseModel);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
     property Particles: TParticles read GetParticles;
     Destructor Destroy; override;
   published
@@ -148,13 +155,22 @@ type
   // @name is used in both @link(TParticleStorage) and
   // @link(TModpathSelection).
   TModpathTimes = class(TPhastCollection)
+  strict private
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
+    FModel: TBaseModel;
   private
     function GetItem(Index: Integer): TModpathTimeItem;
     procedure SetItem(Index: Integer; const Value: TModpathTimeItem);
   public
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     Constructor Create(Model: TBaseModel);
     property Items[Index: Integer]: TModpathTimeItem read GetItem write SetItem; default;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
+    //
+    property Model: TBaseModel read FModel;
   end;
 
   TParticleStorage = class(TGoPhastPersistent)
@@ -181,6 +197,8 @@ type
     procedure SetReleaseTimes(const Value: TModpathTimes);
   public
     procedure ClearSpheres;
+    { TODO -cRefactor : Consider replacing Model with a TNotifyEvent }
+    //
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     property Particles: TParticles read GetParticles;
@@ -231,8 +249,19 @@ begin
 end;
 
 constructor TParticles.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
-  inherited Create(TParticleLocation, Model);
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(TParticleLocation, InvalidateModelEvent);
   FMaxParticleSize := 1;
 end;
 
@@ -362,12 +391,23 @@ begin
 end;
 
 constructor TParticleStorage.Create(Model: TBaseModel);
+var
+  OnInvalidateModelEvent: TNotifyEvent;
 begin
-  inherited;
-  FGridParticles := TGridDistribution.Create(Model);
-  FCylinderParticles := TCylSphereDistribution.Create(Model);
+  if Model = nil then
+  begin
+    OnInvalidateModelEvent := nil;
+  end
+  else
+  begin
+    OnInvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(OnInvalidateModelEvent);
+//  inherited;
+  FGridParticles := TGridDistribution.Create(OnInvalidateModelEvent);
+  FCylinderParticles := TCylSphereDistribution.Create(OnInvalidateModelEvent);
   FCylinderParticles.FDistributionChoice := pdCylinder;
-  FSphereParticles := TCylSphereDistribution.Create(Model);
+  FSphereParticles := TCylSphereDistribution.Create(OnInvalidateModelEvent);
   FSphereParticles.FDistributionChoice := pdSphere;
   FSphereParticles.FLayerCount := 5;
   FCustomParticles := TParticles.Create(Model);
@@ -569,9 +609,17 @@ begin
   end;
 end;
 
-constructor TGridDistribution.Create(Model: TBaseModel);
+constructor TGridDistribution.Create(InvalidateModelEvent: TNotifyEvent);
 begin
   inherited;
+//  if Model = nil then
+//  begin
+//    inherited Create(nil);
+//  end
+//  else
+//  begin
+//    inherited Create(Model.Invalidate);
+//  end;
   FInternal := True;
   FXCount := 1;
   FYCount := 1;
@@ -855,9 +903,17 @@ begin
   end;
 end;
 
-constructor TCylSphereDistribution.Create(Model: TBaseModel);
+constructor TCylSphereDistribution.Create(InvalidateModelEvent: TNotifyEvent);
 begin
   inherited;
+//  if Model = nil then
+//  begin
+//    inherited Create(nil);
+//  end
+//  else
+//  begin
+//    inherited Create(Model.Invalidate);
+//  end;
   FCircleParticleCount := 8;
   FLayerCount := 1;
   FRadius := 0.4;
@@ -1284,8 +1340,19 @@ begin
 end;
 
 constructor TModpathTimes.Create(Model: TBaseModel);
+var
+  InvalidateModelEvent: TNotifyEvent;
 begin
-  inherited Create(TModpathTimeItem, Model);
+  FModel := Model;
+  if Model = nil then
+  begin
+    InvalidateModelEvent := nil;
+  end
+  else
+  begin
+    InvalidateModelEvent := Model.Invalidate;
+  end;
+  inherited Create(TModpathTimeItem, InvalidateModelEvent);
 end;
 
 function TModpathTimes.GetItem(Index: Integer): TModpathTimeItem;

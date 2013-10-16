@@ -161,14 +161,14 @@ type
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary(AModel: TBaseModel); override;
-    procedure CountBoundaryCells(var BoundaryCount: Integer;
+    procedure CountArrayBoundaryCells(var BoundaryCount: Integer;
       DataArray1: TDataArray; DataSets: TList; AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
-    // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+    // See @link(TCustomListArrayBoundColl.AssignArrayCellValues
+    // TCustomListArrayBoundColl.AssignArrayCellValues)
+    procedure AssignArrayCellValues(DataSets: TList; ItemIndex: Integer;
       AModel: TBaseModel); override;
-    // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
-    // TCustomMF_ArrayBoundColl.InitializeTimeLists)
+    // See @link(TCustomListArrayBoundColl.InitializeTimeLists
+    // TCustomListArrayBoundColl.InitializeTimeLists)
     procedure InitializeTimeLists(ListOfTimeLists: TList;
       AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
@@ -798,7 +798,7 @@ begin
   AddBoundary(TSfrStorage.Create(AModel));
 end;
 
-procedure TSfrCollection.AssignCellValues(DataSets: TList;
+procedure TSfrCollection.AssignArrayCellValues(DataSets: TList;
   ItemIndex: Integer; AModel: TBaseModel);
 var
   ReachLengthArray: TDataArray;
@@ -1021,7 +1021,7 @@ begin
   Boundary.CacheData;
 end;
 
-procedure TSfrCollection.CountBoundaryCells(var BoundaryCount: Integer;
+procedure TSfrCollection.CountArrayBoundaryCells(var BoundaryCount: Integer;
   DataArray1: TDataArray; DataSets: TList; AModel: TBaseModel);
 var
   DSIndex: Integer;

@@ -38,7 +38,7 @@ type
     procedure SetSpecifiedPressurePrintFrequency(const Value: integer);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TBaseModel);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
     procedure InitializeVariables;
   published
     // NPRINT (also affected by @link(ListingOptions).
@@ -108,9 +108,17 @@ begin
   end;
 end;
 
-constructor TSutraOutputControl.Create(Model: TBaseModel);
+constructor TSutraOutputControl.Create(InvalidateModelEvent: TNotifyEvent);
 begin
   inherited;
+//  if Model = nil then
+//  begin
+//    inherited Create(nil);
+//  end
+//  else
+//  begin
+//    inherited Create(Model.Invalidate);
+//  end;
   InitializeVariables;
 end;
 

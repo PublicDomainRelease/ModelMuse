@@ -218,6 +218,7 @@ type
     procedure AllowBitmapsToBeDisplayed;
     function GetTopDisplayDataSet: TDataArray;
   public
+    FHasDrawn: boolean;
     FPositionedLayer: TPositionedLayer;
     procedure SelectAll;
     property PaintingNeeded: boolean read FPaintingNeeded;
@@ -1500,6 +1501,7 @@ begin
         and (frmGoPhast.PhastModel.TimeSeries.Series.Count = 0)
         and (frmGoPhast.PhastModel.TimeSeries.SeriesV6.Count = 0)
         and (frmGoPhast.PhastModel.CrossSection.DataArrays.Count = 0)
+        and (frmGoPhast.ModelSelection <> msSutra22)
         then
       begin
         GridChanged := False;
@@ -1515,6 +1517,7 @@ begin
         frmGoPhast.PhastModel.DrawHeadObservations(FBitMap32, ZoomBox);
         frmGoPhast.PhastModel.DrawSfrStreamLinkages(FBitMap32, ZoomBox);
         frmGoPhast.PhastModel.DrawStrStreamLinkages(FBitMap32, ZoomBox);
+        frmGoPhast.PhastModel.DrawSwrReachConnections(FBitMap32, ZoomBox);
       end;
 
       if frmGoPhast.ModelSelection in ModflowSelection then
@@ -1543,6 +1546,7 @@ begin
       frmGoPhast.Grid.Draw3DAllowed := True;
       frmGoPhast.frame3DView.glWidModelView.Invalidate;
     end;
+    FHasDrawn := True;
   end;
 end;
 

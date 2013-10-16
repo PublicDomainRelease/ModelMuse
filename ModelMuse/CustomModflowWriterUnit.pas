@@ -455,6 +455,8 @@ type
       AssignmentMethod: TUpdateMethod;
       MultiplierArrayNames: TTransientMultCollection;
       ZoneArrayNames: TTransientZoneCollection); virtual; abstract;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure ClearTimeLists(AModel: TBaseModel);
   public
     // @name creates and instance of @classname.
@@ -472,7 +474,6 @@ type
   {@name is used as a base class for writing typical boundary condition
    files that allow for both parameter and non-parameter cells.}
   TCustomListWriter = class(TCustomParameterTransientWriter)
-  private
   protected
     // @name counts the maximum number of cells used in any stress period. This
     // value is returned in MaximumNumberOfCells.
@@ -4620,7 +4621,10 @@ begin
       Assert(False);
     end;
   end;
+  UpdateGlobalLocations(ACell.Column, ACell.Row, ACell.Layer, eaBlocks, Model);
   UpdateCurrentScreenObject(ObsFactor.ScreenObject as TScreenObject);
+  { TODO : Find a way to specify segment }
+//  UpdateCurrentSegment(ACell.Segment);
   UpdateCurrentSection(ACell.Section);
   try
     Expression.Evaluate;

@@ -194,6 +194,9 @@ begin
 end;
 
 procedure TframeDisplayLimit.rdeLimitExit(Sender: TObject);
+var
+  RealValue: double;
+  IntValue: Integer;
 begin
   if not FLimit.UseLimit or FAssigningLimit then
   begin
@@ -202,11 +205,25 @@ begin
   case Limit.DataType of
     rdtDouble:
       begin
-        Limit.RealLimitValue := StrToFloat(rdeLimit.Text)
+        if TryStrToFloat(rdeLimit.Text, RealValue) then
+        begin
+          Limit.RealLimitValue := RealValue
+        end
+        else
+        begin
+          FLimit.UseLimit := false;
+        end;
       end;
     rdtInteger:
       begin
-        Limit.IntegerLimitValue := StrToInt(rdeLimit.Text)
+        if TryStrToInt(rdeLimit.Text, IntValue) then
+        begin
+          Limit.IntegerLimitValue := IntValue;
+        end
+        else
+        begin
+          FLimit.UseLimit := false;
+        end;
       end;
     rdtString:
       begin

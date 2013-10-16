@@ -348,6 +348,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -378,6 +379,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end
           item
@@ -400,6 +402,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -422,8 +425,10 @@ inherited frmHUF_Layers: TfrmHUF_Layers
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
+        WordWrapRowCaptions = False
       end
     end
     object tabPrint: TTabSheet
@@ -583,10 +588,8 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end
@@ -596,10 +599,8 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -609,10 +610,8 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
   end

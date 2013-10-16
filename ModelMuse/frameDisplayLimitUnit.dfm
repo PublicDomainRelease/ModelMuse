@@ -14,7 +14,7 @@ object frameDisplayLimit: TframeDisplayLimit
     Height = 30
     Caption = 'Limit to:'
     Enabled = False
-    TabOrder = 0
+    TabOrder = 2
     OnClick = cbCheckClick
   end
   object rdeLimit: TRbwDataEntry
@@ -36,11 +36,11 @@ object frameDisplayLimit: TframeDisplayLimit
     Left = 88
     Top = 0
     Width = 89
-    Height = 21
+    Height = 24
     Style = csDropDownList
     Enabled = False
     ItemIndex = 0
-    TabOrder = 2
+    TabOrder = 0
     Text = 'False'
     Visible = False
     OnChange = comboBoolLimitChange

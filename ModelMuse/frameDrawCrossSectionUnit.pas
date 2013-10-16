@@ -179,7 +179,7 @@ procedure TframeDrawCrossSection.GetData;
 begin
   if Font.Height < 0 then
   begin
-    lstSelectedDataSets.ItemHeight := -Font.Height + 2;;
+    lstSelectedDataSets.ItemHeight := -Font.Height + 2;
   end
   else
   begin

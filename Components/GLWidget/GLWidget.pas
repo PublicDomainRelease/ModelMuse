@@ -620,15 +620,19 @@ var
   display: PDisplay;
 {$ENDIF}
 begin
-  if not Started then
-    InitGL;
-{$IFDEF MSWINDOWS}
-  MakeCurrent(FDC, FRC);
-{$ENDIF}
-{$IFDEF LINUX}
-  display := Application.Display;
-  glXMakeCurrent(display, FDC, FRC)
-{$ENDIF}
+  try
+    if not Started then
+      InitGL;
+  {$IFDEF MSWINDOWS}
+    MakeCurrent(FDC, FRC);
+  {$ENDIF}
+  {$IFDEF LINUX}
+    display := Application.Display;
+    glXMakeCurrent(display, FDC, FRC)
+  {$ENDIF}
+  except
+    Visible := False;
+  end;
 end;
 
 

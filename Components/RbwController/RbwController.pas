@@ -126,14 +126,13 @@ end;
 procedure TRbwController.SetEnabled(const Value: boolean);
 var
   Index: Integer;
+  Changed: Boolean;
 begin
+  Changed := False;
   if FEnabled <> Value then
   begin
     FEnabled := Value;
-    if Assigned(FOnEnabledChange) then
-    begin
-      FOnEnabledChange(self);
-    end;
+    Changed := True;
   end;
   for Index := 0 to ControlList.Count - 1 do
   begin
@@ -141,6 +140,10 @@ begin
     begin
       ControlList.Items[Index].Control.Enabled := FEnabled;
     end;
+  end;
+  if Changed and Assigned(FOnEnabledChange) then
+  begin
+    FOnEnabledChange(self);
   end;
 end;
 

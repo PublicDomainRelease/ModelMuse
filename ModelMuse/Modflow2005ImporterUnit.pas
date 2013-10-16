@@ -5,7 +5,7 @@ interface
 // Windows is used so that AnsiCompareText will be inlined.
 uses Windows, SubscriptionUnit, SysUtils, Classes, Contnrs,
   JclSysUtils,
-  ModflowPackageSelectionUnit, Dialogs, Types;
+  ModflowPackageSelectionUnit, Dialogs, Types, Forms;
 
 type
   TProgressHandler = procedure(Position, Total: integer) of object;
@@ -27,7 +27,8 @@ TArrayImporter, and TObjectArray.
 }
 procedure ImportModflow2005(const ListFileName: string;
   XOrigin, YOrigin, GridAngle: double; textHandler: TTextHandler;
-  ProgressHandler: TProgressHandler; ModelType: TModelType);
+  ProgressHandler: TProgressHandler; ModelType: TModelType;
+  const NameFile: string);
 
 implementation
 
@@ -47,7 +48,10 @@ uses ModflowGridUnit, AbstractGridUnit, ScreenObjectUnit, GoPhastTypes,
   HufDefinition, FluxObservationUnit, ModflowMnw2Unit, ModflowSubsidenceDefUnit,
   ModflowHydmodUnit, ContourExport, ModelMuseUtilities,
   Generics.Collections, ModflowStrUnit, ModflowStrWriterUnit,
-  frmErrorsAndWarningsUnit, ModflowFhbUnit, StrUtils;
+  frmErrorsAndWarningsUnit, ModflowFhbUnit, StrUtils,
+  ModflowSwrReachGeometryUnit, ModflowSwrReachUnit, ModflowSwrUnit,
+  ModflowSwrDirectRunoffUnit, ModflowSwrStructureUnit, ModflowSwrTabfilesUnit,
+  CustomModflowWriterUnit, ModflowSwrObsUnit;
 
 resourcestring
   StrErrorInSPackage = 'Error in %s package input. In the first stress perio' +
@@ -57,6 +61,9 @@ resourcestring
   's have been skipped.';
   StrObservationName = 'Observation Name: "%0:s"; Reference Stress Period: %' +
   '1:d';
+  StrInvalidStreamTribu = 'Invalid Stream tributary number (Segment number, ' +
+  'Tributary Number, Stress Period)';
+  Str0d1d2d = '%0:d, %1:d, %2:d';
 
 var
   DummyInteger: integer;
@@ -239,7 +246,7 @@ Type
     textHandler: TTextHandler;
     ProgressHandler: TProgressHandler;
     Constructor Create(const ListFileName: string;
-      XOrigin, YOrigin, GridAngle: double);
+      XOrigin, YOrigin, GridAngle: double; const NameFile: string);
     Destructor Destroy; override;
     procedure ImportModel;
   end;
@@ -252,7 +259,12 @@ Type
     FProgressHandler: TPackageProgressHandler;
     procedure AssignConstant2DIntArray(Value: integer; Array2D: T2DIntArray);
     function CreateScreenObject(const Name: string): TScreenObject; overload;
-    procedure AddBoundaryPoints(List: TList; Index: integer; ObjectType: TObjectType; var AScreenObject: TScreenObject); virtual;
+    // List contains the @link(TLocation)s for the @link(TScreenObject);
+    procedure AddBoundaryPoints(List: TList; Index: integer;
+      ObjectType: TObjectType; var AScreenObject: TScreenObject); virtual;
+    function GetStressPeriodString(StressPeriodIndex: integer): string;
+    procedure CreateTransientDataSet(StressPeriodIndex: integer;
+      const Root: string; DataType: TRbwDataType; var DataSet: TDataArray);
   protected
     FComments: TStringList;
     FImporter: TModflow2005Importer;
@@ -285,7 +297,9 @@ Type
       ScreenObject: TScreenObject; ImportedData: T2DIntArray);
     procedure ReadVariable2DIntArray(IntArray: T2DIntArray);
     procedure CreateDataArrayAndAssignValues(ScreenObject: TScreenObject;
-      const DataArrayName: string; ImportedValues: T2DDoubleArray);
+      const DataArrayName: string; ImportedValues: T2DDoubleArray); overload;
+    procedure CreateDataArrayAndAssignValues(ScreenObject: TScreenObject;
+      const DataArrayName: string; ImportedValues: T2DIntArray); overload;
     procedure CheckRealConstArray(out ConstantValue: double;
       out IsConstant: boolean; const ArrayToCheck: TRealConstantRecordArray);
     function FixArrayName(const ArrayName: string): string;
@@ -298,6 +312,7 @@ Type
       VarArray: T3DDoubleArray);
     procedure CheckVariableIntegerArrays(var ConstArray: TIntegerConstantArray;
       VarArray: T3DIntArray);
+    function CreateScreenObjectAroundGrid(const Name: string): TScreenObject;
   public
     Constructor Create(Importer: TModflow2005Importer;
       const PackageIdentifier: string);
@@ -308,6 +323,18 @@ Type
 
   TObjectImporter = class(TPackageImporter)
     function ScreenObjectNameRoot: string; virtual; abstract;
+    // List contains the @link(TLocation)s for the @link(TScreenObject);
+    // ScreenObjectIndex is used in assigning the consecutive values to
+    // the @link(TScreenObject) name.
+    // LayerIndex is the MODFLOW layer for the @link(TScreenObject) and is used
+    // in assigning the @link(TScreenObject) name.
+    // If LayerIndex < 1, the layer will not be used the
+    //  @link(TScreenObject) name.
+    // StressPeriodIndex is the stress period (starting at zero)
+    // for the @link(TScreenObject) and is used
+    // in assigning the @link(TScreenObject) name.
+    // If StressPeriodIndex < 0, the StressPeriodIndex will not be used the
+    //  @link(TScreenObject) name.
     function CreateScreenObject(List: TList; var ScreenObjectIndex: integer;
       LayerIndex, StressPeriodIndex: integer; ObjectType: TObjectType)
       : TScreenObject; overload; virtual;
@@ -409,11 +436,14 @@ Type
   protected
     procedure GetTimeStepStartAndEndTimes(TimeStepEndLists: TList;
       TimeStepStartLists: TList);
-    procedure Import2DDataSet(ImportName, ImportArrayName: string;
+    // @name assigns values to the @link(TDataArray) named ImportArrayName.
+    procedure Import2DDataSet(const ImportName, ImportArrayName: string;
       const TwoDConstRecord: TRealConstantRecord;
       const TwoDRealArray: T2DDoubleArray;
       const LayerFormulaSuffix: string = '');
+    // @name sets initial values for ConstArray.
     procedure InitializeConstArray(ConstArray: TRealConstantRecordArray);
+    // @name sets initial values for ConstArray.
     procedure InitializeConstIntArray(ConstArray: TIntegerConstantArray);
     procedure ImportDataSet(ImportName: string; ImportArrayName: string;
       var ThreeDConstRealArray: TRealConstantRecordArray;
@@ -870,8 +900,11 @@ Type
   end;
 
   TLocation = class(TArrayMember)
+    // @name starts at 1.
     Layer: integer;
+    // @name starts at 1.
     Row: integer;
+    // @name starts at 1.
     Column: integer;
     Used: Boolean;
     AuxilliaryVariables: array of double;
@@ -1711,13 +1744,9 @@ Type
     procedure CreateAssignedLayerDataSet(
       Package: TCustomTransientLayerPackageSelection; DataSetRoot: string;
       ScreenObjectName: string; var AssignedLayerDataSet: TDataArray);
-    procedure CreateDataSet(StressPeriodIndex: Integer; const Root: string;
-      DataType: TRbwDataType; var DataSet: TDataArray);
-    function GetStressPeriodString(StressPeriodIndex: Integer): string;
     procedure CreateTransientParam(Param: TArrayParameterObject);
     function FindSimilarClusterAndAddScreenObject(ACluster: TClusterObject;
       ClusterList, ScreenObjectList: TList): boolean;
-    function CreateScreenObjectAroundGrid(const Name: string): TScreenObject;
     procedure CreateScreenObjectFromCluster(ClusterList,
       ScreenObjectList: TList; var ObjectIndex: Integer;
       Cluster: TClusterObject; const ScreenObjectRoot,
@@ -1738,7 +1767,6 @@ Type
     procedure GetParamInstanceForCurrentStressPeriod(
       var Instance: TArrayInstanceObject;
       Param: TArrayParameterObject; StressPeriod: TArrayStressPeriod);
-    procedure CreateBoundary(ScreenObject: TScreenObject); virtual; abstract;
     procedure CreateScreenObjectsAroundValues(Values: T2DDoubleArray;
       const Root: string; DataArray: TDataArray;
       ValueList: TRealList); overload;
@@ -1747,6 +1775,7 @@ Type
       ValueList: TIntegerList); overload;
     procedure InitializeEpsilon;
   protected
+    procedure CreateBoundary(ScreenObject: TScreenObject); virtual; abstract;
     procedure CreateTransientRealDataArray(StressPeriodIndex: Integer;
       Reuse: TBooleanDynArray; DataArrayRoot: string;
       ConstantValues: TRealConstantRecordArray; VariableValues: T3DDoubleArray;
@@ -2081,6 +2110,7 @@ Type
     MAXVAL: integer;
     FSegmentStorage: TList;
     FItemStorage: TList;
+    FIsSelected: Boolean;
     procedure ReadBasicData;
     procedure ReadIsfropt;
     procedure ReadUnsatParameters;
@@ -2598,6 +2628,7 @@ Type
     FCurrentStressPeriodValues: TLakeValueArray;
     FPriorStressPeriodValues: TLakeValueArray;
     FTABLEINPUT: boolean;
+    FIsSelected: Boolean;
     procedure ReadDataSet9bNoAugmentation;
     procedure ReadDataSet9bWithAugmentation;
     procedure ReadDataSet9aNoLimits;
@@ -2747,6 +2778,8 @@ Type
     IsConstThtr: boolean;
     ConstThtr: double;
     THTR: T2DDoubleArray;
+    FLakImporter: TLakImporter;
+    FSfrImporter: TSfrImporter;
     procedure CreateInfiltrationDataArray(StressPeriodIndex: integer);
     procedure CreateETDataArray(StressPeriodIndex: integer);
     procedure CreateExtinctionDepthDataArray(StressPeriodIndex: integer);
@@ -2767,7 +2800,8 @@ Type
     procedure HandlePackage; override;
     procedure CreateBoundary(ScreenObject: TScreenObject); override;
   public
-    Constructor Create(Importer: TModflow2005Importer);
+    Constructor Create(Importer: TModflow2005Importer;
+      LakImporter: TLakImporter; SfrImporter: TSfrImporter);
     Destructor Destroy; override;
   end;
 
@@ -3418,13 +3452,605 @@ Type
     destructor Destroy; override;
   end;
 
+  TCustomSwrArrayMember = class(TArrayMember)
+  private
+    StartingStressPeriodIndex: integer;
+  end;
+
+  TSwrISWRBND = class(TCustomSwrArrayMember)
+  private
+    ISWRBND: integer;
+  end;
+
+  TCustomSwrObjectArray = class(TObjectArray)
+  private
+    function GetAnItem(Index: Integer): TCustomSwrArrayMember;
+  public
+    property Items[Index: Integer]: TCustomSwrArrayMember read GetAnItem; default;
+  end;
+
+  TSwrISWRBND_Array = class(TCustomSwrObjectArray)
+  private
+    function GetSwrISWRBND(Index: integer): TSwrISWRBND;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    property SwrISWRBND[Index: integer]: TSwrISWRBND read GetSwrISWRBND; default;
+    function Last: TSwrISWRBND;
+  end;
+
+  TSwrRain = class(TCustomSwrArrayMember)
+  private
+    RAIN: double;
+  end;
+
+  TSwrRain_Array = class(TCustomSwrObjectArray)
+  private
+    function GetRain(Index: integer): TSwrRain;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    property SwrRain[Index: integer]: TSwrRain read GetRain; default;
+    function Last: TSwrRain;
+  end;
+
+  TSwrEvap = class(TCustomSwrArrayMember)
+  private
+    EVAP: double;
+  end;
+
+  TSwrEvap_Array = class(TCustomSwrObjectArray)
+  private
+    function GetEvap(Index: integer): TSwrEvap;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    property SwrEvap[Index: integer]: TSwrEvap read GetEvap; default;
+    function Last: TSwrEvap;
+  end;
+
+  TSwrLateralFlow = class(TCustomSwrArrayMember)
+  private
+    QLATFLOW: double;
+  end;
+
+  TSwrLateralFlow_Array = class(TCustomSwrObjectArray)
+  private
+    function GetLateralFlow(Index: integer): TSwrLateralFlow;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    property SwrLateralFlow[Index: integer]: TSwrLateralFlow read GetLateralFlow; default;
+    function Last: TSwrLateralFlow;
+  end;
+
+  TSwrStage = class(TCustomSwrArrayMember)
+  private
+    STAGE: double;
+  end;
+
+  TSwrStage_Array = class(TCustomSwrObjectArray)
+  private
+    function GetStage(Index: integer): TSwrStage;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    property SwrStage[Index: integer]: TSwrStage read GetStage; default;
+    function Last: TSwrStage;
+  end;
+
+  TSwrReachGeomLink = class(TCustomSwrArrayMember)
+  private
+    IGEONUMR: integer;
+    GZSHIFT: double;
+  end;
+
+  TSwrReachGeom_Array = class(TCustomSwrObjectArray)
+  private
+    function GetReachGeomLink(Index: integer): TSwrReachGeomLink;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    property ReachGeomLink[Index: integer]: TSwrReachGeomLink read GetReachGeomLink; default;
+    function Last: TSwrReachGeomLink;
+  end;
+
+  TSwrReachStructureCount = class(TCustomSwrArrayMember)
+  private
+    NSTRUCT: integer;
+  end;
+
+  TSwrReachStructureCountArray = class(TCustomSwrObjectArray)
+  private
+    function GetItem(Index: integer): TSwrReachStructureCount;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    property Items[Index: integer]: TSwrReachStructureCount read GetItem; default;
+    function Last: TSwrReachStructureCount;
+  end;
+
+  TSwrReach = class(TLocation)
+  private
+    IROUTETYPE: integer;
+    IRGNUM: integer;
+    RLEN: double;
+    // connection numbering starts at zero.
+    ICONN: array of integer;
+    F_ISWRBND_Array: TSwrISWRBND_Array;
+    FRain: TSwrRain_Array;
+    FEvap: TSwrEvap_Array;
+    FLateralFlow: TSwrLateralFlow_Array;
+    FStage: TSwrStage_Array;
+    FReachGeom_Array: TSwrReachGeom_Array;
+    FReachStructureCounts: TSwrReachStructureCountArray;
+    constructor Create; override;
+    destructor Destroy; override;
+  end;
+
+  TSwrReachArray = class(TObjectArray)
+  private
+    function GetReaches(Index: integer): TSwrReach;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    property Reaches[Index: integer]: TSwrReach read GetReaches; default;
+  end;
+
+  TSwrTabFile = class(TArrayMember)
+  private
+    ITAB: integer;
+    CTABTYPE: string;
+    ITABUNIT: integer;
+    CINTP: string;
+    CTABRCH: string;
+    // @name starts at 0.
+    ITABRCH: array of integer;
+    TabItem: TTabFileItem;
+  end;
+
+  TSwrTabFileArray = class(TObjectArray)
+  private
+    function GetTabfile(Index: integer): TSwrTabFile;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    property Tabfiles[Index: integer]: TSwrTabFile read GetTabfile; default;
+  end;
+
+  TSwrObs = class(TArrayMember)
+  private
+    COBSNAME: string;
+    COBSTYPE: string;
+    IOBSLOC: integer;
+    IOBSLOC2: integer;
+    IOBSLAY: integer;
+  end;
+
+  TSwrObsArray = class(TObjectArray)
+  private
+    function GetObs(Index: integer): TSwrObs;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    property Obs[Index: integer]: TSwrObs read GetObs; default;
+  end;
+
+  TSwrGeomCrossSectionPoint = class(TArrayMember)
+  private
+    XB: double;
+    ELEVB: double;
+  public
+    function IsSame(AnItem: TSwrGeomCrossSectionPoint): boolean;
+  end;
+
+  TSwrCrossSectionArray = class(TObjectArray)
+  private
+    function GetPoint(Index: integer): TSwrGeomCrossSectionPoint;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    property Points[Index: integer]: TSwrGeomCrossSectionPoint read GetPoint; default;
+    function IsSame(AnItem: TSwrCrossSectionArray): boolean;
+  end;
+
+  TSwrGeomTableItem = class(TArrayMember)
+  private
+    ELEV: double;
+    VOL: double;
+    WETPER: double;
+    SAREA: double;
+    XAREA: double;
+  public
+    function IsSame(AnItem: TSwrGeomTableItem): boolean;
+  end;
+
+  TSwrGeomTableArray = class(TObjectArray)
+  private
+    function GetItem(Index: integer): TSwrGeomTableItem;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    property Items[Index: integer]: TSwrGeomTableItem read GetItem; default;
+    function IsSame(AnItem: TSwrGeomTableArray): boolean;
+  end;
+
+  TSwrGeomItem = class(TArrayMember)
+  private
+    IGEONUM: integer;
+    IGEOTYPE: integer;
+    IGCNDOP: integer;
+    GMANNING: double;
+    NGEOPTS: integer;
+    GWIDTH: double;
+    GBELEV: double;
+    GSSLOPE: double;
+    GCND: double;
+    GLK: double;
+    GCNDLN: double;
+    GETEXTD: double;
+    FCrossSection: TSwrCrossSectionArray;
+    FTable: TSwrGeomTableArray;
+    FCurrentIndex: integer;
+    FGeomItem: TReachGeometryItem;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+  public
+    function IsSame(AnItem: TSwrGeomItem): boolean;
+  end;
+
+  TSwrGeomStressPeriodArray = class(TObjectArray)
+  private
+    function GetGeom(Index: integer): TSwrGeomItem;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    FStartingStressPeriod: integer;
+    property Geom[Index: integer]: TSwrGeomItem read GetGeom; default;
+    function Last: TSwrGeomItem;
+  end;
+
+  TSwrGeomArray = class(TObjectArray)
+    function GetGeomArray(Index: integer): TSwrGeomStressPeriodArray;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    property GeomArray[Index: integer]: TSwrGeomStressPeriodArray read GetGeomArray; default;
+    function Last: TSwrGeomStressPeriodArray;
+    function FindByStressPeriod(StressPeriod: Integer): integer;
+  end;
+
+  TSwrStructureTableItem = class(TArrayMember)
+  private
+    STRELEV: double;
+    STRQ: double;
+  public
+    function IsSame(ATableItem: TSwrStructureTableItem): boolean;
+  end;
+
+  TSwrStructureTable = class(TObjectArray)
+  private
+    function GetItem(Index: integer): TSwrStructureTableItem;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    property Items[Index: integer]: TSwrStructureTableItem read GetItem; default;
+    function IsSame(AStructureTable: TSwrStructureTable): boolean;
+  end;
+
+  TSwrStructure = class(TArrayMember)
+  private
+    // ISTRRCH is zero based.
+    ISTRRCH: Integer;
+    ISTRNUM: Integer;
+    // ISTRCONN starts at 1.
+    ISTRCONN: Integer;
+    ISTRTYPE: Integer;
+    NSTRPTS: Integer;
+    STRCD: double;
+    STRCD2: double;
+    STRCD3: double;
+    STRINV: double;
+    STRINV2: double;
+    STRWID: double;
+    STRWID2: double;
+    STRLEN: double;
+    STRLEN2: double;
+    STRMAN: double;
+    STRVAL: double;
+    ISTRDIR: Integer;
+    ISFRSEG: Integer;
+    ISFRRCH: Integer;
+    CSTROTYP: string;
+    ISTRORCH: Integer;
+    ISTROQCON: Integer;
+    CSTROLO: string;
+    CSTRCRIT: string;
+    STRCRIT: double;
+    STRCRITC: double;
+    STRRT: double;
+    STRMAX: double;
+    CSTRVAL: string;
+    // number of tab file associated with STRVAL in data set 13a.
+    ISTRTAB_Discharge: integer;
+    // number of tab file in CSTRCRIT in data set 13b.
+    ISTRTAB_Control: integer;
+    // number of tab file in CSTRVAL in data set 13b.
+    ISTRTAB_Gate: integer;
+    FTable: TSwrStructureTable;
+    FCurrentPointIndex: Integer;
+    FStrucItem: TStructure;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    function IsSame(AStructure: TSwrStructure): boolean;
+  end;
+
+  TStructureStressPeriodArray = class(TObjectArray)
+  private
+    function GetItem(Index: integer): TSwrStructure;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    FStartingStressPeriod: integer;
+    property Items[Index: integer]: TSwrStructure read GetItem; default;
+    function Last: TSwrStructure;
+  end;
+
+  TStructureArray = class(TObjectArray)
+  private
+    function GetItem(Index: integer): TStructureStressPeriodArray;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  public
+    FStartingStressPeriod: integer;
+    property Items[Index: integer]: TStructureStressPeriodArray read GetItem; default;
+    function Last: TStructureStressPeriodArray;
+  end;
+
+  TNameFileItem = class(TObject)
+    FileName: string;
+    UnitNumber: integer;
+  end;
+
+  TNameFileItemList = TObjectList<TNameFileItem>;
+
+
+  TSwrImporter = class(TArrayImporter)
+  private
+    const
+      KRain = '2D RAINFALL DATA';
+      KEvap = '2D EVAPORATION DATA';
+      KLatFlow = '2D LATERAL INFLOW DATA';
+      KStage = '2D STAGE DATA';
+      KRunoffMult = 'DIRECT RUNOFF MULTIPLIER';
+      KRunoffValue = 'DIRECT RUNOFF VALUE';
+      KRunoffMap = 'DIRECT RUNOFF IMAP';
+    var
+    // data set 1a variables.
+    NREACHES: integer;
+    ISWRONLY: integer;
+    ISWRCBC: integer;
+    ISWRPRGF: integer;
+    ISWRPSTG: integer;
+    ISWRPQAQ: integer;
+    ISWRPQM: integer;
+    ISWRPSTR: integer;
+    ISWRPFRN: integer;
+    // Data Set 1b variables;
+    PRINT_SWR_TO_SCREEN: boolean;
+    SAVE_SWRDT: boolean;
+    SWRDT_Unit: Integer;
+    SAVE_CONVERGENCE_HISTORY: boolean;
+    SAVE_RIVER_PACKAGE: boolean;
+    SAVE_RIVER_PACKAGE_ALL: boolean;
+    SAVE_AVERAGE_RESULTS: boolean;
+    USE_TABFILES: boolean;
+    USE_NONCONVERGENCE_CONTINUE: boolean;
+    USE_UPSTREAM_WEIGHTING: boolean;
+    USE_INEXACT_NEWTON: boolean;
+    USE_STEADYSTATE_STORAGE: boolean;
+    USE_LAGGED_OPR_DATA: boolean;
+    USE_LINEAR_DEPTH_SCALING: boolean;
+    USE_DIAGONAL_SCALING: boolean;
+    USE_L2NORM_SCALING: boolean;
+    USE_RCMREORDERING: boolean;
+    USE_RCMREORDERING_IF_IMPROVEMENT: boolean;
+//    USE_STAGE_TRANSFORM: boolean;
+//    USE_WEIGHTED_HEADS: boolean;
+    USE_IMPLICIT_NEWTON_CORRECTION: boolean;
+    USE_EXPLICIT_NEWTON_CORRECTION: boolean;
+//    USE_ORIGINAL_2D_QM_FORMULATION: boolean;
+//    USE_IMPLICIT_INVARIATE_QM: boolean;
+//    USE_SOURCECELL_INVARIATE_QM: boolean;
+    USE_FRACTIONAL_TOLR: boolean;
+    USE_L2NORM_TOLR: boolean;
+    SAVE_SWROBSERVATIONS: boolean;
+    SAVE_SWROBSERVATIONS_ALL: boolean;
+    SWROBSERVATIONS_Unit: Integer;
+//    USE_MULTICORE: boolean;
+//    USE_MULTICORE_VECTOR: boolean;
+    USE_DIRECT_RUNOFF: boolean;
+    USE_GLOBAL_TOLA: boolean;
+    USE_ABSOLUTE_TOLA: boolean;
+    // Data Set 2 variables.
+    NTMULT: Integer;
+    DLENCONV: Double;
+    TIMECONV: double;
+    RTINI: double;
+    RTMIN: double;
+    RTMAX: double;
+    RTPRN: double;
+    RTMULT: double;
+    DMINGRAD: double;
+    DMNDEPTH: Double;
+    DMAXRAI: double;
+    DMAXSTG: double;
+    DMAXINF: double;
+    // Data Set 3 variables
+    ISOLVER: integer;
+    NOUTER: integer;
+    NINNER: integer;
+    IBT: integer;
+    TOLS: double;
+    TOLR: double;
+    TOLA: double;
+    DAMPSS: double;
+    DAMPTR: double;
+    IPRSWR: integer;
+    MUTSWR: integer;
+    IPC: integer;
+    NLEVELS: integer;
+    DROPTOL: double;
+    IBTPRT: integer;
+    PTOLR: double;
+    // data Set 4A and 4B
+    FReachArray: TSwrReachArray;
+    FCurrentReach: TSwrReach;
+    FCurrentConnection: integer;
+    // Data Set 4C and 4D
+    FTabFiles: TSwrTabFileArray;
+    FCurrentTabFile: TSwrTabFile;
+    FCurrentTabIndex: integer;
+    // Data Sets 4E and 4FR
+    FObsArray: TSwrObsArray;
+    FCurrentObs: TSwrObs;
+    FCurrentObsIndex: integer;
+    // TransientData
+    FCurrentStressPeriod: integer;
+    FGeomArray: TSwrGeomArray;
+    FCurrentGeomArrays: TSwrGeomStressPeriodArray;
+    FCurrentGeom: TSwrGeomItem;
+    FStructures: TStructureArray;
+    FCurrentStructures: TStructureStressPeriodArray;
+    FCurrentStructure: TSwrStructure;
+    FStructureChanged: array of boolean;
+    FRain: T3DDoubleArray;
+    FEvap: T3DDoubleArray;
+    FLatFlow: T3DDoubleArray;
+    FStage: T3DDoubleArray;
+    FRunoffMap: T3DIntArray;
+    FRunoffMultiplier: T3DDoubleArray;
+    FRunoffValue: T3DDoubleArray;
+    FRain_Const : TRealConstantRecordArray;
+    FEvap_Const : TRealConstantRecordArray;
+    FLatFlow_Const : TRealConstantRecordArray;
+    FStage_Const : TRealConstantRecordArray;
+    FRunoffMap_Const : TIntegerConstantArray;
+    FRunoffMultiplier_Const : TRealConstantRecordArray;
+    FRunoffValue_Const : TRealConstantRecordArray;
+    FSwrPackage: TSwrPackage;
+    FScreenObjectIndex: integer;
+    FNameFile: string;
+    procedure ReadDataSet1A;
+    procedure ReadDataSet1B;
+    procedure ReadDataSet1B_UnitNumber;
+    procedure ReadDataSet2Required;
+    procedure ReadDataSet2Optional;
+    procedure ReadDataSet3Required;
+    procedure ReadDataSet3IPC;
+    procedure ReadDataSet3_NLEVELS;
+    procedure ReadDataSet3_IBTPRT;
+    procedure ReadDataSet3_PTOLR;
+    procedure ReadDataSet4A;
+    procedure ReadDataSet4B_NCONN;
+    procedure ReadDataSet4B_ICONN;
+    procedure ReadDataSet4C;
+    procedure ReadDataSet4D_ITAB;
+    procedure ReadDataSet4D_CTABTYPE;
+    procedure ReadDataSet4D_ITABUNIT;
+    procedure ReadDataSet4D_CINTP;
+    procedure ReadDataSet4D_CTABRCH;
+    procedure ReadDataSet4D_ITABRCH;
+    procedure ReadDataSet4E;
+    procedure ReadDataSet4F_COBSNAME;
+    procedure ReadDataSet4F_COBSTYPE;
+    procedure ReadDataSet4F_IOBSLOC;
+    procedure ReadDataSet4F_IOBSLOC2_IOBSLAY;
+    procedure ReadDataSet5_NoChange;
+    procedure ReadDataSet5Changed;
+    procedure ReadDataSet6;
+    procedure ReadDataSet7A;
+    procedure ReadDataSet8A;
+    procedure ReadDataSet9A;
+    procedure ReadDataSet14A;
+    procedure ReadDataSet10;
+    procedure ReadDataSet11A_IGEONUM;
+    procedure ReadDataSet11A_NGEOPTS;
+    procedure ReadDataSet11A_GWIDTH;
+    procedure ReadDataSet11A_GSSLOPE;
+    procedure ReadDataSet11A_GCND;
+    procedure ReadDataSet11A_GLK;
+    procedure ReadDataSet11A_GCNDLN;
+    procedure ReadDataSet11A_GETEXTD;
+    procedure ReadDataSet11B;
+    procedure ReadDataSet11C;
+    procedure ReadDataSet12;
+    procedure ReadDataSet13A_1;
+    procedure ReadDataSet13A_2;
+    procedure ReadDataSet13A_3;
+    procedure ReadDataSet13A_4;
+    procedure ReadDataSet13A_5;
+    procedure ReadDataSet13A_6;
+    procedure ReadDataSet13A_7;
+    procedure ReadDataSet13A_8;
+    procedure ReadDataSet13A_9;
+    procedure ReadDataSet13A_10;
+    procedure ReadDataSet13A_11;
+    procedure ReadDataSet13A_12;
+    procedure ReadDataSet13A_13;
+    procedure ReadDataSet13A_14;
+    procedure ReadDataSet13A_15;
+    procedure ReadDataSet13A_16;
+    procedure ReadDataSet13C;
+    procedure ReadDataSet13B_1;
+    procedure ReadDataSet13B_2;
+    procedure ReadDataSet13B_3;
+    procedure ReadDataSet13B_4;
+    procedure ReadDataSet13B_5;
+    procedure ReadDataSet13B_6;
+    procedure ReadDataSet13B_7;
+    procedure ReadDataSet13B_8;
+    procedure ReadDataSet13B_9;
+    procedure ReadVariableRealArrays;
+    procedure ReadConstantRealArrays;
+    procedure ReadRunoffMapConstant;
+    procedure ReadRunoffMapVariable;
+    procedure SetPackageData;
+    procedure ImportReachGeom;
+    procedure ImportReaches;
+    procedure InitializeReuseArray(var Reuse: TBooleanArray;
+      ImportedData: T3DDoubleArray; ImportedConstData: TRealConstantRecordArray);
+    procedure ImportSwrTransientArrays(const Root: string; Reuse: TBooleanArray;
+      ImportedData: T3DDoubleArray; SwrCollection: TCustomSwrListCollection;
+      ImportedConstData: TRealConstantRecordArray);
+    procedure ImportRainArray(var AScreenObject: TScreenObject);
+    procedure ImportEvapArray(var AScreenObject: TScreenObject);
+    procedure ImportLateralFlowArray(var AScreenObject: TScreenObject);
+    procedure ImportStageArray(var AScreenObject: TScreenObject);
+    procedure ImportDirectRunoffArrays(AScreenObject: TScreenObject);
+    procedure ImportTabFiles;
+    procedure InitializeStructureChanged;
+    procedure ImportStructures;
+    procedure ImportObservations;
+  protected
+    procedure ReadData(const ALabel: string); override;
+    procedure HandlePackage; override;
+    function ScreenObjectNameRoot: string; override;
+  public
+    Constructor Create(Importer: TModflow2005Importer; const NameFile: string);
+    Destructor Destroy; override;
+  end;
+
 var
   GlobalCellCenterScreenObject: TScreenObject = nil;
   GlobalModelType: TModelType;
   LayerString: string;
 procedure ImportModflow2005(const ListFileName: string;
   XOrigin, YOrigin, GridAngle: double; textHandler: TTextHandler;
-  ProgressHandler: TProgressHandler; ModelType: TModelType);
+  ProgressHandler: TProgressHandler; ModelType: TModelType;
+  const NameFile: string);
 var
   Importer: TModflow2005Importer;
 begin
@@ -3444,7 +4070,7 @@ begin
   frmGoPhast.CanDraw:= False;
   frmGoPhast.PhastModel.ImportingModel := True;
   Importer := TModflow2005Importer.Create(ListFileName,
-    XOrigin, YOrigin, GridAngle);
+    XOrigin, YOrigin, GridAngle, NameFile);
   try
     Importer.textHandler := textHandler;
     Importer.ProgressHandler := ProgressHandler;
@@ -3457,13 +4083,14 @@ begin
   if frmErrorsAndWarnings.HasMessages then
   begin
     frmErrorsAndWarnings.Show;
+    frmErrorsAndWarnings.BringToFront;
   end;
 end;
 
 { TModflow2005Importer }
 
 constructor TModflow2005Importer.Create(const ListFileName: string;
-  XOrigin, YOrigin, GridAngle: double);
+  XOrigin, YOrigin, GridAngle: double; const NameFile: string);
 var
   MZImporter: TMultZoneImporter;
   LakImporter: TLakImporter;
@@ -3506,7 +4133,11 @@ begin
   FPackageIdentifiers.AddObject('LVDA:',
     TLvdaImporter.Create(self, HufImporter));
   FPackageIdentifiers.AddObject('HFB:', THfbImporter.Create(self));
-  FPackageIdentifiers.AddObject('UZF:', TUzfImporter.Create(self));
+  LakImporter:= TLakImporter.Create(self);
+  FPackageIdentifiers.AddObject('LAK:', LakImporter);
+  SfrImporter := TSfrImporter.Create(self);
+  FPackageIdentifiers.AddObject('SFR:', SfrImporter);
+  FPackageIdentifiers.AddObject('UZF:', TUzfImporter.Create(self, LakImporter, SfrImporter));
   Chd := TChdImporter.Create(self, Bas);
   FPackageIdentifiers.AddObject('CHD:', Chd);
   FPackageIdentifiers.AddObject('FHB:', TFhbImporter.Create(self));
@@ -3519,8 +4150,6 @@ begin
   FPackageIdentifiers.AddObject('EVT:', TEvtImporter.Create(self, MZImporter));
   GHB := TGhbImporter.Create(self);
   FPackageIdentifiers.AddObject('GHB:', GHB);
-  LakImporter:= TLakImporter.Create(self);
-  FPackageIdentifiers.AddObject('LAK:', LakImporter);
   FPackageIdentifiers.AddObject('MNW:', nil);
   Mnw2 := TMnw2Importer.Create(self);
   FPackageIdentifiers.AddObject('MNW2:', Mnw2);
@@ -3528,8 +4157,6 @@ begin
   FPackageIdentifiers.AddObject('RES:', TResImporter.Create(self));
   Riv := TRivImporter.Create(self);
   FPackageIdentifiers.AddObject('RIV:', Riv);
-  SfrImporter := TSfrImporter.Create(self);
-  FPackageIdentifiers.AddObject('SFR:', SfrImporter);
   Str := TStrImporter.Create(self);
   FPackageIdentifiers.AddObject('STR:', Str);
   FPackageIdentifiers.AddObject('DE4:', TDe4Importer.Create(self));
@@ -3557,7 +4184,7 @@ begin
   FPackageIdentifiers.AddObject('SWI2:', TSwiImporter.Create(self));
   FPackageIdentifiers.AddObject('NWT:', TNwtImporter.Create(self));
   FPackageIdentifiers.AddObject('UPW:', TUpwImporter.Create(self));
-  FPackageIdentifiers.AddObject('SWR:', nil);
+  FPackageIdentifiers.AddObject('SWR:', TSwrImporter.Create(self, NameFile));
 end;
 
 destructor TModflow2005Importer.Destroy;
@@ -3654,6 +4281,8 @@ var
   StressPeriodString: string;
   Index: Integer;
   FilePosition: Integer;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   StressPeriodString := '';
   Assert(FileExists(FListFileName));
@@ -3742,6 +4371,16 @@ begin
     frmGoPhast.PhastModel.ScreenObjects[Index].CacheValueArrays;
   end;
   frmGoPhast.PhastModel.FormulaManager.Pack;
+
+  frmGoPhast.PhastModel.DataArrayManager.CreateInitialDataSets;
+  frmGoPhast.PhastModel.UpdateOnPostInitialize;
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    ChildModel.DataArrayManager.CreateInitialDataSets;
+    ChildModel.UpdateOnPostInitialize;
+  end;
+
 end;
 
 { TPackageImporter }
@@ -3755,6 +4394,33 @@ begin
   FComments:= TStringList.Create;
   FModel := frmGoPhast.PhastModel;
   FGrid := FModel.ModflowGrid;
+end;
+
+procedure TPackageImporter.CreateDataArrayAndAssignValues(
+  ScreenObject: TScreenObject; const DataArrayName: string;
+  ImportedValues: T2DIntArray);
+var
+  DataArray: TDataArray;
+  Interpolator: TNearestPoint2DInterpolator;
+begin
+  DataArray := FModel.DataArrayManager.GetDataSetByName(DataArrayName);
+  if DataArray = nil then
+  begin
+    DataArray := FModel.DataArrayManager.CreateNewDataArray(TDataArray,
+      DataArrayName, '0', DataArrayName,
+      [], rdtInteger, eaBlocks, dsoTop, '');
+
+    DataArray.UpdateDimensions(FGrid.LayerCount, FGrid.RowCount,
+      FGrid.ColumnCount);
+
+    Interpolator := TNearestPoint2DInterpolator.Create(nil);
+    try
+      DataArray.TwoDInterpolator := Interpolator;
+    finally
+      Interpolator.Free;
+    end;
+  end;
+  AssignIntegerValuesToCellCenters(DataArray, ScreenObject, ImportedValues);
 end;
 
 destructor TPackageImporter.Destroy;
@@ -4302,7 +4968,7 @@ var
     AboveActive: Boolean;
     AltLayerIndex: Integer;
     AltModelMuseLayIndex: Integer;
-    LIndex: integer;
+//    LIndex: integer;
   begin
     for RowIndex := 0 to NROW - 1 do
     begin
@@ -4375,24 +5041,24 @@ var
               ConvertElevToVariable(ModelMuseLayIndex);
             end;
             FElevations[ModelMuseLayIndex, RowIndex, ColIndex] := TopElevation;
-            for LIndex := ModelMuseLayIndex-1 downto 0 do
-            begin
-              TopElevation := FElevations[LIndex, RowIndex, ColIndex];
-              BottomElevation := FElevations[LIndex+1, RowIndex, ColIndex];
-              if TopElevation <= BottomElevation then
-              begin
-                TopElevation := BottomElevation + MinThickness;
-                if FConstantElevations[LIndex].IsConstant then
-                begin
-                  ConvertElevToVariable(LIndex);
-                end;
-                FElevations[LIndex, RowIndex, ColIndex] := TopElevation;
-              end
-              else
-              begin
-                break;
-              end;
-            end;
+//            for LIndex := ModelMuseLayIndex-1 downto 0 do
+//            begin
+//              TopElevation := FElevations[LIndex, RowIndex, ColIndex];
+//              BottomElevation := FElevations[LIndex+1, RowIndex, ColIndex];
+//              if TopElevation <= BottomElevation then
+//              begin
+//                TopElevation := BottomElevation + MinThickness;
+//                if FConstantElevations[LIndex].IsConstant then
+//                begin
+//                  ConvertElevToVariable(LIndex);
+//                end;
+//                FElevations[LIndex, RowIndex, ColIndex] := TopElevation;
+//              end
+//              else
+//              begin
+//                break;
+//              end;
+//            end;
           end;
         end;
       end;
@@ -4407,7 +5073,7 @@ var
     BottomElevation: Double;
     BelowActive: Boolean;
     AltModelMuseLayIndex: Integer;
-    LIndex: integer;
+//    LIndex: integer;
   begin
     for RowIndex := 0 to NROW - 1 do
     begin
@@ -4472,24 +5138,24 @@ var
               ConvertElevToVariable(ModelMuseLayIndex);
             end;
             FElevations[ModelMuseLayIndex, RowIndex, ColIndex] := BottomElevation;
-            for LIndex := ModelMuseLayIndex+1 to NLAY - 1 do
-            begin
-              TopElevation := FElevations[LIndex-1, RowIndex, ColIndex];
-              BottomElevation := FElevations[LIndex, RowIndex, ColIndex];
-              if TopElevation <= BottomElevation then
-              begin
-                BottomElevation := TopElevation - MinThickness;
-                if FConstantElevations[LIndex].IsConstant then
-                begin
-                  ConvertElevToVariable(LIndex);
-                end;
-                FElevations[LIndex, RowIndex, ColIndex] := BottomElevation;
-              end
-              else
-              begin
-                break;
-              end;
-            end;
+//            for LIndex := ModelMuseLayIndex+1 to NLAY - 1 do
+//            begin
+//              TopElevation := FElevations[LIndex-1, RowIndex, ColIndex];
+//              BottomElevation := FElevations[LIndex, RowIndex, ColIndex];
+//              if TopElevation <= BottomElevation then
+//              begin
+//                BottomElevation := TopElevation - MinThickness;
+//                if FConstantElevations[LIndex].IsConstant then
+//                begin
+//                  ConvertElevToVariable(LIndex);
+//                end;
+//                FElevations[LIndex, RowIndex, ColIndex] := BottomElevation;
+//              end
+//              else
+//              begin
+//                break;
+//              end;
+//            end;
           end;
         end;
       end;
@@ -4855,7 +5521,8 @@ begin
     end;
   end;
   DataSetIndex := ScreenObject.AddDataSet(DataArray);
-  ScreenObject.DataSetFormulas[DataSetIndex] := rsObjectImportedValuesB;
+  ScreenObject.DataSetFormulas[DataSetIndex] := rsObjectImportedValuesB
+    + '("' + DataArray.Name + '")';
   ScreenObject.ImportedValues.Add;
   ImportedValues := ScreenObject.ImportedValues.Items[
     ScreenObject.ImportedValues.Count-1];
@@ -6003,7 +6670,7 @@ begin
   FNextParameterIndex := -1;
 end;
 
-procedure TArrayImporter.Import2DDataSet(ImportName: string;
+procedure TArrayImporter.Import2DDataSet(const ImportName,
   ImportArrayName: string; const TwoDConstRecord: TRealConstantRecord;
   const TwoDRealArray: T2DDoubleArray; const LayerFormulaSuffix: string = '');
 var
@@ -7974,6 +8641,7 @@ begin
           Boundary := StressPeriod.Boundaries[BoundaryIndex];
           if Boundary.Used then
           begin
+            HandleNonParamLocation(StressPeriodIndex, Boundary);
             Continue;
           end;
           InitializeTestArray;
@@ -8130,6 +8798,7 @@ begin
           Boundary := Instance.Locations[LocationIndex];
           if Boundary.Used then
           begin
+            HandleParamLocation(UsedStressPeriods, Boundary);
             Continue;
           end;
           InitializeTestArray;
@@ -9570,7 +10239,7 @@ begin
     CheckVariableIntegerArrays(FConstantLayerIndicators,
       FVariableLayerIndicators);
     Assert(not FReuseLayerIndicator[0]);
-    CreateDataSet(-1, DataSetRoot, rdtDouble, AssignedLayerDataSet);
+    CreateTransientDataSet(-1, DataSetRoot, rdtDouble, AssignedLayerDataSet);
     if (FConstantLayerIndicators <> nil)
       and FConstantLayerIndicators[0].IsConstant then
     begin
@@ -9667,38 +10336,6 @@ begin
   RealConstantArray[FCurrentStressPeriod].IsConstant := True;
   RealConstantArray[FCurrentStressPeriod].RealValue := Value;
   FProgressHandler(FilePos(FImporter.FFile));
-end;
-
-procedure TTransientArrayImporter.CreateDataSet(StressPeriodIndex: Integer;
-  const Root: string; DataType: TRbwDataType;
-  var DataSet: TDataArray);
-var
-  NewName: string;
-  Interpolator: TNearestPoint2DInterpolator;
-begin
-//  DataSet := TDataArray.Create(FModel);
-
-  if StressPeriodIndex >= 0 then
-  begin
-    NewName := Root + GetStressPeriodString(StressPeriodIndex);
-  end
-  else
-  begin
-    NewName := Root;
-  end;
-
-  DataSet := FModel.DataArrayManager.CreateNewDataArray(TDataArray,
-    NewName, '0', NewName,
-    [], DataType, eaBlocks, dsoTop, '');
-
-  DataSet.UpdateDimensions(FGrid.LayerCount, FGrid.RowCount, FGrid.ColumnCount);
-//  FModel.CreateVariables(DataSet);
-  Interpolator := TNearestPoint2DInterpolator.Create(nil);
-  try
-    DataSet.TwoDInterpolator := Interpolator;
-  finally
-    Interpolator.Free;
-  end;
 end;
 
 constructor TTransientArrayImporter.Create(Importer: TModflow2005Importer;
@@ -10040,72 +10677,6 @@ begin
   CreateTransientRealDataArray(StressPeriodIndex, FReuseRecharge,
     StrImportedRechargeSt, FConstantRecharge, FVariableRecharge,
     'Imported_RCH_Values_SP_');
-
-
-//  ScreenObject := nil;
-//  if not FReuseRecharge[StressPeriodIndex] then
-//  begin
-//    CreateDataSet(StressPeriodIndex, StrImportedRechargeSt,
-//      rdtDouble, RechargeDataSet);
-//    if (FConstantRecharge <> nil)
-//      and FConstantRecharge[StressPeriodIndex].IsConstant then
-//    begin
-//      RechargeDataSet.Formula :=
-//        FortranFloatToStr(FConstantRecharge[StressPeriodIndex].RealValue);
-//    end
-//    else
-//    begin
-//      RechargeDataSet.Formula := '0';
-//      Assert(FVariableRecharge <> nil);
-//      Assert(FVariableRecharge[StressPeriodIndex] <> nil);
-//
-//      ValueList := TRealList.Create;
-//      try
-//        ValueList.Sorted := True;
-//        Values := FVariableRecharge[StressPeriodIndex];
-//        MaxCount := Min((Length(Values) * Length(Values[0])) div 10, 100);
-//        for RowIndex := 0 to Length(Values) - 1 do
-//        begin
-//          for ColIndex := 0 to Length(Values[0]) - 1 do
-//          begin
-//            Value := Values[RowIndex,ColIndex];
-//            ValueList.AddUnique(Value);
-//            if ValueList.Count >= MaxCount then
-//            begin
-//              break;
-//            end;
-//          end;
-//          if ValueList.Count >= MaxCount then
-//          begin
-//            break;
-//          end;
-//        end;
-//        if ValueList.Count >= MaxCount then
-//        begin
-//          if ScreenObject = nil then
-//          begin
-//            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
-//          end;
-//          AssignRealValuesToCellCenters(RechargeDataSet, ScreenObject,
-//            FVariableRecharge[StressPeriodIndex]);
-//        end
-//        else if ValueList.Count = 1 then
-//        begin
-//          RechargeDataSet.Formula :=
-//            FortranFloatToStr(ValueList[0]);
-//        end
-//        else
-//        begin
-//          Root := 'Imported_RCH_Values_SP_'
-//            + GetStressPeriodString(StressPeriodIndex) + '_Obj_';
-//          CreateScreenObjectsAroundValues(Values, Root,
-//            RechargeDataSet, ValueList);
-//        end;
-//      finally
-//        ValueList.Free;
-//      end;
-//    end;
-//  end;
 end;
 
 procedure TRchImporter.AssignParamRechargeRate(ScreenObject: TScreenObject;
@@ -10306,7 +10877,7 @@ begin
   begin
     if not FReuseLayerIndicator[StressPeriodIndex] then
     begin
-      CreateDataSet(StressPeriodIndex, DataSetRoot, rdtInteger,
+      CreateTransientDataSet(StressPeriodIndex, DataSetRoot, rdtInteger,
         AssignedLayerDataSet);
       if (FConstantLayerIndicators <> nil)
         and FConstantLayerIndicators[StressPeriodIndex].IsConstant then
@@ -10449,33 +11020,6 @@ begin
       end;
     end;
   end;
-end;
-
-function TTransientArrayImporter.GetStressPeriodString(
-  StressPeriodIndex: Integer): string;
-var
-  StressPeriodMaxLength: Integer;
-begin
-  result := IntToStr(FModel.ModflowStressPeriods.Count);
-  StressPeriodMaxLength := Length(result);
-  result := IntToStr(StressPeriodIndex + 1);
-  while Length(result) < StressPeriodMaxLength do
-  begin
-    result := '0' + result;
-  end;
-end;
-
-function TTransientArrayImporter.CreateScreenObjectAroundGrid(
-  const Name: string): TScreenObject;
-begin
-  Result := CreateScreenObject(Name);
-  result.Capacity := 5;
-  result.AddPoint(FGrid.TwoDElementCorner(0, 0), False);
-  result.AddPoint(FGrid.TwoDElementCorner(0, FGrid.RowCount), False);
-  result.AddPoint(FGrid.TwoDElementCorner(FGrid.ColumnCount,
-    FGrid.RowCount), False);
-  result.AddPoint(FGrid.TwoDElementCorner(FGrid.ColumnCount, 0), False);
-  result.AddPoint(FGrid.TwoDElementCorner(0, 0), False);
 end;
 
 procedure TTransientArrayImporter.InitializeQuadTree;
@@ -11404,7 +11948,7 @@ begin
   ScreenObject := nil;
   if not Reuse[StressPeriodIndex] then
   begin
-    CreateDataSet(StressPeriodIndex, DataArrayRoot, rdtDouble, ADataArray);
+    CreateTransientDataSet(StressPeriodIndex, DataArrayRoot, rdtDouble, ADataArray);
     if (ConstantValues <> nil) and ConstantValues[StressPeriodIndex].IsConstant then
     begin
       ADataArray.Formula := FortranFloatToStr(ConstantValues[StressPeriodIndex].RealValue);
@@ -12290,6 +12834,7 @@ end;
 
 procedure TSfrImporter.ReadBasicData;
 begin
+  FIsSelected := True;
   Read(FImporter.FFile, NSTRM);
   Read(FImporter.FFile, NSS);
   Read(FImporter.FFile, NP);
@@ -12462,6 +13007,7 @@ var
   IUNIT: Integer;
 begin
   Read(FImporter.FFile, SEGNUM);
+  FCurrentSegment := FCurrentSegments[SEGNUM-1];
   Assert(FCurrentSegment.NSEG = SEGNUM);
   Read(FImporter.FFile, NUMVAL);
   SetLength(FCurrentSegment.InflowValues, NUMVAL);
@@ -14125,7 +14671,7 @@ begin
       ScreenObject.ElevationCount := ecTwo;
 
       Layer := FModel.ModflowLayerToDataSetLayer(HighLayer);
-      Elevation := FModel.Grid.ThreeDElementCenter(Column, Obs.Row, Layer).Z;
+      Elevation := FModel.Grid.ThreeDElementCenter(Column, Row, Layer).Z;
       ScreenObject.HigherElevationFormula := FortranFloatToStr(Elevation);
 
       Layer := FModel.ModflowLayerToDataSetLayer(LowLayer);
@@ -14904,7 +15450,7 @@ begin
   else
   begin
     BottomFormula := StrImportedLakeBottom;
-    CreateDataSet(-1, StrImportedLakeBottom, rdtDouble, DataArray);
+    CreateTransientDataSet(-1, StrImportedLakeBottom, rdtDouble, DataArray);
     CreateOrRetrieveCellCenterScreenObject(ScreenObject);
     AssignRealValuesToCellCenters(DataArray, ScreenObject, FLakeBottom);
   end;
@@ -15042,7 +15588,7 @@ begin
         else
         begin
           NewName := 'Imported_LakeLeakance_' + IntToStr(LayerIndex+1);
-          CreateDataSet(-1, NewName, rdtDouble, DataArray);
+          CreateTransientDataSet(-1, NewName, rdtDouble, DataArray);
           if ScreenObject = nil then
           begin
             CreateOrRetrieveCellCenterScreenObject(ScreenObject);
@@ -15072,6 +15618,7 @@ var
   NCOL: Integer;
   Index: Integer;
 begin
+  FIsSelected := True;
   Read(FImporter.FFile, NLAKES);
   Read(FImporter.FFile, DummyInteger); // ILKCB
   ReadLn(FImporter.FFile);
@@ -16411,7 +16958,7 @@ begin
     SegString := SegIndexToStr(SegmentIndex);
     DataSetRoot := StrImportedETSFractionalDepth
       + SegString + '_';
-    CreateDataSet(StressPeriodIndex, DataSetRoot,
+    CreateTransientDataSet(StressPeriodIndex, DataSetRoot,
       rdtDouble, DataSet);
     if (FConstantDepthProportions[SegmentIndex-1] <> nil)
       and FConstantDepthProportions[SegmentIndex-1][
@@ -16499,7 +17046,7 @@ begin
     SegString := SegIndexToStr(SegmentIndex);
     DataSetRoot := StrImportedETSFractionalRate
       + SegString + '_';
-    CreateDataSet(StressPeriodIndex, DataSetRoot,
+    CreateTransientDataSet(StressPeriodIndex, DataSetRoot,
       rdtDouble, DataSet);
     if (FConstantRateProportions[SegmentIndex-1] <> nil)
       and FConstantRateProportions[SegmentIndex-1][
@@ -17449,9 +17996,12 @@ end;
 
 { TUzfImporter }
 
-constructor TUzfImporter.Create(Importer: TModflow2005Importer);
+constructor TUzfImporter.Create(Importer: TModflow2005Importer;
+  LakImporter: TLakImporter; SfrImporter: TSfrImporter);
 begin
   inherited Create(Importer, 'UZF', nil);
+  FLakImporter := LakImporter;
+  FSfrImporter := SfrImporter;
   FEtStressPeriods:= TArrayStressPeriodArray.Create;
   FEtExtinctDepthStressPeriods:= TArrayStressPeriodArray.Create;
   FEtExtinctWaterContentStressPeriods:= TArrayStressPeriodArray.Create;
@@ -17605,6 +18155,9 @@ begin
   FUzfPackage.IsSelected := True;
   FUzfPackage.Comments := FComments;
 
+  FModel.ModflowPackages.SfrPackage.IsSelected := FSfrImporter.FIsSelected;
+  FModel.ModflowPackages.LakPackage.IsSelected := FLakImporter.FIsSelected;
+
   FUzfPackage.SpecifyResidualWaterContent := SPECIFYTHTR;
   FUzfPackage.SpecifyInitialWaterContent := SPECIFYTHTI;
   FUzfPackage.CalulateSurfaceLeakage := not NOSURFLEAK;
@@ -17640,13 +18193,16 @@ begin
   if IRUNFLG > 0 then
   begin
     DataArray := FModel.DataArrayManager.GetDataSetByName(StrUzfDischargeRouting);
-    if IsConstIRUNBND then
+    if DataArray <> nil then
     begin
-      DataArray.Formula := IntToStr(ConstIRUNBND);
-    end
-    else
-    begin
-      AssignVariableIntValues('Imported_IRUNBND', IRUNBND);
+      if IsConstIRUNBND then
+      begin
+        DataArray.Formula := IntToStr(ConstIRUNBND);
+      end
+      else
+      begin
+        AssignVariableIntValues('Imported_IRUNBND', IRUNBND);
+      end;
     end;
   end;
 
@@ -26156,6 +26712,7 @@ var
   AParam: TParamInstance;
   StrInstance: TStrInstanceObject;
   ReachIndex: Integer;
+//  ErrorFound: boolean;
   procedure AddSegment;
   var
     SegmentListIndex: Integer;
@@ -26228,6 +26785,7 @@ var
     PriorPoint: TPoint2D;
     PointIndex: Integer;
     SectionLength: double;
+    TributaryNumber: integer;
   begin
     Grid := frmGoPhast.PhastModel.ModflowGrid;
     UndoCreateScreenObject := nil;
@@ -26529,8 +27087,18 @@ var
           begin
             if Tribs.Itrib[TribIndex] > 0 then
             begin
-              TributaryObject := ScreenObjectsInStressPeriod
-                [Tribs.Itrib[TribIndex]-1];
+              TributaryNumber := Tribs.Itrib[TribIndex];
+              if TributaryNumber-1 < ScreenObjectIndex then
+              begin
+                TributaryObject := ScreenObjectsInStressPeriod
+                  [TributaryNumber-1];
+              end
+              else
+              begin
+//                ErrorFound := True;
+                frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, StrInvalidStreamTribu,
+                  Format(Str0d1d2d, [ScreenObjectIndex+1, TributaryNumber, StressPeriodIndex+1]));
+              end;
               if NP = 0 then
               begin
                 OtherStrItem := TributaryObject.ModflowStrBoundary.
@@ -26602,6 +27170,7 @@ var
     end;
   end;
 begin
+  frmErrorsAndWarnings.RemoveErrorGroup(frmGoPhast.PhastModel, StrInvalidStreamTribu);
   if (FCurrentStressPeriod < 0) or
     (FCurrentStressPeriod < FStressPeriods.ArrayLength -1) then
   begin
@@ -27223,8 +27792,28 @@ var
   AScreenObject: TScreenObject;
   ScreenObjects: TList<TScreenObject>;
   FactorItem: TValueArrayItem;
-  ValueIndex: Integer;
   ObsFactor: TObservationFactor;
+  procedure InitializeFactorItem;
+  var
+    ValueIndex: Integer;
+  begin
+    ObsGroup.AddObject(AScreenObject);
+
+    FactorItem := AScreenObject.ImportedValues.Add as TValueArrayItem;
+    FactorItem.Name := ObsGroup.ObservationName + FactorName;
+    FactorItem.Values.DataType := rdtDouble;
+    FactorItem.Values.Count := AScreenObject.SectionCount;
+    for ValueIndex := 0 to FactorItem.Values.Count - 1 do
+    begin
+      FactorItem.Values.RealValues[ValueIndex] := 0;
+    end;
+
+    ObsFactor := ObsGroup.ObservationFactors.Items[
+      ObsGroup.ObservationFactors.Count-1];
+    Assert(ObsFactor.ScreenObject = AScreenObject);
+    ObsFactor.Factor := rsObjectImportedValuesR
+      + '("' + FactorItem.Name + '")';
+  end;
 begin
   if FStrImporter.ImportedPackage then
   begin
@@ -27243,32 +27832,24 @@ begin
         for CellIndex := 0 to AGroup.FCells.ArrayLength - 1 do
         begin
           AReach := AGroup.FCells[CellIndex];
+
+          // For STOB, AReach.ROW is the segment number.
           AScreenObject := FStrImporter.FScreenObjectsInAllStressPeriod[0][AReach.ROW-1];
           if ScreenObjects.IndexOf(AScreenObject) < 0 then
           begin
             ScreenObjects.Add(AScreenObject);
-            ObsGroup.AddObject(AScreenObject);
-
-            FactorItem := AScreenObject.ImportedValues.Add as TValueArrayItem;
-            FactorItem.Name := ObsGroup.ObservationName + FactorName;
-            FactorItem.Values.DataType := rdtDouble;
-            FactorItem.Values.Count := AScreenObject.Count;
-            for ValueIndex := 0 to FactorItem.Values.Count - 1 do
-            begin
-              FactorItem.Values.RealValues[ValueIndex] := 0;
-            end;
-
-            ObsFactor := ObsGroup.ObservationFactors.Items[
-              ObsGroup.ObservationFactors.Count-1];
-            Assert(ObsFactor.ScreenObject = AScreenObject);
-            ObsFactor.Factor := rsObjectImportedValuesR
-              + '("' + FactorItem.Name + '")';
+            InitializeFactorItem;
           end
           else
           begin
             FactorItem := AScreenObject.ImportedValues.
               ValueItemByName(ObsGroup.ObservationName + FactorName);
+            if FactorItem = nil then
+            begin
+              InitializeFactorItem
+            end;
           end;
+          // For STOB, AReach.COLUMN is the reach number.
           FactorItem.Values.RealValues[AReach.COLUMN-1] := AReach.FACTOR;
         end;
       end;
@@ -27293,7 +27874,9 @@ begin
   CurrentLoc := FCurrentGroup.FCells[FCurrentLocationIndex];
   Readln(FImporter.FFile,  RowReal,
     ColReal, CurrentLoc.FACTOR);
+  // segment number
   CurrentLoc.ROW := Round(RowReal);
+  // reach number
   CurrentLoc.COLUMN := Round(ColReal);
   FProgressHandler(FilePos(FImporter.FFile));
   if NQCL < 0 then
@@ -27401,7 +27984,7 @@ begin
           for TimeIndex := 0 to Length(BDTIM) - 1 do
           begin
             AnItem := FlowBoundary.Values[TimeIndex] as TFhbItem;
-            AnItem.BoundaryValue := FloatToStr(ACell.Values[TimeIndex]);
+            AnItem.BoundaryValue := FortranFloatToStr(ACell.Values[TimeIndex]);
           end;
         end
         else
@@ -27433,7 +28016,7 @@ begin
             AnItem := FlowBoundary.Values[TimeIndex] as TFhbItem;
             if Values.UniformValues then
             begin
-              AnItem.BoundaryValue := FloatToStr(Values.RealValues[0]);
+              AnItem.BoundaryValue := FortranFloatToStr(Values.RealValues[0]);
               ScreenObject.ImportedValues.Delete(TimeIndex);
             end
             else
@@ -27484,7 +28067,7 @@ begin
           for TimeIndex := 0 to Length(BDTIM) - 1 do
           begin
             AnItem := HeadBoundary.Values[TimeIndex] as TFhbItem;
-            AnItem.BoundaryValue := FloatToStr(ACell.Values[TimeIndex]);
+            AnItem.BoundaryValue := FortranFloatToStr(ACell.Values[TimeIndex]);
           end;
         end
         else
@@ -27516,7 +28099,7 @@ begin
             AnItem := HeadBoundary.Values[TimeIndex] as TFhbItem;
             if Values.UniformValues then
             begin
-              AnItem.BoundaryValue := FloatToStr(Values.RealValues[0]);
+              AnItem.BoundaryValue := FortranFloatToStr(Values.RealValues[0]);
               ScreenObject.ImportedValues.Delete(TimeIndex);
             end
             else
@@ -28399,17 +28982,25 @@ begin
     end;
     StressPeriodString := 'StressPeriod' + StressPeriodString;
   end;
-  LayerString := IntToStr(FModel.LayerStructure.ModflowLayerToDataSetLayer
-    (LayerIndex) + 1);
-  MaxLayerString := IntToStr(FGrid.LayerCount);
-  while Length(LayerString) < Length(MaxLayerString) do
+  if LayerIndex >= 1 then
   begin
-    LayerString := '0' + LayerString;
+    LayerString := IntToStr(FModel.LayerStructure.ModflowLayerToDataSetLayer
+      (LayerIndex) + 1);
+    MaxLayerString := IntToStr(FGrid.LayerCount);
+    while Length(LayerString) < Length(MaxLayerString) do
+    begin
+      LayerString := '0' + LayerString;
+    end;
+    LayerString := '_Layer' + LayerString;
+  end
+  else
+  begin
+    LayerString := '';
   end;
   result := TScreenObject.CreateWithViewDirection(FModel, vdTop,
     UndoCreateScreenObject, False);
   Inc(ScreenObjectIndex);
-  result.Name := ScreenObjectNameRoot + StressPeriodString + '_Layer' +
+  result.Name := ScreenObjectNameRoot + StressPeriodString +
     LayerString + '_' + IntToStr(ScreenObjectIndex);
   FModel.AddScreenObject(result);
   result.ElevationCount := ecOne;
@@ -28431,14 +29022,3667 @@ begin
   begin
     AddBoundaryPoints(List, Index, ObjectType, result);
     Boundary := List[Index];
-    ImportedElevations.RealValues[Index] :=
-      FGrid.NearLayerTop(Boundary.Column - 1, Boundary.Row - 1,
-      FModel.ModflowLayerToDataSetLayer(Boundary.Layer));
+    if Boundary.Layer >= 1 then
+    begin
+      ImportedElevations.RealValues[Index] :=
+        FGrid.NearLayerTop(Boundary.Column - 1, Boundary.Row - 1,
+        FModel.ModflowLayerToDataSetLayer(Boundary.Layer));
+    end
+    else
+    begin
+      ImportedElevations.RealValues[Index] :=
+        FGrid.NearLayerTop(Boundary.Column - 1, Boundary.Row - 1, 0);
+    end;
   end;
   result.ElevationFormula := rsObjectImportedValuesR + '("' +
     StrImportedElevations + '")';
   ImportedElevations.CacheData;
   result.SectionStarts.CacheData;
+end;
+
+{ TSwrImporter }
+
+constructor TSwrImporter.Create(Importer: TModflow2005Importer;
+  const NameFile: string);
+begin
+  inherited Create(Importer, 'SWR');
+  FNameFile := NameFile;
+
+  FReachArray := TSwrReachArray.Create;
+  FTabFiles := TSwrTabFileArray.Create;
+  FObsArray := TSwrObsArray.Create;
+  FGeomArray := TSwrGeomArray.Create;
+  FStructures := TStructureArray.Create;
+  FCurrentStressPeriod := -1;
+
+  DMAXRAI := KMaxRainfallForStepAdjustment;
+  DMAXSTG := KMaxStageChangePerStep;
+  IPC := Ord(KPreconditioner);
+  NLEVELS := KMaxLevels;
+  DROPTOL := KDropThreshold;
+  PTOLR := KAlternativeFlowTolerance;
+end;
+
+destructor TSwrImporter.Destroy;
+begin
+  FStructures.Free;
+  FGeomArray.Free;
+  FObsArray.Free;
+  FTabFiles.Free;
+  FReachArray.Free;
+  inherited;
+end;
+
+procedure TSwrImporter.ImportObservations;
+var
+  ObsIndex: Integer;
+  SwrObs: TSwrObs;
+  ObsItem: TSwrObsItem;
+  Observations: TSwrObsCollection;
+  ObservationReach: Integer;
+  StructurePosition: Integer;
+  StructureIndex: Integer;
+  AStructure: TStructure;
+  StructureCount: integer;
+  procedure AddObservation;
+  begin
+    ObsItem := Observations.Add;
+    if SwrObs.COBSTYPE = 'STRUCTURE' then
+    begin
+      ObsItem.ObsName := SwrObs.COBSNAME + IntToStr(StructureCount);
+    end
+    else
+    begin
+      ObsItem.ObsName := SwrObs.COBSNAME;
+    end;
+    if SwrObs.COBSTYPE = 'STAGE' then
+    begin
+      ObsItem.ObsType := sotStage;
+    end
+    else if SwrObs.COBSTYPE = 'DEPTH' then
+    begin
+      ObsItem.ObsType := sotDepth;
+    end
+    else if SwrObs.COBSTYPE = 'RBOTTOM' then
+    begin
+      ObsItem.ObsType := sotBottom;
+    end
+    else if SwrObs.COBSTYPE = 'FLOW' then
+    begin
+      ObsItem.ObsType := sotFlow;
+    end
+    else if SwrObs.COBSTYPE = 'STRUCTURE' then
+    begin
+      ObsItem.ObsType := sotStructure;
+    end
+    else if SwrObs.COBSTYPE = 'BASEFLOW' then
+    begin
+      ObsItem.ObsType := sotBaseFlow;
+    end;
+    ObsItem.ObservationReach := SwrObs.IOBSLOC;
+    ObsItem.ConnectedReach := SwrObs.IOBSLOC2;
+    ObsItem.ObservationLayer := SwrObs.IOBSLAY;
+  end;
+begin
+  Observations := FModel.SwrObservations;
+  Observations.Capacity := FObsArray.ArrayLength;
+  for ObsIndex := 0 to FObsArray.ArrayLength - 1 do
+  begin
+  SwrObs := FObsArray[ObsIndex];
+    if SwrObs.COBSTYPE = 'STRUCTURE' then
+    begin
+      ObservationReach := SwrObs.IOBSLOC;
+      StructurePosition := SwrObs.IOBSLOC2;
+      StructureCount := 0;
+      for StructureIndex := 0 to FModel.SwrStructures.Count - 1 do
+      begin
+        AStructure := FModel.SwrStructures[StructureIndex];
+        if AStructure.Reach = ObservationReach then
+        begin
+          Inc(StructureCount);
+          AddObservation;
+        end;
+      end;
+    end
+    else
+    begin
+      AddObservation;
+    end;
+  end;
+end;
+
+procedure TSwrImporter.ImportStructures;
+var
+  TabFile: TSwrTabFile;
+  Structures: TStructureCollection;
+  TableItem: TStructureDischargeItem;
+  PriorIndex: Integer;
+  SwrTableItem: TSwrStructureTableItem;
+  AStructArray: TStructureStressPeriodArray;
+  StressPeriodIndex: Integer;
+  PriorCount: Integer;
+  TabIndex: Integer;
+  StructureList: Generics.Collections.TList<TSwrStructure>;
+  StructureIndex: Integer;
+  PriorItem: TSwrStructure;
+  EndTime: Double;
+  TimeItem: TStructureTimeItem;
+  PriorEndTime: Double;
+  AStruct: TStructure;
+  StressPeriod: TModflowStressPeriod;
+  ATable: TStructureDischargeCollection;
+  StructIndex: Integer;
+  TableItemIndex: Integer;
+  AStructItem: TSwrStructure;
+begin
+  Structures := FModel.SwrStructures;
+  StructureList := TList<TSwrStructure>.Create;
+  try
+    for StressPeriodIndex := 0 to Length(FStructureChanged) - 1 do
+    begin
+      StressPeriod := FModel.ModflowStressPeriods[StressPeriodIndex];
+      if StressPeriodIndex < FStructures.ArrayLength then
+      begin
+        if FStructureChanged[StressPeriodIndex] then
+        begin
+          AStructArray := FStructures[StressPeriodIndex];
+          PriorCount := StructureList.Count;
+          for StructIndex := 0 to AStructArray.ArrayLength - 1 do
+          begin
+            AStructItem := AStructArray[StructIndex];
+            for PriorIndex := 0 to PriorCount - 1 do
+            begin
+              PriorItem := StructureList[PriorIndex];
+              if PriorItem.IsSame(AStructItem) then
+              begin
+                AStructItem.FStrucItem := PriorItem.FStrucItem;
+                break;
+              end;
+            end;
+            if AStructItem.FStrucItem <> nil then
+            begin
+              Continue;
+            end;
+            AStructItem.FStrucItem := Structures.Add;
+            AStructItem.FStrucItem.Name := 'Structure' + IntToStr(Structures.Count);
+            AStructItem.FStrucItem.Reach := AStructItem.ISTRRCH + 1;
+            AStructItem.FStrucItem.ConnectedReach := AStructItem.ISTRCONN;
+            if AStructItem.ISTRDIR < 0 then
+            begin
+              AStructItem.FStrucItem.StructureRestrictions := srRestrictFromConnected;
+            end
+            else if AStructItem.ISTRDIR > 0 then
+            begin
+              AStructItem.FStrucItem.StructureRestrictions := srRestrictToConnected;
+            end
+            else
+            begin
+              AStructItem.FStrucItem.StructureRestrictions := srBidirectional;
+            end;
+            if AStructItem.ISTRTYPE < 0 then
+            begin
+              Assert(AStructItem.ISTRTYPE = -2);
+              AStructItem.FStrucItem.StructureType := sstUncontrolledZeroDepth;
+            end
+            else
+            begin
+              Assert(AStructItem.ISTRTYPE in [0..12]);
+              AStructItem.FStrucItem.StructureType := TSwrStructureType(AStructItem.ISTRTYPE + 1);
+            end;
+            AStructItem.FStrucItem.WeirDischargeCoefficient := AStructItem.STRCD;
+            AStructItem.FStrucItem.OrificeDischargeCoefficient := AStructItem.STRCD2;
+            AStructItem.FStrucItem.SubmergenceExponent := AStructItem.STRCD3;
+            AStructItem.FStrucItem.InvertElevation := AStructItem.STRINV;
+            AStructItem.FStrucItem.DownstreamInvertElevation := AStructItem.STRINV2;
+            AStructItem.FStrucItem.Width := Abs(AStructItem.STRWID);
+            if AStructItem.STRWID >= 0 then
+            begin
+              AStructItem.FStrucItem.CulvertType := ctCircular;
+            end
+            else
+            begin
+              AStructItem.FStrucItem.CulvertType := ctRectangular;
+            end;
+            AStructItem.FStrucItem.CulvertRise := Abs(AStructItem.STRWID2);
+            if AStructItem.FStrucItem.StructureType in [sstUncontrolledZeroDepth, sstUncontrolledCriticalDepth] then
+            begin
+              AStructItem.FStrucItem.SpecifyCulvertLengths := (AStructItem.STRLEN > 0) or (AStructItem.STRLEN2 > 0);
+            end
+            else
+            begin
+              AStructItem.FStrucItem.SpecifyCulvertLengths := False;
+            end;
+            AStructItem.FStrucItem.CulvertLength := AStructItem.STRLEN;
+            AStructItem.FStrucItem.DownstreamCulvertLength := AStructItem.STRLEN2;
+            AStructItem.FStrucItem.CulvertRoughness := AStructItem.STRMAN;
+            if AStructItem.ISTRTAB_Discharge > 0 then
+            begin
+              AStructItem.FStrucItem.InitialFlowRateMethod := smTabFile;
+              for TabIndex := 0 to FTabFiles.ArrayLength - 1 do
+              begin
+                TabFile := FTabFiles[TabIndex];
+                if AStructItem.ISTRTAB_Discharge = TabFile.ITAB then
+                begin
+                  AStructItem.FStrucItem.FullInitialFlowRateTabFile := TabFile.TabItem.FullTabFileName;
+                  break;
+                end;
+              end;
+            end
+            else
+            begin
+              AStructItem.FStrucItem.InitialFlowRateMethod := smValue;
+              AStructItem.FStrucItem.InitialFlowRateOrGateOpening := AStructItem.STRVAL;
+            end;
+            AStructItem.FStrucItem.SfrSegment := AStructItem.ISFRSEG;
+            AStructItem.FStrucItem.SfrReach := AStructItem.ISFRRCH;
+            if AStructItem.CSTROTYP = 'STAGE' then
+            begin
+              AStructItem.FStrucItem.ControlType := ctStage;
+            end
+            else if AStructItem.CSTROTYP = 'FLOW' then
+            begin
+              AStructItem.FStrucItem.ControlType := ctFlow;
+            end;
+            AStructItem.FStrucItem.ControlReach := AStructItem.ISTRORCH;
+            AStructItem.FStrucItem.ConnectedControlReach := AStructItem.ISTROQCON;
+            if AStructItem.CSTROLO = 'GE' then
+            begin
+              AStructItem.FStrucItem.ControlOperated := coGreaterEqual;
+            end
+            else if AStructItem.CSTROLO = 'LT' then
+            begin
+              AStructItem.FStrucItem.ControlOperated := coLessThan;
+            end;
+            if AStructItem.ISTRTAB_Control > 0 then
+            begin
+              AStructItem.FStrucItem.CriticalMethod := smTabFile;
+              for TabIndex := 0 to FTabFiles.ArrayLength - 1 do
+              begin
+                TabFile := FTabFiles[TabIndex];
+                if AStructItem.ISTRTAB_Control = TabFile.ITAB then
+                begin
+                  AStructItem.FStrucItem.CriticalTabFileName := TabFile.TabItem.FullTabFileName;
+                  break;
+                end;
+              end;
+            end
+            else
+            begin
+              AStructItem.FStrucItem.CriticalMethod := smValue;
+              AStructItem.FStrucItem.CriticalValue := AStructItem.STRCRIT;
+            end;
+            AStructItem.FStrucItem.ControlOffsetCriterion := AStructItem.STRCRITC;
+            AStructItem.FStrucItem.StartingControlRate := AStructItem.STRRT;
+            AStructItem.FStrucItem.MaximumControlRate := AStructItem.STRMAX;
+            if AStructItem.ISTRTAB_Gate > 0 then
+            begin
+              for TabIndex := 0 to FTabFiles.ArrayLength - 1 do
+              begin
+                TabFile := FTabFiles[TabIndex];
+                if AStructItem.ISTRTAB_Gate = TabFile.ITAB then
+                begin
+                  AStructItem.FStrucItem.DischargeTabFile := TabFile.TabItem.FullTabFileName;
+                  break;
+                end;
+              end;
+            end;
+            ATable := AStructItem.FStrucItem.Table;
+            ATable.Capacity := AStructItem.FTable.ArrayLength;
+            for TableItemIndex := 0 to AStructItem.FTable.ArrayLength - 1 do
+            begin
+              TableItem := ATable.Add;
+              SwrTableItem := AStructItem.FTable[TableItemIndex];
+              TableItem.Discharge := SwrTableItem.STRQ;
+              TableItem.Elev := SwrTableItem.STRELEV;
+            end;
+            if (AStructItem.FStrucItem.Times.Count = 0) and (StressPeriodIndex > 0) then
+            begin
+              TimeItem := AStructItem.FStrucItem.Times.Add;
+              TimeItem.StartTime := FModel.ModflowStressPeriods.First.StartTime;
+              TimeItem.EndTime := StressPeriod.StartTime;
+              TimeItem.Used := False;
+            end;
+            TimeItem := AStructItem.FStrucItem.Times.Add;
+            TimeItem.StartTime := StressPeriod.StartTime;
+            TimeItem.EndTime := StressPeriod.EndTime;
+            TimeItem.Used := True;
+          end;
+          for StructureIndex := 0 to Structures.Count - 1 do
+          begin
+            AStruct := Structures[StructureIndex];
+            TimeItem := AStruct.Times.Last;
+            if TimeItem.EndTime <> StressPeriod.EndTime then
+            begin
+              if TimeItem.Used then
+              begin
+                PriorEndTime := TimeItem.EndTime;
+                TimeItem := AStruct.Times.Add;
+                TimeItem.StartTime := PriorEndTime;
+                TimeItem.EndTime := StressPeriod.EndTime;
+                TimeItem.Used := False;
+              end
+              else
+              begin
+                TimeItem.EndTime := StressPeriod.EndTime;
+              end;
+            end;
+          end;
+        end
+        else
+        begin
+          for StructureIndex := 0 to Structures.Count - 1 do
+          begin
+            AStruct := Structures[StructureIndex];
+            TimeItem := AStruct.Times.Last;
+            TimeItem.EndTime := StressPeriod.EndTime;
+          end;
+        end;
+      end
+      else
+      begin
+        EndTime := FModel.ModflowStressPeriods.Last.EndTime;
+        for StructureIndex := 0 to Structures.Count - 1 do
+        begin
+          AStruct := Structures[StructureIndex];
+          TimeItem := AStruct.Times.Last;
+          TimeItem.EndTime := EndTime;
+        end;
+        break;
+      end;
+    end;
+  finally
+    StructureList.Free;
+  end;
+end;
+
+procedure TSwrImporter.InitializeStructureChanged;
+var
+  StressPeriodIndex: Integer;
+begin
+  if Length(FStructureChanged) = 0 then
+  begin
+    SetLength(FStructureChanged, FModel.ModflowStressPeriods.Count);
+    for StressPeriodIndex := 0 to Length(FStructureChanged) - 1 do
+    begin
+      FStructureChanged[StressPeriodIndex] := False;
+    end;
+  end;
+end;
+
+procedure TSwrImporter.ImportTabFiles;
+var
+  TabFile: TSwrTabFile;
+  Splitter: TStringList;
+  TabFiles: TTabFileCollection;
+  NameFileItems: TNameFileItemList;
+  TabFileIndex: Integer;
+  LineIndex: Integer;
+  TabIndex: Integer;
+  TabItem: TTabFileItem;
+  NameItem: TNameFileItem;
+  ReachIndex: Integer;
+  FileType: string;
+  NameFile: TStringList;
+begin
+  if FTabFiles.ArrayLength > 0 then
+  begin
+    NameFileItems := TNameFileItemList.Create;
+    try
+      NameFile := TStringList.Create;
+      Splitter := TStringList.Create;
+      try
+        Splitter.Delimiter := ' ';
+        Assert(FileExists(FNameFile));
+        SetCurrentDir(ExtractFileDir(FNameFile));
+        NameFile.LoadFromFile(FNameFile);
+        for LineIndex := 0 to NameFile.Count - 1 do
+        begin
+          if (Length(NameFile[LineIndex]) > 0) and (NameFile[LineIndex][1] <> '#') then
+          begin
+            Splitter.DelimitedText := NameFile[LineIndex];
+            FileType := UpperCase(Splitter[0]);
+            if (FileType = StrData) or (FileType = StrDATABINARY) then
+            begin
+              NameItem := TNameFileItem.Create;
+              NameFileItems.Add(NameItem);
+              NameItem.FileName := ExpandFileName(Splitter[2]);
+              NameItem.UnitNumber := StrToInt(Splitter[1]);
+            end;
+          end;
+        end;
+      finally
+        Splitter.Free;
+        NameFile.Free;
+      end;
+      TabFiles := FModel.SwrTabFiles;
+      TabFiles.Capacity := FTabFiles.ArrayLength;
+      for TabFileIndex := 0 to FTabFiles.ArrayLength - 1 do
+      begin
+        TabItem := TabFiles.Add;
+        TabFile := FTabFiles[TabFileIndex];
+        TabFile.TabItem := TabItem;
+        if TabFile.CTABTYPE = 'RAIN' then
+        begin
+          TabItem.TabType := ttRain;
+        end
+        else if TabFile.CTABTYPE = 'EVAP' then
+        begin
+          TabItem.TabType := ttEvap;
+        end
+        else if TabFile.CTABTYPE = 'LATFLOW' then
+        begin
+          TabItem.TabType := ttLatFlow;
+        end
+        else if TabFile.CTABTYPE = 'STAGE' then
+        begin
+          TabItem.TabType := ttStage;
+        end
+        else if TabFile.CTABTYPE = 'STRUCTURE' then
+        begin
+          TabItem.TabType := ttStructure;
+        end
+        else if TabFile.CTABTYPE = 'TIME' then
+        begin
+          TabItem.TabType := ttTime;
+        end
+        else
+        begin
+          Assert(False);
+        end;
+        if TabFile.ITABUNIT > 0 then
+        begin
+          TabItem.TabFormat := tfText;
+        end
+        else
+        begin
+          TabItem.TabFormat := tfBinary;
+        end;
+        for TabIndex := 0 to NameFileItems.Count - 1 do
+        begin
+          if Abs(TabFile.ITABUNIT) = NameFileItems[TabIndex].UnitNumber then
+          begin
+            TabItem.TabFileName := NameFileItems[TabIndex].FileName;
+            break;
+          end;
+        end;
+        Assert(TabItem.TabFileName <> '');
+        if TabFile.CINTP = 'NONE' then
+        begin
+          TabItem.InterpolationMethod := imNone;
+        end
+        else if TabFile.CINTP = 'AVERAGE' then
+        begin
+          TabItem.InterpolationMethod := imAverage;
+        end
+        else if TabFile.CINTP = 'INTERPOLATE' then
+        begin
+          TabItem.InterpolationMethod := imInterpolate;
+        end
+        else
+        begin
+          Assert(False);
+        end;
+        if TabFile.CTABRCH = 'ALL' then
+        begin
+          TabItem.ReachSelectionMethod := rsmAll;
+        end
+        else if not (TabItem.TabType in [ttStructure, ttTime]) then
+        begin
+          if Length(TabFile.ITABRCH) > 1 then
+          begin
+            TabItem.ReachSelectionMethod := rsmReaches;
+            TabItem.Reaches.Capacity := Length(TabFile.ITABRCH);
+            for ReachIndex := 0 to Length(TabFile.ITABRCH) - 1 do
+            begin
+              TabItem.Reaches.Add.Value := TabFile.ITABRCH[ReachIndex]+1;
+            end;
+          end
+          else
+          begin
+            TabItem.ReachSelectionMethod := rsmValue;
+            TabItem.Value := TabFile.ITABRCH[0]+1;
+          end;
+        end;
+      end;
+    finally
+      NameFileItems.Free;
+    end;
+  end;
+end;
+
+procedure TSwrImporter.ImportDirectRunoffArrays(AScreenObject: TScreenObject);
+var
+  CurrentMultiplierArray: T2DDoubleArray;
+  MapDataArrayName: string;
+  CurrentMapConstant: Integer;
+  RunoffItem: TSwrDirectRunoffItem;
+  DataArrayName: string;
+  ConstantMultiplier: Double;
+  ConstantValue: Double;
+  StartTime: Double;
+  ImportArray: T2DDoubleArray;
+  CellCenterScreenObject: TScreenObject;
+  DirectRunoffCollection: TSwrDirectRunoffCollection;
+  ImportValues: Boolean;
+  Index1: Integer;
+  Index2: Integer;
+  MapFormula: string;
+  UseConstantValue: Boolean;
+  StressPeriodIndex: Integer;
+  UseConstantMultiplier: Boolean;
+  CurrentValueArray: T2DDoubleArray;
+  CurrentMap: T2DIntArray;
+  DirRunoffBound: TSwrDirectRunoffBoundary;
+begin
+  if (Length(FRunoffMap) > 0) or (Length(FRunoffMap_Const) > 0) then
+  begin
+    if AScreenObject = nil then
+    begin
+      AScreenObject := CreateScreenObjectAroundGrid('SWR_Boundary');
+      AScreenObject.ElevationCount := ecZero;
+    end;
+    AScreenObject.CreateSwrDirectRunoffBoundary;
+    DirRunoffBound := AScreenObject.ModflowSwrDirectRunoff;
+    DirectRunoffCollection := DirRunoffBound.Values as TSwrDirectRunoffCollection;
+    DirectRunoffCollection.Capacity := FModel.ModflowStressPeriods.Count;
+    CurrentMap := nil;
+    CurrentMultiplierArray := nil;
+    CurrentValueArray := nil;
+    ConstantMultiplier := 1;
+    UseConstantMultiplier := True;
+    RunoffItem := nil;
+    ConstantValue := 0;
+    UseConstantValue := True;
+    for StressPeriodIndex := 0 to FModel.ModflowStressPeriods.Count - 1 do
+    begin
+      ImportValues := False;
+      if (StressPeriodIndex < Length(FRunoffMap))
+        and (Length(FRunoffMap[StressPeriodIndex]) > 0) then
+      begin
+        CurrentMap := FRunoffMap[StressPeriodIndex];
+        ImportValues := True;
+        MapDataArrayName := 'Imported_SWR_Direct_RunnoffMap'
+          + GetStressPeriodString(StressPeriodIndex);
+        CreateOrRetrieveCellCenterScreenObject(CellCenterScreenObject);
+        CreateDataArrayAndAssignValues(CellCenterScreenObject,
+          MapDataArrayName, CurrentMap);
+        MapFormula := MapDataArrayName;
+      end
+      else if (StressPeriodIndex < Length(FRunoffMap_Const))
+        and FRunoffMap_Const[StressPeriodIndex].IsConstant then
+      begin
+        CurrentMapConstant := FRunoffMap_Const[StressPeriodIndex].IntegerValue;
+        MapFormula := IntToStr(CurrentMapConstant);
+        ImportValues := True;
+      end;
+      if (StressPeriodIndex < Length(FRunoffMultiplier))
+        and (Length(FRunoffMultiplier[StressPeriodIndex]) > 0) then
+      begin
+        CurrentMultiplierArray := FRunoffMultiplier[StressPeriodIndex];
+        UseConstantMultiplier := False;
+        ImportValues := True;
+      end
+      else if (StressPeriodIndex < Length(FRunoffMultiplier_Const))
+        and FRunoffMultiplier_Const[StressPeriodIndex].IsConstant then
+      begin
+        ConstantMultiplier :=
+          FRunoffMultiplier_Const[StressPeriodIndex].RealValue;
+        UseConstantMultiplier := True;
+        ImportValues := True;
+      end;
+      if (StressPeriodIndex < Length(FRunoffValue))
+        and (Length(FRunoffValue[StressPeriodIndex]) > 0) then
+      begin
+        CurrentValueArray := FRunoffValue[StressPeriodIndex];
+        UseConstantValue := False;
+        ImportValues := True;
+      end
+      else if (StressPeriodIndex < Length(FRunoffValue_Const))
+        and FRunoffValue_Const[StressPeriodIndex].IsConstant then
+      begin
+        ConstantValue := FRunoffValue_Const[StressPeriodIndex].RealValue;
+        UseConstantValue := True;
+        ImportValues := True;
+      end;
+      if ImportValues then
+      begin
+        StartTime := FModel.ModflowStressPeriods[StressPeriodIndex].StartTime;
+        if RunoffItem <> nil then
+        begin
+          RunoffItem.EndTime := StartTime;
+        end;
+        RunoffItem := DirectRunoffCollection.Add as TSwrDirectRunoffItem;
+        RunoffItem.StartTime := StartTime;
+        RunoffItem.Reach := MapFormula;
+        if UseConstantMultiplier and UseConstantValue then
+        begin
+          RunoffItem.Runoff :=
+            FortranFloatToStr(ConstantMultiplier * ConstantValue);
+          ImportArray := nil;
+        end
+        else if UseConstantMultiplier then
+        begin
+          if ConstantMultiplier = 0 then
+          begin
+            ImportArray := nil;
+            RunoffItem.Runoff := '0';
+          end
+          else
+          begin
+            ImportArray := CurrentValueArray;
+            if ConstantMultiplier <> 1 then
+            begin
+              SetLength(ImportArray, Length(ImportArray),
+                Length(ImportArray[0]));
+              for Index1 := 0 to Length(ImportArray) - 1 do
+              begin
+                for Index2 := 0 to Length(ImportArray[0]) - 1 do
+                begin
+                  ImportArray[Index1, Index2] :=
+                    ImportArray[Index1, Index2] * ConstantMultiplier;
+                end;
+              end;
+            end;
+          end;
+        end
+        else if UseConstantValue then
+        begin
+          if ConstantValue = 0 then
+          begin
+            ImportArray := nil;
+            RunoffItem.Runoff := '0';
+          end
+          else
+          begin
+            ImportArray := CurrentMultiplierArray;
+            if ConstantValue <> 1 then
+            begin
+              SetLength(ImportArray,
+                Length(ImportArray), Length(ImportArray[0]));
+              for Index1 := 0 to Length(ImportArray) - 1 do
+              begin
+                for Index2 := 0 to Length(ImportArray[0]) - 1 do
+                begin
+                  ImportArray[Index1, Index2] :=
+                    ImportArray[Index1, Index2] * ConstantValue;
+                end;
+              end;
+            end;
+          end;
+        end
+        else
+        begin
+          ImportArray := CurrentValueArray;
+          SetLength(ImportArray, Length(ImportArray), Length(ImportArray[0]));
+          for Index1 := 0 to Length(ImportArray) - 1 do
+          begin
+            for Index2 := 0 to Length(ImportArray[0]) - 1 do
+            begin
+              ImportArray[Index1, Index2] :=
+                ImportArray[Index1, Index2] *
+                CurrentMultiplierArray[Index1, Index2];
+            end;
+          end;
+        end;
+        if ImportArray <> nil then
+        begin
+          DataArrayName := 'Imported_SWR_Direct_Runoff_'
+            + GetStressPeriodString(StressPeriodIndex);
+          CreateOrRetrieveCellCenterScreenObject(CellCenterScreenObject);
+          CreateDataArrayAndAssignValues(CellCenterScreenObject,
+            DataArrayName, ImportArray);
+          RunoffItem.Runoff := DataArrayName;
+        end;
+      end;
+    end;
+    if RunoffItem <> nil then
+    begin
+      RunoffItem.EndTime := FModel.ModflowStressPeriods.Last.EndTime;
+    end;
+  end;
+end;
+
+procedure TSwrImporter.ImportStageArray(var AScreenObject: TScreenObject);
+var
+  StageBoundary: TSwrStageBoundary;
+  Reuse: TBooleanArray;
+  ImportedConstData: TRealConstantRecordArray;
+  ImportedData: T3DDoubleArray;
+  Root: string;
+  SwrCollection: TCustomSwrListCollection;
+begin
+  if (Length(FStage) > 0) or (Length(FStage_Const) > 0) then
+  begin
+    FSwrPackage.StageSpecification := smArray;
+
+    ImportedData := FStage;
+    ImportedConstData := FStage_Const;
+    InitializeReuseArray(Reuse, ImportedData, ImportedConstData);
+    if AScreenObject = nil then
+    begin
+      AScreenObject := CreateScreenObjectAroundGrid('SWR_Boundary');
+      AScreenObject.ElevationCount := ecZero;
+    end;
+    AScreenObject.CreateSwrStageBoundary;
+    StageBoundary := AScreenObject.ModflowSwrStage;
+    SwrCollection := StageBoundary.Values as TCustomSwrListCollection;
+    Root := 'Imported_SWR_Stage_';
+    ImportSwrTransientArrays(Root, Reuse, ImportedData, SwrCollection,
+      ImportedConstData);
+  end;
+end;
+
+procedure TSwrImporter.ImportLateralFlowArray(var AScreenObject: TScreenObject);
+var
+  ImportedData: T3DDoubleArray;
+  Root: string;
+  ImportedConstData: TRealConstantRecordArray;
+  SwrCollection: TCustomSwrListCollection;
+  LatInflowBoundary: TSwrLatInflowBoundary;
+  Reuse: TBooleanArray;
+begin
+  if (Length(FLatFlow) > 0) or (Length(FLatFlow_Const) > 0) then
+  begin
+    FSwrPackage.LateralInflowSpecification := smArray;
+
+    ImportedData := FLatFlow;
+    ImportedConstData := FLatFlow_Const;
+    InitializeReuseArray(Reuse, ImportedData, ImportedConstData);
+    if AScreenObject = nil then
+    begin
+      AScreenObject := CreateScreenObjectAroundGrid('SWR_Boundary');
+      AScreenObject.ElevationCount := ecZero;
+    end;
+    AScreenObject.CreateSwrLatInflowBoundary;
+    LatInflowBoundary := AScreenObject.ModflowSwrLatInflow;
+    SwrCollection := LatInflowBoundary.Values as TCustomSwrListCollection;
+    Root := 'Imported_SWR_Lateral_Inflow_';
+    ImportSwrTransientArrays(Root, Reuse, ImportedData, SwrCollection,
+      ImportedConstData);
+  end;
+end;
+
+procedure TSwrImporter.ImportEvapArray(var AScreenObject: TScreenObject);
+var
+  SwrCollection: TCustomSwrListCollection;
+  ImportedConstData: TRealConstantRecordArray;
+  ImportedData: T3DDoubleArray;
+  Root: string;
+  EvapBoundary: TSwrEvapBoundary;
+  Reuse: TBooleanArray;
+begin
+  if (Length(FEvap) > 0) or (Length(FEvap_Const) > 0) then
+  begin
+    FSwrPackage.EvapSpecification := smArray;
+
+    ImportedData := FEvap;
+    ImportedConstData := FEvap_Const;
+    InitializeReuseArray(Reuse, ImportedData, ImportedConstData);
+    if AScreenObject = nil then
+    begin
+      AScreenObject := CreateScreenObjectAroundGrid('SWR_Boundary');
+      AScreenObject.ElevationCount := ecZero;
+    end;
+    AScreenObject.CreateSwrEvapBoundary;
+    EvapBoundary := AScreenObject.ModflowSwrEvap;
+    SwrCollection := EvapBoundary.Values as TCustomSwrListCollection;
+    Root := 'Imported_SWR_Evap_';
+    ImportSwrTransientArrays(Root, Reuse, ImportedData, SwrCollection,
+      ImportedConstData);
+  end;
+end;
+
+procedure TSwrImporter.ImportRainArray(var AScreenObject: TScreenObject);
+var
+  ImportedConstData: TRealConstantRecordArray;
+  Root: string;
+  RainBoundary: TSwrRainBoundary;
+  ImportedData: T3DDoubleArray;
+  SwrCollection: TCustomSwrListCollection;
+  Reuse: TBooleanArray;
+begin
+  if (Length(FRain) > 0) or (Length(FRain_Const) > 0) then
+  begin
+    FSwrPackage.RainSpecification := smArray;
+
+    ImportedData := FRain;
+    ImportedConstData := FRain_Const;
+    InitializeReuseArray(Reuse, ImportedData, ImportedConstData);
+    AScreenObject := CreateScreenObjectAroundGrid('SWR_Boundary');
+    AScreenObject.ElevationCount := ecZero;
+    AScreenObject.CreateSwrRainBoundary;
+    RainBoundary := AScreenObject.ModflowSwrRain;
+    SwrCollection := RainBoundary.Values as TCustomSwrListCollection;
+    Root := 'Imported_SWR_Rain_';
+    ImportSwrTransientArrays(Root, Reuse, ImportedData, SwrCollection,
+      ImportedConstData);
+  end;
+end;
+
+procedure TSwrImporter.ImportSwrTransientArrays(const Root: string; 
+  Reuse: TBooleanArray; ImportedData: T3DDoubleArray; 
+  SwrCollection: TCustomSwrListCollection; 
+  ImportedConstData: TRealConstantRecordArray);
+var
+  DataArrayName: string;
+  Index1: Integer;
+  StressPeriodIndex: Integer;
+  SwrItem: TCustomSwrBoundaryItem;
+  StartTime: Double;
+  Index2: Integer;
+  ScreenObject: TScreenObject;
+  Uniform: Boolean;
+  TwoDArray: T2DDoubleArray;
+  AValue: Double;
+begin
+  SwrCollection.Capacity := FModel.ModflowStressPeriods.Count;
+  SwrItem := nil;
+  for StressPeriodIndex := 0 to FModel.ModflowStressPeriods.Count - 1 do
+  begin
+    if not Reuse[StressPeriodIndex] then
+    begin
+      StartTime := FModel.ModflowStressPeriods[StressPeriodIndex].StartTime;
+      if SwrItem <> nil then
+      begin
+        SwrItem.EndTime := StartTime;
+      end;
+      SwrItem := SwrCollection.Add as TCustomSwrBoundaryItem;
+      SwrItem.StartTime := StartTime;
+      if (StressPeriodIndex < Length(ImportedConstData)) and ImportedConstData[StressPeriodIndex].IsConstant then
+      begin
+        SwrItem.SwrValue := FortranFloatToStr(ImportedConstData[StressPeriodIndex].RealValue);
+      end
+      else
+      begin
+        TwoDArray := ImportedData[StressPeriodIndex];
+        AValue := TwoDArray[0, 0];
+        Uniform := True;
+        for Index1 := 0 to length(TwoDArray) - 1 do
+        begin
+          for Index2 := 0 to length(TwoDArray[Index1]) - 1 do
+          begin
+            Uniform := AValue = TwoDArray[Index1, Index2];
+            if not Uniform then
+            begin
+              break;
+            end;
+          end;
+        end;
+        if Uniform then
+        begin
+          SwrItem.SwrValue := FortranFloatToStr(AValue);
+        end
+        else
+        begin
+          DataArrayName := Root + GetStressPeriodString(StressPeriodIndex);
+          CreateOrRetrieveCellCenterScreenObject(ScreenObject);
+          CreateDataArrayAndAssignValues(ScreenObject, DataArrayName, TwoDArray);
+          SwrItem.SwrValue := DataArrayName;
+        end;
+      end;
+    end;
+  end;
+  if SwrItem <> nil then
+  begin
+    SwrItem.EndTime := FModel.ModflowStressPeriods.Last.EndTime;
+  end;
+end;
+
+procedure TSwrImporter.InitializeReuseArray(var Reuse: TBooleanArray; 
+  ImportedData: T3DDoubleArray; ImportedConstData: TRealConstantRecordArray);
+var
+  StressPeriodIndex: Integer;
+begin
+  SetLength(Reuse, FModel.ModflowStressPeriods.Count);
+  for StressPeriodIndex := 0 to FModel.ModflowStressPeriods.Count - 1 do
+  begin
+    Reuse[StressPeriodIndex] := True;
+    if StressPeriodIndex < Length(ImportedData) then
+    begin
+      if Length(ImportedData[StressPeriodIndex]) > 0 then
+      begin
+        Reuse[StressPeriodIndex] := False;
+      end;
+    end;
+    if StressPeriodIndex < Length(ImportedConstData) then
+    begin
+      if ImportedConstData[StressPeriodIndex].IsConstant then
+      begin
+        Reuse[StressPeriodIndex] := False;
+      end;
+    end;
+  end;
+end;
+
+procedure TSwrImporter.ImportReachGeom;
+var
+  GeomList: Generics.Collections.TList<TSwrGeomItem>;
+  XSecItem: TReachCrossSectionItem;
+  ItemIndex: Integer;
+  AGeomItem: TSwrGeomItem;
+  TableItem: TSwrGeomTableItem;
+  CrossSecItem: TSwrGeomCrossSectionPoint;
+  GeomIndex: Integer;
+  StressPeriodIndex: Integer;
+  PriorCount: Integer;
+  TabItem: TReachTableItem;
+  PriorIndex: Integer;
+  AGeomArray: TSwrGeomStressPeriodArray;
+  PriorItem: TSwrGeomItem;
+  ReachGeometry: TReachGeometryCollection;
+begin
+  ReachGeometry := FModel.SwrReachGeometry;
+  GeomList := TList<TSwrGeomItem>.Create;
+  try
+    for StressPeriodIndex := 0 to FGeomArray.ArrayLength - 1 do
+    begin
+      AGeomArray := FGeomArray[StressPeriodIndex];
+      PriorCount := GeomList.Count;
+      for GeomIndex := 0 to AGeomArray.ArrayLength - 1 do
+      begin
+        AGeomItem := AGeomArray[GeomIndex];
+        for PriorIndex := 0 to PriorCount - 1 do
+        begin
+          PriorItem := GeomList[PriorIndex];
+          if PriorItem.IsSame(AGeomItem) then
+          begin
+            AGeomItem.FGeomItem := PriorItem.FGeomItem;
+            break;
+          end;
+        end;
+        if AGeomItem.FGeomItem <> nil then
+        begin
+          Continue;
+        end;
+        AGeomItem.FGeomItem := ReachGeometry.Add;
+        AGeomItem.FGeomItem.Name := 'Geom' + IntToStr(ReachGeometry.Count);
+        AGeomItem.FGeomItem.GeometryType :=
+          TGeometryType(AGeomItem.IGEOTYPE - 1);
+        AGeomItem.FGeomItem.ConductanceMethod :=
+          TConductanceMethod(AGeomItem.IGCNDOP);
+        AGeomItem.FGeomItem.Roughness := AGeomItem.GMANNING;
+        AGeomItem.FGeomItem.Width := AGeomItem.GWIDTH;
+        AGeomItem.FGeomItem.BottomElevation := AGeomItem.GBELEV;
+        AGeomItem.FGeomItem.SideSlope := AGeomItem.GSSLOPE;
+        AGeomItem.FGeomItem.Conductance := AGeomItem.GCND;
+        AGeomItem.FGeomItem.Leakance := AGeomItem.GLK;
+        AGeomItem.FGeomItem.CenterDistance := AGeomItem.GCNDLN;
+        AGeomItem.FGeomItem.ExtinctionDepth := AGeomItem.GETEXTD;
+
+        AGeomItem.FGeomItem.CrossSection.Capacity :=
+          AGeomItem.FCrossSection.ArrayLength;
+        for ItemIndex := 0 to AGeomItem.FCrossSection.ArrayLength - 1 do
+        begin
+          CrossSecItem := AGeomItem.FCrossSection[ItemIndex];
+          XSecItem := AGeomItem.FGeomItem.CrossSection.Add;
+          XSecItem.X := CrossSecItem.XB;
+          XSecItem.Elev := CrossSecItem.ELEVB;
+        end;
+
+        AGeomItem.FGeomItem.Table.Capacity := AGeomItem.FTable.ArrayLength;
+        for ItemIndex := 0 to AGeomItem.FTable.ArrayLength - 1 do
+        begin
+          TableItem := AGeomItem.FTable[ItemIndex];
+          TabItem := AGeomItem.FGeomItem.Table.Add;
+          TabItem.Elevation := TableItem.ELEV;
+          TabItem.Volume := TableItem.VOL;
+          TabItem.WettedPerimeter := TableItem.WETPER;
+          TabItem.SurfaceArea := TableItem.SAREA;
+          TabItem.CrossSectionArea := TableItem.XAREA;
+        end;
+      end;
+    end;
+  finally
+    GeomList.Free;
+  end;
+end;
+
+procedure TSwrImporter.SetPackageData;
+begin
+  FSwrPackage.OnlyUseSWR := ISWRONLY > 0;
+  FSwrPackage.ContinueDespiteNonConvergence := USE_NONCONVERGENCE_CONTINUE;
+  FSwrPackage.UseUpstreamWeightingForDiffusiveWave := USE_UPSTREAM_WEIGHTING;
+  FSwrPackage.UseInexactNewton := USE_INEXACT_NEWTON;
+  FSwrPackage.UseSteadyStateStorage := USE_STEADYSTATE_STORAGE;
+  FSwrPackage.UseLaggedStagesAndFlows := USE_LAGGED_OPR_DATA;
+  FSwrPackage.UseLinearDepthScaling := USE_LINEAR_DEPTH_SCALING;
+
+  if USE_DIAGONAL_SCALING then
+  begin
+    FSwrPackage.Scaling := ssDiagonal;
+  end
+  else if USE_L2NORM_SCALING then
+  begin
+    FSwrPackage.Scaling := ssL2Norm;
+  end
+  else
+  begin
+    FSwrPackage.Scaling := ssNone;
+  end;
+
+  if USE_RCMREORDERING then
+  begin
+    FSwrPackage.Reordering := srUse;
+  end
+  else if USE_RCMREORDERING_IF_IMPROVEMENT then
+  begin
+    FSwrPackage.Reordering := srUseIfImproved;
+  end
+  else
+  begin
+    FSwrPackage.Reordering := srNone;
+  end;
+
+  if USE_IMPLICIT_NEWTON_CORRECTION then
+  begin
+    FSwrPackage.NewtonCorrection := sncImplicit;
+  end
+  else if USE_EXPLICIT_NEWTON_CORRECTION then
+  begin
+    FSwrPackage.NewtonCorrection := sncExplicit;
+  end
+  else
+  begin
+    FSwrPackage.NewtonCorrection := sncNone;
+  end;
+
+  FSwrPackage.InitialTimeStepLength := RTINI;
+  FSwrPackage.MinTimeStepLength := RTMIN;
+  FSwrPackage.MaxTimeStepLength := RTMAX;
+  FSwrPackage.TimeStepMultiplier := RTMULT;
+  FSwrPackage.TimeStepIncreaseFrequency := NTMULT;
+  FSwrPackage.MinGradientForDiffusiveFlow := DMINGRAD;
+  FSwrPackage.MinDepthForOutflow := DMNDEPTH;
+  FSwrPackage.MaxRainfallForStepAdjustment := DMAXRAI;
+  FSwrPackage.MaxStageChangePerStep := DMAXSTG;
+  FSwrPackage.MaxInflowChange := DMAXINF;
+
+  if ISWRPRGF = 0 then
+  begin
+    FSwrPackage.PrintInflowsAndOutflows := spoNone;
+  end
+  else if ISWRPRGF > 0 then
+  begin
+    FSwrPackage.PrintInflowsAndOutflows := spoASCII;
+  end
+  else
+  begin
+    FSwrPackage.PrintInflowsAndOutflows := spoBinary;
+  end;
+
+  if ISWRPSTG = 0 then
+  begin
+    FSwrPackage.PrintStage := spoNone;
+  end
+  else if ISWRPSTG > 0 then
+  begin
+    FSwrPackage.PrintStage := spoASCII;
+  end
+  else
+  begin
+    FSwrPackage.PrintStage := spoBinary;
+  end;
+
+  if ISWRPQAQ = 0 then
+  begin
+    FSwrPackage.PrintReachExchangeAndProperties := spoNone;
+  end
+  else if ISWRPQAQ > 0 then
+  begin
+    FSwrPackage.PrintReachExchangeAndProperties := spoASCII;
+  end
+  else
+  begin
+    FSwrPackage.PrintReachExchangeAndProperties := spoBinary;
+  end;
+
+  if ISWRPQM = 0 then
+  begin
+    FSwrPackage.PrintReachLateralFlow := spoNone;
+  end
+  else if ISWRPQM > 0 then
+  begin
+    FSwrPackage.PrintReachLateralFlow := spoASCII;
+  end
+  else
+  begin
+    FSwrPackage.PrintReachLateralFlow := spoBinary;
+  end;
+
+  if ISWRPSTR = 0 then
+  begin
+    FSwrPackage.PrintStructureFlow := spoNone;
+  end
+  else if ISWRPSTR > 0 then
+  begin
+    FSwrPackage.PrintStructureFlow := spoASCII;
+  end
+  else
+  begin
+    FSwrPackage.PrintStructureFlow := spoBinary;
+  end;
+
+  FSwrPackage.PrintMaxFroude := ISWRPFRN > 0;
+  FSwrPackage.PrintSwrDataToScreen := PRINT_SWR_TO_SCREEN;
+
+  if SAVE_SWRDT then
+  begin
+    if SWRDT_Unit = 0 then
+    begin
+      FSwrPackage.SaveSwrTimeStepLength := spoNone;
+    end
+    else if SWRDT_Unit > 0 then
+    begin
+      FSwrPackage.SaveSwrTimeStepLength := spoASCII;
+    end
+    else
+    begin
+      FSwrPackage.SaveSwrTimeStepLength := spoBinary;
+    end;
+  end
+  else
+  begin
+    FSwrPackage.SaveSwrTimeStepLength := spoNone;
+  end;
+
+  FSwrPackage.SaveAverageSimulatedResults := SAVE_AVERAGE_RESULTS;
+  FSwrPackage.SaveConvergenceHistory := SAVE_CONVERGENCE_HISTORY;
+
+  if SAVE_RIVER_PACKAGE then
+  begin
+    FSwrPackage.SaveRiver := ssrSaveActive;
+  end
+  else if SAVE_RIVER_PACKAGE_ALL then
+  begin
+    FSwrPackage.SaveRiver := ssrSaveAll;
+  end
+  else
+  begin
+    FSwrPackage.SaveRiver := ssrNone;
+  end;
+
+  if SAVE_SWROBSERVATIONS then
+  begin
+    FSwrPackage.SaveObs := ssoSaveObs;
+  end
+  else if SAVE_SWROBSERVATIONS_ALL then
+  begin
+    FSwrPackage.SaveObs := ssoSaveObsAll;
+  end
+  else
+  begin
+    FSwrPackage.SaveObs := ssoNone;
+  end;
+
+  if FSwrPackage.SaveObs in [ssoSaveObs, ssoSaveObsAll] then
+  begin
+    if SWROBSERVATIONS_Unit > 0 then
+    begin
+      FSwrPackage.ObsFormat := swofAscii;
+    end
+    else
+    begin
+      FSwrPackage.ObsFormat := swofBinary;
+    end;
+  end;
+
+  FSwrPackage.SaveFrequency := RTPRN;
+
+  case ISOLVER of
+    1..3:
+      begin
+        FSwrPackage.Solver := TSwrSolver(ISOLVER - 1);
+      end;
+  else
+    Assert(False);
+  end;
+
+  FSwrPackage.MaxOuterIterations := NOUTER;
+  FSwrPackage.MaxInnerIterations := NINNER;
+  FSwrPackage.MaxLineSearchIterations := IBT;
+  FSwrPackage.StageTolerance := TOLS;
+
+  if USE_FRACTIONAL_TOLR then
+  begin
+    FSwrPackage.FlowToleranceOption := rtoFractional;
+  end
+  else if USE_L2NORM_TOLR then
+  begin
+    FSwrPackage.FlowToleranceOption := rtoL2Norm;
+  end
+  else
+  begin
+    FSwrPackage.FlowToleranceOption := rtoNone;
+  end;
+
+  FSwrPackage.FlowTolerance := TOLR;
+
+  if USE_GLOBAL_TOLA then
+  begin
+    FSwrPackage.ExchangeToleranceOption := etGlobal;
+  end
+  else if USE_ABSOLUTE_TOLA then
+  begin
+    FSwrPackage.ExchangeToleranceOption := etAbsolute;
+  end
+  else
+  begin
+    FSwrPackage.ExchangeToleranceOption := etNone;
+  end;
+
+  FSwrPackage.ExchangeTolerance := TOLA;
+  FSwrPackage.SteadyStateDampingFactor := DAMPSS;
+  FSwrPackage.TransientDampingFactor := DAMPTR;
+  FSwrPackage.ConvergencePrintoutInterval := IPRSWR;
+
+  case MUTSWR of
+    0..3:
+      FSwrPackage.PrintConvergence := TSwrPrintConvergence(MUTSWR);
+  else
+    Assert(False);
+  end;
+
+  case IPC of
+    0..4:
+      FSwrPackage.Preconditioner := TSwrPreconditioner(IPC);
+  else
+    Assert(False);
+  end;
+
+  FSwrPackage.MaxLevels := NLEVELS;
+  FSwrPackage.DropThreshold := DROPTOL;
+  FSwrPackage.PrintLineSearchInterval := IBTPRT;
+  FSwrPackage.AlternativeFlowTolerance := PTOLR;
+end;
+
+procedure TSwrImporter.ReadDataSet1B_UnitNumber;
+var
+  IOPTUNIT: Integer;
+  AnOption: string;
+begin
+  Readln(FImporter.FFile, AnOption);
+  AnOption := UpperCase(Trim(AnOption));
+  Readln(FImporter.FFile, IOPTUNIT);
+  if AnOption = 'SAVE_SWRDT' then
+  begin
+    SWRDT_Unit := IOPTUNIT;
+  end
+  else if AnOption = 'SAVE_CONVERGENCE_HISTORY' then
+  begin
+  end
+  else // do nothing
+  if AnOption = 'SAVE_RIVER_PACKAGE' then
+  begin
+  end
+  else // do nothing
+  if AnOption = 'SAVE_RIVER_PACKAGE_ALL' then
+  begin
+  end
+  else // do nothing
+  if AnOption = 'SAVE_SWROBSERVATIONS' then
+  begin
+    SWROBSERVATIONS_Unit := IOPTUNIT;
+  end
+  else if AnOption = 'SAVE_SWROBSERVATIONS_ALL' then
+  begin
+    SWROBSERVATIONS_Unit := IOPTUNIT;
+  end
+  else if AnOption = 'USE_DIRECT_RUNOFF' then
+  begin
+  end
+  else
+  // do nothing
+  begin
+    Assert(False);
+  end;
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadRunoffMapVariable;
+var
+  ID: string;
+begin
+  ReadLn(FImporter.FFile, ID);
+  ID := Trim(ID);
+  Assert(ID = KRunoffMap);
+  if Length(FRunoffMap) = 0 then
+  begin
+    SetLength(FRunoffMap, FModel.ModflowStressPeriods.Count);
+  end;
+  SetLength(FRunoffMap[FCurrentStressPeriod], FGrid.RowCount, FGrid.ColumnCount);
+  ReadVariable2DIntArray(FRunoffMap[FCurrentStressPeriod]);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadRunoffMapConstant;
+var
+  Value: Integer;
+  ID: string;
+begin
+  ReadLn(FImporter.FFile, ID);
+  ID := Trim(ID);
+  Readln(FImporter.FFile, Value);
+  Assert(ID = KRunoffMap);
+  if Length(FRunoffMap_Const) = 0 then
+  begin
+    SetLength(FRunoffMap_Const, FModel.ModflowStressPeriods.Count);
+    InitializeConstIntArray(FRunoffMap_Const);
+  end;
+  FRunoffMap_Const[FCurrentStressPeriod].IsConstant := True;
+  FRunoffMap_Const[FCurrentStressPeriod].IntegerValue := Value;
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13B_9;
+begin
+  Read(FImporter.FFile, FCurrentStructure.ISTRTAB_Gate);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13B_8;
+begin
+  Read(FImporter.FFile, FCurrentStructure.STRMAX);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13B_7;
+begin
+  Read(FImporter.FFile, FCurrentStructure.STRCRITC);
+  Read(FImporter.FFile, FCurrentStructure.STRRT);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13B_6;
+begin
+  Read(FImporter.FFile, FCurrentStructure.STRCRIT);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13B_5;
+begin
+  Read(FImporter.FFile, FCurrentStructure.ISTRTAB_Control);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13B_4;
+var
+  CSTROLO: string;
+begin
+  Readln(FImporter.FFile, CSTROLO);
+  FCurrentStructure.CSTROLO := Trim(UpperCase(CSTROLO));
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13B_3;
+begin
+  Read(FImporter.FFile, FCurrentStructure.ISTROQCON);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13B_2;
+begin
+  Read(FImporter.FFile, FCurrentStructure.ISTRORCH);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13B_1;
+var
+  CSTROTYP: string;
+begin
+  Readln(FImporter.FFile, CSTROTYP);
+  FCurrentStructure.CSTROTYP := Trim(UpperCase(CSTROTYP));
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13C;
+var
+  TableItem: TSwrStructureTableItem;
+begin
+  Inc(FCurrentStructure.FCurrentPointIndex);
+  TableItem := FCurrentStructure.FTable[FCurrentStructure.FCurrentPointIndex];
+  Read(FImporter.FFile, TableItem.STRELEV);
+  Read(FImporter.FFile, TableItem.STRQ);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13A_16;
+begin
+  Read(FImporter.FFile, FCurrentStructure.ISFRRCH);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13A_15;
+begin
+  Read(FImporter.FFile, FCurrentStructure.ISFRSEG);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13A_14;
+begin
+  Read(FImporter.FFile, FCurrentStructure.STRVAL);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13A_13;
+begin
+  Read(FImporter.FFile, FCurrentStructure.ISTRTAB_Discharge);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13A_12;
+begin
+  Read(FImporter.FFile, FCurrentStructure.STRLEN);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13A_11;
+begin
+  Read(FImporter.FFile, FCurrentStructure.STRCD);
+  Read(FImporter.FFile, FCurrentStructure.STRCD2);
+  Read(FImporter.FFile, FCurrentStructure.STRCD3);
+  Read(FImporter.FFile, FCurrentStructure.STRINV);
+  Read(FImporter.FFile, FCurrentStructure.STRWID);
+  Read(FImporter.FFile, FCurrentStructure.STRVAL);
+  Read(FImporter.FFile, FCurrentStructure.ISTRDIR);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13A_10;
+begin
+  Read(FImporter.FFile, FCurrentStructure.STRCD);
+  Read(FImporter.FFile, FCurrentStructure.STRCD3);
+  Read(FImporter.FFile, FCurrentStructure.STRINV);
+  Read(FImporter.FFile, FCurrentStructure.STRWID);
+  Read(FImporter.FFile, FCurrentStructure.STRVAL);
+  Read(FImporter.FFile, FCurrentStructure.ISTRDIR);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13A_9;
+begin
+  Read(FImporter.FFile, FCurrentStructure.STRLEN);
+  Read(FImporter.FFile, FCurrentStructure.STRMAN);
+  Read(FImporter.FFile, FCurrentStructure.ISTRDIR);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13A_8;
+begin
+  Read(FImporter.FFile, FCurrentStructure.STRWID2);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13A_7;
+begin
+  Read(FImporter.FFile, FCurrentStructure.STRCD);
+  Read(FImporter.FFile, FCurrentStructure.STRCD2);
+  Read(FImporter.FFile, FCurrentStructure.STRINV);
+  Read(FImporter.FFile, FCurrentStructure.STRINV2);
+  Read(FImporter.FFile, FCurrentStructure.STRWID);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13A_6;
+begin
+  Read(FImporter.FFile, FCurrentStructure.NSTRPTS);
+  Readln(FImporter.FFile);
+  FCurrentStructure.FTable.ArrayLength := FCurrentStructure.NSTRPTS;
+  FCurrentStructure.FCurrentPointIndex := -1;
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13A_5;
+begin
+  Read(FImporter.FFile, FCurrentStructure.STRVAL);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13A_4;
+begin
+  Read(FImporter.FFile, FCurrentStructure.STRLEN2);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13A_3;
+begin
+  Read(FImporter.FFile, FCurrentStructure.STRLEN);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13A_2;
+begin
+  Read(FImporter.FFile, FCurrentStructure.STRINV);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet13A_1;
+var
+  ISTRRCH: Integer;
+  StructureList: TStructureStressPeriodArray;
+begin
+  StructureList := FStructures.Last;
+  if (StructureList = nil) or (StructureList.FStartingStressPeriod <> FCurrentStressPeriod) then
+  begin
+    FStructures.ArrayLength := FStructures.ArrayLength + 1;
+    StructureList := FStructures.Last;
+    StructureList.FStartingStressPeriod := FCurrentStressPeriod;
+  end;
+  FCurrentStructures := StructureList;
+  FCurrentStructures.ArrayLength := FCurrentStructures.ArrayLength + 1;
+  FCurrentStructure := FCurrentStructures.Last;
+  Read(FImporter.FFile, ISTRRCH);
+  FCurrentStructure.ISTRRCH := ISTRRCH - 1;
+  Read(FImporter.FFile, FCurrentStructure.ISTRNUM);
+  Read(FImporter.FFile, FCurrentStructure.ISTRCONN);
+  Read(FImporter.FFile, FCurrentStructure.ISTRTYPE);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet12;
+var
+  NSTRUCT: Integer;
+  ISMODRCH: Integer;
+  StructureCountItem: TSwrReachStructureCount;
+begin
+  Read(FImporter.FFile, ISMODRCH);
+  FCurrentReach := FReachArray[ISMODRCH - 1];
+  FCurrentReach.FReachStructureCounts.ArrayLength := FCurrentReach.FReachStructureCounts.ArrayLength + 1;
+  Read(FImporter.FFile, NSTRUCT);
+  StructureCountItem := FCurrentReach.FReachStructureCounts.Last;
+  StructureCountItem.StartingStressPeriodIndex := FCurrentStressPeriod;
+  StructureCountItem.NSTRUCT := NSTRUCT;
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet11C;
+var
+  TableItem: TSwrGeomTableItem;
+begin
+  Inc(FCurrentGeom.FCurrentIndex);
+  if FCurrentGeom.FTable.ArrayLength = 0 then
+  begin
+    FCurrentGeom.FTable.ArrayLength := FCurrentGeom.NGEOPTS;
+  end;
+  TableItem := FCurrentGeom.FTable[FCurrentGeom.FCurrentIndex];
+  Read(FImporter.FFile, TableItem.ELEV);
+  Read(FImporter.FFile, TableItem.VOL);
+  Read(FImporter.FFile, TableItem.WETPER);
+  Read(FImporter.FFile, TableItem.SAREA);
+  Read(FImporter.FFile, TableItem.XAREA);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet11B;
+var
+  CrossSectionPoint: TSwrGeomCrossSectionPoint;
+begin
+  Inc(FCurrentGeom.FCurrentIndex);
+  if FCurrentGeom.FCrossSection.ArrayLength = 0 then
+  begin
+    FCurrentGeom.FCrossSection.ArrayLength := FCurrentGeom.NGEOPTS;
+  end;
+  CrossSectionPoint := FCurrentGeom.FCrossSection[FCurrentGeom.FCurrentIndex];
+  Read(FImporter.FFile, CrossSectionPoint.XB);
+  Read(FImporter.FFile, CrossSectionPoint.ELEVB);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet11A_GETEXTD;
+begin
+  Read(FImporter.FFile, FCurrentGeom.GETEXTD);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet11A_GCNDLN;
+begin
+  Read(FImporter.FFile, FCurrentGeom.GCNDLN);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet11A_GLK;
+begin
+  Read(FImporter.FFile, FCurrentGeom.GLK);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet11A_GCND;
+begin
+  Read(FImporter.FFile, FCurrentGeom.GCND);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet11A_GSSLOPE;
+begin
+  Read(FImporter.FFile, FCurrentGeom.GSSLOPE);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet11A_GWIDTH;
+begin
+  Read(FImporter.FFile, FCurrentGeom.GWIDTH);
+  Read(FImporter.FFile, FCurrentGeom.GBELEV);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet11A_NGEOPTS;
+begin
+  Read(FImporter.FFile, FCurrentGeom.NGEOPTS);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+  FCurrentGeom.FCurrentIndex := -1;
+end;
+
+procedure TSwrImporter.ReadDataSet11A_IGEONUM;
+var
+  GeomStressPeriods: TSwrGeomStressPeriodArray;
+begin
+  GeomStressPeriods := FGeomArray.Last;
+  if (GeomStressPeriods = nil) or (GeomStressPeriods.FStartingStressPeriod <> FCurrentStressPeriod) then
+  begin
+    FGeomArray.ArrayLength := FGeomArray.ArrayLength + 1;
+    GeomStressPeriods := FGeomArray.Last;
+    GeomStressPeriods.FStartingStressPeriod := FCurrentStressPeriod;
+  end;
+  FCurrentGeomArrays := GeomStressPeriods;
+  FCurrentGeomArrays.ArrayLength := FCurrentGeomArrays.ArrayLength + 1;
+  FCurrentGeom := FCurrentGeomArrays.Last;
+  Read(FImporter.FFile, FCurrentGeom.IGEONUM);
+  Read(FImporter.FFile, FCurrentGeom.IGEOTYPE);
+  Read(FImporter.FFile, FCurrentGeom.IGCNDOP);
+  Read(FImporter.FFile, FCurrentGeom.GMANNING);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet10;
+var
+  GeomLink: TSwrReachGeomLink;
+  IGMODRCH: Integer;
+  GZSHIFT: Double;
+  IGEONUMR: Integer;
+begin
+  Read(FImporter.FFile, IGMODRCH);
+  FCurrentReach := FReachArray[IGMODRCH - 1];
+  FCurrentReach.FReachGeom_Array.ArrayLength := FCurrentReach.FReachGeom_Array.ArrayLength + 1;
+  Read(FImporter.FFile, IGEONUMR);
+  Read(FImporter.FFile, GZSHIFT);
+  GeomLink := FCurrentReach.FReachGeom_Array.Last;
+  GeomLink.StartingStressPeriodIndex := FCurrentStressPeriod;
+  GeomLink.IGEONUMR := IGEONUMR;
+  GeomLink.GZSHIFT := GZSHIFT;
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet14A;
+var
+  STAGE: Double;
+  IRCHSTG: Integer;
+  SwrStage: TSwrStage;
+begin
+  Read(FImporter.FFile, IRCHSTG);
+  FCurrentReach := FReachArray[IRCHSTG - 1];
+  FCurrentReach.FStage.ArrayLength := FCurrentReach.FStage.ArrayLength + 1;
+  Read(FImporter.FFile, STAGE);
+  SwrStage := FCurrentReach.FStage.Last;
+  SwrStage.StartingStressPeriodIndex := FCurrentStressPeriod;
+  SwrStage.STAGE := STAGE;
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet9A;
+var
+  LatFlow: TSwrLateralFlow;
+  ILINRCH: Integer;
+  QLATFLOW: Double;
+begin
+  Read(FImporter.FFile, ILINRCH);
+  FCurrentReach := FReachArray[ILINRCH - 1];
+  FCurrentReach.FLateralFlow.ArrayLength := FCurrentReach.FLateralFlow.ArrayLength + 1;
+  Read(FImporter.FFile, QLATFLOW);
+  LatFlow := FCurrentReach.FLateralFlow.Last;
+  LatFlow.StartingStressPeriodIndex := FCurrentStressPeriod;
+  LatFlow.QLATFLOW := QLATFLOW;
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadConstantRealArrays;
+var
+  ID: string;
+  Value: double;
+  ConstArray: TRealConstantRecordArray;
+begin
+  ConstArray:= nil;
+  ReadLn(FImporter.FFile, ID);
+  ID := Trim(ID);
+  Readln(FImporter.FFile, Value);
+  if ID = KRain then
+  begin
+    if Length(FRain_Const) = 0 then
+    begin
+      SetLength(FRain_Const, FModel.ModflowStressPeriods.Count);
+      InitializeConstArray(FRain_Const);
+    end;
+    ConstArray := FRain_Const;
+  end
+  else if ID = KEvap then
+  begin
+    if Length(FEvap_Const) = 0 then
+    begin
+      SetLength(FEvap_Const, FModel.ModflowStressPeriods.Count);
+      InitializeConstArray(FEvap_Const);
+    end;
+    ConstArray := FEvap_Const;
+  end
+  else if ID = KLatFlow then
+  begin
+    if Length(FLatFlow_Const) = 0 then
+    begin
+      SetLength(FLatFlow_Const, FModel.ModflowStressPeriods.Count);
+      InitializeConstArray(FLatFlow_Const);
+    end;
+    ConstArray := FLatFlow_Const;
+  end
+  else if ID = KStage then
+  begin
+    if Length(FStage_Const) = 0 then
+    begin
+      SetLength(FStage_Const, FModel.ModflowStressPeriods.Count);
+      InitializeConstArray(FStage_Const);
+    end;
+    ConstArray := FStage_Const;
+  end
+  else if ID = KRunoffMult then
+  begin
+    if Length(FRunoffMultiplier_Const) = 0 then
+    begin
+      SetLength(FRunoffMultiplier_Const, FModel.ModflowStressPeriods.Count);
+      InitializeConstArray(FRunoffMultiplier_Const);
+    end;
+    ConstArray := FRunoffMultiplier_Const;
+  end
+  else if ID = KRunoffValue then
+  begin
+    if Length(FRunoffValue_Const) = 0 then
+    begin
+      SetLength(FRunoffValue_Const, FModel.ModflowStressPeriods.Count);
+      InitializeConstArray(FRunoffValue_Const);
+    end;
+    ConstArray := FRunoffValue_Const;
+  end
+  else
+  begin
+    Assert(False);
+  end;
+  ConstArray[FCurrentStressPeriod].IsConstant := True;
+  ConstArray[FCurrentStressPeriod].RealValue := Value;
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadVariableRealArrays;
+var
+  ID: string;
+begin
+  ReadLn(FImporter.FFile, ID);
+  ID := Trim(ID);
+  if ID = KRain then
+  begin
+    if Length(FRain) = 0 then
+    begin
+      SetLength(FRain, FModel.ModflowStressPeriods.Count);
+    end;
+    SetLength(FRain[FCurrentStressPeriod], FGrid.RowCount, FGrid.ColumnCount);
+    Read2DRealArray(FRain[FCurrentStressPeriod]);
+  end
+  else if ID = KEvap then
+  begin
+    if Length(FEvap) = 0 then
+    begin
+      SetLength(FEvap, FModel.ModflowStressPeriods.Count);
+    end;
+    SetLength(FEvap[FCurrentStressPeriod], FGrid.RowCount, FGrid.ColumnCount);
+    try
+    Read2DRealArray(FEvap[FCurrentStressPeriod]);
+    except
+      begin
+        ShowMessage(IntToStr(FCurrentStressPeriod));
+        raise;
+      end;
+    end;
+  end
+  else if ID = KLatFlow then
+  begin
+    if Length(FLatFlow) = 0 then
+    begin
+      SetLength(FLatFlow, FModel.ModflowStressPeriods.Count);
+    end;
+    SetLength(FLatFlow[FCurrentStressPeriod], FGrid.RowCount, FGrid.ColumnCount);
+    Read2DRealArray(FLatFlow[FCurrentStressPeriod]);
+  end
+  else if ID = KStage then
+  begin
+    if Length(FStage) = 0 then
+    begin
+      SetLength(FStage, FModel.ModflowStressPeriods.Count);
+    end;
+    SetLength(FStage[FCurrentStressPeriod], FGrid.RowCount, FGrid.ColumnCount);
+    Read2DRealArray(FStage[FCurrentStressPeriod]);
+  end
+  else if ID = KRunoffMult then
+  begin
+    if Length(FRunoffMultiplier) = 0 then
+    begin
+      SetLength(FRunoffMultiplier, FModel.ModflowStressPeriods.Count);
+    end;
+    SetLength(FRunoffMultiplier[FCurrentStressPeriod], FGrid.RowCount, FGrid.ColumnCount);
+    Read2DRealArray(FRunoffMultiplier[FCurrentStressPeriod]);
+  end
+  else if ID = KRunoffValue then
+  begin
+    if Length(FRunoffValue) = 0 then
+    begin
+      SetLength(FRunoffValue, FModel.ModflowStressPeriods.Count);
+    end;
+    SetLength(FRunoffValue[FCurrentStressPeriod], FGrid.RowCount, FGrid.ColumnCount);
+    Read2DRealArray(FRunoffValue[FCurrentStressPeriod]);
+  end
+  else
+  begin
+    Assert(False);
+  end;
+end;
+
+procedure TSwrImporter.ReadDataSet8A;
+var
+  IEVPRCH: Integer;
+  EVAP: Double;
+  SwrEvap: TSwrEvap;
+begin
+  Read(FImporter.FFile, IEVPRCH);
+  FCurrentReach := FReachArray[IEVPRCH - 1];
+  FCurrentReach.FEvap.ArrayLength := FCurrentReach.FEvap.ArrayLength + 1;
+  Read(FImporter.FFile, EVAP);
+  SwrEvap := FCurrentReach.FEvap.Last;
+  SwrEvap.StartingStressPeriodIndex := FCurrentStressPeriod;
+  SwrEvap.EVAP := EVAP;
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet7A;
+var
+  SwrRain: TSwrRain;
+  RAIN: Double;
+  IRAIRCH: Integer;
+begin
+  Read(FImporter.FFile, IRAIRCH);
+  FCurrentReach := FReachArray[IRAIRCH - 1];
+  FCurrentReach.FRain.ArrayLength := FCurrentReach.FRain.ArrayLength + 1;
+  Read(FImporter.FFile, RAIN);
+  SwrRain := FCurrentReach.FRain.Last;
+  SwrRain.StartingStressPeriodIndex := FCurrentStressPeriod;
+  SwrRain.RAIN := RAIN;
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet6;
+var
+  ISWRBND: Integer;
+  IBNDRCH: Integer;
+  SWRBND: TSwrISWRBND;
+begin
+  Read(FImporter.FFile, IBNDRCH);
+  FCurrentReach := FReachArray[IBNDRCH - 1];
+  FCurrentReach.F_ISWRBND_Array.ArrayLength := FCurrentReach.F_ISWRBND_Array.ArrayLength + 1;
+  Read(FImporter.FFile, ISWRBND);
+  SWRBND := FCurrentReach.F_ISWRBND_Array.Last;
+  SWRBND.StartingStressPeriodIndex := FCurrentStressPeriod;
+  SWRBND.ISWRBND := ISWRBND;
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet5Changed;
+var
+  ITMP: Integer;
+  IRDGEO: Integer;
+  IPTFLG: Integer;
+  IRDSTG: Integer;
+  IRDLIN: Integer;
+  IRDSTR: Integer;
+  IRDEVP: Integer;
+  IRDBND: Integer;
+  IRDRAI: Integer;
+begin
+  InitializeStructureChanged;
+  Inc(FCurrentStressPeriod);
+  Read(FImporter.FFile, ITMP);
+  Read(FImporter.FFile, IRDBND);
+  Read(FImporter.FFile, IRDRAI);
+  Read(FImporter.FFile, IRDEVP);
+  Read(FImporter.FFile, IRDLIN);
+  Read(FImporter.FFile, IRDGEO);
+  Read(FImporter.FFile, IRDSTR);
+  FStructureChanged[FCurrentStressPeriod] := IRDSTR > 0;
+  Read(FImporter.FFile, IRDSTG);
+  Read(FImporter.FFile, IPTFLG);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+  Assert(ITMP > 0);
+end;
+
+procedure TSwrImporter.ReadDataSet5_NoChange;
+var
+  ITMP: Integer;
+begin
+  InitializeStructureChanged;
+  Read(FImporter.FFile, ITMP);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+  Inc(FCurrentStressPeriod);
+  Assert(ITMP <= 0);
+end;
+
+procedure TSwrImporter.ReadDataSet4F_IOBSLOC2_IOBSLAY;
+var
+  IOBSLOC2_IOBSLAY: Integer;
+begin
+  Readln(FImporter.FFile, IOBSLOC2_IOBSLAY);
+  if (FCurrentObs.COBSTYPE = 'FLOW') or (FCurrentObs.COBSTYPE = 'STRUCTURE') then
+  begin
+    FCurrentObs.IOBSLOC2 := IOBSLOC2_IOBSLAY;
+  end
+  else if FCurrentObs.COBSTYPE = 'BASEFLOW' then
+  begin
+    FCurrentObs.IOBSLAY := IOBSLOC2_IOBSLAY;
+  end
+  else
+  begin
+    Assert(False);
+  end;
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet4F_IOBSLOC;
+var
+  IOBSLOC: integer;
+begin
+  Readln(FImporter.FFile, IOBSLOC);
+  FCurrentObs.IOBSLOC := IOBSLOC;
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet4F_COBSTYPE;
+var
+  COBSTYPE: string;
+begin
+  Readln(FImporter.FFile, COBSTYPE);
+  FCurrentObs.COBSTYPE := upperCase(Trim(COBSTYPE));
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet4F_COBSNAME;
+begin
+  Inc(FCurrentObsIndex);
+  FCurrentObs := FObsArray[FCurrentObsIndex];
+  Readln(FImporter.FFile, FCurrentObs.COBSNAME);
+  FCurrentObs.COBSNAME := Trim(FCurrentObs.COBSNAME);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet4E;
+var
+  NOBS: Integer;
+begin
+  Read(FImporter.FFile, NOBS);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+  FObsArray.ArrayLength := NOBS;
+  FCurrentObsIndex := -1;
+end;
+
+procedure TSwrImporter.ReadDataSet4D_ITABRCH;
+var
+  ReachIndex: Integer;
+  ITABRCH: Integer;
+  ntabrch: Integer;
+begin
+  Readln(FImporter.FFile, ntabrch);
+  SetLength(FCurrentTabFile.ITABRCH, ntabrch);
+  for ReachIndex := 0 to ntabrch - 1 do
+  begin
+    Readln(FImporter.FFile, ITABRCH);
+    FCurrentTabFile.ITABRCH[ReachIndex] := ITABRCH-1;
+  end;
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet4D_CTABRCH;
+var
+  CTABRCH: string;
+begin
+  Readln(FImporter.FFile, CTABRCH);
+  FCurrentTabFile.CTABRCH := Trim(UpperCase(CTABRCH));
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet4D_CINTP;
+var
+  CINTP: string;
+begin
+  Readln(FImporter.FFile, CINTP);
+  FCurrentTabFile.CINTP := Trim(UpperCase(CINTP));
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet4D_ITABUNIT;
+begin
+  Read(FImporter.FFile, FCurrentTabFile.ITABUNIT);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet4D_CTABTYPE;
+var
+  CTABTYPE: string;
+begin
+  Readln(FImporter.FFile, CTABTYPE);
+  FCurrentTabFile.CTABTYPE := Trim(UpperCase(CTABTYPE));
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet4D_ITAB;
+begin
+  Inc(FCurrentTabIndex);
+  FCurrentTabFile := FTabFiles[FCurrentTabIndex];
+  Read(FImporter.FFile, FCurrentTabFile.ITAB);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet4C;
+var
+  NTABS: Integer;
+begin
+  Read(FImporter.FFile, NTABS);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+  FTabFiles.ArrayLength := NTABS;
+  FCurrentTabIndex := -1;
+end;
+
+procedure TSwrImporter.ReadDataSet4B_ICONN;
+var
+  ICONN: Integer;
+begin
+  Read(FImporter.FFile, ICONN);
+  Inc(FCurrentConnection);
+  Readln(FImporter.FFile);
+  FCurrentReach.ICONN[FCurrentConnection] := ICONN - 1;
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet4B_NCONN;
+var
+  NCONN: Integer;
+  IRCH4B: Integer;
+begin
+  Read(FImporter.FFile, IRCH4B);
+  Read(FImporter.FFile, NCONN);
+  FCurrentReach := FReachArray[IRCH4B - 1];
+  SetLength(FCurrentReach.ICONN, NCONN);
+  FCurrentConnection := -1;
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet4A;
+var
+  IRCH4A: Integer;
+begin
+  Read(FImporter.FFile, IRCH4A);
+  FCurrentReach := FReachArray[IRCH4A - 1];
+  Read(FImporter.FFile, FCurrentReach.IROUTETYPE);
+  Read(FImporter.FFile, FCurrentReach.IRGNUM);
+  Read(FImporter.FFile, FCurrentReach.Layer);
+  Read(FImporter.FFile, FCurrentReach.Row);
+  Read(FImporter.FFile, FCurrentReach.Column);
+  Read(FImporter.FFile, FCurrentReach.RLEN);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ImportReaches;
+var
+  ReachIndex: Integer;
+  ReachItem: TSwrReach;
+  LocationList: TList;
+  AScreenObject: TScreenObject;
+  AReachBoundary: TSwrReachBoundary;
+  VertexValue: TPointValuesItem;
+  VVItem: TPointValue;
+  ConnectionIndex: Integer;
+  AConnection: TSwrConnectionItem;
+  IntList: TList<Integer>;
+  StressPeriodIndex: Integer;
+  ActiveIndex: Integer;
+  StageIndex: Integer;
+  GeomIndex: Integer;
+  ActiveItem: TSwrISWRBND;
+  StressPeriod: Integer;
+  StartingTime: Double;
+  EndingTime: Double;
+  ReachValues: TSwrReachCollection;
+  TransientReachItem: TSwrTransientReachItem;
+  StageItem: TSwrStage;
+  GeomLink: TSwrReachGeomLink;
+  EndStressPeriod: Integer;
+  GeomItem: TReachGeometryItem;
+  RainItem: TSwrRain;
+  NextRainItem: TSwrRain;
+  RainBoundary: TSwrRainBoundary;
+  RainCollection: TSwrRainListCollection;
+  SwrRainItem: TSwrRainItem;
+  EvapBoundary: TSwrEvapBoundary;
+  EvapCollection: TSwrEvapListCollection;
+  EvapItem: TSwrEvap;
+  NextEvapItem: TSwrEvap;
+  SwrEvapItem: TSwrEvapItem;
+  LatInflow: TSwrLatInflowBoundary;
+  LatInflowCollection: TSwrLatInflowListCollection;
+  LatInflowItem: TSwrLateralFlow;
+  NextLatInflowItem: TSwrLateralFlow;
+  SwrLatInflowItem: TSwrLatInflowItem;
+  procedure AddStartingStressPeriods(SwrObjectArray: TCustomSwrObjectArray);
+  var
+    StressPeriodIndex: integer;
+  begin
+    for StressPeriodIndex := 0 to SwrObjectArray.ArrayLength - 1 do
+    begin
+      IntList.Add(SwrObjectArray[StressPeriodIndex].StartingStressPeriodIndex);
+    end;
+  end;
+  procedure UpdateIndex(var AnIndex: integer;
+    SwrObjectArray: TCustomSwrObjectArray);
+  var
+    TestIndex: Integer;
+    SwrItem: TCustomSwrArrayMember;
+  begin
+    if AnIndex < SwrObjectArray.ArrayLength then
+    begin
+      for TestIndex := AnIndex to SwrObjectArray.ArrayLength - 1 do
+      begin
+        SwrItem := SwrObjectArray[TestIndex];
+        if SwrItem.StartingStressPeriodIndex = StressPeriod then
+        begin
+          AnIndex := TestIndex;
+          break;
+        end
+        else if SwrItem.StartingStressPeriodIndex > StressPeriod then
+        begin
+          AnIndex := TestIndex-1;
+          break;
+        end;
+      end;
+    end
+  end;
+  function FindGeom(IGEONUMR: integer): TReachGeometryItem;
+  var
+    GeomArrayStart: Integer;
+    GeomArrayIndex: Integer;
+    GeomArray: TSwrGeomStressPeriodArray;
+    GeomIndex: integer;
+    GeomItem: TSwrGeomItem;
+  begin
+    result := nil;
+    GeomArrayStart := FGeomArray.FindByStressPeriod(StressPeriod);
+    for GeomArrayIndex := GeomArrayStart downto 0 do
+    begin
+      GeomArray := FGeomArray[GeomArrayIndex];
+      for GeomIndex := 0 to GeomArray.ArrayLength - 1 do
+      begin
+        GeomItem := GeomArray[GeomIndex];
+        if GeomItem.IGEONUM = IGEONUMR then
+        begin
+          result := GeomItem.FGeomItem;
+          Exit;
+        end;
+      end;
+    end;
+  end;
+begin
+  FScreenObjectIndex := 0;
+  LocationList := TList.Create;
+  IntList := TList<Integer>.Create;
+  try
+    for ReachIndex := 0 to FReachArray.ArrayLength - 1 do
+    begin
+      ReachItem := FReachArray[ReachIndex];
+      LocationList.Clear;
+      LocationList.Add(ReachItem);
+      AScreenObject := CreateScreenObject(LocationList, FScreenObjectIndex,
+        -1, -1, otPoint);
+
+      VertexValue := AScreenObject.PointPositionValues.Add;
+      VertexValue.Position := 0;
+      VVItem := VertexValue.Values.Add;
+      VVItem.Name := 'Reach';
+      VVItem.Value := ReachIndex + 1;
+
+      AScreenObject.CreateSwrReachesBoundary;
+      AReachBoundary := AScreenObject.ModflowSwrReaches;
+      AReachBoundary.RouteType := TSwrRouteType(ReachItem.IROUTETYPE -1);
+      AReachBoundary.Grouped := True;
+      AReachBoundary.GroupNumber := ReachItem.IRGNUM;
+      AReachBoundary.ReachLengthFormula := FortranFloatToStr(ReachItem.RLEN);
+      AReachBoundary.MultiLayer := ReachItem.Layer < 1;
+
+      AReachBoundary.Connections.Capacity := Length(ReachItem.ICONN);
+      for ConnectionIndex := 0 to Length(ReachItem.ICONN) - 1 do
+      begin
+        AConnection := AReachBoundary.Connections.Add;
+        AConnection.Method := scmSpecifiedReach;
+        AConnection.Reach := ReachItem.ICONN[ConnectionIndex]+1;
+      end;
+
+      AddStartingStressPeriods(ReachItem.F_ISWRBND_Array);
+      AddStartingStressPeriods(ReachItem.FStage);
+      AddStartingStressPeriods(ReachItem.FReachGeom_Array);
+
+      IntList.Sort;
+      for StressPeriodIndex := IntList.Count - 1 downto 1 do
+      begin
+        if IntList[StressPeriodIndex] = IntList[StressPeriodIndex-1] then
+        begin
+          IntList.Delete(StressPeriodIndex);
+        end;
+      end;
+
+      ActiveIndex := 0;
+      StageIndex := 0;
+      GeomIndex := 0;
+
+      ReachValues := AReachBoundary.ReachValues;
+      ReachValues.Capacity := IntList.Count;
+      for StressPeriodIndex := 0 to IntList.Count - 1 do
+      begin
+        StressPeriod := IntList[StressPeriodIndex];
+        UpdateIndex(ActiveIndex, ReachItem.F_ISWRBND_Array);
+        UpdateIndex(StageIndex, ReachItem.FStage);
+        UpdateIndex(GeomIndex, ReachItem.FReachGeom_Array);
+
+        StartingTime := FModel.ModflowStressPeriods[StressPeriod].StartTime;
+        if StressPeriodIndex+1 < IntList.Count - 1 then
+        begin
+          EndStressPeriod := IntList[StressPeriodIndex+1];
+          EndingTime := FModel.ModflowStressPeriods[EndStressPeriod].StartTime;
+        end
+        else
+        begin
+          EndingTime := FModel.ModflowStressPeriods.Last.EndTime;
+        end;
+
+        TransientReachItem := ReachValues.Add;
+        TransientReachItem.StartTime := StartingTime;
+        TransientReachItem.EndTime := EndingTime;
+
+        if ActiveIndex < ReachItem.F_ISWRBND_Array.ArrayLength then
+        begin
+          ActiveItem := ReachItem.F_ISWRBND_Array[ActiveIndex];
+          TransientReachItem.ReachType := TSwrReachType(1-ActiveItem.ISWRBND)
+        end
+        else
+        begin
+          TransientReachItem.ReachType := srtActive;
+        end;
+
+        if StageIndex < ReachItem.FStage.ArrayLength then
+        begin
+          FSwrPackage.StageSpecification := smObject;
+          StageItem := ReachItem.FStage[StageIndex];
+          TransientReachItem.Stage := FortranFloatToStr(StageItem.STAGE);
+        end;
+
+        Assert(GeomIndex < ReachItem.FReachGeom_Array.ArrayLength);
+        GeomLink := ReachItem.FReachGeom_Array[GeomIndex];
+        GeomItem := FindGeom(GeomLink.IGEONUMR);
+        TransientReachItem.GeometryName := GeomItem.Name;
+        TransientReachItem.VerticalOffset := FortranFloatToStr(GeomLink.GZSHIFT);
+      end;
+
+      if ReachItem.FRain.ArrayLength > 0 then
+      begin
+        FSwrPackage.RainSpecification := smObject;
+
+        AScreenObject.CreateSwrRainBoundary;
+        RainBoundary := AScreenObject.ModflowSwrRain;
+        RainCollection := RainBoundary.Values as TSwrRainListCollection;
+        RainCollection.Capacity := ReachItem.FRain.ArrayLength;
+        for StressPeriodIndex := 0 to ReachItem.FRain.ArrayLength - 1 do
+        begin
+          RainItem := ReachItem.FRain[StressPeriodIndex];
+          StartingTime := FModel.ModflowStressPeriods[
+            RainItem.StartingStressPeriodIndex].StartTime;
+          if StressPeriodIndex+1 < ReachItem.FRain.ArrayLength - 1 then
+          begin
+            NextRainItem := ReachItem.FRain[StressPeriodIndex+1];
+            EndingTime := FModel.ModflowStressPeriods[
+              NextRainItem.StartingStressPeriodIndex].StartTime;
+          end
+          else
+          begin
+            EndingTime := FModel.ModflowStressPeriods.Last.EndTime;
+          end;
+
+          SwrRainItem := RainCollection.Add as TSwrRainItem;
+          SwrRainItem.StartTime := StartingTime;
+          SwrRainItem.EndTime := EndingTime;
+          SwrRainItem.SwrValue := FortranFloatToStr(RainItem.RAIN);
+        end;
+      end;
+
+      if ReachItem.FEvap.ArrayLength > 0 then
+      begin
+        FSwrPackage.EvapSpecification := smObject;
+
+        AScreenObject.CreateSwrEvapBoundary;
+        EvapBoundary := AScreenObject.ModflowSwrEvap;
+        EvapCollection := EvapBoundary.Values as TSwrEvapListCollection;
+        EvapCollection.Capacity := ReachItem.FEvap.ArrayLength;
+        for StressPeriodIndex := 0 to ReachItem.FEvap.ArrayLength - 1 do
+        begin
+          EvapItem := ReachItem.FEvap[StressPeriodIndex];
+          StartingTime := FModel.ModflowStressPeriods[
+            EvapItem.StartingStressPeriodIndex].StartTime;
+          if StressPeriodIndex+1 < ReachItem.FEvap.ArrayLength - 1 then
+          begin
+            NextEvapItem := ReachItem.FEvap[StressPeriodIndex+1];
+            EndingTime := FModel.ModflowStressPeriods[
+              NextEvapItem.StartingStressPeriodIndex].StartTime;
+          end
+          else
+          begin
+            EndingTime := FModel.ModflowStressPeriods.Last.EndTime;
+          end;
+
+          SwrEvapItem := EvapCollection.Add as TSwrEvapItem;
+          SwrEvapItem.StartTime := StartingTime;
+          SwrEvapItem.EndTime := EndingTime;
+          SwrEvapItem.SwrValue := FortranFloatToStr(EvapItem.EVAP);
+        end;
+      end;
+
+      if ReachItem.FLateralFlow.ArrayLength > 0 then
+      begin
+        FSwrPackage.LateralInflowSpecification := smObject;
+
+        AScreenObject.CreateSwrLatInflowBoundary;
+        LatInflow := AScreenObject.ModflowSwrLatInflow;
+        LatInflowCollection := LatInflow.Values as TSwrLatInflowListCollection;
+        LatInflowCollection.Capacity := ReachItem.FLateralFlow.ArrayLength;
+        for StressPeriodIndex := 0 to ReachItem.FLateralFlow.ArrayLength - 1 do
+        begin
+          LatInflowItem := ReachItem.FLateralFlow[StressPeriodIndex];
+          StartingTime := FModel.ModflowStressPeriods[
+            LatInflowItem.StartingStressPeriodIndex].StartTime;
+          if StressPeriodIndex+1 < ReachItem.FLateralFlow.ArrayLength - 1 then
+          begin
+            NextLatInflowItem := ReachItem.FLateralFlow[StressPeriodIndex+1];
+            EndingTime := FModel.ModflowStressPeriods[
+              NextLatInflowItem.StartingStressPeriodIndex].StartTime;
+          end
+          else
+          begin
+            EndingTime := FModel.ModflowStressPeriods.Last.EndTime;
+          end;
+
+          SwrLatInflowItem := LatInflowCollection.Add as TSwrLatInflowItem;
+          SwrLatInflowItem.StartTime := StartingTime;
+          SwrLatInflowItem.EndTime := EndingTime;
+          SwrLatInflowItem.SwrValue := FortranFloatToStr(LatInflowItem.QLATFLOW);
+        end;
+      end;
+    end;
+  finally
+    IntList.Free;
+    LocationList.Free;
+  end
+end;
+
+procedure TSwrImporter.HandlePackage;
+var
+  AScreenObject: TScreenObject;
+begin
+  if (FCurrentStressPeriod < 0) or
+    (FCurrentStressPeriod < FModel.ModflowStressPeriods.Count -1) then
+  begin
+    Exit;
+  end;
+  inherited;
+  FSwrPackage := FModel.ModflowPackages.SwrPackage;
+  FSwrPackage.IsSelected := True;
+  if FModel.ModelSelection = msModflow then
+  begin
+    FModel.ModelSelection := msModflowNWT;
+  end;
+
+  SetPackageData;
+  ImportReachGeom;
+  ImportReaches;
+
+  AScreenObject := nil;
+  ImportRainArray(AScreenObject);
+  ImportEvapArray(AScreenObject);
+  ImportLateralFlowArray(AScreenObject);
+  ImportStageArray(AScreenObject);
+  ImportDirectRunoffArrays(AScreenObject);
+
+  ImportTabFiles;
+  ImportStructures;
+  ImportObservations;
+
+  frmGoPhast.EnableSwrActions;
+
+//  FModel.DataArrayManager.CreateInitialDataSets;
+//  FModel.UpdateOnPostInitialize;
+//  for ChildIndex := 0 to FModel.ChildModels.Count - 1 do
+//  begin
+//    ChildModel := FModel.ChildModels[ChildIndex].ChildModel;
+//    ChildModel.DataArrayManager.CreateInitialDataSets;
+//    ChildModel.UpdateOnPostInitialize;
+//  end;
+
+end;
+
+procedure TSwrImporter.ReadDataSet3_PTOLR;
+begin
+  Read(FImporter.FFile, PTOLR);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet3_IBTPRT;
+begin
+  Read(FImporter.FFile, IBTPRT);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet3_NLEVELS;
+begin
+  Read(FImporter.FFile, NLEVELS);
+  Read(FImporter.FFile, DROPTOL);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet3IPC;
+begin
+  Read(FImporter.FFile, IPC);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet3Required;
+begin
+  Read(FImporter.FFile, ISOLVER);
+  Read(FImporter.FFile, NOUTER);
+  Read(FImporter.FFile, NINNER);
+  Read(FImporter.FFile, IBT);
+  Read(FImporter.FFile, TOLS);
+  Read(FImporter.FFile, TOLR);
+  Read(FImporter.FFile, TOLA);
+  Read(FImporter.FFile, DAMPSS);
+  Read(FImporter.FFile, DAMPTR);
+  Read(FImporter.FFile, IPRSWR);
+  Read(FImporter.FFile, MUTSWR);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet2Optional;
+begin
+  Read(FImporter.FFile, DMAXRAI);
+  Read(FImporter.FFile, DMAXSTG);
+  Read(FImporter.FFile, DMAXINF);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet2Required;
+begin
+  Read(FImporter.FFile, DLENCONV);
+  Read(FImporter.FFile, TIMECONV);
+  Read(FImporter.FFile, RTINI);
+  Read(FImporter.FFile, RTMIN);
+  Read(FImporter.FFile, RTMAX);
+  Read(FImporter.FFile, RTPRN);
+  Read(FImporter.FFile, RTMULT);
+  Read(FImporter.FFile, NTMULT);
+  Read(FImporter.FFile, DMINGRAD);
+  Read(FImporter.FFile, DMNDEPTH);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet1B;
+var
+  AnOption: string;
+begin
+  Readln(FImporter.FFile, AnOption);
+  AnOption := UpperCase(Trim(AnOption));
+  if AnOption = 'PRINT_SWR_TO_SCREEN' then
+  begin
+    PRINT_SWR_TO_SCREEN := True;
+  end
+  else if AnOption = 'SAVE_SWRDT' then
+  begin
+    SAVE_SWRDT := True;
+  end
+  else if AnOption = 'SAVE_CONVERGENCE_HISTORY' then
+  begin
+    SAVE_CONVERGENCE_HISTORY := True;
+  end
+  else if AnOption = 'SAVE_RIVER_PACKAGE' then
+  begin
+    SAVE_RIVER_PACKAGE := True;
+    SAVE_RIVER_PACKAGE_ALL := False;
+  end
+  else if AnOption = 'SAVE_RIVER_PACKAGE_ALL' then
+  begin
+    SAVE_RIVER_PACKAGE_ALL := True;
+    SAVE_RIVER_PACKAGE := False;
+  end
+  else if AnOption = 'SAVE_AVERAGE_RESULTS' then
+  begin
+    SAVE_AVERAGE_RESULTS := True;
+  end
+  else if AnOption = 'USE_TABFILES' then
+  begin
+    USE_TABFILES := True;
+  end
+  else if AnOption = 'USE_NONCONVERGENCE_CONTINUE' then
+  begin
+    USE_NONCONVERGENCE_CONTINUE := True;
+  end
+  else if AnOption = 'USE_UPSTREAM_WEIGHTING' then
+  begin
+    USE_UPSTREAM_WEIGHTING := True;
+  end
+  else if AnOption = 'USE_INEXACT_NEWTON' then
+  begin
+    USE_INEXACT_NEWTON := True;
+  end
+  else if AnOption = 'USE_STEADYSTATE_STORAGE' then
+  begin
+    USE_STEADYSTATE_STORAGE := True;
+  end
+  else if AnOption = 'USE_LAGGED_OPR_DATA' then
+  begin
+    USE_LAGGED_OPR_DATA := True;
+  end
+  else if AnOption = 'USE_LINEAR_DEPTH_SCALING' then
+  begin
+    USE_LINEAR_DEPTH_SCALING := True;
+  end
+  else if AnOption = 'USE_DIAGONAL_SCALING' then
+  begin
+    USE_DIAGONAL_SCALING := True;
+    USE_L2NORM_SCALING := False;
+  end
+  else if AnOption = 'USE_L2NORM_SCALING' then
+  begin
+    USE_L2NORM_SCALING := True;
+    USE_DIAGONAL_SCALING := False;
+  end
+  else if AnOption = 'USE_RCMREORDERING' then
+  begin
+    USE_RCMREORDERING := True;
+    USE_RCMREORDERING_IF_IMPROVEMENT := False;
+  end
+  else if AnOption = 'USE_RCMREORDERING_IF_IMPROVEMENT' then
+  begin
+    USE_RCMREORDERING_IF_IMPROVEMENT := True;
+    USE_RCMREORDERING := False;
+  end
+//  else if AnOption = 'USE_STAGE_TRANSFORM' then
+//  begin
+//    USE_STAGE_TRANSFORM := True;
+//  end
+//  else if AnOption = 'USE_WEIGHTED_HEADS' then
+//  begin
+//    USE_WEIGHTED_HEADS := True;
+//  end
+  else if AnOption = 'USE_IMPLICIT_NEWTON_CORRECTION' then
+  begin
+    USE_IMPLICIT_NEWTON_CORRECTION := True;
+    USE_EXPLICIT_NEWTON_CORRECTION := False;
+  end
+  else if AnOption = 'USE_EXPLICIT_NEWTON_CORRECTION' then
+  begin
+    USE_EXPLICIT_NEWTON_CORRECTION := True;
+    USE_IMPLICIT_NEWTON_CORRECTION := False;
+  end
+//  else if AnOption = 'USE_ORIGINAL_2D_QM_FORMULATION' then
+//  begin
+//    USE_ORIGINAL_2D_QM_FORMULATION := True;
+//  end
+//  else if AnOption = 'USE_IMPLICIT_INVARIATE_QM' then
+//  begin
+//    USE_IMPLICIT_INVARIATE_QM := True;
+//  end
+//  else if AnOption = 'USE_SOURCECELL_INVARIATE_QM' then
+//  begin
+//    USE_SOURCECELL_INVARIATE_QM := True;
+//  end
+  else if AnOption = 'USE_FRACTIONAL_TOLR' then
+  begin
+    USE_FRACTIONAL_TOLR := True;
+    USE_L2NORM_TOLR := False;
+  end
+  else if AnOption = 'USE_L2NORM_TOLR' then
+  begin
+    USE_L2NORM_TOLR := True;
+    USE_FRACTIONAL_TOLR := False;
+  end
+  else if AnOption = 'SAVE_SWROBSERVATIONS' then
+  begin
+    SAVE_SWROBSERVATIONS := True;
+    SAVE_SWROBSERVATIONS_ALL := False;
+  end
+  else if AnOption = 'SAVE_SWROBSERVATIONS_ALL' then
+  begin
+    SAVE_SWROBSERVATIONS_ALL := True;
+    SAVE_SWROBSERVATIONS := False;
+  end
+//  else if AnOption = 'USE_MULTICORE' then
+//  begin
+//    USE_MULTICORE := True;
+//  end
+//  else if AnOption = 'USE_MULTICORE_VECTOR' then
+//  begin
+//    USE_MULTICORE_VECTOR := True;
+//  end
+  else if AnOption = 'USE_DIRECT_RUNOFF' then
+  begin
+    USE_DIRECT_RUNOFF := True;
+  end
+  else if AnOption = 'USE_GLOBAL_TOLA' then
+  begin
+    USE_GLOBAL_TOLA := True;
+    USE_ABSOLUTE_TOLA := False;
+  end
+  else if AnOption = 'USE_ABSOLUTE_TOLA' then
+  begin
+    USE_ABSOLUTE_TOLA := True;
+    USE_GLOBAL_TOLA := False;
+  end
+  else if AnOption = 'END' then
+  begin
+  end
+  else
+  // do nothing
+  begin
+    Assert(False);
+  end;
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TSwrImporter.ReadDataSet1A;
+begin
+  Read(FImporter.FFile, NREACHES);
+  Read(FImporter.FFile, ISWRONLY);
+  Read(FImporter.FFile, ISWRCBC);
+  Read(FImporter.FFile, ISWRPRGF);
+  Read(FImporter.FFile, ISWRPSTG);
+  Read(FImporter.FFile, ISWRPQAQ);
+  Read(FImporter.FFile, ISWRPQM);
+  Read(FImporter.FFile, ISWRPSTR);
+  Read(FImporter.FFile, ISWRPFRN);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+  FReachArray.ArrayLength := NREACHES;
+end;
+
+procedure TSwrImporter.ReadData(const ALabel: string);
+begin
+  inherited;
+  if ALabel = 'NREACHES,ISWRONLY,ISWRCBC,ISWRPRGF,ISWRPSTG,ISWRPQAQ,ISWRPQM,ISWRPSTR,ISWRPFRN:' then
+  begin
+    ReadDataSet1A;
+  end
+  else if ALabel = 'AUXILIARY SWR1 VARIABLE:' then
+  begin
+    // Skip names of auxiliary variables
+    Readln(FImporter.FFile);
+    FProgressHandler(FilePos(FImporter.FFile));
+  end
+  else if ALabel = 'SWROPTIONS nopt:' then
+  begin
+    // Skip number of options.
+    Readln(FImporter.FFile);
+    FProgressHandler(FilePos(FImporter.FFile));
+  end
+  else if ALabel = 'CSWROPT:' then
+  begin
+    ReadDataSet1B;
+  end
+  else if ALabel = 'IOPTUNIT:' then
+  begin
+    ReadDataSet1B_UnitNumber;
+  end
+  else if ALabel = 'DLENCONV, TIMECONV, RTINI, RTMIN, RTMAX, RTPRN, RTMULT, NTMULT, DMINGRAD, DMNDEPTH:' then
+  begin
+    ReadDataSet2Required;
+  end
+  else if ALabel = 'DMAXRAI,DMAXSTG,DMAXINF:' then
+  begin
+    ReadDataSet2Optional;
+  end
+  else if ALabel = 'ISOLVER,NOUTER,NINNER,IBT,TOLS,TOLR,TOLA,DAMPSS,DAMPTR,IPRSWR,MUTSWR:' then
+  begin
+    ReadDataSet3Required;
+  end
+  else if ALabel = 'IPC:' then
+  begin
+    ReadDataSet3IPC;
+  end
+  else if ALabel = 'NLEVELS,DROPTOL:' then
+  begin
+    ReadDataSet3_NLEVELS;
+  end
+  else if ALabel = 'IBTPRT:' then
+  begin
+    ReadDataSet3_IBTPRT;
+  end
+  else if ALabel = 'PTOLR:' then
+  begin
+    ReadDataSet3_PTOLR;
+  end
+  else if ALabel = 'IRCH4A IROUTETYPE IRGNUM KRCH IRCH JRCH RLEN:' then
+  begin
+    ReadDataSet4A;
+  end
+  else if ALabel = 'IRCH4B NCONN:' then
+  begin
+    ReadDataSet4B_NCONN;
+  end
+  else if ALabel = 'ICONN:' then
+  begin
+    ReadDataSet4B_ICONN;
+  end
+  else if ALabel = 'NTABS:' then
+  begin
+    ReadDataSet4C;
+  end
+  else if ALabel = 'itab:' then
+  begin
+    ReadDataSet4D_ITAB;
+  end
+  else if ALabel = 'CTABTYPE:' then
+  begin
+    ReadDataSet4D_CTABTYPE;
+  end
+  else if ALabel = 'ITABUNIT:' then
+  begin
+    ReadDataSet4D_ITABUNIT;
+  end
+  else if ALabel = 'CINTP:' then
+  begin
+    ReadDataSet4D_CINTP;
+  end
+  else if ALabel = 'CTABRCH:' then
+  begin
+    ReadDataSet4D_CTABRCH;
+  end
+  else if ALabel = 'ntabrch ITABRCH:' then
+  begin
+    ReadDataSet4D_ITABRCH;
+  end
+  else if ALabel = 'NOBS:' then
+  begin
+    ReadDataSet4E;
+  end
+  else if ALabel = 'COBSNAME:' then
+  begin
+    ReadDataSet4F_COBSNAME;
+  end
+  else if ALabel = 'COBSTYPE:' then
+  begin
+    ReadDataSet4F_COBSTYPE;
+  end
+  else if ALabel = 'IOBSLOC:' then
+  begin
+    ReadDataSet4F_IOBSLOC;
+  end
+  else if ALabel = 'IOBSLOC2 or IOBSLAY:' then
+  begin
+    ReadDataSet4F_IOBSLOC2_IOBSLAY;
+  end
+  else if ALabel = 'ITMP:' then
+  begin
+    ReadDataSet5_NoChange;
+  end
+  else if ALabel = 'ITMP, IRDBND, IRDRAI, IRDEVP, IRDLIN, IRDGEO, IRDSTR, IRDSTG, IPTFLG:' then
+  begin
+    ReadDataSet5Changed;
+  end
+  else if ALabel = 'IRDAUX:' then
+  begin
+    // Skip IRDAUX.
+    Readln(FImporter.FFile);
+    FProgressHandler(FilePos(FImporter.FFile));
+  end
+  else if ALabel = 'IBNDRCH ISWRBND:' then
+  begin
+    ReadDataSet6;
+  end
+  else if ALabel = 'IRAIRCH RAIN:' then
+  begin
+    ReadDataSet7A;
+  end
+  else if ALabel = 'IEVPRCH EVAP:' then
+  begin
+    ReadDataSet8A;
+  end
+  else if ALabel = 'ILINRCH QLATFLOW:' then
+  begin
+    ReadDataSet9A;
+  end
+  else if ALabel = 'IGMODRCH IGEONUMR GZSHIFT:' then
+  begin
+    ReadDataSet10;
+  end
+  else if ALabel = 'IGEONUM IGEOTYPE IGCNDOP GMANNING:' then
+  begin
+    ReadDataSet11A_IGEONUM;
+  end
+  else if ALabel = 'NGEOPTS:' then
+  begin
+    ReadDataSet11A_NGEOPTS;
+  end
+  else if ALabel = 'GWIDTH GBELEV:' then
+  begin
+    ReadDataSet11A_GWIDTH;
+  end
+  else if ALabel = 'GSSLOPE:' then
+  begin
+    ReadDataSet11A_GSSLOPE;
+  end
+  else if ALabel = 'GCND:' then
+  begin
+    ReadDataSet11A_GCND;
+  end
+  else if ALabel = 'GLK:' then
+  begin
+    ReadDataSet11A_GLK;
+  end
+  else if ALabel = 'GCNDLN:' then
+  begin
+    ReadDataSet11A_GCNDLN;
+  end
+  else if ALabel = 'GETEXTD:' then
+  begin
+    ReadDataSet11A_GETEXTD;
+  end
+  else if ALabel = 'XB(I) ELEVB(I):' then
+  begin
+    ReadDataSet11B;
+  end
+  else if ALabel = 'ELEV(I) VOL(I) WETPER(I) SAREA(I) XAREA(I):' then
+  begin
+    ReadDataSet11C;
+  end
+  else if ALabel = 'ISMODRCH NSTRUCT:' then
+  begin
+    ReadDataSet12;
+  end
+  else if ALabel = 'ISTRRCH ISTRNUM ISTRCONN ISTRTYPE:' then
+  begin
+    ReadDataSet13A_1;
+  end
+  else if ALabel = 'STRINV:' then
+  begin
+    ReadDataSet13A_2;
+  end
+  else if ALabel = 'STRLEN:' then
+  begin
+    ReadDataSet13A_3;
+  end
+  else if ALabel = 'STRLEN2:' then
+  begin
+    ReadDataSet13A_4;
+  end
+  else if ALabel = 'STRVAL:' then
+  begin
+    ReadDataSet13A_5;
+  end
+  else if ALabel = 'NSTRPTS:' then
+  begin
+    ReadDataSet13A_6;
+  end
+  else if ALabel = 'STRCD, STRCD2, STRINV, STRINV2, STRWID:' then
+  begin
+    ReadDataSet13A_7;
+  end
+  else if ALabel = 'STRWID2:' then
+  begin
+    ReadDataSet13A_8;
+  end
+  else if ALabel = 'STRLEN, STRMAN, ISTRDIR:' then
+  begin
+    ReadDataSet13A_9;
+  end
+  else if ALabel = 'STRCD, STRCD3, STRINV, STRWID, STRVAL, ISTRDIR:' then
+  begin
+    ReadDataSet13A_10;
+  end
+  else if ALabel = 'STRCD, STRCD2, STRCD3, STRINV, STRWID, STRVAL, ISTRDIR:' then
+  begin
+    ReadDataSet13A_11;
+  end
+  else if ALabel = 'STRLEN:' then
+  begin
+    ReadDataSet13A_12;
+  end
+  else if ALabel = 'STRVAL TABDATA:' then
+  begin
+    ReadDataSet13A_13;
+  end
+  else if ALabel = 'STRVAL:' then
+  begin
+    ReadDataSet13A_14;
+  end
+  else if ALabel = 'ISFRSEG:' then
+  begin
+    ReadDataSet13A_15;
+  end
+  else if ALabel = 'ISFRRCH:' then
+  begin
+    ReadDataSet13A_16;
+  end
+  else if ALabel = 'CSTROTYP:' then
+  begin
+    ReadDataSet13B_1;
+  end
+  else if ALabel = 'ISTRORCH:' then
+  begin
+    ReadDataSet13B_2;
+  end
+  else if ALabel = 'ISTROQCON:' then
+  begin
+    ReadDataSet13B_3;
+  end
+  else if ALabel = 'CSTROLO:' then
+  begin
+    ReadDataSet13B_4;
+  end
+  else if ALabel = 'TABDATA CSTRCRIT ISTRTAB:' then
+  begin
+    ReadDataSet13B_5;
+  end
+  else if ALabel = 'REACH, ISTROSTG:' then
+  begin
+    Assert(False, 'Undocumented structure option in SWR');
+//    Read(FImporter.FFile, FCurrentStructure.REACH);
+//    Read(FImporter.FFile, FCurrentStructure.ISTROSTG);
+//    Readln(FImporter.FFile);
+//    FProgressHandler(FilePos(FImporter.FFile));
+  end
+  else if ALabel = 'STRCRIT:' then
+  begin
+    ReadDataSet13B_6;
+  end
+  else if ALabel = 'STRCRITC, STRRT:' then
+  begin
+    ReadDataSet13B_7;
+  end
+  else if ALabel = 'STRMAX:' then
+  begin
+    ReadDataSet13B_8;
+  end
+  else if ALabel = 'TABDATA CSTRVAL ISTRTAB:' then
+  begin
+    ReadDataSet13B_9;
+  end
+  else if ALabel = 'STRELEV STRQ:' then
+  begin
+    ReadDataSet13C;
+  end
+  else if ALabel = 'IRCHSTG STAGE:' then
+  begin
+    ReadDataSet14A;
+  end
+  else if ALabel = 'IRCHAUX:' then
+  begin
+    // Skip IRCHAUX.
+    Readln(FImporter.FFile);
+    FProgressHandler(FilePos(FImporter.FFile));
+  end
+  else if ALabel = 'xyz:' then
+  begin
+    // Skip xyz.
+    Readln(FImporter.FFile);
+    FProgressHandler(FilePos(FImporter.FFile));
+  end
+  else if ALabel = StrConstant2DRealArray then
+  begin
+    ReadConstantRealArrays;
+  end
+  else if ALabel = StrVariable2DRealArray then
+  begin
+    ReadVariableRealArrays;
+  end
+  else if ALabel = StrConstant2DIntegerArray then
+  begin
+    ReadRunoffMapConstant;
+  end
+  else if ALabel = StrVariable2DIntegerArray then
+  begin
+    ReadRunoffMapVariable;
+  end
+  else
+  begin
+    ShowMessage(ALabel);
+    Assert(False);
+  end;
+end;
+
+function TSwrImporter.ScreenObjectNameRoot: string;
+begin
+  result := 'SWR_Object';
+end;
+
+{ TSwrReachArray }
+
+function TSwrReachArray.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TSwrReach;
+end;
+
+function TSwrReachArray.GetReaches(Index: integer): TSwrReach;
+begin
+  result := Objects[Index] as TSwrReach
+end;
+
+{ TSwrTabFileArray }
+
+function TSwrTabFileArray.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TSwrTabFile;
+end;
+
+function TSwrTabFileArray.GetTabfile(Index: integer): TSwrTabFile;
+begin
+  result := Objects[Index] as TSwrTabFile;
+end;
+
+{ TSwrObsArray }
+
+function TSwrObsArray.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TSwrObs;
+end;
+
+function TSwrObsArray.GetObs(Index: integer): TSwrObs;
+begin
+  result := Objects[Index] as TSwrObs;
+end;
+
+{ TSwrISWRBND_Array }
+
+function TSwrISWRBND_Array.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TSwrISWRBND;
+end;
+
+function TSwrISWRBND_Array.GetSwrISWRBND(Index: integer): TSwrISWRBND;
+begin
+  result := Objects[Index] as TSwrISWRBND;
+end;
+
+function TSwrISWRBND_Array.Last: TSwrISWRBND;
+begin
+  result := SwrISWRBND[ArrayLength-1];
+end;
+
+{ TSwrReach }
+
+constructor TSwrReach.Create;
+begin
+  inherited;
+  F_ISWRBND_Array := TSwrISWRBND_Array.Create;
+  FRain := TSwrRain_Array.Create;
+  FEvap := TSwrEvap_Array.Create;
+  FLateralFlow := TSwrLateralFlow_Array.Create;
+  FStage := TSwrStage_Array.Create;
+  FReachGeom_Array := TSwrReachGeom_Array.Create;
+  FReachStructureCounts := TSwrReachStructureCountArray.Create;
+end;
+
+destructor TSwrReach.Destroy;
+begin
+  FReachStructureCounts.Free;
+  FReachGeom_Array.Free;
+  FStage.Free;
+  FLateralFlow.Free;
+  FEvap.Free;
+  FRain.Free;
+  F_ISWRBND_Array.Free;
+  inherited;
+end;
+
+{ TSwrRain_Array }
+
+function TSwrRain_Array.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TSwrRain;
+end;
+
+function TSwrRain_Array.GetRain(Index: integer): TSwrRain;
+begin
+  result := Objects[Index] as TSwrRain;
+end;
+
+function TSwrRain_Array.Last: TSwrRain;
+begin
+  result := SwrRain[ArrayLength-1];
+end;
+
+{ TSwrEvap_Array }
+
+function TSwrEvap_Array.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TSwrEvap;
+end;
+
+function TSwrEvap_Array.GetEvap(Index: integer): TSwrEvap;
+begin
+  result := Objects[Index] as TSwrEvap;
+end;
+
+function TSwrEvap_Array.Last: TSwrEvap;
+begin
+  result := SwrEvap[ArrayLength-1];
+end;
+
+{ TSwrLateralFlow_Array }
+
+function TSwrLateralFlow_Array.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TSwrLateralFlow;
+end;
+
+function TSwrLateralFlow_Array.GetLateralFlow(Index: integer): TSwrLateralFlow;
+begin
+  result := Objects[Index] as TSwrLateralFlow;
+end;
+
+function TSwrLateralFlow_Array.Last: TSwrLateralFlow;
+begin
+  result := SwrLateralFlow[ArrayLength-1];
+end;
+
+{ TSwrStage_Array }
+
+function TSwrStage_Array.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TSwrStage;
+end;
+
+function TSwrStage_Array.GetStage(Index: integer): TSwrStage;
+begin
+  result := Objects[Index] as TSwrStage;
+end;
+
+function TSwrStage_Array.Last: TSwrStage;
+begin
+  result := SwrStage[ArrayLength-1];
+end;
+
+{ TSwrReachGeom_Array }
+
+function TSwrReachGeom_Array.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TSwrReachGeomLink;
+end;
+
+function TSwrReachGeom_Array.GetReachGeomLink(
+  Index: integer): TSwrReachGeomLink;
+begin
+  result := Objects[Index] as TSwrReachGeomLink;
+end;
+
+function TSwrReachGeom_Array.Last: TSwrReachGeomLink;
+begin
+  result := ReachGeomLink[ArrayLength-1];
+end;
+
+{ TGeomStressPeriodArray }
+
+function TSwrGeomStressPeriodArray.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TSwrGeomItem;
+end;
+
+function TSwrGeomStressPeriodArray.GetGeom(Index: integer): TSwrGeomItem;
+begin
+  result := Objects[Index] as TSwrGeomItem;
+end;
+
+function TSwrGeomStressPeriodArray.Last: TSwrGeomItem;
+begin
+  result := Geom[ArrayLength-1];
+end;
+
+{ TGeomArray }
+
+function TSwrGeomArray.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TSwrGeomStressPeriodArray;
+end;
+
+function TSwrGeomArray.FindByStressPeriod(StressPeriod: Integer): integer;
+var
+  Index: Integer;
+begin
+  result := -1;
+  for Index := 0 to ArrayLength - 1 do
+  begin
+    if GeomArray[Index].FStartingStressPeriod = StressPeriod then
+    begin
+      result := Index;
+      Exit;
+    end
+    else if GeomArray[Index].FStartingStressPeriod > StressPeriod then
+    begin
+      result := Index-1;
+      Exit;
+    end;
+  end;
+end;
+
+function TSwrGeomArray.GetGeomArray(Index: integer): TSwrGeomStressPeriodArray;
+begin
+  result := Objects[Index] as TSwrGeomStressPeriodArray;
+end;
+
+function TSwrGeomArray.Last: TSwrGeomStressPeriodArray;
+begin
+  if ArrayLength > 0 then
+  begin
+    result := GeomArray[ArrayLength-1];
+  end
+  else
+  begin
+    result := nil;
+  end;
+end;
+
+{ TCrossSectionArray }
+
+function TSwrCrossSectionArray.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TSwrGeomCrossSectionPoint;
+end;
+
+function TSwrCrossSectionArray.GetPoint(Index: integer): TSwrGeomCrossSectionPoint;
+begin
+  result := Objects[Index] as TSwrGeomCrossSectionPoint;
+end;
+
+function TSwrCrossSectionArray.IsSame(AnItem: TSwrCrossSectionArray): boolean;
+var
+  index: Integer;
+begin
+  Result := (AnItem <> nil)
+    and (ArrayLength = AnItem.ArrayLength);
+  if result then
+  begin
+    for index := 0 to ArrayLength - 1 do
+    begin
+      result := Points[index].IsSame(AnItem.Points[index]);
+      if not result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+{ TGeomItem }
+
+constructor TSwrGeomItem.Create;
+begin
+  inherited;
+  FCrossSection := TSwrCrossSectionArray.Create;
+  FTable := TSwrGeomTableArray.Create;
+end;
+
+destructor TSwrGeomItem.Destroy;
+begin
+  FTable.Free;
+  FCrossSection.Free;
+  inherited;
+end;
+
+function TSwrGeomItem.IsSame(AnItem: TSwrGeomItem): boolean;
+begin
+  Result := (AnItem <> nil)
+    and (IGEONUM = AnItem.IGEONUM)
+    and (IGEOTYPE = AnItem.IGEOTYPE)
+    and (IGCNDOP = AnItem.IGCNDOP)
+    and (GMANNING = AnItem.GMANNING)
+    and (NGEOPTS = AnItem.NGEOPTS)
+    and (GWIDTH = AnItem.GWIDTH)
+    and (GBELEV = AnItem.GBELEV)
+    and (GSSLOPE = AnItem.GSSLOPE)
+    and (GCND = AnItem.GCND)
+    and (GLK = AnItem.GLK)
+    and (GCNDLN = AnItem.GCNDLN)
+    and (GETEXTD = AnItem.GETEXTD)
+    and FCrossSection.IsSame(AnItem.FCrossSection)
+    and FTable.IsSame(AnItem.FTable)
+end;
+
+{ TSwrGeomTableArray }
+
+function TSwrGeomTableArray.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TSwrGeomTableItem;
+end;
+
+function TSwrGeomTableArray.GetItem(Index: integer): TSwrGeomTableItem;
+begin
+  result := Objects[Index] as TSwrGeomTableItem;
+end;
+
+function TSwrGeomTableArray.IsSame(AnItem: TSwrGeomTableArray): boolean;
+var
+  index: Integer;
+begin
+  Result := (AnItem <> nil)
+    and (ArrayLength = AnItem.ArrayLength);
+  if result then
+  begin
+    for index := 0 to ArrayLength - 1 do
+    begin
+      result := Items[index].IsSame(AnItem.Items[index]);
+      if not result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+{ TSwrReachStructureCountArray }
+
+function TSwrReachStructureCountArray.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TSwrReachStructureCount
+end;
+
+function TSwrReachStructureCountArray.GetItem(
+  Index: integer): TSwrReachStructureCount;
+begin
+  result := Objects[Index] as TSwrReachStructureCount;
+end;
+
+function TSwrReachStructureCountArray.Last: TSwrReachStructureCount;
+begin
+  result := Items[ArrayLength-1];
+end;
+
+{ TStructureStressPeriodArray }
+
+function TStructureStressPeriodArray.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TSwrStructure
+end;
+
+function TStructureStressPeriodArray.GetItem(Index: integer): TSwrStructure;
+begin
+  result := Objects[Index] as TSwrStructure;
+end;
+
+function TStructureStressPeriodArray.Last: TSwrStructure;
+begin
+  result := Items[ArrayLength-1];
+end;
+
+{ TStructureArray }
+
+function TStructureArray.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TStructureStressPeriodArray;
+end;
+
+function TStructureArray.GetItem(Index: integer): TStructureStressPeriodArray;
+begin
+  result := Objects[Index] as TStructureStressPeriodArray;
+end;
+
+function TStructureArray.Last: TStructureStressPeriodArray;
+begin
+  if ArrayLength > 0 then
+  begin
+    result := Items[ArrayLength-1];
+  end
+  else
+  begin
+    result := nil;
+  end;
+end;
+
+{ TSwrStructureTable }
+
+function TSwrStructureTable.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := TSwrStructureTableItem;
+end;
+
+function TSwrStructureTable.GetItem(Index: integer): TSwrStructureTableItem;
+begin
+  result := Objects[index] as TSwrStructureTableItem;
+end;
+
+function TSwrStructureTable.IsSame(
+  AStructureTable: TSwrStructureTable): boolean;
+var
+  index: integer;
+begin
+  result := ArrayLength = AStructureTable.ArrayLength;
+  if result then
+  begin
+    for index := 0 to ArrayLength - 1 do
+    begin
+      result := Items[Index].IsSame(AStructureTable.Items[Index]);
+      if not Result then
+      begin
+        Exit;
+      end;
+    end;
+
+  end;
+end;
+
+{ TSwrStructure }
+
+constructor TSwrStructure.Create;
+begin
+  inherited;
+  FTable := TSwrStructureTable.Create;
+end;
+
+destructor TSwrStructure.Destroy;
+begin
+  FTable.Free;
+  inherited;
+end;
+
+function TSwrStructure.IsSame(AStructure: TSwrStructure): boolean;
+begin
+  result := (ISTRRCH = AStructure.ISTRRCH)
+    and (ISTRNUM = AStructure.ISTRNUM)
+    and (ISTRCONN = AStructure.ISTRCONN)
+    and (ISTRTYPE = AStructure.ISTRTYPE)
+    and (NSTRPTS = AStructure.NSTRPTS)
+    and (STRCD = AStructure.STRCD)
+    and (STRCD2 = AStructure.STRCD2)
+    and (STRCD3 = AStructure.STRCD3)
+    and (STRINV = AStructure.STRINV)
+    and (STRINV2 = AStructure.STRINV2)
+    and (STRWID = AStructure.STRWID)
+    and (STRWID2 = AStructure.STRWID2)
+    and (STRLEN = AStructure.STRLEN)
+    and (STRLEN2 = AStructure.STRLEN2)
+    and (STRMAN = AStructure.STRMAN)
+    and (STRCD2 = AStructure.STRCD2)
+    and (STRVAL = AStructure.STRVAL)
+    and (ISTRDIR = AStructure.ISTRDIR)
+    and (ISFRSEG = AStructure.ISFRSEG)
+    and (ISFRRCH = AStructure.ISFRRCH)
+    and (CSTROTYP = AStructure.CSTROTYP)
+    and (STRCD2 = AStructure.STRCD2)
+    and (ISTRORCH = AStructure.ISTRORCH)
+    and (ISTROQCON = AStructure.ISTROQCON)
+    and (CSTROLO = AStructure.CSTROLO)
+    and (CSTRCRIT = AStructure.CSTRCRIT)
+    and (STRRT = AStructure.STRRT)
+    and (STRMAX = AStructure.STRMAX)
+    and (CSTRVAL = AStructure.CSTRVAL)
+    and (ISTRTAB_Discharge = AStructure.ISTRTAB_Discharge)
+    and (ISTRTAB_Control = AStructure.ISTRTAB_Control)
+    and (ISTRTAB_Gate = AStructure.ISTRTAB_Gate)
+    and FTable.IsSame(AStructure.FTable);
+end;
+
+{ TSwrGeomCrossSectionPoint }
+
+function TSwrGeomCrossSectionPoint.IsSame(
+  AnItem: TSwrGeomCrossSectionPoint): boolean;
+begin
+  Result := (AnItem <> nil)
+    and (XB = AnItem.XB)
+    and (ELEVB = AnItem.ELEVB)
+end;
+
+{ TSwrGeomTableItem }
+
+function TSwrGeomTableItem.IsSame(AnItem: TSwrGeomTableItem): boolean;
+begin
+  Result := (AnItem <> nil)
+    and (ELEV = AnItem.ELEV)
+    and (VOL = AnItem.VOL)
+    and (WETPER = AnItem.WETPER)
+    and (SAREA = AnItem.SAREA)
+    and (XAREA = AnItem.XAREA)
+end;
+
+{ TCustomSwrObjectArray }
+
+function TCustomSwrObjectArray.GetAnItem(Index: Integer): TCustomSwrArrayMember;
+begin
+  result := Objects[Index] as TCustomSwrArrayMember;
+end;
+
+function TPackageImporter.GetStressPeriodString(StressPeriodIndex
+  : integer): string;
+var
+  StressPeriodMaxLength: integer;
+begin
+  result := IntToStr(FModel.ModflowStressPeriods.Count);
+  StressPeriodMaxLength := Length(result);
+  result := IntToStr(StressPeriodIndex + 1);
+  while Length(result) < StressPeriodMaxLength do
+  begin
+    result := '0' + result;
+  end;
+end;
+
+procedure TPackageImporter.CreateTransientDataSet(StressPeriodIndex: integer; 
+  const Root: string; DataType: TRbwDataType; var DataSet: TDataArray);
+var
+  NewName: string;
+  Interpolator: TNearestPoint2DInterpolator;
+begin
+  // DataSet := TDataArray.Create(FModel);
+  if StressPeriodIndex >= 0 then
+  begin
+    NewName := Root + GetStressPeriodString(StressPeriodIndex);
+  end
+  else
+  begin
+    NewName := Root;
+  end;
+  DataSet := FModel.DataArrayManager.CreateNewDataArray(TDataArray, NewName,
+    '0', NewName, [], DataType, eaBlocks, dsoTop, '');
+  DataSet.UpdateDimensions(FGrid.LayerCount, FGrid.RowCount, FGrid.ColumnCount);
+  // FModel.CreateVariables(DataSet);
+  Interpolator := TNearestPoint2DInterpolator.Create(nil);
+  try
+    DataSet.TwoDInterpolator := Interpolator;
+  finally
+    Interpolator.Free;
+  end;
+end;
+
+function TPackageImporter.CreateScreenObjectAroundGrid(const Name: string)
+  : TScreenObject;
+begin
+  result := CreateScreenObject(Name);
+  result.Capacity := 5;
+  result.AddPoint(FGrid.TwoDElementCorner(0, 0), False);
+  result.AddPoint(FGrid.TwoDElementCorner(0, FGrid.RowCount), False);
+  result.AddPoint(FGrid.TwoDElementCorner(FGrid.ColumnCount,
+    FGrid.RowCount), False);
+  result.AddPoint(FGrid.TwoDElementCorner(FGrid.ColumnCount, 0), False);
+  result.AddPoint(FGrid.TwoDElementCorner(0, 0), False);
+end;
+
+{ TSwrStructureTableItem }
+
+function TSwrStructureTableItem.IsSame(
+  ATableItem: TSwrStructureTableItem): boolean;
+begin
+  result := (STRELEV = ATableItem.STRELEV)
+    and (STRQ = ATableItem.STRQ)
 end;
 
 end.

@@ -5,33 +5,46 @@ interface
 uses
   Windows, Messages, Types, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ArgusDataEntry, ExtCtrls,
-  UndoItems, ScreenObjectUnit, OrderedCollectionUnit;
+  UndoItems, ScreenObjectUnit, OrderedCollectionUnit,
+  Generics.Collections, ModflowSwrReachUnit;
 
 type
+  TLinkType = (ltSFR, ltSTR, ltSWR);
+
   TStreamLinkageChangeItem = class(TCollectionItem)
   private
     FNewOutFlowSegment: integer;
     FOldOutFlowSegments: TIntegerDynArray;
     FScreenObject: TScreenObject;
+    FNewSwrReachConnections: TSwrConnections;
+    FOldSwrReachConnections: TSwrConnections;
     procedure SetNewOutFlowSegment(const Value: integer);
     procedure SetScreenObject(const Value: TScreenObject);
     function GetOutFlowSegment(Index: integer): integer;
+    procedure SetNewSwrReachConnections(const Value: TSwrConnections);
+    procedure SetOldSwrReachConnections(const Value: TSwrConnections);
   public
+    constructor Create(Collection: TCollection); override;
+    destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
     property ScreenObject: TScreenObject read FScreenObject
       write SetScreenObject;
     property NewOutFlowSegment: integer read FNewOutFlowSegment
       write SetNewOutFlowSegment;
     property OldOutFlowSegments[Index: integer]: integer read GetOutFlowSegment;
+    property NewSwrReachConnections: TSwrConnections
+      read FNewSwrReachConnections write SetNewSwrReachConnections;
+    property OldSwrReachConnections: TSwrConnections
+      read FOldSwrReachConnections write SetOldSwrReachConnections;
   end;
 
   TStreamLinkageChangeCollection = class(TCollection)
   private
-    FParameterType: TParameterType;
+    FLinkType: TLinkType;
     function GetItems(Index: integer): TStreamLinkageChangeItem;
     procedure SetItems(Index: integer; const Value: TStreamLinkageChangeItem);
   public
-    Constructor Create(ParameterType: TParameterType);
+    Constructor Create(LinkType: TLinkType);
     property Items[Index: integer]: TStreamLinkageChangeItem read GetItems
       write SetItems;
     function Add: TStreamLinkageChangeItem;
@@ -60,6 +73,7 @@ type
     procedure GetLinkTolerance;
     procedure btnApplyClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure rgStreamtypeClick(Sender: TObject);
   private
     procedure GetData;
     { Private declarations }
@@ -73,7 +87,7 @@ var
 implementation
 
 uses frmGoPhastUnit, ModflowSfrParamIcalcUnit, ModflowStrUnit,
-  ModflowBoundaryUnit;
+  ModflowBoundaryUnit, DataSetUnit, PhastModelUnit;
 
 resourcestring
   StrAssignStreamLinkag = 'assign stream linkages';
@@ -90,6 +104,22 @@ begin
   SourceItem := Source as TStreamLinkageChangeItem;
   ScreenObject := SourceItem.ScreenObject;
   NewOutFlowSegment := SourceItem.NewOutFlowSegment;
+  OldSwrReachConnections.Assign(SourceItem.OldSwrReachConnections);
+  NewSwrReachConnections.Assign(SourceItem.NewSwrReachConnections);
+end;
+
+constructor TStreamLinkageChangeItem.Create(Collection: TCollection);
+begin
+  inherited;
+  FNewSwrReachConnections := TSwrConnections.Create(nil);
+  FOldSwrReachConnections := TSwrConnections.Create(nil);
+end;
+
+destructor TStreamLinkageChangeItem.Destroy;
+begin
+  FOldSwrReachConnections.Free;
+  FNewSwrReachConnections.Free;
+  inherited;
 end;
 
 function TStreamLinkageChangeItem.GetOutFlowSegment(Index: integer): integer;
@@ -102,6 +132,18 @@ begin
   FNewOutFlowSegment := Value;
 end;
 
+procedure TStreamLinkageChangeItem.SetNewSwrReachConnections(
+  const Value: TSwrConnections);
+begin
+  FNewSwrReachConnections.Assign(Value);
+end;
+
+procedure TStreamLinkageChangeItem.SetOldSwrReachConnections(
+  const Value: TSwrConnections);
+begin
+  FOldSwrReachConnections.Assign(Value);
+end;
+
 procedure TStreamLinkageChangeItem.SetScreenObject(const Value: TScreenObject);
 var
   ParamIcalc: TSfrParamIcalcCollection;
@@ -110,8 +152,8 @@ var
   Values: TStrCollection;
 begin
   FScreenObject := Value;
-  case (Collection as TStreamLinkageChangeCollection).FParameterType of
-    ptSFR:
+  case (Collection as TStreamLinkageChangeCollection).FLinkType of
+    ltSFR:
       begin
         Assert((FScreenObject.ModflowSfrBoundary <> nil)
           and FScreenObject.ModflowSfrBoundary.Used);
@@ -122,7 +164,7 @@ begin
           FOldOutFlowSegments[Index] := ParamIcalc.Items[Index].OutflowSegment;
         end;
       end;
-    ptSTR:
+    ltSTR:
       begin
         Assert((FScreenObject.ModflowStrBoundary <> nil)
           and FScreenObject.ModflowStrBoundary.Used);
@@ -143,6 +185,14 @@ begin
           FOldOutFlowSegments[Index] := (Values[Index] as TStrItem).OutflowSegment;
         end;
       end;
+    ltSWR:
+      begin
+        Assert((FScreenObject.ModflowSwrReaches <> nil)
+          and FScreenObject.ModflowSwrReaches.Used);
+        FOldSwrReachConnections.Assign(FScreenObject.ModflowSwrReaches.Connections);
+      end
+    else
+      Assert(False)
   end;
 end;
 
@@ -153,11 +203,11 @@ begin
   result := inherited Add as TStreamLinkageChangeItem;
 end;
 
-constructor TStreamLinkageChangeCollection.Create(ParameterType: TParameterType);
+constructor TStreamLinkageChangeCollection.Create(LinkType: TLinkType);
 begin
   inherited Create(TStreamLinkageChangeItem);
-  Assert(ParameterType in [ptSFR, ptSTR]);
-  FParameterType := ParameterType;
+  Assert(LinkType in [ltSFR, ltSTR, ltSWR]);
+  FLinkType := LinkType;
 end;
 
 function TStreamLinkageChangeCollection.GetItems(
@@ -178,7 +228,7 @@ constructor TUndoChangeStreamLinkages.Create(
   Linkages: TStreamLinkageChangeCollection);
 begin
   inherited Create;
-  FLinkages:= TStreamLinkageChangeCollection.Create(Linkages.FParameterType);
+  FLinkages:= TStreamLinkageChangeCollection.Create(Linkages.FLinkType);
   FLinkages.Assign(Linkages);
 end;
 
@@ -202,12 +252,13 @@ var
   ParamItem: TModflowParamItem;
   Values: TStrCollection;
   ItemIndex: Integer;
+  ADataArray: TDataArray;
 begin
   for Index := 0 to FLinkages.Count - 1 do
   begin
     Item := FLinkages.Items[Index];
-    case FLinkages.FParameterType of
-      ptSFR:
+    case FLinkages.FLinkType of
+      ltSFR:
         begin
           ParamIcalc := Item.ScreenObject.ModflowSfrBoundary.ParamIcalc;
           for PI_Index := 0 to ParamIcalc.Count - 1 do
@@ -215,7 +266,7 @@ begin
             ParamIcalc.Items[PI_Index].OutflowSegment := Item.NewOutFlowSegment;
           end;
         end;
-      ptSTR:
+      ltSTR:
         begin
           if Item.ScreenObject.ModflowStrBoundary.Parameters.Count > 0 then
           begin
@@ -232,6 +283,14 @@ begin
             (Values[ItemIndex] as TStrItem).OutflowSegment := Item.NewOutFlowSegment;
           end;
         end;
+      ltSWR:
+        begin
+          Item.ScreenObject.ModflowSwrReaches.Connections := Item.NewSwrReachConnections;
+          ADataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(KSwrReach);
+          ADataArray.Invalidate;
+          frmGoPhast.frameTopView.ModelChanged := True;
+          frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
+        end
       else
         Assert(False);
     end;
@@ -247,12 +306,13 @@ var
   ParamItem: TModflowParamItem;
   Values: TStrCollection;
   ItemIndex: Integer;
+  ADataArray: TDataArray;
 begin
   for Index := 0 to FLinkages.Count - 1 do
   begin
     Item := FLinkages.Items[Index];
-    case FLinkages.FParameterType of
-      ptSFR:
+    case FLinkages.FLinkType of
+      ltSFR:
         begin
           ParamIcalc := Item.ScreenObject.ModflowSfrBoundary.ParamIcalc;
           for PI_Index := 0 to ParamIcalc.Count - 1 do
@@ -261,7 +321,7 @@ begin
               Item.OldOutFlowSegments[PI_Index];
           end;
         end;
-      ptSTR:
+      ltSTR:
         begin
           if Item.ScreenObject.ModflowStrBoundary.Parameters.Count > 0 then
           begin
@@ -278,6 +338,16 @@ begin
             (Values[ItemIndex] as TStrItem).OutflowSegment := Item.OldOutFlowSegments[ItemIndex];
           end;
         end;
+      ltSWR:
+        begin
+          Item.ScreenObject.ModflowSwrReaches.Connections := Item.OldSwrReachConnections;
+          ADataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(KSwrReach);
+          ADataArray.Invalidate;
+          frmGoPhast.frameTopView.ModelChanged := True;
+          frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
+        end
+      else
+        Assert(False);
     end;
   end;
 end;
@@ -294,21 +364,21 @@ var
   ParamIcalc: TSfrParamIcalcCollection;
   PI_Index: Integer;
   OutFlowSegmentNeedsToChange: Boolean;
-  ParameterType: TParameterType;
+  LinkType: TLinkType;
   Values: TStrCollection;
   ParamItem: TModflowParamItem;
   ItemIndex: Integer;
   StrItem: TStrItem;
+  NearbyReachObjects: TList<TScreenObject>;
+  ConnectionIndex: Integer;
+  AConnection: TSwrConnectionItem;
+  ObjectIndex: Integer;
 begin
   inherited;
   Tolerance := StrToFloat(rdeTolerance.Text);
-  ParameterType := ptUndefined;
-  case rgStreamtype.ItemIndex of
-    0: ParameterType := ptSFR;
-    1: ParameterType := ptSTR;
-    else Assert(False);
-  end;
-  Linkages := TStreamLinkageChangeCollection.Create(ParameterType);
+  LinkType := TLinkType(rgStreamtype.ItemIndex);
+  NearbyReachObjects := TList<TScreenObject>.Create;
+  Linkages := TStreamLinkageChangeCollection.Create(LinkType);
   try
     for ScreenObjectIndex := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
     begin
@@ -317,8 +387,8 @@ begin
       begin
         Continue;
       end;
-      case ParameterType of
-        ptSFR:
+      case LinkType of
+        ltSFR:
           begin
             if (ScreenObject.ModflowSfrBoundary = nil)
               or not ScreenObject.ModflowSfrBoundary.Used then
@@ -326,7 +396,7 @@ begin
               Continue;
             end;
           end;
-        ptSTR:
+        ltSTR:
           begin
             if (ScreenObject.ModflowStrBoundary = nil)
               or not ScreenObject.ModflowStrBoundary.Used then
@@ -334,6 +404,16 @@ begin
               Continue;
             end;
           end;
+        ltSWR:
+          begin
+            if (ScreenObject.ModflowSwrReaches = nil)
+              or not ScreenObject.ModflowSwrReaches.Used then
+            begin
+              Continue;
+            end;
+          end;
+        else
+          Assert(False);
       end;
       if (rgWhatToLink.ItemIndex = 1) and not ScreenObject.Selected then
       begin
@@ -342,8 +422,8 @@ begin
       if cbKeepExistingLinkages.Checked then
       begin
         OutflowSegmentAssigned := False;
-        case ParameterType of
-          ptSFR:
+        case LinkType of
+          ltSFR:
             begin
               ParamIcalc := ScreenObject.ModflowSfrBoundary.ParamIcalc;
               for PI_Index := 0 to ParamIcalc.Count - 1 do
@@ -355,7 +435,7 @@ begin
                 end;
               end;
             end;
-          ptSTR:
+          ltSTR:
             begin
               if ScreenObject.ModflowStrBoundary.Parameters.Count > 0 then
               begin
@@ -376,6 +456,11 @@ begin
                 end;
               end;
             end;
+          ltSWR:
+            begin
+              OutflowSegmentAssigned := False;
+              // do nothing.
+            end
           else Assert(False);
         end;
         if OutflowSegmentAssigned then
@@ -385,29 +470,53 @@ begin
       end;
       NearestStream := nil;
       NearestLake := nil;
-      case ParameterType of
-        ptSFR:
+      case LinkType of
+        ltSFR:
           begin
             frmGoPhast.PhastModel.LocateNearestLakeOrStream(ScreenObject,
                 NearestLake, NearestStream, Tolerance);
           end;
-        ptSTR:
+        ltSTR:
           begin
             frmGoPhast.PhastModel.LocateNearestStrStream(ScreenObject,
                 NearestStream, Tolerance);
           end;
+        ltSWR:
+          begin
+            frmGoPhast.PhastModel.LocateNearestSwrReachObjects(ScreenObject,
+              NearbyReachObjects, Tolerance);
+            if rgWhatToLink.ItemIndex = 1 then
+            begin
+              for ObjectIndex := NearbyReachObjects.Count - 1 downto 0 do
+              begin
+                if not NearbyReachObjects[ObjectIndex].Selected then
+                begin
+                  NearbyReachObjects.Delete(ObjectIndex);
+                end;
+              end;
+            end;
+          end
         else Assert(False);
       end;
-      if (NearestStream = nil) and (NearestLake = nil) then
+      if (NearestStream = nil) and (NearestLake = nil)
+        and (NearbyReachObjects.Count = 0) then
       begin
+        if (LinkType = ltSWR)
+          and (ScreenObject.ModflowSwrReaches.Connections.Count > 0)
+          and not cbKeepExistingLinkages.Checked then
+        begin
+          Linkage := Linkages.Add;
+          Linkage.ScreenObject := ScreenObject;
+          Linkage.NewSwrReachConnections.Clear;
+        end;
         Continue;
       end
       else
       begin
         if NearestLake = nil then
         begin
-          case ParameterType of
-            ptSFR:
+          case LinkType of
+            ltSFR:
               begin
                 Assert(NearestStream.ModflowSfrBoundary <> nil);
                 OutFlowSegmentNeedsToChange := False;
@@ -429,7 +538,7 @@ begin
                     NearestStream.ModflowSfrBoundary.SegementNumber;
                 end;
               end;
-            ptSTR:
+            ltSTR:
               begin
                 Assert(NearestStream.ModflowStrBoundary <> nil);
                 OutFlowSegmentNeedsToChange := False;
@@ -460,8 +569,43 @@ begin
                   Linkage.NewOutFlowSegment :=
                     NearestStream.ModflowStrBoundary.SegmentNumber;
                 end;
-
               end;
+            ltSWR:
+              begin
+                if cbKeepExistingLinkages.Checked then
+                begin
+                  for ConnectionIndex := 0 to ScreenObject.ModflowSwrReaches.Connections.Count - 1 do
+                  begin
+                    AConnection := ScreenObject.ModflowSwrReaches.Connections[ConnectionIndex];
+                    if AConnection.Method = scmObject then
+                    begin
+                      for ObjectIndex := NearbyReachObjects.Count - 1 downto 0 do
+                      begin
+                        if NearbyReachObjects[ObjectIndex].Name = AConnection.ScreenObjectName then
+                        begin
+                          NearbyReachObjects.Delete(ObjectIndex);
+                        end;
+                      end;
+                    end;
+                  end;
+                end;
+                if NearbyReachObjects.Count > 0 then
+                begin
+                  Linkage := Linkages.Add;
+                  Linkage.ScreenObject := ScreenObject;
+                  Linkage.NewSwrReachConnections := ScreenObject.ModflowSwrReaches.Connections;
+                  if not cbKeepExistingLinkages.Checked then
+                  begin
+                    Linkage.NewSwrReachConnections.Clear;
+                  end;
+                  for ObjectIndex := 0 to NearbyReachObjects.Count - 1 do
+                  begin
+                    AConnection := Linkage.NewSwrReachConnections.Add;
+                    AConnection.Method := scmObject;
+                    AConnection.ScreenObject := NearbyReachObjects[ObjectIndex];
+                  end;
+                end;
+              end
             else Assert(False);
           end;
         end
@@ -500,6 +644,7 @@ begin
         [mbOK], 0);
     end;
   finally
+    NearbyReachObjects.Free;
     Linkages.Free;
   end;
 end;
@@ -516,9 +661,17 @@ begin
   GetLinkTolerance;
   rgStreamtype.Buttons[0].Enabled := frmGoPhast.PhastModel.SfrIsSelected;
   rgStreamtype.Buttons[1].Enabled := frmGoPhast.PhastModel.StrIsSelected;
+  rgStreamtype.Buttons[2].Enabled := frmGoPhast.PhastModel.SwrIsSelected;
   if not rgStreamtype.Buttons[0].Enabled then
   begin
-    rgStreamtype.ItemIndex := 1;
+    if rgStreamtype.Buttons[1].Enabled then
+    begin
+      rgStreamtype.ItemIndex := 1;
+    end
+    else
+    begin
+      rgStreamtype.ItemIndex := 2;
+    end;
   end;
 end;
 
@@ -551,6 +704,23 @@ begin
     Tolerance := -1;
   end;
   rdeTolerance.Text := FloatToStr(Tolerance);
+end;
+
+procedure TfrmLinkStreams.rgStreamtypeClick(Sender: TObject);
+begin
+  inherited;
+  case TLinkType(rgStreamtype.ItemIndex) of
+    ltSFR, ltSTR:
+      begin
+        rgWhatToLink.Items[0] := 'All streams';
+        rgWhatToLink.Items[1] := 'Selected streams';
+      end;
+    ltSWR:
+      begin
+        rgWhatToLink.Items[0] := 'All reach objects';
+        rgWhatToLink.Items[1] := 'Selected reach objects';
+      end;
+  end;
 end;
 
 end.

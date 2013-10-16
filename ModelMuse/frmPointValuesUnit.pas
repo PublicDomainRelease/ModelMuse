@@ -8,7 +8,7 @@ uses
   Buttons, ScreenObjectUnit, UndoItems;
 
 type
-  TPointValueColumn = (pvcName, pvcValue);
+  TPointValueColumn = (pvcName, pvcValue, pvcDefineStructure);
 
   TfrmPointValues = class(TfrmCustomGoPhast)
     pnlBottom: TPanel;
@@ -22,6 +22,12 @@ type
     procedure FormDestroy(Sender: TObject); override;
     procedure btnAddClick(Sender: TObject);
     procedure rdgValuesKeyPress(Sender: TObject; var Key: Char);
+    procedure rdgValuesButtonClick(Sender: TObject; ACol, ARow: Integer);
+    procedure rdgValuesSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure rdgValuesSetEditText(Sender: TObject; ACol, ARow: Integer;
+      const Value: string);
+    procedure rdgValuesEndUpdate(Sender: TObject);
   private
     FScreenObject: TScreenObject;
     FSelectedVertex: integer;
@@ -53,7 +59,8 @@ type
 implementation
 
 uses
-  frmGoPhastUnit, ZoomBox2, GoPhastTypes;
+  frmGoPhastUnit, ZoomBox2, GoPhastTypes, ModflowSwrStructureUnit,
+  frmSwrStructuresUnit;
 
 resourcestring
   StrChangeVertexValues = 'change vertex values';
@@ -77,10 +84,26 @@ begin
 end;
 
 procedure TfrmPointValues.FormCreate(Sender: TObject);
+var
+  AColumn: TRbwColumn4;
 begin
   inherited;
   rdgValues.Cells[Ord(pvcName),0] := StrKey;
   rdgValues.Cells[Ord(pvcValue),0] := StrValue;
+  if frmGoPhast.PhastModel.SwrIsSelected then
+  begin
+    AColumn := rdgValues.Columns[0];
+    AColumn.ComboUsed := True;
+    AColumn.PickList.Add('Reach');
+    AColumn.PickList.Add('TabFile');
+
+    AColumn := rdgValues.Columns.Add;
+    rdgValues.Cells[Ord(pvcDefineStructure),0] := 'Define or edit structure';
+    AColumn.ButtonUsed := True;
+    AColumn.AutoAdjustColWidths := True;
+    AColumn.ButtonWidth := rdgValues.ColWidths[Ord(pvcDefineStructure)];
+    AColumn.ButtonCaption := 'Edit structure';
+  end;
 end;
 
 procedure TfrmPointValues.FormDestroy(Sender: TObject);
@@ -161,6 +184,40 @@ begin
   end;
 end;
 
+procedure TfrmPointValues.rdgValuesButtonClick(Sender: TObject; ACol,
+  ARow: Integer);
+var
+  SwrStructures: TStructureCollection;
+  Reach: integer;
+  Index: Integer;
+  AStructure: TStructure;
+begin
+  inherited;
+  SwrStructures := frmGoPhast.PhastModel.SwrStructures;
+  Reach := Round(StrToFloat(rdgValues.Cells[Ord(pvcValue),ARow]));
+  for Index := 0 to SwrStructures.Count - 1 do
+  begin
+    AStructure := SwrStructures[Index];
+    if AStructure.Reach = Reach then
+    begin
+      TfrmSwrStructures.AddNewStructure := False;
+      TfrmSwrStructures.SelectedStructureIndex := Index;
+      ShowAForm(TfrmSwrStructures);
+      Exit;
+    end;
+  end;
+  TfrmSwrStructures.AddNewStructure := True;
+  TfrmSwrStructures.SelectedStructureIndex := SwrStructures.Count;
+  TfrmSwrStructures.Reach := Reach;
+  ShowAForm(TfrmSwrStructures);
+end;
+
+procedure TfrmPointValues.rdgValuesEndUpdate(Sender: TObject);
+begin
+  inherited;
+  rdgValues.Invalidate;
+end;
+
 procedure TfrmPointValues.rdgValuesKeyPress(Sender: TObject; var Key: Char);
 var
   Grid: TRbwDataGrid4;
@@ -191,6 +248,32 @@ begin
     end;
   end;
   inherited;
+end;
+
+procedure TfrmPointValues.rdgValuesSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+var
+  AValue: double;
+begin
+  inherited;
+  if (ARow >= rdgValues.FixedRows) and (ACol = Ord(pvcDefineStructure)) then
+  begin
+    CanSelect := LowerCase(rdgValues.Cells[Ord(pvcName), ARow]) = 'reach';
+    if CanSelect then
+    begin
+      CanSelect := TryStrToFloat(rdgValues.Cells[Ord(pvcValue),ARow], AValue)
+    end;
+  end;
+end;
+
+procedure TfrmPointValues.rdgValuesSetEditText(Sender: TObject; ACol,
+  ARow: Integer; const Value: string);
+begin
+  inherited;
+  if (ACol = Ord(pvcName)) and (ARow >= rdgValues.FixedRows) then
+  begin
+    rdgValues.Invalidate;
+  end;
 end;
 
 procedure TfrmPointValues.SetData;

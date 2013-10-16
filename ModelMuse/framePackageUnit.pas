@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ComCtrls, JvExStdCtrls, JvCheckBox,
+  Dialogs, StdCtrls, ComCtrls, JvExStdCtrls, JvCheckBox, JvPageList,
   ModflowPackageSelectionUnit, RbwController, Grids, RbwDataGrid4;
 
 type
@@ -28,7 +28,9 @@ type
     // @name moves the control on @classname to the first
     // tab of ParentPageControl.
     // @name is used in @link(TframeGMG).
-    procedure MoveControlsToTab(ParentPageControl: TPageControl);
+    procedure MoveControlsToTab(ParentPageControl: TPageControl); overload;
+    procedure MoveControlsToTab(ParentPageList: TJvPageList); overload;
+
     procedure EnableMultiEditControl(Control: TControl;
       DataGrid: TRbwDataGrid4);
   public
@@ -105,6 +107,43 @@ begin
   memoComments.Lines := Package.Comments;
   lblPackage.Width := Width - lblPackage.Left - 8;
   lblPackage.Caption := Package.PackageIdentifier;
+end;
+
+procedure TframePackage.MoveControlsToTab(ParentPageList: TJvPageList);
+var
+  AControl: TControl;
+  OldHeight: Integer;
+  Index: Integer;
+  DeltaHeight: Integer;
+  ControlsToMoveDown: TList;
+  DestinationTab: TJvCustomPage;
+begin
+  if not (csDesigning in ComponentState) then
+  begin
+    DestinationTab := ParentPageList.Pages[0];
+    ControlsToMoveDown := TList.Create;
+    try
+      DestinationTab.Handle;
+      for Index := 0 to DestinationTab.ControlCount - 1 do
+      begin
+        ControlsToMoveDown.Add(DestinationTab.Controls[Index]);
+      end;
+      OldHeight := ParentPageList.Height;
+      lblPackage.Parent := DestinationTab;
+      lblComments.Parent := DestinationTab;
+      memoComments.Parent := DestinationTab;
+      ParentPageList.Align := alClient;
+      DeltaHeight := ParentPageList.Height - OldHeight;
+      for Index := 0 to ControlsToMoveDown.Count - 1 do
+      begin
+        AControl := ControlsToMoveDown[Index];
+        AControl.Top := AControl.Top + DeltaHeight;
+        AControl.Anchors := [akLeft, akBottom];
+      end;
+    finally
+      ControlsToMoveDown.Free;
+    end;
+  end;
 end;
 
 procedure TframePackage.SetCanSelect(const Value: boolean);

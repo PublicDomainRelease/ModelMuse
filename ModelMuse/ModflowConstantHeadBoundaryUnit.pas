@@ -78,19 +78,27 @@ type
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure InvalidateStartData(Sender: TObject);
     procedure InvalidateEndData(Sender: TObject);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
     // @name returns @link(TChdItem).
     class function ItemClass: TBoundaryItemClass; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AddSpecificBoundary(AModel: TBaseModel); override;
-    procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
+    procedure AssignListCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
       BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
       Variables, DataSets: TList; AModel: TBaseModel); override;
     function AdjustedFormula(FormulaIndex, ItemIndex: integer): string;
       override;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(Boundary: TModflowBoundary;
       Model: TBaseModel; ScreenObject: TObject); override;
   end;
@@ -157,9 +165,17 @@ type
     procedure SetColumn(const Value: integer); override;
     procedure SetLayer(const Value: integer); override;
     procedure SetRow(const Value: integer); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
@@ -180,12 +196,16 @@ type
   // @seealso(TModflowParameters)
   TChdBoundary = class(TModflowParamBoundary)
   protected
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure AssignCells(BoundaryStorage: TCustomBoundaryStorage;
       ValueTimeList: TList; AModel: TBaseModel);  override;
     class function BoundaryCollectionClass: TMF_BoundCollClass; override;
     class function ModflowParamItemClass: TModflowParamItemClass; override;
     function ParameterType: TParameterType; override;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
       AModel: TBaseModel); override;
     procedure InvalidateDisplay; override;
@@ -387,7 +407,7 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
-    UpdataRequiredData(DataSets, Variables, ACell, AModel);
+    UpdateRequiredListData(DataSets, Variables, ACell, AModel);
     Expression.Evaluate;
     with ChdStorage.ChdArray[Index] do
     begin
@@ -408,7 +428,7 @@ begin
   end;
 end;
 
-procedure TChdCollection.AssignCellLocation(
+procedure TChdCollection.AssignListCellLocation(
   BoundaryStorage: TCustomBoundaryStorage; ACellList: TObject);
 var
   ChdStorage: TChdStorage;
@@ -435,7 +455,7 @@ constructor TChdCollection.Create(Boundary: TModflowBoundary; Model: TBaseModel;
   ScreenObject: TObject);
 begin
   inherited;
-  DuplicatesAllowed := False;
+  ListDuplicatesAllowed := False;
 end;
 
 procedure TChdCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;

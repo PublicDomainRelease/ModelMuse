@@ -297,6 +297,7 @@ type
     function GetCaseSensitivePicklist: boolean;
     procedure SetCaseSensitivePicklist(const Value: boolean);
     procedure SetCheckStyle(const Value: TCheckStyle);
+    procedure InvalidateCachedWidth(Sender: TObject);
   protected
     // @name checks that all the cells in the @classname have values
     // that are between @link(Max) and @link(Min)
@@ -572,6 +573,15 @@ type
     procedure SetItemIndex(const ACol, ARow, Value: integer);
     procedure SetExtendedAutoDistributeText(const Value: boolean);
     procedure SetAutoIncreaseColCount(const Value: boolean);
+    function GetRealValue(const ACol, ARow: integer): double;
+    procedure SetRealValue(const ACol, ARow: integer; const Value: double);
+    function GetIntegerValue(const ACol, ARow: integer): integer;
+    procedure SetIntegerValue(const ACol, ARow: integer; const Value: integer);
+    function GetRealValueDefault(const ACol, ARow: integer;
+      DefaultValue: double = 0): double;
+    function GetIntegerValueDefault(const ACol, ARow: integer;
+      DefaultValue: Integer = 0): integer;
+    procedure InvalidateCachedWidth; virtual;
   protected
     FColorSelectedColumnOrRow: boolean;
     FdgColumn: integer;
@@ -595,7 +605,7 @@ type
     function GetFixedCols : integer;
     function IsCaptionCell(ACol, ARow: integer): boolean; virtual; abstract;
     function SelectCell(ACol, ARow: Longint): Boolean;override;
-    function ShouldAdujstColWidths(ACol: integer): boolean; virtual; abstract;
+    function ShouldAdjustColWidths(ACol: integer): boolean; virtual; abstract;
     procedure AdjustColWidths(const ACol: integer);virtual; abstract;
     procedure ColWidthsChanged;override;
     procedure DoExit;override;
@@ -628,6 +638,7 @@ type
     function GetCheckStyle(const ACol, ARow: integer): TCheckStyle; virtual; abstract;
     procedure SetCheckState(const ACol, ARow: integer;
       const Value: TCheckBoxState); virtual;
+    function PickListRequiredWidth(const ACol, ARow: integer): integer; virtual;
   public
     function WidthNeededToFitText(const ACol, ARow: Integer): integer;
     procedure SelectAll;
@@ -678,6 +689,14 @@ type
     procedure SettingsChanged(Sender: TObject; Flag: Integer; const Section: string; var Result: Longint);
     property CheckStyle[const ACol, ARow: integer]: TCheckStyle
       read GetCheckStyle;
+    property RealValue[const ACol, ARow: integer]: double read GetRealValue
+      write SetRealValue;
+    property RealValueDefault[const ACol, ARow: integer;
+      DefaultValue: double = 0]: double read GetRealValueDefault;
+    property IntegerValue[const ACol, ARow: integer]: integer read GetIntegerValue
+      write SetIntegerValue;
+    property IntegerValueDefault[const ACol, ARow: integer;
+      DefaultValue: Integer = 0]: integer read GetIntegerValueDefault;
   published
     property ExtendedAutoDistributeText: boolean
       read FExtendedAutoDistributeText write SetExtendedAutoDistributeText;
@@ -733,14 +752,15 @@ type
     FUpdateCount: Integer;
     FOnEndUpdate: TNotifyEvent;
     FWordWrapRowCaptions: Boolean;
-
+    FRequiredWidthCol: Integer;
+    FRequiredWidth: integer;
     procedure SetColumns(const Value: TRbwDataGridColumns4);
     procedure SetWordWrapColTitles(const Value: boolean);
     procedure SetWordWrapRowCaptions(const Value: Boolean);
 
   { Private declarations }
   protected
-    function ShouldAdujstColWidths(ACol: integer): boolean; override;
+    function ShouldAdjustColWidths(ACol: integer): boolean; override;
     function CollectionItem(const ACol, ARow: Longint)
       : TCustomRowOrColumn; override;
     function ColorSelectedRowOrColumn(ACol, ARow: integer): boolean; override;
@@ -756,6 +776,8 @@ type
     function GetCheckStyle(const ACol, ARow: integer): TCheckStyle; override;
     procedure SetCheckState(const ACol, ARow: integer;
       const Value: TCheckBoxState); override;
+    function PickListRequiredWidth(const ACol, ARow: integer): integer; override;
+    procedure InvalidateCachedWidth; override;
     { Protected declarations }
   public
     procedure AdjustRowHeights(const ARow: integer);override;
@@ -863,12 +885,14 @@ type
     // See @link(Rows).
     FRows: TRbwDataGridRows;
     FUpdateCount: Integer;
+    FRequiredWidthRow: Integer;
+    FRequiredWidth: Integer;
     // See @link(Columns).
     procedure SetColumns(const Value: TAutoAdjustColumns);
     // See @link(Rows).
     procedure SetRows(const Value: TRbwDataGridRows);
   protected
-    function ShouldAdujstColWidths(ACol: integer): boolean; override;
+    function ShouldAdjustColWidths(ACol: integer): boolean; override;
     // @name returns Rows[ARow].
     function CollectionItem(const ACol, ARow: Longint): TCustomRowOrColumn;
       override;
@@ -902,6 +926,8 @@ type
     function GetCheckStyle(const ACol, ARow: integer): TCheckStyle; override;
     procedure SetCheckState(const ACol, ARow: integer;
       const Value: TCheckBoxState); override;
+    function PickListRequiredWidth(const ACol, ARow: integer): integer; override;
+    procedure InvalidateCachedWidth; override;
   public
     procedure BeginUpdate; override;
     procedure EndUpdate; override;
@@ -1208,6 +1234,7 @@ begin
   FdgColumn := 1;
   FdgRow := 1;
   FSelectedRow := FdgRow;
+  FRequiredWidthCol := -1;
 end;
 
 function TRbwDataGrid4.CreateColumns: TRbwDataGridColumns4;
@@ -1305,6 +1332,11 @@ begin
   end;
 end;
 
+procedure TRbwDataGrid4.InvalidateCachedWidth;
+begin
+  FRequiredWidthCol := -1;
+end;
+
 function TRbwDataGrid4.IsCaptionCell(ACol, ARow: integer): boolean;
 begin
   result := (ARow < FixedRows) or (WordWrapRowCaptions and (ACol < FixedCols));
@@ -1315,6 +1347,17 @@ begin
   inherited;
   FixedCols := FFixedCols;
   HideEditor;
+end;
+
+function TRbwDataGrid4.PickListRequiredWidth(const ACol,
+  ARow: integer): integer;
+begin
+  if FRequiredWidthCol <> ACol then
+  begin
+    FRequiredWidthCol := ACol;
+    FRequiredWidth := inherited PickListRequiredWidth(ACol, ARow);
+  end;
+  result := FRequiredWidth;
 end;
 
 procedure TRbwDataGrid4.SetCheckState(const ACol, ARow: integer;
@@ -1366,7 +1409,7 @@ begin
   end;
 end;
 
-function TRbwDataGrid4.ShouldAdujstColWidths(ACol: integer): boolean;
+function TRbwDataGrid4.ShouldAdjustColWidths(ACol: integer): boolean;
 begin
   result := Columns[ACol].AutoAdjustColWidths;
 end;
@@ -1853,6 +1896,7 @@ begin
     begin
       ButtonUsed := False;
     end;
+    InvalidateCachedWidth(nil);
   end;
 end;
 
@@ -2140,6 +2184,17 @@ begin
   result := (FPicklist as TStringList).CaseSensitive;
 end;
 
+procedure TCustomRowOrColumn.InvalidateCachedWidth(Sender: TObject);
+var
+  LocalGrid: TCustomRBWDataGrid;
+begin
+  LocalGrid := Grid;
+  if LocalGrid <> nil then
+  begin
+    LocalGrid.InvalidateCachedWidth;
+  end;
+end;
+
 procedure TCustomRowOrColumn.SetButtonFont(const Value: TFont);
 begin
   FButtonFont.Assign(Value);
@@ -2154,7 +2209,8 @@ begin
   FButtonCaption := '...';
   FButtonWidth := 20;
   FButtonUsed := False;
-  FPickList := TStringList.Create;;
+  FPickList := TStringList.Create;
+  TStringList(FPickList).OnChange := InvalidateCachedWidth;
   if (Grid <> nil) and
     not Grid.FUpdating and not (csLoading in Grid.ComponentState) then
   begin
@@ -2183,6 +2239,7 @@ begin
   if FPickList <> Value then
   begin
     FPickList.Assign(Value);
+    InvalidateCachedWidth(Self);
   end;
 end;
 
@@ -2259,6 +2316,17 @@ function TCustomRBWDataGrid.GetRangeSelection: TGridRect;
 begin
   result.TopLeft := FAnchor;
   result.BottomRight := FOtherPoint;
+end;
+
+function TCustomRBWDataGrid.GetRealValue(const ACol, ARow: integer): double;
+begin
+  result := StrToFloat(Cells[ACol, ARow]);
+end;
+
+function TCustomRBWDataGrid.GetRealValueDefault(const ACol, ARow: integer;
+  DefaultValue: double): double;
+begin
+  Result := StrToFloatDef(Cells[ACol, ARow], DefaultValue)
 end;
 
 function TCustomRBWDataGrid.GetRowCount: Longint;
@@ -2342,6 +2410,11 @@ begin
     CheckState[ColIndex, ARow] := cbUnchecked;
     FSpecialFormat[ColIndex, ARow] := nil;
   end;
+end;
+
+procedure TCustomRBWDataGrid.InvalidateCachedWidth;
+begin
+
 end;
 
 function TCustomRBWDataGrid.IsSelectedCell(ACol, ARow: Integer): boolean;
@@ -2503,12 +2576,18 @@ begin
   end;
 end;
 
+procedure TCustomRBWDataGrid.SetRealValue(const ACol, ARow: integer;
+  const Value: double);
+begin
+  Cells[ACol, ARow] := FloatToStr(Value);
+end;
+
 procedure TCustomRBWDataGrid.SetRow(const Value: integer);
 begin
   if dgRow <> Value then
   begin
     dgRow := Value;
-    if (Value >= 0) and (Value < RowCount) then
+    if (Value >= FixedRows) and (Value < RowCount) then
     begin
       inherited Row := Value;
     end;
@@ -2915,6 +2994,7 @@ begin
     FColumns.Add;
   end;
   FUpdating := False;
+  FRequiredWidthRow := -1;
 end;
 
 function TRbwRowDataGrid.CreateColumns: TAutoAdjustColumns;
@@ -3082,6 +3162,11 @@ begin
   Rows[Rows.Count - 1].Index := ARow;
 end;
 
+procedure TRbwRowDataGrid.InvalidateCachedWidth;
+begin
+  FRequiredWidthRow := -1;
+end;
+
 function TRbwRowDataGrid.IsCaptionCell(ACol, ARow: integer): boolean;
 begin
   result := ACol < FixedCols;
@@ -3100,7 +3185,18 @@ begin
   end;
 end;
 
-function TRbwRowDataGrid.ShouldAdujstColWidths(ACol: integer): boolean;
+function TRbwRowDataGrid.PickListRequiredWidth(const ACol,
+  ARow: integer): integer;
+begin
+  if FRequiredWidthRow <> ARow then
+  begin
+    FRequiredWidthRow := ARow;
+    FRequiredWidth := inherited PickListRequiredWidth(ACol, ARow);
+  end;
+  result := FRequiredWidth;
+end;
+
+function TRbwRowDataGrid.ShouldAdjustColWidths(ACol: integer): boolean;
 begin
   result := Columns[ACol].AutoAdjustColWidths;
 end;
@@ -3572,6 +3668,17 @@ begin
   result := inherited FixedCols;
 end;
 
+function TCustomRBWDataGrid.GetIntegerValue(const ACol, ARow: integer): integer;
+begin
+  Result := StrToInt(Cells[ACol, ARow]);
+end;
+
+function TCustomRBWDataGrid.GetIntegerValueDefault(const ACol, ARow: integer;
+  DefaultValue: Integer ): integer;
+begin
+  Result := StrToIntDef(Cells[ACol, ARow], DefaultValue)
+end;
+
 function TCustomRBWDataGrid.GetItemIndex(const ACol, ARow: integer): integer;
 begin
   result := CollectionItem(ACol, ARow).PickList.IndexOf(Cells[ACol, ARow])
@@ -3581,6 +3688,12 @@ procedure TCustomRBWDataGrid.SetFixedCols(const Value : integer);
 begin
   FFixedCols := Value;
   inherited FixedCols := Value;
+end;
+
+procedure TCustomRBWDataGrid.SetIntegerValue(const ACol, ARow: integer;
+  const Value: integer);
+begin
+  Cells[ACol, ARow] := IntToStr(Value);
 end;
 
 procedure TCustomRBWDataGrid.SetItemIndex(const ACol, ARow, Value: integer);
@@ -3908,7 +4021,7 @@ begin
   if dgColumn <> Value then
   begin
     dgColumn := Value;
-    if (Value >= 0) and (Value < ColCount) then
+    if (Value >= FixedCols) and (Value < ColCount) then
     begin
       Col := Value;
     end;
@@ -4565,16 +4678,19 @@ begin
       try
         CellCaption := Cells[ACol, ARow];
         AvailableWidth := ColWidths[ACol]-4;
-        if GetCellFormat(ACol, ARow) = rcf4Boolean then
+        if not IsCaptionCell(ACol, ARow) then
         begin
-          Dec(AvailableWidth,CheckBoxSize+2);
-        end
-        else if (CollectionItem(ACol, ARow).ComboUsed)
-          and ShouldAdujstColWidths(ACol) then
-        begin
-          Dec(AvailableWidth,20);
+          if GetCellFormat(ACol, ARow) = rcf4Boolean then
+          begin
+            Dec(AvailableWidth,CheckBoxSize+2);
+          end
+          else if (CollectionItem(ACol, ARow).ComboUsed)
+            and ShouldAdjustColWidths(ACol) then
+          begin
+            Dec(AvailableWidth,20);
+          end;
         end;
-        
+
         FillCaptionList(CellCaption, CellList, AvailableWidth);
         for Index := 0 to CellList.Count - 1 do
         begin
@@ -4791,14 +4907,34 @@ begin
   end;
 end;
 
-function TCustomRBWDataGrid.RequiredCellWidth(
+function TCustomRBWDataGrid.PickListRequiredWidth(
   const ACol, ARow: integer): integer;
 var
   PickIndex: Integer;
   TestWidth: Integer;
+  ColOrRow: TCustomRowOrColumn;
 begin
   result := 0;
-  if ShouldAdujstColWidths(ACol) then
+  ColOrRow := CollectionItem(ACol, ARow);
+  for PickIndex := 0 to ColOrRow.PickList.Count - 1 do
+  begin
+    TestWidth := Canvas.TextWidth(ColOrRow.PickList[PickIndex]);
+    if TestWidth > result then
+    begin
+      result := TestWidth
+    end;
+  end;
+  Inc(result, ComboAdustSize);
+
+end;
+
+function TCustomRBWDataGrid.RequiredCellWidth(
+  const ACol, ARow: integer): integer;
+var
+  TestWidth: Integer;
+begin
+  result := 0;
+  if ShouldAdjustColWidths(ACol) then
   begin
 
     Canvas.Font.Assign(Font);
@@ -4811,16 +4947,17 @@ begin
       end
       else if CollectionItem(ACol, ARow).ComboUsed then
       begin
-        for PickIndex := 0 to CollectionItem(ACol, ARow).PickList.Count - 1 do
-        begin
-          TestWidth := Canvas.TextWidth(
-            CollectionItem(ACol, ARow).PickList[PickIndex]);
+        TestWidth := PickListRequiredWidth(ACol, ARow);
+//        for PickIndex := 0 to CollectionItem(ACol, ARow).PickList.Count - 1 do
+//        begin
+//          TestWidth := Canvas.TextWidth(
+//            CollectionItem(ACol, ARow).PickList[PickIndex]);
           if TestWidth > result then
           begin
             result := TestWidth
           end;
-        end;
-        Inc(result, ComboAdustSize);
+//        end;
+//        Inc(result, ComboAdustSize);
       end;
     end;
   end;

@@ -236,12 +236,6 @@ type
     FUpdatingICalc: Boolean;
     FDeletingTime: Boolean;
     FTimeCount: integer;
-//    procedure AddFrame(FrameClass: TFrameClass; PageList: TJvPageList;
-//      out Frame: TFrame);
-//    procedure InsertDataGridTime(DataGrid: TRbwDataGrid4; SpinEdit: TJvSpinEdit;
-//      PageList: TJvPageList; Row: integer);
-//    procedure DeleteDataGridTime(DataGrid: TRbwDataGrid4; {SpinEdit: TJvSpinEdit;}
-//      PageList: TJvPageList; Row: integer);
     procedure PaintCrossSection(Sender: TObject; Buffer: TBitmap32);
     procedure DrawCrossSection(ABitMap: TBitmap32);
     procedure dgCrossSectionSetEditText(Sender: TObject; ACol, ARow: Integer;
@@ -385,30 +379,6 @@ Type
 
 { TframeScreenObjectSFR }
 
-//procedure TframeScreenObjectSFR.DeleteDataGridTime(DataGrid: TRbwDataGrid4;
-//  PageList: TJvPageList; Row: integer);
-//var
-//  Page: TJvCustomPage;
-//  Dummy: boolean;
-//begin
-//  if Row >= 1 then
-//  begin
-//    Page := PageList.Pages[Row-1];
-//    Assert(Page.ControlCount = 1);
-//    Page.Handle;
-//    Page.Controls[0].Free;
-//    Page.Free;
-//    FDeletingRow := True;
-//    try
-//      DataGrid.DeleteRow(Row);
-//    finally
-//      FDeletingRow := False;
-//    end;
-//    Dummy := True;
-//    DataGrid.OnSelectCell(DataGrid, 0, DataGrid.SelectedRow, Dummy);
-//  end;
-//end;
-
 procedure TframeScreenObjectSFR.btnDeleteParametersClick(Sender: TObject);
 var
   RowToDelete: integer;
@@ -424,8 +394,6 @@ begin
     dgDown.DeleteRow(RowToDelete);
     dgSfrEquation.DeleteRow(RowToDelete);
 
-//    DeleteDataGridTime(dgSfrRough, jvplCrossSection, RowToDelete);
-//    DeleteDataGridTime(dgTableTime, jvplTable, RowToDelete);
     frameCrossSection1.DeleteItem(RowToDelete-1);
     frameFlowTable1.DeleteItem(RowToDelete-1);
     Dec(FTimeCount);
@@ -444,24 +412,6 @@ begin
     EnableTabs;
   end;
 end;
-
-//procedure TframeScreenObjectSFR.InsertDataGridTime(DataGrid: TRbwDataGrid4;
-//  SpinEdit: TJvSpinEdit; PageList: TJvPageList; Row: integer);
-//var
-//  Page: TJvCustomPage;
-//  Dummy: boolean;
-//begin
-//  if Row >= 1 then
-//  begin
-//    DataGrid.InsertRow(Row);
-//    DataGrid.Rows[Row] := DataGrid.Rows[DataGrid.RowCount-1];
-//    DataGrid.DeleteRow(DataGrid.RowCount-1);
-//    Page := PageList.Pages[SpinEdit.AsInteger-1];
-//    Page.PageIndex := Row-1;
-//    Dummy := True;
-//    DataGrid.OnSelectCell(DataGrid, 0, DataGrid.SelectedRow, Dummy);
-//  end;
-//end;
 
 procedure TframeScreenObjectSFR.Loaded;
 var
@@ -910,9 +860,6 @@ begin
 
     seParametersCount.AsInteger := seParametersCount.AsInteger +1;
     seParametersCount.OnChange(nil);
-
-//    InsertDataGridTime(dgSfrRough, seParametersCount, jvplCrossSection, ARow);
-//    InsertDataGridTime(dgTableTime, seParametersCount, jvplTable, ARow);
   end;
 end;
 
@@ -1516,19 +1463,11 @@ begin
     else
     begin
       ClearTable(dgFlowTimes);
-//      for Row := 1 to dgFlowTimes.RowCount - 1 do
-//      begin
-//        for Column := 0 to dgFlowTimes.ColCount - 1 do
-//        begin
-//          dgFlowTimes.Cells[Column, Row] := '';
-//        end;
-//      end;
     end;
   end
   else
   begin
     Assert(seParametersCount.AsInteger >= Boundary.SegmentFlows.Count);
-//    seFlowCount.OnChange(seFlowCount);
     for TableIndex := 0 to Boundary.SegmentFlows.Count - 1 do
     begin
       FlowItem := Boundary.SegmentFlows.Items[TableIndex] as TSfrSegmentFlowItem;
@@ -1542,7 +1481,6 @@ begin
         dgFlowTimes.Cells[Ord(sfcEvap), Row] := FlowItem.Evapotranspiration;
         dgFlowTimes.Cells[Ord(sfcRunoff), Row] := FlowItem.Runnoff;
       end;
-//      Row := TableIndex + 1;
     end;
   end;
 end;
@@ -1553,25 +1491,10 @@ var
   TablelItem: TSfrTablelItem;
   TableIndex: integer;
   Row: integer;
-//  FrameFlowTable: TframeFlowTable;
-//  Page: TJvCustomPage;
-//  FlowTableIndex: Integer;
-//  FlowTableItem: TSfrTableRowItem;
-//  PageIndex: Integer;
   procedure ClearAll;
-//  var
-//    PageIndex: integer;
   begin
     ClearTable(dgTableTime);
     frameFlowTable1.ClearTable;
-//    for PageIndex := 0 to jvplTable.PageCount - 1 do
-//    begin
-//      Page := jvplTable.Pages[PageIndex];
-//      Assert(Page.ControlCount = 1);
-//      Page.Handle;
-//      FrameFlowTable := Page.Controls[0] as TframeFlowTable;
-//      ClearTable(FrameFlowTable.dgSfrTable);
-//    end;
   end;
 begin
   if FoundFirst then
@@ -1593,47 +1516,10 @@ begin
             dgTableTime.Cells[Ord(sttEndTime), Row] := '';
           end;
 
-//          Page := jvplTable.Pages[Row-1];
-//          Assert(Page.ControlCount = 1);
-//          Page.Handle;
-//          FrameFlowTable := Page.Controls[0] as TframeFlowTable;
-//
-//          if FrameFlowTable.seTableCount.AsInteger = TablelItem.SfrTable.Count then
-//          begin
-//            for FlowTableIndex := 0 to TablelItem.SfrTable.Count - 1 do
-//            begin
-//              FlowTableItem := TablelItem.SfrTable.Items[FlowTableIndex] as TSfrTableRowItem;
-//              Row := FlowTableIndex + 1;
-//              if FrameFlowTable.dgSfrTable.Cells[Ord(stcFlow), Row] <> FlowTableItem.Flow then
-//              begin
-//                FrameFlowTable.dgSfrTable.Cells[Ord(stcFlow), Row] := '';
-//              end;
-//              if FrameFlowTable.dgSfrTable.Cells[Ord(stcDepth), Row] <> FlowTableItem.Depth then
-//              begin
-//                FrameFlowTable.dgSfrTable.Cells[Ord(stcDepth), Row] := '';
-//              end;
-//              if FrameFlowTable.dgSfrTable.Cells[Ord(stcWidth), Row] <> FlowTableItem.Width then
-//              begin
-//                FrameFlowTable.dgSfrTable.Cells[Ord(stcWidth), Row] := '';
-//              end;
-//            end;
-//          end
-//          else
-//          begin
-//            ClearTable(FrameFlowTable.dgSfrTable);
-//          end;
         end
         else
         begin
           ClearAll;
-//          ClearTable(dgTableTime);
-//          for PageIndex := 0 to jvplTable.PageCount - 1 do
-//          begin
-//            Page := jvplTable.Pages[PageIndex];
-//            Assert(Page.ControlCount = 1);
-//            FrameFlowTable := Page.Controls[0] as TframeFlowTable;
-//            ClearTable(FrameFlowTable.dgSfrTable);
-//          end;
           break;
         end;
       end;
@@ -1641,14 +1527,6 @@ begin
     else
     begin
       ClearAll;
-//      ClearTable(dgTableTime);
-//      for PageIndex := 0 to jvplTable.PageCount - 1 do
-//      begin
-//        Page := jvplTable.Pages[PageIndex];
-//        Assert(Page.ControlCount = 1);
-//        FrameFlowTable := Page.Controls[0] as TframeFlowTable;
-//        ClearTable(FrameFlowTable.dgSfrTable);
-//      end;
     end;
   end
   else
@@ -1664,35 +1542,10 @@ begin
         dgTableTime.Cells[Ord(sttStartTime), Row] := FloatToStr(TablelItem.StartTime);
         dgTableTime.Cells[Ord(sttEndTime), Row] := FloatToStr(TablelItem.EndTime);
 
-//        Page := jvplTable.Pages[Row-1];
-//        Assert(Page.ControlCount = 1);
-//        Page.Handle;
-//        FrameFlowTable := Page.Controls[0] as TframeFlowTable;
-//
-//        FrameFlowTable.seTableCount.AsInteger := TablelItem.SfrTable.Count;
-//        FrameFlowTable.seTableCount.OnChange(FrameFlowTable.seTableCount);
-//
-//        for FlowTableIndex := 0 to TablelItem.SfrTable.Count - 1 do
-//        begin
-//          FlowTableItem := TablelItem.SfrTable.Items[FlowTableIndex] as TSfrTableRowItem;
-//          Row := FlowTableIndex + 1;
-//          FrameFlowTable.dgSfrTable.Cells[Ord(stcFlow), Row] := FlowTableItem.Flow;
-//          FrameFlowTable.dgSfrTable.Cells[Ord(stcDepth), Row] := FlowTableItem.Depth;
-//          FrameFlowTable.dgSfrTable.Cells[Ord(stcWidth), Row] := FlowTableItem.Width;
-//        end;
       end;
     end;
   end;
   FrameFlowTable1.TableCountChanged := False;
-//  for PageIndex := 0 to jvplTable.PageCount - 1 do
-//  begin
-//    Page := jvplTable.Pages[PageIndex];
-//    Assert(Page.ControlCount = 1);
-//    Page.Handle;
-//    FrameFlowTable := Page.Controls[0] as TframeFlowTable;
-//    FrameFlowTable.TableCountChanged := False;
-//  end;
-
 end;
 
 procedure TframeScreenObjectSFR.GetSfrSegments(Boundary: TSfrBoundary; FoundFirst: Boolean);
@@ -1709,7 +1562,6 @@ procedure TframeScreenObjectSFR.GetSfrSegments(Boundary: TSfrBoundary; FoundFirs
       Row := LocateRowFromStartAndEndTimes(SegmentItem.StartTime, SegmentItem.EndTime);
       if Row >= 1 then
       begin
-  //      Row := TableIndex + 1;
         DataGrid.Cells[Ord(scStartTime), Row] := FloatToStr(SegmentItem.StartTime);
         DataGrid.Cells[Ord(scEndTime), Row] := FloatToStr(SegmentItem.EndTime);
         DataGrid.Cells[Ord(scK), Row] := SegmentItem.HydraulicConductivity;
@@ -1730,7 +1582,6 @@ procedure TframeScreenObjectSFR.GetSfrSegments(Boundary: TSfrBoundary; FoundFirs
     for TableIndex := 0 to SegmentCollection.Count - 1 do
     begin
       SegmentItem := SegmentCollection.Items[TableIndex] as TSfrSegmentItem;
-//      Row := TableIndex + 1;
       Row := LocateRowFromStartAndEndTimes(SegmentItem.StartTime, SegmentItem.EndTime);
       if Row >= 1 then
       begin
@@ -1773,9 +1624,6 @@ procedure TframeScreenObjectSFR.GetSfrSegments(Boundary: TSfrBoundary; FoundFirs
 var
   Row: Integer;
   Column: Integer;
-//var
-////  Row: Integer;
-//  Column: Integer;
 begin
   if FoundFirst then
   begin
@@ -1786,7 +1634,6 @@ begin
     end
     else
     begin
-//      ClearTable(dgUp);
       for Row := 1 to dgUp.RowCount - 1 do
       begin
         for Column := Ord(scK) to dgUp.ColCount - 1 do
@@ -1794,7 +1641,6 @@ begin
           dgUp.Cells[Column, Row] := '';
         end;
       end;
-//      ClearTable(dgDown);
       for Row := 1 to dgDown.RowCount - 1 do
       begin
         for Column := Ord(scK) to dgDown.ColCount - 1 do
@@ -2142,25 +1988,16 @@ var
   TableIndex: Integer;
   Item: TSfrChannelItem;
   Row: integer;
-//  XS_Index: Integer;
-//  Page: TJvCustomPage;
-//  FrameCrossSection: TframeCrossSection;
-//  PageIndex: integer;
 begin
   if FoundFirst then
   begin
     if seParametersCount.AsInteger <> Boundary.ChannelValues.Count then
     begin
-      ClearTable(dgSfrRough);
-      frameCrossSection1.ClearTable;
-//      for PageIndex := 0 to jvplCrossSection.PageCount - 1 do
-//      begin
-//        Page := jvplCrossSection.Pages[PageIndex];
-//        Assert(Page.ControlCount = 1);
-//        Page.Handle;
-//        FrameCrossSection := Page.Controls[0] as TframeCrossSection;
-//        ClearTable(FrameCrossSection.dg8Point);
-//      end;
+      if Boundary.ChannelValues.Count > 0 then
+      begin
+        ClearTable(dgSfrRough);
+        frameCrossSection1.ClearTable;
+      end;
     end
     else
     begin
@@ -2186,37 +2023,11 @@ begin
           begin
             dgSfrRough.Cells[Ord(srBankRough), Row] := '';
           end;
-
-//          Page := jvplCrossSection.Pages[TableIndex];
-//          Assert(Page.ControlCount = 1);
-//          Page.Handle;
-//          FrameCrossSection := Page.Controls[0] as TframeCrossSection;
-//
-//          for XS_Index := 0 to 7 do
-//          begin
-//            Row := XS_Index + 1;
-//            if FrameCrossSection.dg8Point.Cells[Ord(s8pX), Row] <> Item.X[XS_Index] then
-//            begin
-//              FrameCrossSection.dg8Point.Cells[Ord(s8pX), Row] := '';
-//            end;
-//            if FrameCrossSection.dg8Point.Cells[Ord(s8pZ), Row] <> Item.Z[XS_Index] then
-//            begin
-//              FrameCrossSection.dg8Point.Cells[Ord(s8pZ), Row] := '';
-//            end;
-//          end;
         end
         else
         begin
           ClearTable(dgSfrRough);
           frameCrossSection1.ClearTable;
-//          for PageIndex := 0 to jvplCrossSection.PageCount - 1 do
-//          begin
-//            Page := jvplCrossSection.Pages[PageIndex];
-//            Assert(Page.ControlCount = 1);
-//            Page.Handle;
-//            FrameCrossSection := Page.Controls[0] as TframeCrossSection;
-//            ClearTable(FrameCrossSection.dg8Point);
-//          end;
           break;
         end;
       end;
@@ -2236,25 +2047,10 @@ begin
       Row := self.LocateRowFromStartAndEndTimes(Item.StartTime, Item.EndTime);
       if Row >= 1 then
       begin
-//        Row := TableIndex + 1;
-
         dgSfrRough.Cells[Ord(srStartTime), Row] := FloatToStr(Item.StartTime);
         dgSfrRough.Cells[Ord(srEndTime), Row] := FloatToStr(Item.EndTime);
         dgSfrRough.Cells[Ord(srChannelRough), Row] := Item.ChannelRoughness;
         dgSfrRough.Cells[Ord(srBankRough), Row] := Item.BankRoughness;
-
-
-//        Page := jvplCrossSection.Pages[TableIndex];
-//        Assert(Page.ControlCount = 1);
-//        Page.Handle;
-//        FrameCrossSection := Page.Controls[0] as TframeCrossSection;
-//
-//        for XS_Index := 0 to 7 do
-//        begin
-//          Row := XS_Index + 1;
-//          FrameCrossSection.dg8Point.Cells[Ord(s8pX), Row] := Item.X[XS_Index];
-//          FrameCrossSection.dg8Point.Cells[Ord(s8pZ), Row] := Item.Z[XS_Index];
-//        end;
       end;
     end;
   end;
@@ -2266,7 +2062,6 @@ var
   TableIndex: Integer;
   Item: TSfrEquationItem;
   Row: integer;
-//  Col: Integer;
 begin
   if FoundFirst then
   begin
@@ -2275,7 +2070,6 @@ begin
       for TableIndex := 0 to Boundary.EquationValues.Count - 1 do
       begin
         Item := Boundary.EquationValues.Items[TableIndex] as TSfrEquationItem;
-//        Row := TableIndex + 1;
         Row := LocateRowFromStartAndEndTimes(Item.StartTime, Item.EndTime);
         if Row >= 1 then
         begin
@@ -2353,7 +2147,6 @@ var
   PointIndex: Integer;
   MagX: Double;
   MagY: Double;
-//  Frame: TframeFlowTable;
   Grid: TStringGrid;
   PointFound: Boolean;
   Index: Integer;
@@ -2368,10 +2161,8 @@ var
   YFormula: string;
   Parser: TRbwParser;
 begin
-  if {(jvplTable.ActivePage <> nil) and} Assigned(GetParser) then
+  if Assigned(GetParser) then
   begin
-//    jvplTable.ActivePage.Handle;
-//    Frame := jvplTable.ActivePage.Controls[0] as TframeFlowTable;
     Grid := frameFlowTable1.dgSfrTable;
     Parser := GetParser(self);
     PointFound := False;
@@ -2555,8 +2346,6 @@ var
   TimePeriod: integer;
   Column: TsfrRoughColumn;
   ICalc: TByteSet;
-//  Page: TJvCustomPage;
-//  FrameCrossSection: TframeCrossSection;
   ItemCount: integer;
 begin
   if FDeletingRow then
@@ -2600,7 +2389,6 @@ begin
       CanSelect := False;
     end;
   end;
-//  ICalc := comboIcalc.ItemIndex;
 
   if not dgSfrRough.Drawing then
   begin
@@ -2610,22 +2398,14 @@ begin
     if ISFROPT <= 1 then
     begin
       // saturated flow
-//      jvplCrossSection.ActivePageIndex := TimePeriod;
       frameCrossSection1.DisplayData(TimePeriod);
     end
     else
     begin
       // unsaturated flow
-//      jvplCrossSection.ActivePageIndex := 0;
       frameCrossSection1.DisplayData(0);
     end;
     frameCrossSection1.dg8Point.Invalidate;
-
-//    Page := jvplCrossSection.ActivePage;
-//    Assert(Page.ControlCount = 1);
-//    Page.Handle;
-//    FrameCrossSection := Page.Controls[0] as TframeCrossSection;
-//    FrameCrossSection.dg8Point.Invalidate;
 
     zbChannel.InvalidateImage32;
   end;
@@ -2674,8 +2454,6 @@ procedure TframeScreenObjectSFR.dgTableTimeSelectCell(Sender: TObject; ACol,
   ARow: Integer; var CanSelect: Boolean);
 var
   TimePeriod: integer;
-//  Page: TJvCustomPage;
-//  FrameFlowTable: TframeFlowTable;
   ItemCount: integer;
 begin
   if FDeletingRow then
@@ -2696,18 +2474,9 @@ begin
       TimePeriod := ARow -1;
       frameFlowTable1.DisplayData(TimePeriod);
 
-//      jvplTable.ActivePageIndex := TimePeriod;
       zbFlowDepthTable.InvalidateImage32;
       zbFlowWidthTable.InvalidateImage32;
 
-//      Page := jvplTable.ActivePage;
-//      Assert(Page.ControlCount = 1);
-//      Page.Handle;
-//      FrameFlowTable1 := Page.Controls[0] as TframeFlowTable;
-//      FrameFlowTable1.dgSfrTable.Align := alNone;
-//      FrameFlowTable1.dgSfrTable.Align := alTop;
-//      FrameFlowTable1.dgSfrTable.height := FrameFlowTable1.seTableCount.Top - 6;
-//      FrameFlowTable1.dgSfrTable.Anchors := [akLeft,akTop,akRight,akBottom];
       FrameFlowTable1.dgSfrTable.Invalidate;
 
       FrameFlowTable1.seTableCount.Enabled := CanSelect;
@@ -2727,16 +2496,11 @@ end;
 
 procedure TframeScreenObjectSFR.dgFlowTableSetEditText(Sender: TObject; ACol,
   ARow: Integer; const Value: string);
-//var
-//  Grid: TRbwDataGrid4;
-//  Frame: TframeFlowTable;
 begin
   Edited;
   zbFlowDepthTable.InvalidateImage32;
   zbFlowWidthTable.InvalidateImage32;
   if not (Sender is TRbwDataGrid4) then Exit;
-//  Grid := TRbwDataGrid4(Sender);
-//  Frame := Grid.Owner as TframeFlowTable;
   frameFlowTable1.dgSfrTableSetEditText(Sender, ACol, ARow, Value);
 end;
 
@@ -2762,7 +2526,7 @@ begin
   if [csLoading, csReading] * ComponentState <> [] then
   begin
     Exit
-  end;  
+  end;
   LayoutControls(dgFlowTimes, rdeFlowFormula, lblFlowFormula,
     Max(2,dgFlowTimes.LeftCol));
 end;
@@ -2772,7 +2536,7 @@ begin
   if [csLoading, csReading] * ComponentState <> [] then
   begin
     Exit
-  end;  
+  end;
   LayoutControls(rdgParameters, comboParameterChoices, lblParameterChoices,
     Ord(spicParameter));
   LayoutControls(rdgParameters, comboIcalcChoice, lblIcalcChoice,
@@ -2784,7 +2548,7 @@ begin
   if [csLoading, csReading] * ComponentState <> [] then
   begin
     Exit
-  end;  
+  end;
   LayoutControls(rdgNetwork, rdeNetwork, lblSegment,
     Ord(sncOutflowSegment));
   LayoutControls(rdgNetwork, comboMultiIprior, nil,
@@ -2796,7 +2560,7 @@ begin
   if [csLoading, csReading] * ComponentState <> [] then
   begin
     Exit
-  end;  
+  end;
   LayoutControls(dgSfrRough, rdeChannelFormula, lblChannelFormula,
     Max(2,dgSfrRough.LeftCol));
 end;
@@ -2806,7 +2570,7 @@ begin
   if [csLoading, csReading] * ComponentState <> [] then
   begin
     Exit
-  end;  
+  end;
   LayoutControls(dgSfrEquation, rdeEquationFormula, lblEquationFormula,
     Max(2,dgSfrEquation.LeftCol));
 end;
@@ -2816,7 +2580,7 @@ begin
   if [csLoading, csReading] * ComponentState <> [] then
   begin
     Exit
-  end;  
+  end;
   LayoutControls(dgUp, rdeUpstreamFormula, lblUpstreamFormula,
     Max(2,dgUp.LeftCol));
 end;
@@ -2826,7 +2590,7 @@ begin
   if [csLoading, csReading] * ComponentState <> [] then
   begin
     Exit
-  end;  
+  end;
   LayoutControls(dgDown, rdeDownstreamFormula, lblDownstreamFormula,
     Max(2,dgDown.LeftCol));
 end;
@@ -2968,7 +2732,6 @@ begin
     begin
       if TryStrToFloat(rdgParameters.Cells[Ord(spicStartTime), RowIndex], StartTime)
         and TryStrToFloat(rdgParameters.Cells[Ord(spicEndTime), RowIndex], EndTime)
-//        and (rdgParameters.Cells[Ord(spicIcalc), RowIndex] <> '')
         then
       begin
         Valid := True;
@@ -3050,7 +2813,6 @@ begin
       Boundary.ParamIcalc := ParamIcalcValues;
       SfrItem := Boundary.Values.Items[0] as TSfrItem;
       SfrItem.StartTime := ParamIcalcValues[0].StartTime;
-//      LastItem := ParamIcalcValues[ParamIcalcValues.Count-1] as TSfrItem;
       LastItem := Boundary.Values.Items[Boundary.Values.Count-1] as TSfrItem;
       SfrItem.EndTime := LastItem.EndTime;
     end
@@ -3069,9 +2831,6 @@ var
   StartTime, EndTime: double;
   Item: TSfrChannelItem;
   RowIndex: integer;
-//  XS_Index: Integer;
-//  FrameCrossSection: TframeCrossSection;
-//  Page: TJvCustomPage;
   Formula: string;
 begin
   ChannelValues := TSfrChannelCollection.Create(nil, nil, nil);
@@ -3112,27 +2871,6 @@ begin
         begin
           Item.BankRoughness := Formula;
         end;
-
-
-//        Page := jvplCrossSection.Pages[RowIndex-1];
-//        Assert(Page.ControlCount = 1);
-//        Page.Handle;
-//        FrameCrossSection := Page.Controls[0] as TframeCrossSection;
-//        for XS_Index := 0 to 7 do
-//        begin
-//          Formula := FrameCrossSection.dg8Point.Cells[Ord(s8pX), XS_Index+1];
-//          if Formula <> '' then
-//          begin
-//            Item.X[XS_Index] := Formula;
-//          end;
-//
-//
-//          Formula := FrameCrossSection.dg8Point.Cells[Ord(s8pZ), XS_Index+1];
-//          if Formula <> '' then
-//          begin
-//            Item.Z[XS_Index] := Formula;
-//          end;
-//        end;
       end;
     end;
     if ChannelValues.Count > 0 then
@@ -3156,7 +2894,6 @@ var
   Item: TSfrEquationItem;
   Formula: string;
 begin
-//  seStartTime, dgSfrEquation, EquationValues
   EquationValues := TSfrEquationCollection.Create(nil, nil, nil);
   try
     EquationValues.Assign(Boundary.EquationValues);
@@ -3301,12 +3038,6 @@ var
   TableCollection: TSfrTableCollection;
   RowIndex: Integer;
   StartTime, EndTime: double;
-//  FrameFlowTable: TframeFlowTable;
-//  Page: TJvCustomPage;
-//  Table: TSfrTable;
-//  TableRowIndex: Integer;
-//  Flow, Depth, Width: string;
-//  TableRow: TSfrTableRowItem;
   Item: TSfrTablelItem;
 begin
   TableCollection := TSfrTableCollection.Create(nil, nil, nil);
@@ -3325,11 +3056,6 @@ begin
         and TryStrToFloat(dgTableTime.Cells[Ord(sttEndTime), RowIndex], EndTime)
         then
       begin
-//        Page := jvplTable.Pages[RowIndex-1];
-//        Assert(Page.ControlCount = 1);
-//        Page.Handle;
-//        FrameFlowTable1 := Page.Controls[0] as TframeFlowTable;
-
         if RowIndex - 1 < TableCollection.Count then
         begin
           Item := TableCollection.Items[RowIndex - 1] as TSfrTablelItem;
@@ -3340,59 +3066,11 @@ begin
         end;
         Item.StartTime := StartTime;
         Item.EndTime := EndTime;
-//        Item.SfrTable := Table;
-
-//        Table := TSfrTable.Create(nil, nil);
-//        try
-//          Table.Assign(Item.SfrTable);
-//          if FrameFlowTable1.TableCountChanged then
-//          begin
-//            while Table.Count > FrameFlowTable1.dgSfrTable.RowCount -1 do
-//            begin
-//              Table.Delete(Table.Count-1);
-//            end;
-//          end;
-////          for TableRowIndex := 1 to FrameFlowTable1.dgSfrTable.RowCount - 1 do
-////          begin
-////            Flow := FrameFlowTable1.dgSfrTable.Cells[Ord(stcFlow), TableRowIndex];
-////            Depth := FrameFlowTable1.dgSfrTable.Cells[Ord(stcDepth), TableRowIndex];
-////            Width := FrameFlowTable1.dgSfrTable.Cells[Ord(stcWidth), TableRowIndex];
-////            if (Flow <> '') and (Depth <> '') and (Width <> '') then
-////            begin
-////              if TableRowIndex - 1 < Table.Count then
-////              begin
-////                TableRow := Table[TableRowIndex - 1];
-////              end
-////              else
-////              begin
-////                TableRow := Table.Add as TSfrTableRowItem;
-////              end;
-////              TableRow.Flow := Flow;
-////              TableRow.Depth := Depth;
-////              TableRow.Width := Width;
-////            end;
-////          end;
-//
-//          if Table.Count > 0 then
-//          begin
-//          end
-//          else if FrameFlowTable1.TableCountChanged then
-//          begin
-//            Item.SfrTable.Clear;
-//          end;
-//
-//        finally
-//          Table.Free;
-//        end;
       end;
     end;
     if TableCollection.Count > 0 then
     begin
       Boundary.TableCollection := TableCollection;
-//    end
-//    else if FTimesChanged then
-//    begin
-//      Boundary.TableCollection.Clear;
     end;
   finally
     TableCollection.Free;
@@ -3740,88 +3418,19 @@ begin
 end;
 
 procedure TframeScreenObjectSFR.SetOnButtonClick(const Value: TGridButtonEvent);
-//var
-//  Index: integer;
-//  Page: TJvCustomPage;
-//  FrameFlowTable: TframeFlowTable;
-//  FrameCrossSection: TframeCrossSection;
 begin
   FOnButtonClick := Value;
   FrameFlowTable1.dgSfrTable.OnButtonClick := Value;
-//  for Index := 0 to jvplTable.PageCount - 1 do
-//  begin
-//    Page := jvplTable.Pages[Index];
-//    Assert(Page.ControlCount = 1);
-//    Page.Handle;
-//    FrameFlowTable := Page.Controls[0] as TframeFlowTable;
-//    FrameFlowTable.dgSfrTable.OnButtonClick := Value;
-//  end;
   FrameCrossSection1.dg8Point.OnButtonClick := Value;
-//  for Index := 0 to jvplCrossSection.PageCount - 1 do
-//  begin
-//    Page := jvplCrossSection.Pages[Index];
-//    Assert(Page.ControlCount = 1);
-//    Page.Handle;
-//    FrameCrossSection := Page.Controls[0] as TframeCrossSection;
-//    FrameCrossSection.dg8Point.OnButtonClick := Value;
-//  end;
 end;
-
-//procedure TframeScreenObjectSFR.AddFrame(FrameClass: TFrameClass;
-//  PageList: TJvPageList; out Frame: TFrame);
-//var
-//  Page: TJvCustomPage;
-//  AControl: TWinControl;
-//  Form: TfrmCustomGoPhast;
-//  Index: Integer;
-//  Control: TControl;
-//begin
-//  Page := PageList.GetPageClass.Create(self);
-//  Page.PageList := PageList;
-//  Frame := FrameClass.Create(self);
-//  Frame.Name := '';
-//  Frame.Parent := Page;
-//  Frame.Align := alClient;
-////  Frame.Handle;
-//
-//  Form := nil;
-//  AControl := Parent;
-//  While AControl <> nil do
-//  begin
-//    if AControl is TfrmCustomGoPhast then
-//    begin
-//      Form := TfrmCustomGoPhast(AControl);
-//      Break;
-//    end;
-//    AControl := AControl.Parent;
-//  end;
-//  if Form <> nil then
-//  begin
-//    Form.UpdateSubComponents(Frame);
-//  end;
-////  for index := 0 to Frame.ControlCount - 1 do
-////  begin
-////    Control := Frame.Controls[index];
-////    if Control is TWinControl then
-////    begin
-////      AControl := TWinControl(Control);
-////      AControl.Handle
-////    end;
-////  end;
-//end;
 
 procedure TframeScreenObjectSFR.seParametersCountChange(Sender: TObject);
 var
   ItemCount: integer;
-//  Frame: TFrame;
-//  FrameCrossSection: TframeCrossSection;
-//  FrameFlowTable: TframeFlowTable;
   Index: integer;
   OldRowcount: integer;
   RowIndex: Integer;
 begin
-//  OutputDebugString('SAMPLING ON');
-
   FDeletingTime := True;
   try
     FTimesChanged := True;
@@ -3883,21 +3492,11 @@ begin
       rdgNetwork.RowCount := ItemCount + 1;
     end;
 
-//    while jvplCrossSection.PageCount < ItemCount do
     while FTimeCount < ItemCount do
     begin
-//      AddFrame(TframeCrossSection, jvplCrossSection, Frame);
-//      FrameCrossSection := Frame as TframeCrossSection;
-//      FrameCrossSection.dg8Point.OnSelectCell :=
-//        dg8PointSelectCell;
-//      FrameCrossSection.dg8Point.OnSetEditText :=
-//        dgCrossSectionSetEditText;
-//      FrameCrossSection.dg8Point.OnButtonClick := OnButtonClick;
-//      FrameCrossSection.dg8Point.AutoMultiEdit := True;
       frameCrossSection1.AddItem;
       frameFlowTable1.AddItem;
       Inc(FTimeCount)
-//      FrameCrossSection.dg8Point.OnMouseDown := dgFlowTimesMouseDown;
     end;
     while FTimeCount > ItemCount do
     begin
@@ -3925,26 +3524,6 @@ begin
       dgTableTime.RowCount := ItemCount + 1;
     end;
 
-//    while jvplTable.PageCount < ItemCount do
-//    begin
-//      AddFrame(TframeFlowTable, jvplTable, Frame);
-//      FrameFlowTable := Frame as TframeFlowTable;
-//      FrameFlowTable.dgSfrTable.OnSetEditText := dgFlowTableSetEditText;
-//      FrameFlowTable.dgSfrTable.OnButtonClick := OnButtonClick;
-//      FrameFlowTable.dgSfrTable.OnSelectCell := dgSfrTableSelectCell;
-//      FrameFlowTable.dgSfrTable.AutoMultiEdit := True;
-//      FrameFlowTable.dgSfrTable.Width := FrameFlowTable.ClientWidth;
-//      FrameFlowTable.dgSfrTable.Height := FrameFlowTable.seTableCount.Top -6;
-//    end;
-//    if ItemCount = 0 then
-//    begin
-//      dgTableTime.RowCount := 2;
-//    end
-//    else
-//    begin
-//      dgTableTime.RowCount := ItemCount + 1;
-//    end;
-
     btnDeleteParameters.Enabled := (ItemCount > 0);
     UpdateICalc;
     EnableTabs;
@@ -3952,7 +3531,6 @@ begin
   finally
     FDeletingTime := False;
   end;
-//  OutputDebugString('SAMPLING OFF');
 end;
 
 procedure TframeScreenObjectSFR.seParametersCountEnter(Sender: TObject);
@@ -3978,10 +3556,8 @@ var
   FormulaX, FormulaZ: string;
   Parser: TRbwParser;
 begin
-  if {(jvplCrossSection.ActivePage <> nil) and} Assigned(GetParser) then
+  if Assigned(GetParser) then
   begin
-//    jvplCrossSection.ActivePage.Handle;
-//    Frame := jvplCrossSection.ActivePage.Controls[0] as TframeCrossSection;
     Frame := frameCrossSection1;
     Parser := GetParser(self);
     Grid := Frame.dg8Point;
@@ -4098,10 +3674,6 @@ var
   ShouldEnable: boolean;
 begin
   ShouldEnable := ISFROPT in [4,5];
-//  if ShouldEnable then
-//  begin
-//    ShouldEnable := (IcalcSet * [1,2] <> [])
-//  end;
   jceSaturatedVolumetricWaterUpstream.Enabled := ShouldEnable;
   jceSaturatedVolumetricWaterDownstream.Enabled := ShouldEnable;
   jceInitialVolumetricWaterUpstream.Enabled := ShouldEnable;
@@ -4109,10 +3681,7 @@ begin
   jceBrooksCoreyExponentUpstream.Enabled := ShouldEnable;
   jceBrooksCoreyExponentDownstream.Enabled := ShouldEnable;
   ShouldEnable := ISFROPT  = 5;
-//  if ShouldEnable then
-//  begin
-//    ShouldEnable := (IcalcSet * [1,2] <> [])
-//  end;
+
   jceMaxUnsaturatedKzUpstream.Enabled := ShouldEnable;
   jceMaxUnsaturatedKzDownstream.Enabled := ShouldEnable;
 
@@ -4165,9 +3734,7 @@ procedure TframeScreenObjectSFR.frameFlowTable1dgSfrTableSetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
 begin
   inherited;
-//  frameFlowTable1.dgSfrTableSetEditText(Sender, ACol, ARow, Value);
   dgFlowTableSetEditText(Sender, ACol, ARow, Value);
-
 end;
 
 procedure TframeScreenObjectSFR.FrameResize(Sender: TObject);
@@ -4186,10 +3753,6 @@ var
   Item: TScreenObjectEditItem;
   FoundFirst: boolean;
   Boundary: TSfrBoundary;
-//  PageIndex: Integer;
-//  Page: TJvCustomPage;
-//  FrameCrossSection: TframeCrossSection;
-//  FrameFlowTable: TframeFlowTable;
   First: boolean;
   Gage0: TCheckBoxState;
   Gage1: TCheckBoxState;
@@ -4252,24 +3815,7 @@ begin
     EnableTabs;
     FrameCrossSection1.ClearTable;
 
-//    for PageIndex := 0 to jvplCrossSection.PageCount - 1 do
-//    begin
-//      Page := jvplCrossSection.Pages[PageIndex];
-//      Assert(Page.ControlCount = 1);
-//      Page.Handle;
-//      FrameCrossSection := Page.Controls[0] as TframeCrossSection;
-//      ClearTable(FrameCrossSection.dg8Point);
-//    end;
-
     FrameFlowTable1.ClearTable;
-//    for PageIndex := 0 to jvplTable.PageCount - 1 do
-//    begin
-//      Page := jvplTable.Pages[PageIndex];
-//      Assert(Page.ControlCount = 1);
-//      Page.Handle;
-//      FrameFlowTable := Page.Controls[0] as TframeFlowTable;
-//      ClearTable(FrameFlowTable.dgSfrTable);
-//    end;
 
     tabExternalFlowFile.TabVisible := List.Count = 1;
 

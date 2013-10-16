@@ -41,7 +41,7 @@ uses
   frameMt3dmsChemReactionPkgUnit, frameMt3dmsTransObsPkgUnit, Mt3dmsTimesUnit,
   framePackagePcgnUnit, framePackageWellUnit, framePackageStrUnit,
   framePackageFrmUnit, frameRadioGridUnit, framePackageCFPUnit,
-  framePackageSwiUnit;
+  framePackageSwiUnit, framePackageSwrUnit;
 
 type
 
@@ -210,6 +210,8 @@ type
     framePkgCFP: TframePackageCFP;
     jvspSWI: TJvStandardPage;
     framePackageSWI: TframePackageSWI;
+    jvspSWR: TJvStandardPage;
+    framePkgSWR: TframePackageSwr;
     procedure tvPackagesChange(Sender: TObject; Node: TTreeNode);
     procedure btnOKClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject); override;
@@ -254,6 +256,7 @@ type
     procedure framePkgFrmjvplFarmChange(Sender: TObject);
     procedure framePkgCFPrcSelectionControllerEnabledChange(Sender: TObject);
     procedure framePkgCFPcbPipesClick(Sender: TObject);
+    procedure framePkgSWRjvplSwrChange(Sender: TObject);
   private
     IsLoaded: boolean;
     CurrentParameterType: TParameterType;
@@ -417,6 +420,7 @@ resourcestring
   'running MODPATH.';
   StrFarmProcess = 'Farm Process';
   StrConduitFlowProcess = 'Conduit Flow Process';
+//  StrSurfaceWaterRouting = 'Surface-Water Routing';
 
 {$R *.dfm}
 
@@ -796,6 +800,16 @@ begin
     frmGoPhast.acLayersExecute(nil);
   end;
 
+  if frmGoPhast.ModelSelection in [msModflowNWT
+    {$IFDEF FMP}, msModflowFmp {$ENDIF}] then
+  begin
+    if frmGoPhast.PhastModel.ModflowPackages.SwrPackage.IsSelected
+      and (frmGoPhast.PhastModel.SwrReachGeometry.Count = 0) then
+    begin
+      frmGoPhast.acSWR_ReachGeometryExecute(nil);
+    end;
+  end;
+
 {$IFDEF FMP}
   if (frmGoPhast.ModelSelection = msModflowFmp)
     and frmGoPhast.PhastModel.ModflowPackages.FarmProcess.IsSelected then
@@ -1160,6 +1174,13 @@ procedure TfrmModflowPackages.framePkgSFRrgSfr2ISFROPTClick(Sender: TObject);
 begin
   inherited;
   EnableSfrParameters;
+end;
+
+procedure TfrmModflowPackages.framePkgSWRjvplSwrChange(Sender: TObject);
+begin
+  inherited;
+  HelpKeyword := framePkgSWR.jvplSwr.ActivePage.HelpKeyword;
+
 end;
 
 procedure TfrmModflowPackages.framePkgUPWrcSelectionControllerEnabledChange(
@@ -1697,6 +1718,16 @@ begin
     AddNode(StrSubSidence, StrSubSidence, PriorNode);
     AddNode(StrObservations, StrObservations, PriorNode);
     AddNode(StrOutput, StrOutput, PriorNode);
+
+    if frmGoPhast.ModelSelection in [msModflowNWT
+    {$IFDEF FMP}
+      , msModflowFMP
+    {$ENDIF}
+    ] then
+    begin
+      AddNode(StrSurfaceWaterRoutin, StrSurfaceWaterRoutin, PriorNode);
+    end;
+
     if frmGoPhast.ModelSelection = msModflowCFP then
     begin
       AddNode(StrConduitFlowProcess, StrConduitFlowProcess, PriorNode);
@@ -2801,6 +2832,16 @@ begin
     FPackageList.Add(Packages.SwiPackage);
   end;
 
+  if frmGoPhast.ModelSelection in [msModflowNWT
+  {$IFDEF FMP}
+    , msModflowFMP
+  {$ENDIF}
+  ] then
+  begin
+    Packages.SwrPackage.Frame := framePkgSWR;
+    FPackageList.Add(Packages.SwrPackage);
+  end;
+
 end;
 
 procedure TfrmModflowPackages.tvHufParameterTypesChange(Sender: TObject;
@@ -3010,6 +3051,7 @@ begin
   frmGoPhast.EnableHufMenuItems;
   frmGoPhast.EnableMt3dmsMenuItems;
   frmGoPhast.EnableFarmMenuItems;
+  frmGoPhast.EnableSwrActions;
   if Mt3dmsNewlySelected then
   begin
     Beep;
@@ -3081,6 +3123,7 @@ begin
   frmGoPhast.EnableManageFlowObservations;
   frmGoPhast.EnableManageHeadObservations;
   frmGoPhast.EnableFarmMenuItems;
+  frmGoPhast.EnableSwrActions;
 end;
 
 procedure TUndoChangeLgrPackageSelection.UpdateLayerGroupProperties(

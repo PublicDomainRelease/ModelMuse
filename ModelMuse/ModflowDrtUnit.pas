@@ -96,7 +96,7 @@ type
     procedure InvalidateReturnData(Sender: TObject);
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
+    procedure AssignListCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
       BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
@@ -229,7 +229,7 @@ type
     function StoreReturnObject: boolean;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TBaseModel);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent);
     Destructor Destroy; override;
     // @name returns the cell where the drain returns extracted water
     // The cell numbers in the @link(TCellLocation) will be 1 based.
@@ -280,6 +280,8 @@ type
     // @name copies @link(Values) and @link(Parameters) from the Source
     // @classname to this @classname.
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+    //
     Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     // @name fills ValueTimeList via a call to AssignCells for each
     // link  @link(TDrtStorage) in
@@ -538,7 +540,7 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
-    UpdataRequiredData(DataSets, Variables, ACell, AModel);
+    UpdateRequiredListData(DataSets, Variables, ACell, AModel);
 
     Expression.Evaluate;
     with DrtStorage.DrtArray[Index] do
@@ -567,7 +569,7 @@ begin
   end;
 end;
 
-procedure TDrtCollection.AssignCellLocation(
+procedure TDrtCollection.AssignListCellLocation(
   BoundaryStorage: TCustomBoundaryStorage; ACellList: TObject);
 var
   DrtStorage: TDrtStorage;
@@ -960,9 +962,19 @@ begin
 end;
 
 constructor TDrtBoundary.Create(Model: TBaseModel; ScreenObject: TObject);
+var
+  OnInvalidateModelEvent: TNotifyEvent;
 begin
+  if Model = nil then
+  begin
+    OnInvalidateModelEvent := nil;
+  end
+  else
+  begin
+    OnInvalidateModelEvent := Model.Invalidate;
+  end;
   inherited Create(Model, ScreenObject);
-  FDrainReturn := TDrainReturn.Create(Model);
+  FDrainReturn := TDrainReturn.Create(OnInvalidateModelEvent);
 end;
 
 destructor TDrtBoundary.Destroy;
@@ -1235,12 +1247,12 @@ begin
   result := ReturnChoice = rtObject;
 end;
 
-constructor TDrainReturn.Create(Model: TBaseModel);
+constructor TDrainReturn.Create(InvalidateModelEvent: TNotifyEvent);
 begin
   inherited;
-  FReturnCell := TReturnCell.Create(Model);
-  FReturnLocation := TReturnLocation.Create(Model);
-  FReturnObject := TReturnObject.Create(Model);
+  FReturnCell := TReturnCell.Create(InvalidateModelEvent);
+  FReturnLocation := TReturnLocation.Create(InvalidateModelEvent);
+  FReturnObject := TReturnObject.Create(InvalidateModelEvent);
 end;
 
 destructor TDrainReturn.Destroy;

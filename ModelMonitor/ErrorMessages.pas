@@ -230,8 +230,6 @@ begin
     ErrorValues.Add('***Erroneous value for Input value "Options."***');
     ErrorValues.Add('Check input. Model Stopping.');
     ErrorValues.Add('***Incorrect value for Linear solution method specified. Check input.***');
-    ErrorValues.Add('**Active cell surrounded by inactive cells**');
-    ErrorValues.Add('**Resetting cell to inactive**');
     ErrorValues.Add('Error in Preconditioning:');
     ErrorValues.Add('Linear solver failed to converge:');
     ErrorValues.Add('Error in gmres: ');
@@ -318,6 +316,43 @@ begin
     ErrorValues.Add('MUST HAVE A NEGATIVE FARM-WELL ID');
     ErrorValues.Add('Blank instance name in the');
     ErrorValues.Add('HAS ALREADY BEEN ACTIVATED THIS STRESS PERIOD');
+
+    // SWR
+    ErrorValues.Add('DIRECT RUNOFF UNIT MUST BE >= 0');
+    ErrorValues.Add('MUST BE GREATER THAN');
+    ErrorValues.Add('MUST BE GREATER  THAN');
+    ErrorValues.Add('ISOLVER MUST MUST BE');
+    ErrorValues.Add('ISOLVER MUST BE');
+    ErrorValues.Add('NOUTER MUST NOT EQUAL 0');
+    ErrorValues.Add('MUST BE LESS THAN');
+    ErrorValues.Add('EXCEEDS NREACHES');
+    ErrorValues.Add('LESS THAN ONE');
+    ErrorValues.Add('LESS THAN ZERO');
+    ErrorValues.Add('REACH LAYER EXCEEDS NLAY');
+    ErrorValues.Add('REACH ROW EXCEEDS NROW');
+    ErrorValues.Add('REACH COL EXCEEDS NCOL');
+    ErrorValues.Add('COULD NOT PARSE NTABRCH');
+    ErrorValues.Add('CONFINED AQUIFERS CANNOT BE SIMULATED WITH SWR');
+    ErrorValues.Add('FLOW PACKAGE SPECIFIED INCONSISTENT WITH SWR');
+    ErrorValues.Add('MUST BE EQUAL TO');
+    ErrorValues.Add('MUST NOT EXCEED');
+    ErrorValues.Add('SHOULD BE SPECIFIED AS');
+    ErrorValues.Add('POSITIVE REACH RAIN VALUE REQUIRED');
+    ErrorValues.Add('POSITIVE REACH EVAP VALUE REQUIRED');
+    ErrorValues.Add('ISTRRCH.LT.1 OR .GT.NREACHES');
+    ErrorValues.Add('ISTRNUM.LT.1 OR .GT.REACH(ISTRRCH)%NSTRUCT');
+    ErrorValues.Add('SIMULATED SWR1 STAGE STRCRIT ONLY FOR');
+    ErrorValues.Add('STAGE CANNOT BE SPECIFIED USING ANOTHER');
+    ErrorValues.Add('INVALID SOURCE REACH DEFINING STAGE FOR');
+    ErrorValues.Add('INVALID STRUCTURE CONNECTION');
+    ErrorValues.Add('ASSYMETRY IN REACH CONNECTIONS');
+    ErrorValues.Add('COULD NOT ALLOCATE');
+    ErrorValues.Add('MULTIPLE DW CONNECTIONS TO THE SAME DW RCHGRP');
+    ErrorValues.Add('ROUTING APPROACHES FOR AT LEAST');
+    ErrorValues.Add('KRCH MUST BE SET TO 1');
+//    ErrorValues.Add('aaa');
+//    ErrorValues.Add('aaa');
+//    ErrorValues.Add('aaa');
 //    ErrorValues.Add('aaa');
 //    ErrorValues.Add('aaa');
 //    ErrorValues.Add('aaa');
@@ -444,6 +479,7 @@ begin
     WarningValues.Add('these conditions can diminish the impact');
     WarningValues.Add('COMBINED LAKE/AQUIFER CONDUCTANCES BASED SOLELY ON LAKEBED');
     WarningValues.Add('Well is inactive');
+    WarningValues.Add('Extremely thin cell');
 
     // MODFLOW-NWT
 //    WarningValues.Add('*** WARNING *** NEGATIVE LAKE OUTFLOW NOT ALLOWED;');
@@ -455,6 +491,8 @@ begin
     WarningValues.Add('warning in xmdcheck');
     WarningValues.Add('UNRECOGNIZED SWR1 OPTION:');
     WarningValues.Add('*** MODFLOW CONVERGENCE FAILURE ***');
+    WarningValues.Add('**Active cell surrounded by inactive cells**');
+    WarningValues.Add('**Resetting cell to inactive**');
 
 //    FMP
     WarningValues.Add('CORRECTION FOR');

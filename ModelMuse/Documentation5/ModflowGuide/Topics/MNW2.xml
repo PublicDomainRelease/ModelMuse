@@ -112,6 +112,7 @@
           </list>
           <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-OWHM</text></li>
           </list>
         </td>
       </tr>
@@ -129,7 +130,7 @@
     <para styleclass="Heading1"><text styleclass="Heading1" translate="true">MNW2 Package Input Data</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The MNW2 input file consists of input items (datasets) numbered from 0 through 4, each consisting of one or more records, as described in detail below. These data are used to specify information about the locations, flows, physical and hydraulic properties of the wells, and possibly solute concentrations, as well as specifying certain output control options.</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">In the following description, input parameters are indicated as being optional by their enclosure in curly brackets. All input variables are read using free formats. In free format, variables are separated by one or more spaces or by a comma and optionally one or more spaces. Thus, in free format, a blank field cannot be used to set a variable value to zero.</text></para>
-    <para styleclass="Normal"><table rowcount="24" colcount="2" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Normal"><table rowcount="28" colcount="2" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td colspan="2">
           <para styleclass="Normal"><text styleclass="Normal" translate="true">FOR EACH SIMULATION:</text></para>
@@ -154,6 +155,38 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="vertical-align:top;">
+          <para styleclass="Heading2_atoc_"><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/><text styleclass="Heading2_atoc_" translate="true">Data Set 0a-1</text><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Heading2_atoc_" translate="true"> (MODFLOW-OWHM only)</text><conditional-text type="END"/><conditional-text type="END"/></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><snippet src="Tabfile1"/></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:top;">
+          <para styleclass="Heading2_atoc_"><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/><text styleclass="Heading2_atoc_" translate="true">Data Set 0a-2</text><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Heading2_atoc_" translate="true"> (MODFLOW-OWHM only)</text><conditional-text type="END"/><conditional-text type="END"/></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><snippet src="Tabfile2"/></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:top;">
+          <para styleclass="Heading2_atoc_"><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/><text styleclass="Heading2_atoc_" translate="true">Data Set 0a-3</text><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Heading2_atoc_" translate="true"> (MODFLOW-OWHM only)</text><conditional-text type="END"/><conditional-text type="END"/></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><snippet src="Tabfile3"/></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:top;">
+          <para styleclass="Heading2_atoc_"><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/><text styleclass="Heading2_atoc_" translate="true">Data Set 0a-4</text><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Heading2_atoc_" translate="true"> (MODFLOW-OWHM only)</text><conditional-text type="END"/><conditional-text type="END"/></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><snippet src="Tabfile7_Mnw"/></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:top;">
           <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 1</text></para>
         </td>
         <td>
@@ -171,7 +204,7 @@
                 <para styleclass="Normal" style="text-align:center;"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2005, MODFLOW-NWT</text><conditional-text type="END"/></para>
               </td>
               <td>
-                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><text styleclass="Normal" translate="true">MNWMAX [NODTOT] IWL2CB MNWPRNT [OPTION]</text><conditional-text type="END"/></para>
+                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-FMP2,MODFLOW-NWT"/><text styleclass="Normal" translate="true">MNWMAX [NODTOT] IWL2CB MNWPRNT [OPTION]</text><conditional-text type="END"/></para>
               </td>
             </tr>
           </table></para>
@@ -183,11 +216,11 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><anchor id="MNWMAX" styleclass="Normal"></anchor><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><text styleclass="Normal" translate="true">The absolute value of </text><conditional-text type="END"/><text styleclass="Normal" translate="true">MNWMAX is the maximum number of multi-node wells (MNW) to be simulated.</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><text styleclass="Normal" translate="true"> If MNWMAX is a negative number, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW2" anchor="NODTOT" styleclass="Normal" translate="true">NODTOT</link><text styleclass="Normal" translate="true"> is read.</text><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Normal" translate="true"> Negative values of MNWMAX are only currently supported in MOFLOW-2005 and MOFLOW-NWT.</text><conditional-text type="END"/></para>
+                      <para styleclass="Normal"><anchor id="MNWMAX" styleclass="Normal"></anchor><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-FMP2,MODFLOW-NWT"/><text styleclass="Normal" translate="true">The absolute value of </text><conditional-text type="END"/><text styleclass="Normal" translate="true">MNWMAX is the maximum number of multi-node wells (MNW) to be simulated.</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-FMP2,MODFLOW-NWT"/><text styleclass="Normal" translate="true"> If MNWMAX is a negative number, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW2" anchor="NODTOT" styleclass="Normal" translate="true">NODTOT</link><text styleclass="Normal" translate="true"> is read.</text><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Normal" translate="true"> Negative values of MNWMAX are only currently supported in MODFLOW-2005, MODFLOW-NWT, and MODFLOW-OWHM.</text><conditional-text type="END"/></para>
                     </td>
                   </tr>
                 </table></para>
-                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[NODTOT]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-FMP2,MODFLOW-NWT"/><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[NODTOT]]></caption></toggle></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>

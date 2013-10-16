@@ -115,7 +115,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="95" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="19" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/usgspubs/ofr/ofr20041042" target="_blank" styleclass="Citation" translate="true">Prudic, D.E., Konikow, L.F., and Banta, E.R., 2004, A new stream-flow routing (SFR1) package to simulate stream-aquifer interaction with MODFLOW-2000: U.S. Geological Survey Open-File Report 2004-1042, 95 p.</link><text styleclass="Citation" translate="true"> &#160;</text><link displaytype="text" defaultstyle="true" type="weblink" href="http://water.usgs.gov/nrp/gwsoftware/modflow2000/ofr2004-1042.pdf" target="_blank" styleclass="Citation" translate="true">PDF version</link></li>
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.usgs.gov/tm/2006/tm6A13/" target="_blank" styleclass="Citation" translate="true">Niswonger, R.G. and Prudic, D.E., 2005, Documentation of the Streamflow-Routing (SFR2) Package to include unsaturated flow beneath streams--A modification to SFR1: U.S. Geological Survey Techniques and Methods, Book 6, Chap. A13, 47 p.</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="tma6a13_SFR2revision_history.pdf" styleclass="Normal" translate="true">tma6a13_SFR2revision_history.pdf</link></li>
@@ -128,7 +128,7 @@
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="LAK_SFR_UZF_updates_MF2005.txt" styleclass="Citation" style="font-style:normal;" translate="true">LAK_SFR_UZF_updates_MF2005.txt</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="Updated_SFR2_input_instructions_MF2005.pdf" styleclass="Citation" style="font-style:normal;" translate="true">Updated_SFR2_input_instructions_MF2005.pdf</link></li>
           </list>
-          <list id="96" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="20" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Citation" translate="true">Schmid, Wolfgang, and Hanson R.T., 2009, The Farm Process Version 2 (FMP2) for MODFLOW-2005 - Modifications and Upgrades to FMP1: U.S. Geological Survey Techniques in Water Resources Investigations, Book 6, Chapter A32, 102p.</text><text styleclass="Normal" translate="true"> (</text><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/publication/tm6A32" target="_blank" styleclass="Normal" translate="true">http://pubs.er.usgs.gov/publication/tm6A32</link><text styleclass="Normal" translate="true">)</text></li>
           </list>
         </td>
@@ -138,11 +138,11 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Related Packages</text></para>
         </td>
         <td>
-          <list id="97" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="21" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="STR" styleclass="Normal" translate="true">Stream (STR)</link><text styleclass="Normal" translate="true"> package</text></li>
-            <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="GAGE" styleclass="Normal" translate="true">Gage</link><text styleclass="Normal" translate="true"> package</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/></li>
+            <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="GAGE" styleclass="Normal" translate="true">Gage</link><text styleclass="Normal" translate="true"> package</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2,MODFLOW-NWT"/></li>
           </list>
-          <list id="98" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="22" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" styleclass="Normal" translate="true">Surface-Water Routing (SWR)</link><text styleclass="Normal" translate="true"> process</text><conditional-text type="END"/></li>
           </list>
         </td>
@@ -152,19 +152,19 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="99" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="23" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="100" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="24" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
-          <list id="101" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="25" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
           </list>
-          <list id="102" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
-            <li styleclass="Normal"><text styleclass="Normal" translate="true">MF2005-FMP2</text></li>
+          <list id="26" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-OWHM</text></li>
           </list>
         </td>
       </tr>
@@ -173,7 +173,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Common Errors</text></para>
         </td>
         <td>
-          <list id="103" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="27" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Stream reaches within segments are listed from downstream to upstream instead of from upstream to downstream.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Stream segments are listed from downstream to upstream instead of from upstream to downstream.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Linkages between streams are not specified.</text></li>
@@ -186,13 +186,13 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Other Notes</text></para>
         </td>
         <td>
-          <list id="104" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="28" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Compared with the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="STR" styleclass="Normal" translate="true">Stream (STR)</link><text styleclass="Normal" translate="true"> package, the Streamflow-Routing (SFR) provides greater flexibility in how streams are specified</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000"/><text styleclass="Normal" translate="true"> but the parameters in it can not be used with the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SEN" styleclass="Normal" translate="true">Sensitivity</link><text styleclass="Normal" translate="true"> or &#160;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="PES" styleclass="Normal" translate="true">Parameter-Estimation</link><text styleclass="Normal" translate="true"> processes</text><conditional-text type="END"/><text styleclass="Normal" translate="true">.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Package_Incompatibilities" styleclass="Normal" translate="true">Package Incompatibilities</link></li>
             <li styleclass="Normal"><conditional-text type="IF" value="MODFLOW-2005,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="Normal" translate="true">Rejected recharge in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" styleclass="Normal" translate="true">UZF</link><text styleclass="Normal" translate="true"> package can be routed to streams in the SFR package.</text></li>
             <li styleclass="Normal"><conditional-text type="END"/><text styleclass="New Materials" translate="true">Although the same segment can be defined in more than one parameter, only one parameter can be used with a particular segment in any one stress period.</text></li>
           </list>
-          <list id="105" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="29" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The SFR package does not support unsaturated flow when the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="HUF2" styleclass="Normal" translate="true">HUF</link><text styleclass="Normal" translate="true"> package is used.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">If a stream is defined in an inactive cell, it will be automatically moved to an active cell in the layer below. &#160;See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="KRCH" styleclass="Normal" translate="true">KRCH</link><text styleclass="Normal" translate="true"> for more details.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT has a number of changes to the SFR input instructions. The changes are documented in </text><link displaytype="text" defaultstyle="true" type="filelink" href="Updated_SFR2_input_instructions_NWT.pdf" styleclass="Citation" style="font-style:normal;" translate="true">Updated_SFR2_input_instructions_NWT.pdf</link><text styleclass="Citation" style="font-style:normal;" translate="true">.</text></li>
@@ -225,7 +225,7 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Normal"><table rowcount="37" colcount="2" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Normal"><table rowcount="41" colcount="2" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td colspan="2">
           <para styleclass="Normal"><text styleclass="Normal" translate="true">FOR EACH SIMULATION</text></para>
@@ -290,10 +290,10 @@
       </tr>
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-LGR,MODFLOW-NWT"/><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Table Header" translate="true">MODFLOW-2005, MODFLOW-NWT, MODFLOW-LGR Version 2: </text><conditional-text type="END"/><text styleclass="Heading2_atoc_" translate="true">Data Set 1b</text><conditional-text type="END"/></para>
+          <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-FMP2,MODFLOW-LGR,MODFLOW-NWT"/><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2005, MODFLOW-NWT, MODFLOW-OWHM, MODFLOW-LGR Version 2: </text><conditional-text type="END"/><text styleclass="Heading2_atoc_" translate="true">Data Set 1b</text><conditional-text type="END"/></para>
         </td>
         <td>
-          <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="Normal" translate="true">[</text><text styleclass="Keywords" translate="true">TABFILES</text><text styleclass="Normal" translate="true"> NUMTAB MAXVAL]</text></para>
+          <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-FMP2,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="Normal" translate="true">[</text><text styleclass="Keywords" translate="true">TABFILES</text><text styleclass="Normal" translate="true"> NUMTAB MAXVAL]</text></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
@@ -330,6 +330,38 @@
       </tr>
       <tr style="vertical-align:top">
         <td>
+          <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-OWHM: </text><conditional-text type="END"/><text styleclass="Table Header" translate="true">Data Set 1bb-1</text><conditional-text type="END"/></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><snippet src="Tabfile1"/></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-OWHM: </text><conditional-text type="END"/><text styleclass="Table Header" translate="true">Data Set 1bb-2</text><conditional-text type="END"/></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><snippet src="Tabfile2"/></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-OWHM: </text><conditional-text type="END"/><text styleclass="Table Header" translate="true">Data Set 1bb-3</text><conditional-text type="END"/></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><snippet src="Tabfile3"/></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-OWHM: </text><conditional-text type="END"/><text styleclass="Table Header" translate="true">Data Set 1bb-4</text><conditional-text type="END"/></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><snippet src="Tabfile4"/></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
           <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 1</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="Heading2_atoc_" translate="true">c</text><conditional-text type="END"/></para>
         </td>
         <td>
@@ -344,8 +376,7 @@
             </tr>
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2005, MODFLOW-CFP, MODFLOW-NWT,</text></para>
-                <para styleclass="Table Header"><text styleclass="Table Header" translate="true">MF2005-FMP2: </text><conditional-text type="END"/></para>
+                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2005, MODFLOW-CFP, MODFLOW-NWT: </text><conditional-text type="END"/></para>
               </td>
               <td>
                 <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-NWT"/><text styleclass="Normal" translate="true">NSTRM NSS NSFRPAR NPARSEG CONST DLEAK ISTCB1 &#160;ISTCB2 [ISFROPT] [NSTRAIL] [ISUZN] [NSFRSETS] [IRTFLG] [NUMTIM] [WEIGHT] [FLWTOL]</text><conditional-text type="END"/></para>
@@ -353,7 +384,8 @@
             </tr>
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-LGR: </text><conditional-text type="END"/></para>
+                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-LGR,</text></para>
+                <para styleclass="Table Header"><text styleclass="Table Header" translate="true">MODFLOW-OWHM: </text><conditional-text type="END"/></para>
               </td>
               <td>
                 <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Normal" translate="true">NSTRM NSS NSFRPAR NPARSEG CONST DLEAK ISTCB1 &#160;ISTCB2 [ISFROPT] [NSTRAIL] [ISUZN] [NSFRSETS] [IRTFLG] [NUMTIM] [WEIGHT] [FLWTOL] [Option]</text><conditional-text type="END"/></para>
@@ -376,8 +408,7 @@
                       <para styleclass="Normal"><table styleclass="Default" rowcount="2" colcount="2" style="cell-padding:4px;">
                         <tr style="vertical-align:top">
                           <td>
-                            <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Table Header" translate="true">MODFLOW-2005, MODFLOW-CFP, MODFLOW-LGR Version 1,</text></para>
-                            <para styleclass="Normal"><text styleclass="Table Header" translate="true">MF2005-FMP2:</text><conditional-text type="END"/></para>
+                            <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Table Header" translate="true">MODFLOW-2005, MODFLOW-CFP, MODFLOW-LGR Version 1:</text><conditional-text type="END"/></para>
                           </td>
                           <td>
                             <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-LGR"/><text styleclass="Normal" translate="true">An integer value that can be specified to be positive or negative. The absolute value of NSTRM is equal to the number of stream reaches (finite-difference cells) that are active during the simulation and the number of lines of data to be included in Item 2, described below. When NSTRM is specified to be a negative integer, it is also used as a flag for changing the format of the data input, for simulating unsaturated flow beneath streams, and (or) for simulating transient streamflow routing, depending on the values specified for variables ISFROPT and IRTFLG, as described below. When NSTRM is negative, NSFRPAR must be set to zero, which means that parameters cannot be specified. &#160;See Note 3.</text><conditional-text type="END"/></para>
@@ -385,7 +416,7 @@
                         </tr>
                         <tr style="vertical-align:top">
                           <td>
-                            <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Table Header" translate="true">MODFLOW-2000, MODFLOW-NWT, MODFLOW-LGR Version 2:</text><conditional-text type="END"/></para>
+                            <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Table Header" translate="true">MODFLOW-2000, MODFLOW-NWT, MODFLOW-OWHM, MODFLOW-LGR Version 2:</text><conditional-text type="END"/></para>
                           </td>
                           <td>
                             <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="Normal" translate="true">An integer value equal to the number of stream reaches (finite-difference cells) that are active during the simulation. The value of NSTRM also represents the number of lines of data to be included in Item 2, described below.</text><conditional-text type="END"/></para>
@@ -484,7 +515,7 @@
                       <para styleclass="Normal"><table styleclass="Default" rowcount="2" colcount="2" style="cell-padding:4px;">
                         <tr style="vertical-align:top">
                           <td>
-                            <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Table Header" translate="true"> MODFLOW-CFP, MODFLOW-LGR Version 1, MF2005-FMP2: </text><conditional-text type="END"/></para>
+                            <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Table Header" translate="true"> MODFLOW-CFP, MODFLOW-LGR Version 1: </text><conditional-text type="END"/></para>
                           </td>
                           <td>
                             <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-LGR"/><text styleclass="Normal" translate="true">ISFROPT is used only if &#160;NSTRM is less than 0.</text><conditional-text type="END"/></para>
@@ -492,7 +523,7 @@
                         </tr>
                         <tr style="vertical-align:top">
                           <td>
-                            <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Table Header" translate="true">MODFLOW-2005,MODFLOW-NWT, </text></para>
+                            <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Table Header" translate="true">MODFLOW-2005,MODFLOW-NWT, MODFLOW-OWHM, </text></para>
                             <para styleclass="Normal"><text styleclass="Table Header" translate="true">MODFLOW-LGR Version 2: </text><conditional-text type="END"/></para>
                           </td>
                           <td>
@@ -501,7 +532,7 @@
                         </tr>
                       </table></para>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">ISFROPT is an integer value that defines the input structureUnsaturated flow is simulated for ISFROPT ≥ 2; unsaturated flow is not simulated for ISFROPT = 0 or 1. Optional variables </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="NSTRAIL" styleclass="Normal" translate="true">NSTRAIL</link><text styleclass="Normal" translate="true">, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="ISUZN" styleclass="Normal" translate="true">ISUZN</link><text styleclass="Normal" translate="true">, and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="NSFRSETS" styleclass="Normal" translate="true">NSFRSETS</link><text styleclass="Normal" translate="true"> also must be specified if ISFROPT&gt;1. Values of ISFROPT are defined as follows: </text></para>
-                      <list id="106" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="30" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">0. No vertical unsaturated flow beneath streams. Streambed elevations, stream slope, streambed thickness, and streambed hydraulic conductivity are read for each stress period using variables defined in Items 6b and 6c; the optional variables in Item 2 are not used.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">1. No vertical unsaturated flow beneath streams. Streambed elevation, stream slope, streambed thickness, and streambed hydraulic conductivity are read for each reach only once at the beginning of the simulation using optional variables defined in Item 2; Items 4a and 4b or 6b and 6c are used to define stream width and depth for ICALC =0 and stream width for ICALC = 1.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">2. Streambed and unsaturated-zone properties are read for each reach only once at the beginning of the simulation using optional variables defined in Item 2; Items 4a and 4b or 6b and 6c are used to define stream width and depth for ICALC = 0 and stream width for ICALC = 1. When using the LPF Package, saturated vertical hydraulic conductivity for the unsaturated zone is the same as the vertical hydraulic conductivity of the corresponding layer in LPF and input variable UHC is not read.</text></li>
@@ -517,7 +548,7 @@
                           </td>
                         </tr>
                       </table></para>
-                      <list id="107" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="31" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">The SFR package does not support unsaturated flow when the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="HUF2" styleclass="Normal" translate="true">HUF</link><text styleclass="Normal" translate="true"> package is used.</text></li>
                       </list>
                     </td>
@@ -558,7 +589,7 @@
                       <para styleclass="Normal"><table styleclass="Default" rowcount="2" colcount="2" style="cell-padding:4px;">
                         <tr style="vertical-align:top">
                           <td>
-                            <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Table Header" translate="true"> MODFLOW-CFP, MODFLOW-LGR Version 1, MF2005-FMP2: </text><conditional-text type="END"/></para>
+                            <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Table Header" translate="true"> MODFLOW-CFP, MODFLOW-LGR Version 1: </text><conditional-text type="END"/></para>
                           </td>
                           <td>
                             <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-LGR"/><text styleclass="Normal" translate="true">IRTFLG is only read if NSTRM is less than 0.</text><conditional-text type="END"/></para>
@@ -566,7 +597,7 @@
                         </tr>
                         <tr style="vertical-align:top">
                           <td>
-                            <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Table Header" translate="true">MODFLOW-2005,MODFLOW-NWT, MODFLOW-LGR Version 2: </text><conditional-text type="END"/></para>
+                            <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Table Header" translate="true">MODFLOW-2005,MODFLOW-NWT, MODFLOW-OWHM, MODFLOW-LGR Version 2: </text><conditional-text type="END"/></para>
                           </td>
                           <td>
                             <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="Normal" translate="true">IRTFLG is only read if NSTRM is less than 0 or the keyword </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="TRANSROUTE" styleclass="Keywords" translate="true">TRANSROUTE</link><text styleclass="Normal" translate="true"> has been specified:</text><conditional-text type="END"/></para>
@@ -609,11 +640,11 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">Option—is an optional list of character values.</text></para>
-                      <list id="108" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="32" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">“</text><text styleclass="Keywords" translate="true">AUXILIARY</text><text styleclass="Normal" translate="true"> abc” or “</text><text styleclass="Keywords" translate="true">AUX</text><text styleclass="Normal" translate="true"> abc”—defines an auxiliary variable, named &quot;abc&quot;, which will be read for each well as part of Items 4 and 6. Up to 20 variables can be specified, each of which must be preceded by &quot;AUXILIARY&quot; or &quot;AUX.&quot; These variables will not be used by the Ground-Water Flow Process, but they will be available for use by other processes. The auxiliary variable values will be read after the other SFR variables.</text></li>
                       </list>
                       <para styleclass="Normal"><snippet src="Uses_of_Auxiliary_Parameters"/></para>
-                      <list id="109" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="33" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">The routing between grids is controlled using two new auxiliary variables in item 1 of the SFR input file: LGRGRID and LGRSEG. In item 4b and(or) 6a, these variables function similarly to input variable IUPSEG in the SFR2 Package, which is used to indicate the upstream segment from which flow is supplied from a diversion. LGRGRID and LGRSEG indicate the grid and segment number, respectively, whose outflow will be used as an inflow for the current segment. Segments of the parent grid that are represented by the child grid are inactive after the first LGR iteration, which is indicated by setting LGRGRID to a negative value in the parent-grid SFR2 input file. In this case, the value specified for LGRSEG in the parent-grid SFR2 input file is not used and can be set to any value. Zeros are used for any active segments that do not receive inflow from another grid.</text></li>
                       </list>
                     </td>
@@ -629,7 +660,7 @@
               <td>
                 <para styleclass="Normal"><snippet src="SFR_Note2"/></para>
                 <para styleclass="Normal"><snippet src="SFR_Note3"/></para>
-                <list id="110" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                <list id="34" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                   <li styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">Note 4</text><text styleclass="Normal" translate="true">: SFR2 differs from the Stream (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="STR" styleclass="Normal" translate="true">STR1</link><text styleclass="Normal" translate="true">) Package (Prudic, 1989) because the new package solves for stream depth at the midpoint of each reach instead of at the beginning of the reach. To solve for depth at the midpoint of each reach, like SFR1, SFR2 uses Newton’s iterative method and consequently, a tolerance (DLEAK) is used for stopping the iterative process. A value of 1.0 ×10</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">-6</text><text styleclass="Normal" translate="true"> meters has been used successfully in test simulations (and would need to be converted to whatever units are being used in the particular simulation).</text></li>
                 </list>
               </td>
@@ -775,7 +806,7 @@
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
             <tr style="vertical-align:top">
               <td>
-                <list id="111" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                <list id="35" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                   <li styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">Note 5</text><text styleclass="Normal" translate="true">: Reach information is read in sequential order from upstream to downstream, first by segments, and then sequentially by reaches. If segments are not numbered sequentially in downstream order, then the inflow to a segment during the current MODFLOW iteration will be the outflow from an upstream segment calculated during the previous iteration. Lagging the inflow by one iteration does not change the solution for flows into and out of a segment after MODFLOW converges; however, this approach may require an additional iteration for the model to converge. Reaches must be listed and read sequentially because the order determines the connections of inflows and outflows within a stream segment.</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">Note 6</text><text styleclass="Normal" translate="true">: The stream network is assumed to remain fixed geometrically over the duration of a simulation. The active part of the stream network, however, can be made to vary over time by making selected stream segments inactive for selected stress periods. This would be implemented by setting the streambed hydraulic conductivity, segment inflow, overland runoff, and direct precipitation to zero for the inactive segments in Items 4 or 6 for the specific stress periods when they are known to be inactive or dry.</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">Note 7</text><text styleclass="Normal" translate="true">: If the model cell corresponding to a stream reach is inactive, the program will search for the uppermost active cell in the vertical column to apply the stream leakage. If there are no active cells or if the cell is a constant head, no interaction is allowed and flow in the reach is passed to the next reach.</text></li>
@@ -912,7 +943,7 @@
           <para styleclass="Normal"><table styleclass="Default" rowcount="2" colcount="2" style="cell-padding:4px; cell-spacing:0px; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none;">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2000, MODFLOW-2005, MODFLOW-CFP, MODFLOW-NWT, MF2005-FMP2: </text><conditional-text type="END"/></para>
+                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2000, MODFLOW-2005, MODFLOW-CFP, MODFLOW-NWT: </text><conditional-text type="END"/></para>
               </td>
               <td>
                 <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-NWT"/><text styleclass="Normal" translate="true">NSEG ICALC OUTSEG &#160;IUPSEG [IPRIOR] [NSTRPTS] FLOW RUNOFF ETSW &#160;PPTSW [ROUGHCH] [ROUGHBK] [CDPTH] [FDPTH] [AWDTH] [BWDTH]</text><conditional-text type="END"/></para>
@@ -920,7 +951,7 @@
             </tr>
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-LGR: </text><conditional-text type="END"/></para>
+                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-LGR, MODFLOW-OWHM: </text><conditional-text type="END"/></para>
               </td>
               <td>
                 <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Normal" translate="true">NSEG ICALC OUTSEG &#160;IUPSEG [IPRIOR] [NSTRPTS] FLOW RUNOFF ETSW &#160;PPTSW [ROUGHCH] [ROUGHBK] [CDPTH] [FDPTH] [AWDTH] [BWDTH] [xyz]</text><conditional-text type="END"/></para>
@@ -1113,7 +1144,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><anchor id="ITMP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">An integer value for reusing or reading stream segment data that can change each stress period. If ITMP = 0 then all stream segment data are defined by Item 4 (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="NSFRPAR" styleclass="Normal" translate="true">NSFRPAR</link><text styleclass="Normal" translate="true"> &gt; 0; number of stream parameters is greater than 0). If ITMP &gt; 0, then stream segment data are not defined in Item 4 and must be defined in Item 6 below for a number of segments equal to the value of ITMP. If ITMP &lt; 0, then stream segment data not defined in Item 4 will be reused from the last stress period (Item 6 is not read for the current stress period). ITMP must be defined = 0 for the first stress period of a simulation.</text></para>
+                      <para styleclass="Normal"><anchor id="ITMP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">An integer value for reusing or reading stream segment data that can change each stress period. If ITMP = 0 then all stream segment data are defined by Item 4 (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="NSFRPAR" styleclass="Normal" translate="true">NSFRPAR</link><text styleclass="Normal" translate="true"> &gt; 0; number of stream parameters is greater than 0). If ITMP &gt; 0, then stream segment data are not defined in Item 4 and must be defined in Item 6 below for a number of segments equal to the value of ITMP. If ITMP &lt; 0, then stream segment data not defined in Item 4 will be reused from the last stress period (Item 6 is not read for the current stress period). ITMP must be defined ≥ 0 for the first stress period of a simulation.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -1166,12 +1197,12 @@
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
             <tr style="vertical-align:top">
               <td>
-                <list id="112" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                <list id="36" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                   <li styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">Note 21</text><text styleclass="Normal" translate="true">: Item 6 must be completed </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="ITMP" styleclass="Normal" translate="true">ITMP</link><text styleclass="Normal" translate="true"> times. The data need not be defined in sequential order by stream segment number. All active segments in the stream network must be defined for each stress period through a combination of </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="ITMP" styleclass="Normal" translate="true">ITMP</link><text styleclass="Normal" translate="true"> and Item 6 and NP and Item 7.</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">Note 22</text><text styleclass="Normal" translate="true">: If </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="ITMP" styleclass="Normal" translate="true">ITMP</link><text styleclass="Normal" translate="true"> ≤ 0, then Item 6 is excluded for this stress period. If </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="ITMP" styleclass="Normal" translate="true">ITMP</link><text styleclass="Normal" translate="true"> &lt; 0, then values for Item 6 from the previous stress period are reused. If </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="ITMP" styleclass="Normal" translate="true">ITMP</link><text styleclass="Normal" translate="true"> = 0, then no Item 6 records are read, and all segments must be defined using parameters.</text></li>
                 </list>
                 <para styleclass="Normal"><snippet src="SFR_Note23"/></para>
-                <list id="112" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                <list id="36" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                   <li styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">Note 24</text><text styleclass="Normal" translate="true">: All the explanatory notes applicable to Item 4 (except those related to parameters) are also relevant to Item 6.</text></li>
                 </list>
               </td>
@@ -1187,8 +1218,7 @@
           <para styleclass="Normal"><table styleclass="Default" rowcount="2" colcount="2" style="cell-padding:4px; cell-spacing:0px; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none;">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2000, MODFLOW-2005, MODFLOW-CFP, MODFLOW-NWT,</text></para>
-                <para styleclass="Table Header"><text styleclass="Table Header" translate="true">MF2005-FMP2: </text><conditional-text type="END"/></para>
+                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2000, MODFLOW-2005, MODFLOW-CFP, MODFLOW-NWT: </text><conditional-text type="END"/></para>
               </td>
               <td>
                 <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-NWT"/><text styleclass="Normal" translate="true">NSEG ICALC OUTSEG IUPSEG [IPRIOR] [NSTRPTS] FLOW RUNOFF ETSW PPTSW [ROUGHCH] [ROUGHBK] [CDPTH] [FDPTH] [AWDTH] [BWDTH]</text><conditional-text type="END"/></para>
@@ -1196,7 +1226,7 @@
             </tr>
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-LGR: </text><conditional-text type="END"/></para>
+                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-LGR, MODFLOW-OWHM: </text><conditional-text type="END"/></para>
               </td>
               <td>
                 <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Normal" translate="true">NSEG ICALC OUTSEG IUPSEG [IPRIOR] [NSTRPTS] FLOW RUNOFF ETSW PPTSW [ROUGHCH] [ROUGHBK] [CDPTH] [FDPTH] [AWDTH] [BWDTH] [xyz]</text><conditional-text type="END"/></para>
@@ -1370,7 +1400,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td colspan="2">
-          <list id="113" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="37" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">If </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="ICALC2" styleclass="Normal" translate="true">ICALC</link><text styleclass="Normal" translate="true"> = 2</text><text styleclass="New Materials" translate="true"> and (this is the first stress period OR </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="NSTRM" styleclass="New Materials" translate="true">NSTRM</link><text styleclass="New Materials" translate="true"> &gt; 0</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="Normal" translate="true"> and the keyword </text><text styleclass="Keywords" translate="true">REACHINPUT</text><text styleclass="Normal" translate="true"> is not specified</text><conditional-text type="END"/><text styleclass="New Materials" translate="true"> OR </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="ISFROPT" styleclass="New Materials" translate="true">ISFROPT</link><text styleclass="New Materials" translate="true">&#32;</text><text styleclass="New Materials" style="font-family:Symbol;" translate="true">£</text><text styleclass="New Materials" translate="true"> 1)</text></li>
           </list>
         </td>

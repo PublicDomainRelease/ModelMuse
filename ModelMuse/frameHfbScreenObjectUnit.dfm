@@ -9,8 +9,8 @@ object frameHfbScreenObject: TframeHfbScreenObject
   object lblParameterName: TLabel
     Left = 8
     Top = 34
-    Width = 79
-    Height = 13
+    Width = 96
+    Height = 16
     Margins.Left = 8
     Caption = 'Parameter name'
     Enabled = False
@@ -18,8 +18,8 @@ object frameHfbScreenObject: TframeHfbScreenObject
   object lblHydraulicConductivity: TLabel
     Left = 8
     Top = 63
-    Width = 139
-    Height = 13
+    Width = 164
+    Height = 16
     Margins.Left = 8
     Caption = 'Barrier hydraulic conductivity'
     Enabled = False
@@ -27,8 +27,8 @@ object frameHfbScreenObject: TframeHfbScreenObject
   object lblBarrierThickness: TLabel
     Left = 8
     Top = 91
-    Width = 79
-    Height = 13
+    Width = 95
+    Height = 16
     Margins.Left = 8
     Caption = 'Barrier thickness'
     Enabled = False
@@ -37,7 +37,7 @@ object frameHfbScreenObject: TframeHfbScreenObject
     Left = 312
     Top = 31
     Width = 170
-    Height = 23
+    Height = 26
     Margins.Right = 8
     Style = csOwnerDrawVariable
     ButtonStyle = fsLighter
@@ -46,9 +46,9 @@ object frameHfbScreenObject: TframeHfbScreenObject
     Enabled = False
     ImageHeight = 0
     ImageWidth = 0
-    ItemHeight = 17
+    ItemHeight = 20
     ItemIndex = -1
-    TabOrder = 0
+    TabOrder = 1
     OnChange = comboHfbParametersChange
     Items = <>
   end
@@ -68,7 +68,7 @@ object frameHfbScreenObject: TframeHfbScreenObject
       
         'Distribute conductivity among sections most nearly parallel to t' +
         'he grid')
-    TabOrder = 1
+    TabOrder = 6
   end
   object pnlCaption: TPanel
     Left = 0
@@ -78,14 +78,13 @@ object frameHfbScreenObject: TframeHfbScreenObject
     Align = alTop
     BevelOuter = bvNone
     Caption = 'pnlCaption'
-    TabOrder = 2
-    ExplicitWidth = 415
+    TabOrder = 0
   end
   object edHydraulicConductivity: TRbwEdit
     Left = 312
     Top = 60
     Width = 89
-    Height = 21
+    Height = 24
     Color = clBtnFace
     Enabled = False
     TabOrder = 3
@@ -94,10 +93,10 @@ object frameHfbScreenObject: TframeHfbScreenObject
     Left = 312
     Top = 88
     Width = 89
-    Height = 21
+    Height = 24
     Color = clBtnFace
     Enabled = False
-    TabOrder = 4
+    TabOrder = 5
   end
   object btnEditHfbHydraulicConductivityFormula: TButton
     Left = 407
@@ -106,7 +105,7 @@ object frameHfbScreenObject: TframeHfbScreenObject
     Height = 25
     Caption = 'Edit F()...'
     Enabled = False
-    TabOrder = 5
+    TabOrder = 2
   end
   object btnEditHfbThicknessyFormula: TButton
     Left = 407
@@ -115,6 +114,6 @@ object frameHfbScreenObject: TframeHfbScreenObject
     Height = 25
     Caption = 'Edit F()...'
     Enabled = False
-    TabOrder = 6
+    TabOrder = 4
   end
 end

@@ -2,7 +2,7 @@
 @name is used to define boundary conditions for the Flow and Head Boundary (FHB)
 package. The data for it are defined somewhat differently than for other
 MODFLOW boundary conditions. Instead of a start and end time only a time is
-defined. MODFLOW will interpolate betwee whatever is defined for that time
+defined. MODFLOW will interpolate between whatever is defined for that time
 and the value for the next defined time. If a time before the beginning
 or after the end of the model is defined, ModelMuse will interpolate values
 at the beginning or end of the model. If no value is defined for the beginning
@@ -93,7 +93,7 @@ type
     procedure SetItem(Index: Integer; const Value: TFhbItem);
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
+    procedure AssignListCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
       BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
@@ -160,7 +160,7 @@ type
   // @name represents the MODFLOW FHB head boundaries associated with
   // a single @link(TScreenObject).
   //
-  // @seealso(TFhbCollection)
+  // @seealso(TFhbHeadCollection)
   TFhbHeadBoundary = class(TModflowBoundary)
   protected
     // @name fills ValueTimeList with a series of TObjectLists - one for
@@ -199,7 +199,7 @@ type
   //     intersection between the @link(TScreenObject) and grid cell.)
   //   @item(fiTotal - BoundaryValue.)
   // )
-  // @seealso(TFhbCollection)
+  // @seealso(TFhbFlowCollection)
   TFhbFlowBoundary = class(TFhbHeadBoundary)
   private
     FFormulaInterpretation: TFormulaInterpretation;
@@ -372,7 +372,7 @@ begin
   inherited;
 end;
 
-{ TFhbCollection }
+{ TFhbHeadCollection }
 
 procedure TFhbHeadCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
@@ -464,7 +464,7 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
-    UpdataRequiredData(DataSets, Variables, ACell, AModel);
+    UpdateRequiredListData(DataSets, Variables, ACell, AModel);
     // 2. update locations
     Expression.Evaluate;
     with FhbStorage.FhbArray[Index] do
@@ -482,7 +482,7 @@ begin
   end;
 end;
 
-procedure TFhbHeadCollection.AssignCellLocation(
+procedure TFhbHeadCollection.AssignListCellLocation(
   BoundaryStorage: TCustomBoundaryStorage; ACellList: TObject);
 var
   FhbStorage: TFhbStorage;

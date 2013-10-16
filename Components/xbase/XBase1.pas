@@ -1371,7 +1371,7 @@ Begin
           begin
             CharArray[Index] := RecordBuffer[Address+Index];
           end;
-          TmpS := string(PChar(CharArray));
+          TmpS := Ansistring(PAnsiChar(CharArray));
   {$IFEND}
      end ;
      Index := Pos(#0, TmpS);

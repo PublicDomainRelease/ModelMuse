@@ -100,7 +100,7 @@ type
       ChangeKind: TChangeKind); virtual;
     // @name removes all subscribers to the current object.
     // See @link(StopsTalkingTo). @name is called in @link(Destroy).
-    procedure StopTalkingToAnyone;
+    procedure StopTalkingToAnyone; virtual;
     {@name causes Observer to be notified when there is a change
      in this object.
      @name calls

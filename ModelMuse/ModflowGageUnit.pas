@@ -25,7 +25,9 @@ Type
   public
     procedure Assign(Source: TPersistent); override;
     function Used: boolean;
-    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
+    Constructor Create(InvalidateModelEvent: TNotifyEvent; ScreenObject: TObject);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     procedure Evaluate(DataSets: TList; AModel: TBaseModel);
   published
     property Gage0: boolean read FGage0 write SetGage0;
@@ -68,9 +70,9 @@ begin
   end;
 end;
 
-constructor TStreamGage.Create(Model: TBaseModel; ScreenObject: TObject);
+constructor TStreamGage.Create(InvalidateModelEvent: TNotifyEvent; ScreenObject: TObject);
 begin
-  inherited Create(Model);
+  inherited Create(InvalidateModelEvent);
   FScreenObject := ScreenObject;
 end;
 

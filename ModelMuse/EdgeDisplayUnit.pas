@@ -26,6 +26,8 @@ type
     FRow2: integer;
     // See @link(Layer).
     FLayer: integer;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FModel: TBaseModel;
     // See @link(RealAnnotation).
     function GetRealAnnotation(Index: integer): string; virtual; abstract;
@@ -36,6 +38,8 @@ type
     // @name is the ending point of the @classname in screen coordinates.
     function EndPoint: TPoint;
   public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     constructor Create(AModel: TBaseModel);
     // @name is the number of the first column
     // defining the location of @classname.
@@ -109,6 +113,8 @@ type
     FMinValue: string;
     // @name is set to @true in @link(UpdateMinMax) to prevent recursion.
     FUpdatingMinMax: Boolean;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
     FModel: TBaseModel;
     // See @link(RealAnnotation).
     function GetRealAnnotation(X, Y, ALayer: integer): string;

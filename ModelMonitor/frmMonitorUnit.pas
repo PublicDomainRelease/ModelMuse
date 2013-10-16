@@ -17,6 +17,7 @@ interface
     start the program will be flagged as an error.
   1.5.0.0 Minor changes.
   1.6.0.0 Minor changes.
+  1.7.0.0 Added support for MODFLOW-FMP. Converted to compiling with Delphi XE.
 }
 
 uses
@@ -995,6 +996,7 @@ begin
 //        SetPageStatus(tabMonitor, scError);
       end;
     end;
+//    Application.ProcessMessages;
   end;
 end;
 
@@ -1296,7 +1298,7 @@ begin
   FLabel.Align := alTop;
   FLabel.Alignment := Classes.taCenter;
   FLabel.Caption := 'Errors and warnings in Listing file';
-  FLabel.Height := 19;
+  FLabel.Height := 24;
 
   FErrorMessages := TJvRichEdit.Create(FPageControl.Owner);
   FErrorMessages.Parent := FListingTabSheet;

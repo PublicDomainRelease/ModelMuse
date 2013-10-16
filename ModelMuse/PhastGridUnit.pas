@@ -83,6 +83,7 @@ type
     // If Source is a @classname, @name copies the layer elevations from
     // Source before calling inherited.
     procedure Assign(Source: TPersistent); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname.
     constructor Create(Model: TBaseModel);
     // @name deletes the layer boundary with the number ALayer.

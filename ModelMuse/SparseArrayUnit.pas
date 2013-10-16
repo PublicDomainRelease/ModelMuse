@@ -58,8 +58,10 @@ type
   TSPAApply = TFunc<NativeInt, Pointer, NativeInt>;
 
   { Enough for up to 12 bits of sec }
-  TSecDir = array[0..4095] of Pointer;
+//  TSecDir = array[0..4095] of Pointer;
+  TSecDir = array[0..65535] of Pointer;
   PSecDir = ^TSecDir;
+//  PSecDir = array of Pointer;
   TSecDirType = PSecDir;
 
   TCustomData = Pointer;

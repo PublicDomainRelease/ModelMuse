@@ -1,12 +1,12 @@
-ModelMuse – Version 3.2.1.0
+ModelMuse – Version 3.3.0.0
 
 NOTE: Any use of trade, product or firm names is for descriptive purposes 
       only and does not imply endorsement by the U.S. Government.
 
 This version of ModelMuse is packaged for personal computers using
-the Microsoft Windows XP, Vista, 7 or 8 operating systems.  Executable files
-for personal computers are provided as well as the source code. Although not 
-a supported operating system, some users have reported success on using 
+the Microsoft Windows XP, Vista, 7, 8 or 8.1 operating systems.  Executable 
+files for personal computers are provided as well as the source code. Although 
+not a supported operating system, some users have reported success on using 
 ModelMuse on Linux computers under WINE.
 
 Instructions for installation, execution, and compiling are provided below.
@@ -29,11 +29,11 @@ Either version may be used for installing ModelMuse.  Both contain
 the same version of ModelMuse for use on personal computers:
 
 For 32 or 64-bit operating systems:
-         ModelMuseSetup32_3_2_1.exe
-         ModelMuse32_3_2_1.zip
+         ModelMuseSetup32_3_3.exe
+         ModelMuse32_3_3.zip
 For 64-bit operating systems:
-         ModelMuseSetup64_3_2_1.exe
-         ModelMuse64_3_2_1.zip
+         ModelMuseSetup64_3_3.exe
+         ModelMuse64_3_3.zip
 
 Both distribution files contain:
 
@@ -43,22 +43,22 @@ Both distribution files contain:
           Example models
           Supplementary materials
 
-The file ModelMuseSource3_2_1.zip contains the source code for ModelMuse, 
+The file ModelMuseSource3_3.zip contains the source code for ModelMuse, 
          ModelMonitor, and MF2005_Importer.exe.
 
 B. INSTALLING
 
 The distribution file is an installer.  Execution of the distribution 
 file will install ModelMuse in a directory chosen by the user. By default,
-ModelMuse will be installed in C:\Program Files\USGS\ModelMuse3_2_1 or
-C:\Program Files (x86)\USGS\ModelMuse3_2_1. If 
+ModelMuse will be installed in C:\Program Files\USGS\ModelMuse3_3 or
+C:\Program Files (x86)\USGS\ModelMuse3_3. If 
 the new version of ModelMuse is installed over an older version, the 
 program may be installed in the same directory as the older version of the 
 program. The installer will associate files with the extensions .gpt, 
 .gpb, and .mmZlib with ModelMuse.  The following directory structure will 
 be created in the installation directory:
 
-   |--ModelMuse3_2_1
+   |--ModelMuse3_3
    |  |--bin          ; ModelMuse, ModelMonitor, and MF2005_Importer 
    |  |                   executables.
    |  |--doc          ; Documentation file
@@ -69,7 +69,7 @@ ModelMuse will also create a subdirectory of the "My Documents" directory named
    |  |                   documentation or the ModelMuse help.
    |  |--examples     ; Sample models.
 
-Included in directory ModelMuse3_2_1\doc is the report on ModelMuse as a 
+Included in directory ModelMuse3_3\doc is the report on ModelMuse as a 
 Portable Document Format (PDF) file. The PDF file is readable and 
 printable on various computer platforms using Acrobat Reader from Adobe.
 The Acrobat Reader is freely available from the following World Wide Web
@@ -77,8 +77,8 @@ site:
       http://www.adobe.com/
 
 The zip file contains the same files in the same directory structure. 
-To install it, unzip the file retaining the directory structure of the zip file.
-Unlike the installer, unzipping the files from a zip file will not 
+To install it, unzip the file retaining the directory structure of the zip
+file. Unlike the installer, unzipping the files from a zip file will not 
 associate ModelMuse project files with extensions .gpt, .gpb, or .mmZLib 
 with ModelMuse.  This can be done manually.  The manual method used to 
 associate ModelMuse project files with ModelMuse varies among the various 
@@ -122,8 +122,8 @@ from EC Software. http://www.helpandmanual.com/
 MF2005_Importer is compiled with the Intel Fortran compiler.
 
 ModelMuse uses a number of custom comoponents which must be installed 
-in Delphi XE or Delphi XE2 before compiling ModelMuse.  Some are included with the 
-ModelMuse source code.  Additional required files or components are 
+in Delphi XE or Delphi XE2 before compiling ModelMuse.  Some are included  
+with the ModelMuse source code.  Additional required files or components are 
 listed below.  In some cases, the files must be altered before they 
 can be used with ModelMuse.  The required changes are listed below.
 
@@ -184,11 +184,14 @@ to
 
 Installing Graphics32
 http://graphics32.org/wiki/
-Download the latest version of Graphics32. It should be version graphics32-1-9-1 or more recent.
-Comment out MouseUp(mbLeft, [], 0, 0); in TCustomImage32.DblClick in GR32_Image.pas.
-Build the runtime package first. Then install the design time package.  To compile the 
-design-time package, you may need to edit the search path for the design time Project
-(Project|Options|Delphi compiler|Search path) so that it includes the dcp and/or bpl
+Download the latest version of Graphics32. It should be version 
+graphics32-1-9-1 or more recent.
+Comment out MouseUp(mbLeft, [], 0, 0); in TCustomImage32.DblClick in 
+GR32_Image.pas.
+Build the runtime package first. Then install the design time package.  
+To compile the design-time package, you may need to edit the search path for 
+the design time Project (Project|Options|Delphi compiler|Search path) so that 
+it includes the dcp and/or bpl
 output directories. For example:
 C:\Users\Public\Documents\RAD Studio\9.0\Dcp;C:\Users\Public\Documents\RAD Studio\9.0\Bpl
 
@@ -206,14 +209,15 @@ to
 
 Build DelphiXE2\GLScene_RunTime.dpk and then install 
 DelphiXE2\GLScene_DesignTime.dpk.
-As with Graphics32 the projects search path may need to include the dcp and/or bpl
-output directories. Typical paths for those would be the following.
+As with Graphics32 the projects search path may need to include the dcp and/or 
+bpl output directories. Typical paths for those would be the following.
 C:\Users\Public\Documents\RAD Studio\9.0\Bpl
 C:\Users\Public\Documents\RAD Studio\9.0\Dcp
-In the design time package, be sure that the correct package is listed under "Requires".
+In the design time package, be sure that the correct package is listed under 
+"Requires".
 
-Get and install VirtualTreeView version 5.3.0 or later.
-http://www.soft-gems.net/
+Get and install VirtualTreeView version 5.3 or later.
+http://www.jam-software.com/virtual-treeview/
 
 MadExcept version 4 or later must be installed.  It can be obtained from 
 http://www.madshi.net/
@@ -242,8 +246,8 @@ RbwParser
 RbwRuler
 xbase
 
-The GraphicEX directory does not have a package but it needs to be added to the 
-search path.
+The GraphicEX and xygraph directories do not have packages but they need to be
+added to the search path.
 
 
 

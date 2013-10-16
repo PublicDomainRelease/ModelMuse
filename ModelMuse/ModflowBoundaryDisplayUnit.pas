@@ -12,12 +12,12 @@ type
     function GetCellCount(Layer, Row, Column: integer): integer;
     procedure SetCellCount(Layer, Row, Column: integer; const Value: integer);
   protected
-    procedure Clear; override;
     procedure SetDimensions(const SetToZero: boolean); override;
     procedure SetUpToDate(const Value: boolean); override;
     procedure StoreData(Stream: TStream); override;
     procedure ReadData(DecompressionStream: TDecompressionStream); override;
   public
+    procedure Clear; override;
     procedure AddDataArray(DataArray: TDataArray);
     procedure AddDataValue(const DataAnnotation: string; DataValue: Double;
       ColIndex, RowIndex, LayerIndex: Integer);
@@ -43,6 +43,7 @@ type
       write SetOnInitialize;
     property OnGetUseList: TOnGetUseList read FOnGetUseList
       write FOnGetUseList;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name creates an instance of @classname.
     constructor Create(Model: TBaseModel);
     // @name destroys the current instance of @classname.
@@ -622,5 +623,9 @@ begin
   end;
 
 end;
+
+initialization
+
+  RegisterClass(TModflowBoundaryDisplayDataArray);
 
 end.

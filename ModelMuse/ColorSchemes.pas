@@ -107,7 +107,7 @@ type
     function GetItem(Index: Integer): TColorItem;
     procedure SetItem(Index: Integer; const Value: TColorItem);
   public
-    constructor Create(Model: TBaseModel);
+    constructor Create(InvalidateModelEvent: TNotifyEvent);
     function Add: TColorItem;
     property Items[Index: Integer]: TColorItem read GetItem write SetItem; default;
     procedure SortColors;
@@ -134,7 +134,7 @@ type
     procedure SetItem(Index: Integer; const Value: TUserDefinedColorSchemeItem);
   public
     function Add: TUserDefinedColorSchemeItem;
-    constructor Create(Model: TBaseModel);
+    constructor Create(InvalidateModelEvent: TNotifyEvent);
     property Items[Index: Integer]: TUserDefinedColorSchemeItem
       read GetItem write SetItem; default;
   end;
@@ -950,9 +950,9 @@ begin
   Result := inherited Add as TColorItem;
 end;
 
-constructor TColorCollection.Create(Model: TBaseModel);
+constructor TColorCollection.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(TColorItem, Model);
+  inherited Create(TColorItem, InvalidateModelEvent);
 end;
 
 function TColorCollection.GetItem(Index: Integer): TColorItem;
@@ -1022,7 +1022,7 @@ end;
 constructor TUserDefinedColorSchemeItem.Create(Collection: TCollection);
 begin
   inherited;
-  FColors:= TColorCollection.Create(Model);
+  FColors:= TColorCollection.Create(OnInvalidateModel);
 end;
 
 destructor TUserDefinedColorSchemeItem.Destroy;
@@ -1048,9 +1048,9 @@ begin
   result := inherited Add as TUserDefinedColorSchemeItem;
 end;
 
-constructor TUserDefinedColorSchemeCollection.Create(Model: TBaseModel);
+constructor TUserDefinedColorSchemeCollection.Create(InvalidateModelEvent: TNotifyEvent);
 begin
-  inherited Create(TUserDefinedColorSchemeItem, Model);
+  inherited Create(TUserDefinedColorSchemeItem, InvalidateModelEvent);
 end;
 
 function TUserDefinedColorSchemeCollection.GetItem(

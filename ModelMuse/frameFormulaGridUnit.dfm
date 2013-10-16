@@ -15,10 +15,6 @@ inherited frameFormulaGrid: TframeFormulaGrid
     inherited sbDelete: TSpeedButton
       Hint = 'Delete row|Delete the selected row.'
     end
-    inherited seNumber: TJvSpinEdit
-      Height = 24
-      ExplicitHeight = 24
-    end
   end
   inherited Grid: TRbwDataGrid4
     Top = 57
@@ -43,13 +39,23 @@ inherited frameFormulaGrid: TframeFormulaGrid
       Left = 128
       Top = 30
       Width = 121
-      Height = 24
+      Height = 21
       EditLabel.Width = 47
       EditLabel.Height = 16
       EditLabel.Caption = 'Formula'
       Enabled = False
       TabOrder = 0
       OnChange = edFormulaChange
+    end
+    object cbMultiCheck: TCheckBox
+      Left = 56
+      Top = 34
+      Width = 49
+      Height = 17
+      Caption = 'cbMultiCheck'
+      TabOrder = 1
+      Visible = False
+      OnClick = cbMultiCheckClick
     end
   end
 end
