@@ -1122,7 +1122,8 @@ begin
     Exit;
   end;
   Rect := Grid.CellRect(Column, 0);
-  if (Rect.Left = 0) and (Rect.Right = 0) then
+  if ((Rect.Left = 0) and (Rect.Right = 0))
+    or (Rect.Right - Rect.Left <> Grid.ColWidths[Column]) then
   begin
     if Control <> nil then
     begin

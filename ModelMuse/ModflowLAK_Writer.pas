@@ -50,7 +50,7 @@ type
 implementation
 
 uses ModflowUnitNumbers, ScreenObjectUnit, frmErrorsAndWarningsUnit,
-  DataSetUnit, frmProgressUnit, Forms;
+  DataSetUnit, frmProgressUnit, Forms, GoPhastTypes;
 
 resourcestring
   DupNameErrorMessage = 'The following Lakes have the same Lake ID.';
@@ -66,8 +66,8 @@ resourcestring
   StrWritingLAKPackage = 'Writing LAK Package input.';
   StrWritingDataSet1a = '  Writing Data Set 1a.';
   StrWritingDataSet1b = '  Writing Data Set 1b.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSet3 = '  Writing Data Set 3.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSet3 = '  Writing Data Set 3.';
   StrWritingDataSets4to9 = '  Writing Data Sets 4 to 9.';
 
 { TModflowLAK_Writer }
@@ -374,7 +374,7 @@ begin
     begin
       Inc(ModflowLayer);
       WriteArray(LakeID, LayerIndex, 'Data Set 5, LKARR: Layer '
-        + IntToStr(ModflowLayer));
+        + IntToStr(ModflowLayer), StrNoValueAssigned);
     end;
   end;
 end;
@@ -397,7 +397,9 @@ begin
     if Model.IsLayerSimulated(LayerIndex) then
     begin
       Inc(ModflowLayer);
-      WriteArray(LakeLeakance, LayerIndex, 'Data Set 6, BDLKNC: Layer ' + IntToStr(ModflowLayer));
+      WriteArray(LakeLeakance, LayerIndex,
+        'Data Set 6, BDLKNC: Layer ' + IntToStr(ModflowLayer),
+        StrNoValueAssigned);
     end;
   end;
 end;

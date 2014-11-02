@@ -329,7 +329,7 @@ begin
       begin
         Layer := Model.DataSetLayerToModflowLayer(LayerIndex);
         WriteArray(ADataArray, LayerIndex,
-          Format(StrZETASurface0dLa, [SurfaceIndex, Layer]),
+          Format(StrZETASurface0dLa, [SurfaceIndex, Layer]), StrNoValueAssigned,
           LayerIndex = Model.Grid.LayerCount - 1);
       end;
     end;
@@ -351,7 +351,7 @@ begin
     begin
       Layer := Model.DataSetLayerToModflowLayer(LayerIndex);
       WriteArray(ADataArray, LayerIndex,
-        Format(StrSSZLayerD, [Layer]),
+        Format(StrSSZLayerD, [Layer]), StrNoValueAssigned,
         LayerIndex = Model.Grid.LayerCount - 1);
     end;
   end;
@@ -372,7 +372,7 @@ begin
     begin
       Layer := Model.DataSetLayerToModflowLayer(LayerIndex);
       WriteArray(ADataArray, LayerIndex,
-        Format(StrISOURCELayerD, [Layer]),
+        Format(StrISOURCELayerD, [Layer]), StrNoValueAssigned,
         LayerIndex = Model.Grid.LayerCount - 1);
     end;
   end;

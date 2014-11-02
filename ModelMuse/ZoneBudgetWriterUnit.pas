@@ -49,7 +49,8 @@ const
 implementation
 
 uses
-  ModflowUnitNumbers, frmProgressUnit, frmErrorsAndWarningsUnit, Forms;
+  ModflowUnitNumbers, frmProgressUnit, frmErrorsAndWarningsUnit, Forms,
+  GoPhastTypes;
 
 resourcestring
   StrZONEBUDGETZonesMus = 'ZONEBUDGET Zones must be  between 0 and 999 ' +
@@ -64,9 +65,9 @@ resourcestring
   StrTheBudgetFileRequ = 'The budget file required by ZONEBUDGET is absent. '
     + 'Try running MODFLOW again.';
   StrWritingZONEBUDGETZ = 'Writing ZONEBUDGET Zone File input.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSet3 = '  Writing Data Set 3.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSet3 = '  Writing Data Set 3.';
   StrWritingZONEBUDGETR = 'Writing ZONEBUDGET Response file.';
 
 { TZoneBudgetWriter }
@@ -116,7 +117,7 @@ begin
     if Model.IsLayerSimulated(LayerIndex) then
     begin
       WriteArray(DataArray, LayerIndex,
-        'IZONE for layer ' + IntToStr(LayerIndex+1));
+        'IZONE for layer ' + IntToStr(LayerIndex+1), StrNoValueAssigned);
     end;
   end;
 end;

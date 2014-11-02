@@ -30,21 +30,21 @@ implementation
 
 uses
   frmProgressUnit, ModflowUnitNumbers, DataSetUnit, SysUtils,
-  Mt3dmsChemSpeciesUnit;
+  Mt3dmsChemSpeciesUnit, GoPhastTypes;
 
 resourcestring
   StrSInTheMT3DMSRCT = '%s in the MT3DMS RCT package';
   StrRHOBLayerD = 'Data Set 2A: RHOB Layer: %d';
   StrPRSITY2LayerD = 'Data Set 2B: PRSITY2 Layer: %d';
   StrWritingMT3DMSRCTP = 'Writing MT3DMS RCT Package input.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
   StrWritingDataSet2A = '  Writing Data Set 2A.';
   StrWritingDataSet2B = '  Writing Data Set 2B.';
   StrWritingDataSet2C = '  Writing Data Set 2C.';
-  StrWritingDataSet3 = '  Writing Data Set 3.';
-  StrWritingDataSet4 = '  Writing Data Set 4.';
-  StrWritingDataSet5 = '  Writing Data Set 5.';
-  StrWritingDataSet6 = '  Writing Data Set 6.';
+//  StrWritingDataSet3 = '  Writing Data Set 3.';
+//  StrWritingDataSet4 = '  Writing Data Set 4.';
+//  StrWritingDataSet5 = '  Writing Data Set 5.';
+//  StrWritingDataSet6 = '  Writing Data Set 6.';
 
 { TMt3dmsRctWriter }
 
@@ -98,7 +98,7 @@ begin
       if Model.IsLayerSimulated(LayerIndex) then
       begin
         WriteArray(DataArray, LayerIndex, Format(StrRHOBLayerD,
-          [Model.DataSetLayerToModflowLayer(LayerIndex)]));
+          [Model.DataSetLayerToModflowLayer(LayerIndex)]), StrNoValueAssigned);
       end;
     end;
   end;
@@ -118,7 +118,7 @@ begin
       if Model.IsLayerSimulated(LayerIndex) then
       begin
         WriteArray(DataArray, LayerIndex, Format(StrPRSITY2LayerD,
-          [Model.DataSetLayerToModflowLayer(LayerIndex)]));
+          [Model.DataSetLayerToModflowLayer(LayerIndex)]), StrNoValueAssigned);
       end;
     end;
   end;
@@ -141,7 +141,7 @@ var
       if Model.IsLayerSimulated(LayerIndex) then
       begin
         WriteArray(DataArray, LayerIndex, Format('Data Set: 2C: SRCONC: %0:s, Layer: %1:d',
-          [Item.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]));
+          [Item.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]), StrNoValueAssigned);
       end;
     end;
   end;
@@ -178,7 +178,7 @@ var
       if Model.IsLayerSimulated(LayerIndex) then
       begin
         WriteArray(DataArray, LayerIndex, Format('Data Set: 3: SP1: %0:s, Layer: %1:d',
-          [Item.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]));
+          [Item.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]), StrNoValueAssigned);
       end;
     end;
   end;
@@ -215,7 +215,7 @@ var
       if Model.IsLayerSimulated(LayerIndex) then
       begin
         WriteArray(DataArray, LayerIndex, Format('Data Set: 4: SP2: %0:s, Layer: %1:d',
-          [Item.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]));
+          [Item.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]), StrNoValueAssigned);
       end;
     end;
   end;
@@ -252,7 +252,7 @@ var
       if Model.IsLayerSimulated(LayerIndex) then
       begin
         WriteArray(DataArray, LayerIndex, Format('Data Set: 5: RC1: %0:s, Layer: %1:d',
-          [Item.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]));
+          [Item.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]), StrNoValueAssigned);
       end;
     end;
   end;
@@ -289,7 +289,7 @@ var
       if Model.IsLayerSimulated(LayerIndex) then
       begin
         WriteArray(DataArray, LayerIndex, Format('Data Set: 6: RC2: %0:s, Layer: %1:d',
-          [Item.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]));
+          [Item.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]), StrNoValueAssigned);
       end;
     end;
   end;

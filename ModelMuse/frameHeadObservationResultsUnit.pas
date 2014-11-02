@@ -795,6 +795,16 @@ begin
           end
         ));
 
+      if ObservedMax = ObservedMin then
+      begin
+        ObservedMax := ObservedMax + 1;
+        ObservedMin := ObservedMin - 1;
+      end;
+      if SimulatedMax = SimulatedMin then
+      begin
+        SimulatedMax := SimulatedMax + 1;
+        SimulatedMin := SimulatedMin - 1;
+      end;
       qtreeHeadObs.XMax := ObservedMax;
       qtreeHeadObs.XMin := ObservedMin;
       qtreeHeadObs.YMax := SimulatedMax;
@@ -886,7 +896,7 @@ begin
   begin
     CurrentModelLink.FNewHeadObsCollection.FileName := flnmedHeadObsResults.FileName;
     FImportResult := CurrentModelLink.FNewHeadObsCollection.ReadFromFile(CurrentModelLink.FModel);
-    FUndoType := utImport
+    FUndoType := utImport;
   end
   else
   begin
@@ -979,6 +989,7 @@ procedure TframeHeadObservationResults.pbHeadObsMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   XYMouseup(Button, Shift, X, Y);
+  FSelectedObsItem := nil;
   if qtreeHeadObs.Count > 0 then
   begin
     FSelectedObsItem := qtreeHeadObs.NearestPointsFirstData

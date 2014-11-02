@@ -138,6 +138,10 @@ implementation
 uses frmGoPhastUnit, DataSetUnit,
   RbwParser, UndoItems, frmProgressUnit, frmDataSetsUnits, ModelMuseUtilities;
 
+resourcestring
+  StrYouMustHaveAGrid = 'You must have a grid or mesh defined before you can' +
+  ' import the data from your file.';
+
 {$R *.dfm}
 
 procedure TfrmCustomImportSimpleFile.FormCreate(Sender: TObject);
@@ -620,6 +624,13 @@ begin
   else
   begin
     Assert(False);
+  end;
+
+  if (ColumnCount < 0) or (RowCount < 0) then
+  begin
+    Beep;
+    MessageDlg(StrYouMustHaveAGrid, mtError, [mbOK], 0);
+    Exit;
   end;
 
   SetLength(Values, RowCount, ColumnCount);

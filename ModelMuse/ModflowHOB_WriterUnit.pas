@@ -72,8 +72,8 @@ resourcestring
   Str0sDefinedByObje = '%0:s defined by object %1:s';
   StrWritingHOBPackage = 'Writing HOB Package input.';
   StrEvaluatingData = 'Evaluating data.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
   StrWritingDataSets3to6 = '  Writing Data Sets 3 to 6.';
 
 { TModflowHobWriter }

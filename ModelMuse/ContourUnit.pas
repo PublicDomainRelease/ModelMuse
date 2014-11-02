@@ -76,6 +76,7 @@ type
     FLabelLocations: TRbwQuadTree;
     FLabels: TLabelObjectList;
     FContourLabel: string;
+    FLabelSpacing: Integer;
     procedure ExtractSegments(const GridSquare: TGridSquare);
     procedure ConvertAndDrawSegments(Sender: TObject;
       const SegmentArray: TLine2DArray);
@@ -97,6 +98,7 @@ type
       write FOnExtractSegments;
     procedure DrawContour;
     procedure ExtractContour;
+    constructor Create(ContourLabelSpacing: integer);
   end;
 
   TCustomContourCreator = class(TObject)
@@ -163,6 +165,7 @@ type
     FLabelLocations: TRbwQuadTree;
     FLabels: TLabelObjectList;
     FAlgorithm: TContourAlg;
+    FLabelSpacing: Integer;
     // @name calls @link(TContourCreator.DrawContour) for each memeber of
     // ContourValues.
     procedure CreateAndDrawContours(const ContourValues,
@@ -197,7 +200,8 @@ type
     property BitMap: TBitmap32 read FBitMap write FBitMap;
     property ZoomBox: TQRbwZoomBox2 read FZoomBox write FZoomBox;
     procedure DrawContours(SelectedColRowLayer: integer;
-      ColorParameters: TColorParameters; ViewDirection: TViewDirection); overload;
+      ColorParameters: TColorParameters; ViewDirection: TViewDirection;
+      LabelSpacing: integer); overload;
   end;
 
 
@@ -229,12 +233,9 @@ type TPointArray4 = array[0..3] of TPoint2D;
 
 { TContourCreator }
 
-const
-  LabelSpacing = 100;
-
 procedure PlotLabel(const CenterX, CenterY: Integer; const LabelLocations:
   TRbwQuadTree; const AContourLabel: string; const Labels: TLabelObjectList;
-  BitMap: TBitmap32);
+  BitMap: TBitmap32; LabelSpacing: Integer);
 var
   PointX: double;
   PointY: double;
@@ -307,10 +308,15 @@ begin
         and (CenterX < LabelLocations.XMax) and (CenterY < LabelLocations.YMax) then
       begin
         PlotLabel(CenterX, CenterY, LabelLocations, ContourLabel,
-          Labels, BitMap);
+          Labels, BitMap, FLabelSpacing);
       end;
     end;
   end;
+end;
+
+constructor TContourCreator.Create(ContourLabelSpacing: integer);
+begin
+  FLabelSpacing := ContourLabelSpacing;
 end;
 
 procedure TContourCreator.DrawContour;
@@ -688,7 +694,8 @@ begin
   end;
   Assert(Length(ContourValues) = Length(LineThicknesses));
   Assert(Length(ContourValues) = Length(ContourColors));
-  CreateAndDrawContours(ContourValues, LineThicknesses, ContourColors, ContourLabels);
+  CreateAndDrawContours(ContourValues, LineThicknesses, ContourColors,
+    ContourLabels);
 end;
 
 procedure TCustomContourCreator.AssignGridValues(out MinValue, MaxValue: double;
@@ -902,7 +909,7 @@ begin
 end;
 
 procedure TMultipleContourCreator.DrawContours(SelectedColRowLayer: integer;
-  ColorParameters: TColorParameters; ViewDirection: TViewDirection);
+  ColorParameters: TColorParameters; ViewDirection: TViewDirection; LabelSpacing: integer);
 var
   DSValues: TStringList;
   ContourValues, NewContourValues: TOneDRealArray;
@@ -926,6 +933,7 @@ var
   LocalMesh: TSutraMesh3D;
 begin
   Assert(Assigned(DataSet));
+  FLabelSpacing := LabelSpacing;
   FAlgorithm := DataSet.ContourAlg;
 //  {$IFDEF SUTRA}
 //  if (DataSet.Model as TCustomModel).ModelSelection = msSutra22 then
@@ -2829,7 +2837,7 @@ var
         begin
 
           PlotLabel(CenterX, CenterY, LabelLocations, AContourLabel,
-            Labels, BitMap);
+            Labels, BitMap, FLabelSpacing);
         end;
       end;
     end
@@ -2842,15 +2850,15 @@ begin
   FLabels.Clear;
   FLabelLocations.XMin := 0;
   FLabelLocations.YMin := 0;
-  FLabelLocations.XMax := ZoomBox.Width;
-  FLabelLocations.YMax := ZoomBox.Height;
+  FLabelLocations.XMax := BitMap.Width;
+  FLabelLocations.YMax := BitMap.Height;
 
   case FAlgorithm of
     caSimple:
       begin
         if Assigned(Grid) then
         begin
-          ContourCreator := TContourCreator.Create;
+          ContourCreator := TContourCreator.Create(FLabelSpacing);
           try
             ContourCreator.BitMap := BitMap;
             ContourCreator.Grid := Grid;

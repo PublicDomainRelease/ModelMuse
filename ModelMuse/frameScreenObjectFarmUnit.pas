@@ -71,7 +71,6 @@ type
     procedure GetWaterRightsForFirstFarm(FarmItem: TScreenObjectEditItem);
     procedure GetMaxTimeAndCountForCrops(var MaxIndex, MaxTimeCount: Integer;
       AFarm: TFarm);
-    procedure ClearGrid(Grid: TRbwDataGrid4);
     procedure SetCropEfficiencies(Farm: TFarm; Crops: TCropCollection);
     procedure SetFarmCosts(Farm: TFarm);
     procedure SetWaterRights(Farm: TFarm);
@@ -142,19 +141,6 @@ begin
   DoChange;
 end;
 
-procedure TframeScreenObjectFarm.ClearGrid(Grid: TRbwDataGrid4);
-var
-  RowIndex: Integer;
-  ColIndex: Integer;
-begin
-  for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
-  begin
-    for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
-    begin
-      Grid.Cells[ColIndex,RowIndex] := ''
-    end;
-  end;
-end;
 {$ENDIF}
 
 procedure TframeScreenObjectFarm.GetData(

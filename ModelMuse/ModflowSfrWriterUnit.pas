@@ -97,6 +97,8 @@ type
     FIsChildModel: Boolean;
     NUMTAB: Integer;
     MAXVAL: Integer;
+    FSegDictionary: TDictionary<Integer, TSegment>;
+    FLakDictionary: TDictionary<Integer, TScreenObject>;
     function NewFormat: boolean;
     procedure CheckParamInstances;
     procedure WriteDataSet1a;
@@ -132,7 +134,7 @@ type
       TimeIndex: integer);
     procedure WriteDataSets5to7;
     function FindConvertedSegment(OriginalSegmentNumber: integer;
-      Direction: TStreamDirection): integer;
+      Direction: TStreamDirection; out Segment: TSegment): integer;
     procedure WriteGages(Lines: TStrings);
     function GetSegment(Index: integer): TSegment;
     function GetSegmentCount: integer;
@@ -225,14 +227,17 @@ resourcestring
   StrEvaluatingS = '    Evaluating %s';
   StrWritingParamete = '    Writing parameter %s';
   StrWritingSFRPackage = 'Writing SFR Package input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
-  StrWritingDataSets5to7 = '  Writing Data Sets 5 to 7.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
+//  StrWritingDataSets5to7 = '  Writing Data Sets 5 to 7.';
   StrInterpolatedFromS = 'Interpolated from %s';
   Str0sMultipliedByP = '%0:s multiplied by Parameter: %1:s';
   WarningRootRL_Less_0 = 'SFR reach length (RCHLEN) <= 0';
+  StrLargeSeparationBet = 'Large separation between connected segments';
+  StrTheDownstreamEndO = 'The downstream end of %0:s is separated from the u' +
+  'pstream end of %1:s by %2:d cells.';
 
 const
   StrSegmentNumber = 'Segment Number in ';
@@ -1014,6 +1019,8 @@ end;
 
 destructor TModflowSFR_Writer.Destroy;
 begin
+  FLakDictionary.Free;
+  FSegDictionary.Free;
   FSegments.Free;
   FValues.Free;
   FLakes.Free;
@@ -1061,6 +1068,8 @@ begin
     frmErrorsAndWarnings.RemoveErrorGroup(Model, StrLakeDiversionError);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrNoStreamsDefined);
     frmErrorsAndWarnings.RemoveErrorGroup(Model, StrDupParamInstances);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrLargeSeparationBet);
+
 
     StartTime := Model.ModflowStressPeriods[0].StartTime;
     EndTime := Model.ModflowStressPeriods[
@@ -1098,7 +1107,12 @@ begin
         Item.StartTime := StartTime;
         Item.EndTime := EndTime;
 
-        Boundary.GetCellValues(FValues, Dummy, Model);
+//        try
+          Boundary.GetCellValues(FValues, Dummy, Model);
+//        except
+//          frmErrorsAndWarnings.AddError(Model, 'Error in:', ScreenObject.Name);
+//          Continue;
+//        end;
         if (FValues.Count >= 1) then
         begin
           Assert(FValues.Count = 1);
@@ -4526,14 +4540,14 @@ begin
 end;
 
 function TModflowSFR_Writer.FindConvertedSegment(OriginalSegmentNumber: integer;
-  Direction: TStreamDirection): integer;
+  Direction: TStreamDirection; out Segment: TSegment): integer;
 var
   Index: Integer;
-  Segment: TSegment;
   AScreenObject: TScreenObject;
   SubSeg: TSubSegment;
 begin
   result := 0;
+  Segment := nil;
   if OriginalSegmentNumber = 0 then
   begin
     Exit;
@@ -4542,31 +4556,61 @@ begin
   begin
     if OriginalSegmentNumber > 0 then
     begin
-      for Index := 0 to FSegments.Count - 1 do
+      if FSegDictionary = nil then
       begin
-        Segment := FSegments[Index];
-        if Segment.OriginalSegmentNumber = OriginalSegmentNumber then
+        FSegDictionary := TDictionary<integer,TSegment>.Create(FSegments.Count);
+        for Index := 0 to FSegments.Count - 1 do
         begin
-          case Direction of
-            sdDownstream: result := Segment.NewSegmentNumber;
-            sdUpstream:
-              begin
-                if Segment.FSubSegmentList.Count = 0 then
-                begin
-                  result := Segment.NewSegmentNumber;
-                end
-                else
-                begin
-                  SubSeg := Segment.FSubSegmentList[
-                    Segment.FSubSegmentList.Count-1];
-                  Result := SubSeg.FSegmentNumber;
-                end;
-              end
-            else Assert(False);
-          end;
-          Exit;
+          Segment := FSegments[Index];
+          FSegDictionary.Add(Segment.OriginalSegmentNumber, Segment);
         end;
       end;
+      Segment := nil;
+      if FSegDictionary.TryGetValue(OriginalSegmentNumber, Segment) then
+      begin
+        case Direction of
+          sdDownstream: result := Segment.NewSegmentNumber;
+          sdUpstream:
+            begin
+              if Segment.FSubSegmentList.Count = 0 then
+              begin
+                result := Segment.NewSegmentNumber;
+              end
+              else
+              begin
+                SubSeg := Segment.FSubSegmentList[
+                  Segment.FSubSegmentList.Count-1];
+                Result := SubSeg.FSegmentNumber;
+              end;
+            end
+          else Assert(False);
+        end;
+      end;
+//      for Index := 0 to FSegments.Count - 1 do
+//      begin
+//        Segment := FSegments[Index];
+//        if Segment.OriginalSegmentNumber = OriginalSegmentNumber then
+//        begin
+//          case Direction of
+//            sdDownstream: result := Segment.NewSegmentNumber;
+//            sdUpstream:
+//              begin
+//                if Segment.FSubSegmentList.Count = 0 then
+//                begin
+//                  result := Segment.NewSegmentNumber;
+//                end
+//                else
+//                begin
+//                  SubSeg := Segment.FSubSegmentList[
+//                    Segment.FSubSegmentList.Count-1];
+//                  Result := SubSeg.FSegmentNumber;
+//                end;
+//              end
+//            else Assert(False);
+//          end;
+//          Exit;
+//        end;
+//      end;
     end
     else
     begin
@@ -4588,17 +4632,32 @@ begin
             end;
           end;
         end;
-        OriginalSegmentNumber := -OriginalSegmentNumber;
-        for Index := 0 to FLakes.Count - 1 do
+        if FLakDictionary = nil then
         begin
-          AScreenObject := FLakes[Index];
-          Assert(AScreenObject.ModflowLakBoundary <> nil);
-          if AScreenObject.ModflowLakBoundary.LakeID = OriginalSegmentNumber then
+          FLakDictionary := TDictionary<Integer, TScreenObject>.Create(FLakes.Count);
+          for Index := 0 to FLakes.Count - 1 do
           begin
-            result := -AScreenObject.ModflowLakBoundary.TrueLakeID;
-            Exit;
+            AScreenObject := FLakes[Index];
+            Assert(AScreenObject.ModflowLakBoundary <> nil);
+            FLakDictionary.Add(AScreenObject.ModflowLakBoundary.LakeID, AScreenObject);
           end;
         end;
+        OriginalSegmentNumber := -OriginalSegmentNumber;
+        if FLakDictionary.TryGetValue(OriginalSegmentNumber, AScreenObject) then
+        begin
+          Assert(AScreenObject.ModflowLakBoundary <> nil);
+          result := -AScreenObject.ModflowLakBoundary.TrueLakeID;
+        end;
+//        for Index := 0 to FLakes.Count - 1 do
+//        begin
+//          AScreenObject := FLakes[Index];
+//          Assert(AScreenObject.ModflowLakBoundary <> nil);
+//          if AScreenObject.ModflowLakBoundary.LakeID = OriginalSegmentNumber then
+//          begin
+//            result := -AScreenObject.ModflowLakBoundary.TrueLakeID;
+//            Exit;
+//          end;
+//        end;
       end;
     end;
   end;
@@ -4642,6 +4701,15 @@ var
   NextSubSeg: TSubSegment;
   ChildSeg: TSegment;
   ChildSubSeg: TSubSegment;
+  OUTSEG: Integer;
+  OutflowSegement: TSegment;
+  TerminalCell: TValueCell;
+  ConnectedCell: TValueCell;
+  MaxDistance: integer;
+  SourceSegment: TSegment;
+  UpstreamScreenObject: TScreenObject;
+  DownstreamScreenObject: TScreenObject;
+
 begin
 //  IsChildModel := Model is TChildModel;
   SubSeg := nil;
@@ -4687,10 +4755,30 @@ begin
   // OUTSEG
   if (SubSegIndex = Segment.FSubSegmentList.Count -1) then
   begin
-    WriteInteger(FindConvertedSegment(ParamScreenObjectItem.OutflowSegment, sdDownstream));
+    // Parent models and last subsegment in child models.
+    OUTSEG := FindConvertedSegment(ParamScreenObjectItem.OutflowSegment,
+      sdDownstream, OutflowSegement);
+    WriteInteger(OUTSEG);
+    if (OUTSEG > 0) and not FIsChildModel then
+    begin
+      Assert(OutflowSegement <> nil);
+      TerminalCell := Segment.FReaches.Last;
+      ConnectedCell := OutflowSegement.FReaches.First;
+      MaxDistance := Max(Abs(TerminalCell.Column - ConnectedCell.Column),
+        Abs(TerminalCell.Row - ConnectedCell.Row));
+      if MaxDistance > 1 then
+      begin
+        UpstreamScreenObject := Segment.FScreenObject as TScreenObject;
+        DownstreamScreenObject := OutflowSegement.FScreenObject as TScreenObject;
+        frmErrorsAndWarnings.AddWarning(Model, StrLargeSeparationBet,
+           Format(StrTheDownstreamEndO,
+           [UpstreamScreenObject.Name, DownstreamScreenObject.Name, MaxDistance]));
+      end;
+    end;
   end
   else
   begin
+    // Subsegments in child model except last sub segment
     Assert(SubSeg <> nil);
     if FIsChildModel then
     begin
@@ -4705,7 +4793,8 @@ begin
       end
       else
       begin
-        WriteInteger(FindConvertedSegment(ParamScreenObjectItem.OutflowSegment, sdDownstream));
+        WriteInteger(FindConvertedSegment(ParamScreenObjectItem.OutflowSegment,
+          sdDownstream, OutflowSegement));
       end;
     end;
   end;
@@ -4713,7 +4802,8 @@ begin
   // IUPSEG
   if SubSegIndex < 0 then
   begin
-    IUPSEG := FindConvertedSegment(ParamScreenObjectItem.DiversionSegment, sdUpstream);
+    IUPSEG := FindConvertedSegment(ParamScreenObjectItem.DiversionSegment,
+      sdUpstream, SourceSegment);
   end
   else
   begin
@@ -4722,7 +4812,8 @@ begin
     begin
       if FirstSegmentInParent then
       begin
-        IUPSEG := FindConvertedSegment(ParamScreenObjectItem.DiversionSegment, sdUpstream);
+        IUPSEG := FindConvertedSegment(ParamScreenObjectItem.DiversionSegment,
+          sdUpstream, SourceSegment);
       end
       else
       begin
@@ -4733,7 +4824,8 @@ begin
     begin
       if SubSegIndex = 0 then
       begin
-        IUPSEG := FindConvertedSegment(ParamScreenObjectItem.DiversionSegment, sdUpstream);
+        IUPSEG := FindConvertedSegment(ParamScreenObjectItem.DiversionSegment,
+          sdUpstream, SourceSegment);
       end
       else
       begin
@@ -4984,7 +5076,15 @@ begin
     frmErrorsAndWarnings.AddError(Model,
       StrInvalidStartingTimeStep1, ErrorObject.Name);
     Exit;
+  end
+  else if Length(UpstreamValues.SrfSegmentArray) = 0 then
+  begin
+    ErrorObject := SfrBoundary.ScreenObject as TScreenObject;
+    frmErrorsAndWarnings.AddError(Model,
+      StrInvalidStartingTimeStep1, ErrorObject.Name);
+    Exit;
   end;
+
   if SubSegIndex < 0 then
   begin
     PSegValue := nil;
@@ -5059,6 +5159,13 @@ begin
     GetBoundaryByStartTime(StartTime, Model)
     as TSfrSegmentStorage;
   if DownstreamValues = nil then
+  begin
+    ErrorObject := SfrBoundary.ScreenObject as TScreenObject;
+    frmErrorsAndWarnings.AddError(Model,
+      StrInvalidStartingTimeStep1, ErrorObject.Name);
+    Exit;
+  end
+  else if Length(DownstreamValues.SrfSegmentArray) = 0 then
   begin
     ErrorObject := SfrBoundary.ScreenObject as TScreenObject;
     frmErrorsAndWarnings.AddError(Model,

@@ -34,9 +34,9 @@ resourcestring
   StrWritingDataSet8 = '  Writing Data Set 8 for parameter: %s';
   StrWritingDataSet9 = '  Writing Data Set 9 for parameter: %s';
   StrWritingLVDAPackage = 'Writing LVDA Package input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSets2and3 = '  Writing Data Sets 2 and 3.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSets2and3 = '  Writing Data Sets 2 and 3.';
 
 { TModflowLVDA_Writer }
 

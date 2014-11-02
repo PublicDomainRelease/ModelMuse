@@ -45,11 +45,11 @@ resourcestring
   StrTheRechargePackage = 'The recharge package is active but no recharge ha' +
   's been defined for any stress period.';
   StrWritingRCHPackage = 'Writing RCH Package input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
-  StrWritingDataSets5to8 = '  Writing Data Sets 5 to 8.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
+//  StrWritingDataSets5to8 = '  Writing Data Sets 5 to 8.';
   StrWritingStressP = '    Writing Stress Period %d';
   ErrorRoot = 'One or more %s parameters have been eliminated '
     + 'because there are no cells associated with them.';

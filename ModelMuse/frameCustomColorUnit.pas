@@ -63,6 +63,8 @@ type
     timerLegend: TTimer;
     reComment: TRichEdit;
     btnColorSchemes: TButton;
+    btnFont: TButton;
+    dlgFontLegend: TFontDialog;
     procedure seNumberOfValuesToIgnoreChange(Sender: TObject);
     procedure seLegendRowsChange(Sender: TObject);
     // @name gives a preview of the color scheme
@@ -94,12 +96,15 @@ type
     procedure FrameResize(Sender: TObject);
     procedure timerLegendTimer(Sender: TObject);
     procedure btnColorSchemesClick(Sender: TObject);
+    procedure btnFontClick(Sender: TObject);
   private
     // @name is implemented as a TObjectList.
     FDataSetDummyObjects: TList;
     FSelectedVirtNode: PVirtualNode;
     FUpdatingLegend: Boolean;
     FStartTime: TDateTime;
+    FLegendFont: TFont;
+    FFontAssigned: Boolean;
     procedure UpdateLegendAfterDelay;
     function GetLegendDataSource: TObserver;
     procedure SetLegendDataSource(const Value: TObserver);
@@ -137,14 +142,18 @@ type
     procedure UpdateLegend;
     procedure Loaded; override;
     function CanColorDataSet(DataArray: TDataArray): boolean; virtual;
+    procedure GetData; virtual;
+
   public
     property LegendDataSource: TObserver read GetLegendDataSource
       write SetLegendDataSource;
     procedure ResetTreeText;
     property SelectedVirtNode: PVirtualNode read FSelectedVirtNode;
+    constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure SetData; virtual; abstract;
     procedure UpdateColorSchemes;
+    property LegendFont: TFont read FLegendFont;
     { Public declarations }
   end;
 
@@ -251,6 +260,16 @@ begin
   ShowAForm(TfrmColorSchemes)
 end;
 
+procedure TframeCustomColor.btnFontClick(Sender: TObject);
+begin
+  dlgFontLegend.Font := FLegendFont;
+  if dlgFontLegend.Execute then
+  begin
+    FLegendFont.Assign(dlgFontLegend.Font);
+    UpdateLegend
+  end;
+end;
+
 function TframeCustomColor.CanColorDataSet(DataArray: TDataArray): boolean;
 begin
   result := False;
@@ -282,8 +301,15 @@ begin
   UpdateLegend;
 end;
 
+constructor TframeCustomColor.Create(AOwner: TComponent);
+begin
+  inherited;
+  FLegendFont := TFont.Create
+end;
+
 destructor TframeCustomColor.Destroy;
 begin
+  FLegendFont.Free;
   FTopItems.Free;
   FFrontItems.Free;
   FSideItems.Free;
@@ -302,6 +328,15 @@ end;
 procedure TframeCustomColor.FrameResize(Sender: TObject);
 begin
   UpdateLegend;
+end;
+
+procedure TframeCustomColor.GetData;
+begin
+  if not FFontAssigned then
+  begin
+    FFontAssigned := True;
+    FLegendFont.Assign(Font);
+  end;
 end;
 
 procedure TframeCustomColor.GetDataSets;
@@ -863,10 +898,10 @@ begin
       begin
         BitMap := TBitMap.Create;
         try
-          BitMap.Canvas.Font := Font;
+          BitMap.Canvas.Font := FLegendFont;
           BitMap.Width := imLegend.Width;
           BitMap.Height := imLegend.Height;
-          FLegend.Draw(BitMap.Canvas, 10, 10, DummyRect);
+          FLegend.Draw(BitMap.Canvas, 10, 10, DummyRect, FLegendFont);
           imLegend.Picture.Assign(BitMap);
         finally
           BitMap.Free;

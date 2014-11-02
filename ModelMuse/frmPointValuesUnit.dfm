@@ -3,9 +3,9 @@ inherited frmPointValues: TfrmPointValues
   HelpKeyword = 'Vertex_Values_Dialog_Box'
   Caption = 'Vertex Values'
   ClientWidth = 367
-  ExplicitWidth = 385
-  ExplicitHeight = 271
-  PixelsPerInch = 120
+  ExplicitWidth = 383
+  ExplicitHeight = 264
+  PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0

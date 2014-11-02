@@ -49,15 +49,15 @@ resourcestring
   StrWritingDataSet7 = '  Writing Data Set 7 for %s';
   StrWritingDataSet8 = '  Writing Data Set 8 for %s';
   StrWritingHUF2Package = 'Writing HUF2 Package input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSet3 = '  Writing Data Set 3.';
-  StrWritingDataSet4 = '  Writing Data Set 4.';
-  StrWritingDataSet5 = '  Writing Data Set 5.';
-  StrWritingDataSet9 = '  Writing Data Set 9.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSet3 = '  Writing Data Set 3.';
+//  StrWritingDataSet4 = '  Writing Data Set 4.';
+//  StrWritingDataSet5 = '  Writing Data Set 5.';
+//  StrWritingDataSet9 = '  Writing Data Set 9.';
   StrWritingDataSets10and11 = '  Writing Data Sets 10 and 11.';
-  StrWritingDataSet12 = '  Writing Data Set 12.';
+//  StrWritingDataSet12 = '  Writing Data Set 12.';
   StrCheckingElevation = '  Checking elevations.';
   GapWarning = 'Gap between hydrogeologic units';
   OverlapWarning = 'Overlap between hydrogeologic units';
@@ -388,7 +388,7 @@ begin
           LayerDescription := Model.
             ModflowLayerBottomDescription(DataArrayLayerIndex);
 
-          WriteArray(DataArray, DataArrayLayerIndex, 'Data set 5: WETDRY ' + LayerDescription);
+          WriteArray(DataArray, DataArrayLayerIndex, 'Data set 5: WETDRY ' + LayerDescription, StrNoValueAssigned);
         end;
         Application.ProcessMessages;
         if not frmProgressMM.ShouldContinue then
@@ -415,7 +415,7 @@ var
 begin
   DataArray := Model.DataArrayManager.GetDataSetByName(HGU.TopDataArrayName);
   Assert(DataArray <> nil);
-  WriteArray(DataArray, 0, ' Data set 7: TOP ' + HGU.HufName);
+  WriteArray(DataArray, 0, ' Data set 7: TOP ' + HGU.HufName, StrNoValueAssigned);
   Model.DataArrayManager.CacheDataArrays;
 end;
 
@@ -425,7 +425,7 @@ var
 begin
   DataArray := Model.DataArrayManager.GetDataSetByName(HGU.ThickessDataArrayName);
   Assert(DataArray <> nil);
-  WriteArray(DataArray, 0, ' Data set 8:  THCK ' + HGU.HufName);
+  WriteArray(DataArray, 0, ' Data set 8:  THCK ' + HGU.HufName, StrNoValueAssigned);
   Model.DataArrayManager.CacheDataArrays;
 end;
 

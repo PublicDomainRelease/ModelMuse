@@ -89,7 +89,15 @@ begin
   end
   else
   begin
-    MaxLength := PERLEN * (TSMULT-1)/(Power(TSMULT,NSTP)-1);
+    try
+      MaxLength := PERLEN * (TSMULT-1)/(Power(TSMULT,NSTP)-1);
+    except on E: EMathError do
+      begin
+        MaxLength := 0;
+        Beep;
+        MessageDlg(E.message, mtError, [mbOK], 0);
+      end;
+    end;
   end;
   rdeMaxLengthFirstTimeStep.Text := FloatToStr(MaxLength);
 end;

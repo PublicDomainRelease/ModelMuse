@@ -24,16 +24,16 @@ type
 implementation
 
 uses
-  ModflowUnitNumbers, frmProgressUnit, SysUtils;
+  ModflowUnitNumbers, frmProgressUnit, SysUtils, GoPhastTypes;
 
 resourcestring
   rsAdvID = '%s in the MT3DMS ADV package';
   StrWritingMT3DMSADVP = 'Writing MT3DMS ADV Package input.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSet3 = '  Writing Data Set 3.';
-  StrWritingDataSet4 = '  Writing Data Set 4.';
-  StrWritingDataSet5 = '  Writing Data Set 5.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSet3 = '  Writing Data Set 3.';
+//  StrWritingDataSet4 = '  Writing Data Set 4.';
+//  StrWritingDataSet5 = '  Writing Data Set 5.';
 
 { TMt3dmsAdvWriter }
 

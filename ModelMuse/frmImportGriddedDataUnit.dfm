@@ -6,17 +6,19 @@ inherited frmImportGriddedData: TfrmImportGriddedData
   ClientWidth = 436
   Constraints.MinHeight = 432
   Constraints.MinWidth = 444
+  KeyPreview = True
+  OnKeyUp = FormKeyUp
   OnResize = FormResize
-  ExplicitWidth = 452
-  ExplicitHeight = 486
-  PixelsPerInch = 96
+  ExplicitWidth = 454
+  ExplicitHeight = 493
+  PixelsPerInch = 120
   TextHeight = 18
   object jvplCellGrid: TJvPageList
     Left = 0
     Top = 147
     Width = 436
     Height = 254
-    ActivePage = jvspGrid
+    ActivePage = jvspCellList
     PropagateEnable = False
     Align = alClient
     object jvspCellList: TJvStandardPage
@@ -36,6 +38,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
         RowCount = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
         TabOrder = 0
+        OnMouseUp = GridMouseDown
         ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = True
@@ -446,8 +449,8 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Height = 26
       Tree.Left = 0
       Tree.Top = 0
-      Tree.Width = 304
-      Tree.Height = 202
+      Tree.Width = 302
+      Tree.Height = 195
       Tree.Align = alClient
       Tree.Header.AutoSizeIndex = 0
       Tree.Header.DefaultHeight = 17
@@ -517,8 +520,10 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end
@@ -530,6 +535,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Anchors = [akTop, akRight]
       Caption = 'OK'
       Default = True
+      DoubleBuffered = True
       Enabled = False
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
@@ -550,6 +556,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
         0000}
       ModalResult = 1
       NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -559,8 +566,10 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 2
     end
   end

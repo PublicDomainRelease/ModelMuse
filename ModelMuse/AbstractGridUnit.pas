@@ -1426,6 +1426,7 @@ begin
   begin
     Exit;
   end;
+
   // Force update of cell elevations.
 //  HighestElevation;
   case ViewDirection of
@@ -1444,15 +1445,6 @@ begin
   else
     Assert(False);
   end;
-//  if (ThreeDDataSet <> nil)
-//    or (ThreeDContourDataSet <> nil) then
-//  begin
-//    if frmDisplayData = nil then
-//    begin
-//      Application.CreateForm(TfrmDisplayData, frmDisplayData);
-//    end;
-//    UpdateFrmDisplayData(True);
-//  end;
 end;
 
 function ConvertTop2D_Point(const ZoomBox: TQRbwZoomBox2;
@@ -7737,7 +7729,8 @@ begin
           LocalModel.ModelSelection, vdSide, SelectedColumn);
         Contourer.ZoomBox := ZoomBox;
         Contourer.DrawContours(SelectedColumn,
-          frmGoPhast.PhastModel.ContourColorParameters, vdSide);
+          frmGoPhast.PhastModel.ContourColorParameters, vdSide,
+          frmGoPhast.PhastModel.ContourLabelSpacing);
       finally
         Contourer.Free;
       end;
@@ -8183,7 +8176,8 @@ begin
           LocalModel.ModelSelection, vdTop, SelectedLayer);
         Contourer.ZoomBox := ZoomBox;
         Contourer.DrawContours(SelectedLayer,
-          frmGoPhast.PhastModel.ContourColorParameters, vdTop);
+          frmGoPhast.PhastModel.ContourColorParameters, vdTop,
+          frmGoPhast.PhastModel.ContourLabelSpacing);
       finally
         Contourer.Free;
       end;
@@ -8474,7 +8468,8 @@ begin
           LocalModel.ModelSelection, vdFront, SelectedRow);
         Contourer.ZoomBox := ZoomBox;
         Contourer.DrawContours(SelectedRow,
-          frmGoPhast.PhastModel.ContourColorParameters, vdFront);
+          frmGoPhast.PhastModel.ContourColorParameters, vdFront,
+          frmGoPhast.PhastModel.ContourLabelSpacing);
       finally
         Contourer.Free;
       end;

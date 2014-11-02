@@ -101,7 +101,7 @@
       <config-value name="deffont">font-family:'MS Sans Serif'; font-size:8pt; color:#000000;</config-value>
       <config-value name="contents"></config-value>
       <config-value name="topicprefix"></config-value>
-      <config-value name="autohelpstart">3919</config-value>
+      <config-value name="autohelpstart">3922</config-value>
       <config-value name="autohelpincrement">1</config-value>
       <config-value name="autohelpanchor">1</config-value>
       <config-value name="searchpath">.\;.\Used Images\;.\ScreenShots\;.\ModflowGuide\;.\Topics\Invisible\</config-value>
@@ -992,6 +992,15 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="MinI" value="830"/>
       <helpcontext-number href="MinR" value="840"/>
       <helpcontext-number href="MNW_Loss_Terms" value="3546"/>
+      <helpcontext-number href="MNW1_Multi_Node_Well_Package_2" value="3921"/>
+      <helpcontext-number href="MNW1_Multi_Node_Well_Package_2#Conductance" value="3924"/>
+      <helpcontext-number href="MNW1_Multi_Node_Well_Package_2#Hlim" value="3922"/>
+      <helpcontext-number href="MNW1_Multi_Node_Well_Package_2#Qdes" value="3928"/>
+      <helpcontext-number href="MNW1_Multi_Node_Well_Package_2#Qfrcmn" value="3925"/>
+      <helpcontext-number href="MNW1_Multi_Node_Well_Package_2#Qfrcmx" value="3926"/>
+      <helpcontext-number href="MNW1_Multi_Node_Well_Package_2#Skin" value="3923"/>
+      <helpcontext-number href="MNW1_Multi_Node_Well_Package_V" value="3920"/>
+      <helpcontext-number href="MNW1_Multi_Node_Well_Package_V#LOSSTYPE" value="3927"/>
       <helpcontext-number href="MNW2_Basic_Tab" value="3530"/>
       <helpcontext-number href="MNW2_Basic_Tab#LOSSTYPE" value="3534"/>
       <helpcontext-number href="MNW2_Basic_Tab#PUMPCAP" value="3535"/>

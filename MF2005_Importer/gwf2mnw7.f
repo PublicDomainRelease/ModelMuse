@@ -92,7 +92,7 @@ c
       IOWELL2(3) = 0
 c
 c1------identify package and initialize nwell2
-      WRITE (IOUT, *) 'MNW:'
+      WRITE (IOUT, *) 'MNW1:'
 !      WRITE (IOUT, 9001) In
 ! 9001 FORMAT (/, ' MNW1 -- MULTI-NODE WELL 1 PACKAGE, VERSION 7,', 
 !     +        ' 11/07/2005.', /, '    INPUT READ FROM UNIT', i4)
@@ -165,10 +165,12 @@ c
       ENDIF
 	IF ( INDEX(txt, 'NONLINEAR').GT.0 ) THEN
 	  WRITE(IOUT,*) 'LOSSTYPE PLossMNW:'
-	  WRITE(IOUT,*) 'NONLINEAR', PLOSS
+	  WRITE(IOUT,*) 'NONLINEAR'
+	  WRITE(IOUT,*) PLOSS
 	ELSEIF ( INDEX(txt, 'LINEAR').GT.0 ) THEN
 	  WRITE(IOUT,*) 'LOSSTYPE PLossMNW:'
-	  WRITE(IOUT,*) 'LINEAR', PLOSS
+	  WRITE(IOUT,*) 'LINEAR'
+	  WRITE(IOUT,*) PLOSS
 	ELSE
 	  WRITE(IOUT,*) 'LOSSTYPE:'
 	  WRITE(IOUT,*) 'SKIN'
@@ -234,11 +236,14 @@ c            Find and use file name
      +          WRITE (ABS(IOWELL2(jf)),'(3i10)') MXWEL2, IWL2CB, IWELPT
                 WRITE(IOUT, *) 'MNW DATA SET 3:'
 	          IF (IOWELL2(jf).LT.0) THEN
-	            WRITE(IOUT, *) 'FILE:', tx2(1:kf), 
-     +			  ftag(jf)(1:icf(jf)), ABS(IOWELL2(jf)), 'ALLTIME '
+	            WRITE(IOUT, *) tx2(1:kf) 
+      			  WRITE(IOUT, *) ftag(jf)(1:icf(jf))
+      			  WRITE(IOUT, *) ABS(IOWELL2(jf))
+      			  WRITE(IOUT, *) , 'ALLTIME:'
 	          ELSE
-	            WRITE(IOUT, *) 'FILE:', tx2(1:kf), 
-     +			  ftag(jf)(1:icf(jf)), ABS(IOWELL2(jf))
+	            WRITE(IOUT, *) tx2(1:kf)
+     		  	      WRITE(IOUT, *) ftag(jf)(1:icf(jf))
+			      WRITE(IOUT, *) ABS(IOWELL2(jf))
 	          ENDIF
               ENDIF
             ENDIF
@@ -333,7 +338,7 @@ c     ------------------------------------------------------------------
 c     ------------------------------------------------------------------
 c-----SET POINTERS FOR THE CURRENT GRID.
       CALL SGWF2MNW1PNT(Igrid)
-	WRITE(IOUT,*) 'MNW:'
+	WRITE(IOUT,*) 'MNW1:'
 cswm: SET POINTERS FOR FLOW PACKAGE TO GET K's FOR CEL2WEL
       IF ( Iubcf.NE.0 ) CALL SGWF2BCF7PNT(Igrid)
       IF ( Iulpf.NE.0 ) CALL SGWF2LPF7PNT(Igrid)
@@ -480,20 +485,26 @@ c    Look for limit modifications
             kqc = INDEX(txt, 'QCUT')
             kpc = INDEX(txt, '%CUT')
             IF ( kqc+kpc.GT.0 .AND. ABS(q).GT.ZERO25 ) THEN
+              if (kqc.GT.0) then
+                WRITE(IOUT, *)'QCUT:'
+              endif
+              if (kpc.GT.0) then
+                WRITE(IOUT, *)'%CUT:'
+              endif
               tx2 = txt(kqc+kpc+5:256)
               CALL QREAD(rn, 2, tx2, ierr)
-              IF ( kqc.GT.0 ) THEN         !!  Absolute value was provided
-                rn(1) = 100.0D0*rn(1)/q        !!  Convert to percentage
-                rn(2) = 100.0D0*rn(2)/q
-              ENDIF
+!              IF ( kqc.GT.0 ) THEN         !!  Absolute value was provided
+!                rn(1) = 100.0D0*rn(1)/q        !!  Convert to percentage
+!                rn(2) = 100.0D0*rn(2)/q
+!              ENDIF
               IF ( ierr.GE.1 ) rn(2) = rn(1)
-              WELL2(13, ipt) = rn(1)*0.01D0    !! convert percentages to fractions
-              WELL2(14, ipt) = rn(2)*0.01D0
+              WELL2(13, ipt) = rn(1)!*0.01D0    !! convert percentages to fractions
+              WELL2(14, ipt) = rn(2)!*0.01D0
 
 
               IF ( INDEX(tx2, 'DEFAULT').GT.0 ) THEN
-                qfrcmn = rn(1)*0.01D0          !!  New default lower limit
-                qfrcmx = rn(2)*0.01D0          !!  New default upper limit
+                qfrcmn = rn(1)!*0.01D0          !!  New default lower limit
+                qfrcmx = rn(2)!*0.01D0          !!  New default upper limit
               ENDIF
             ENDIF
 	      WRITE(IOUT, *) 'Qfrcmn, Qfrcmx:' 
@@ -509,9 +520,9 @@ c    Look for NonLinear coefficient
                 WELL2(16, ipt) = rn(1)
 c         Could reset default C-term here to a non-zero value
               ENDIF
+  	        WRITE(IOUT,*) 'Cp:C:'
+	        WRITE(IOUT,*) WELL2(16, ipt)
             ENDIF
-	      WRITE(IOUT,*) 'Cp:C:'
-	      WRITE(IOUT,*) WELL2(16, ipt)
 c
 c   Look for Site Identifier   -- Set to NO-PRINT  if not present.
             ksiteid = INDEX(txt, 'SITE')
@@ -566,14 +577,16 @@ c   Move from well data from temp to permanent locations
             IF ( ierr.GE.2 .OR. ABS(WELL2(8,ipt)).GT.HMAX )
      +           WELL2(8, ipt) = HREF(i,j,k)
 c  Compute HLIM relative to reference elevation if HLIM read was a DrawDown (DD)
-            IF ( INDEX(txt, 'DD').GT.0 )
-     +           WELL2(7, ipt) = ipole*WELL2(7, ipt) + WELL2(8, ipt)
+            IF ( INDEX(txt, 'DD').GT.0 ) then
+                WELL2(7, ipt) = ipole*WELL2(7, ipt) + WELL2(8, ipt)
+                WRITE(IOUT, *) 'DD:'
+            endif
             IF ( ierr.GE.3 ) WELL2(7, ipt) = ipole*1.0D+26
             IF ( ierr.GE.4 ) WELL2(6, ipt) = 0.0D0
             IF ( ierr.GE.5 ) WELL2(5, ipt) = 0.0D0
             IF ( ierr.GE.6 ) WELL2(4, ipt) = -1.0D0
 		  WRITE(IOUT,*) 'QWval, Rw, Skin, Hlim, Href, Iwgrp:'
-	      WRITE(IOUT,*) (WELL2(IP, ipt), IP=3,9)
+	      WRITE(IOUT,*) (WELL2(IP, ipt), IP=4,9)
 c  Flag as 2-point definition of a multi-node well if MULTI is detected.
             IF ( INDEX(tx2, 'MULTI').GT.0 .AND.
      +           ABS(WELL2(5,ipt)).GT.ZERO25 ) THEN

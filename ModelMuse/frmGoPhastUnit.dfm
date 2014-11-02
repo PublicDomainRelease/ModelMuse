@@ -20,12 +20,12 @@ inherited frmGoPhast: TfrmGoPhast
   OnResize = FormResize
   ExplicitWidth = 776
   ExplicitHeight = 566
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object splitHoriz: TJvNetscapeSplitter
     Left = 0
-    Top = 337
-    Width = 760
+    Top = 325
+    Width = 758
     Height = 10
     Cursor = crVSplit
     Hint = 'Click and drag to resize the windows.'
@@ -41,16 +41,16 @@ inherited frmGoPhast: TfrmGoPhast
   object pnlTop: TPanel
     Left = 0
     Top = 100
-    Width = 760
-    Height = 237
+    Width = 758
+    Height = 225
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 1
     object splitVertTop: TJvNetscapeSplitter
-      Left = 521
+      Left = 519
       Top = 0
-      Height = 237
+      Height = 225
       Hint = 'Click and drag to resize the windows.'
       Align = alRight
       MinSize = 1
@@ -65,42 +65,42 @@ inherited frmGoPhast: TfrmGoPhast
     inline frameTopView: TframeView
       Left = 0
       Top = 0
-      Width = 521
-      Height = 237
+      Width = 519
+      Height = 225
       HorzScrollBar.Range = 36
       VertScrollBar.Range = 40
       Align = alClient
       TabOrder = 0
       TabStop = True
-      ExplicitWidth = 521
-      ExplicitHeight = 237
+      ExplicitWidth = 519
+      ExplicitHeight = 225
       inherited rulVertical: TRbwRuler
-        Height = 183
+        Height = 171
         ExplicitTop = 39
         ExplicitHeight = 173
       end
       inherited Panel1: TPanel
-        Width = 521
-        ExplicitWidth = 521
+        Width = 519
+        ExplicitWidth = 519
         inherited rulHorizontal: TRbwRuler
-          Width = 472
+          Width = 470
           ExplicitWidth = 351
         end
       end
       inherited ZoomBox: TQRbwZoomBox2
-        Width = 472
-        Height = 183
+        Width = 470
+        Height = 171
         Image32.Left = 1
         Image32.Top = 1
-        Image32.Width = 470
-        Image32.Height = 181
+        Image32.Width = 468
+        Image32.Height = 169
         Image32.Align = alClient
         Image32.ExplicitLeft = 1
         Image32.ExplicitTop = 1
-        Image32.ExplicitWidth = 470
-        Image32.ExplicitHeight = 181
-        ExplicitWidth = 472
-        ExplicitHeight = 183
+        Image32.ExplicitWidth = 468
+        Image32.ExplicitHeight = 169
+        ExplicitWidth = 470
+        ExplicitHeight = 171
       end
       inherited OrderMenu: TPopupMenu
         Left = 80
@@ -108,21 +108,21 @@ inherited frmGoPhast: TfrmGoPhast
       end
     end
     inline frameSideView: TframeView
-      Left = 531
+      Left = 529
       Top = 0
       Width = 229
-      Height = 237
+      Height = 225
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alRight
       TabOrder = 1
       TabStop = True
-      ExplicitLeft = 531
+      ExplicitLeft = 529
       ExplicitWidth = 229
-      ExplicitHeight = 237
+      ExplicitHeight = 225
       inherited rulVertical: TRbwRuler
         Left = 180
-        Height = 183
+        Height = 171
         Align = alRight
         RulerPosition = rpRight
         ExplicitLeft = 194
@@ -156,21 +156,21 @@ inherited frmGoPhast: TfrmGoPhast
       inherited ZoomBox: TQRbwZoomBox2
         Left = 0
         Width = 180
-        Height = 183
+        Height = 171
         ExaggerationDirection = edHorizontal
         HorizontalDirection = hdLeft
         Image32.Left = 1
         Image32.Top = 1
         Image32.Width = 178
-        Image32.Height = 181
+        Image32.Height = 169
         Image32.Align = alClient
         Image32.ExplicitLeft = 1
         Image32.ExplicitTop = 1
         Image32.ExplicitWidth = 178
-        Image32.ExplicitHeight = 181
+        Image32.ExplicitHeight = 169
         ExplicitLeft = 0
         ExplicitWidth = 180
-        ExplicitHeight = 183
+        ExplicitHeight = 171
       end
       inherited OrderMenu: TPopupMenu
         Left = 48
@@ -180,8 +180,8 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 347
-    Width = 760
+    Top = 335
+    Width = 758
     Height = 133
     Align = alBottom
     BevelOuter = bvNone
@@ -192,7 +192,7 @@ inherited frmGoPhast: TfrmGoPhast
     TabOrder = 2
     OnMouseMove = pnlLowerRightMouseMove
     object splitVertBottom: TJvNetscapeSplitter
-      Left = 521
+      Left = 519
       Top = 0
       Height = 133
       Hint = 'Click and drag to resize the windows.'
@@ -208,14 +208,14 @@ inherited frmGoPhast: TfrmGoPhast
     inline frameFrontView: TframeView
       Left = 0
       Top = 0
-      Width = 521
+      Width = 519
       Height = 133
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alClient
       TabOrder = 0
       TabStop = True
-      ExplicitWidth = 521
+      ExplicitWidth = 519
       ExplicitHeight = 133
       inherited rulVertical: TRbwRuler
         Top = 0
@@ -225,11 +225,11 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited Panel1: TPanel
         Top = 79
-        Width = 521
+        Width = 519
         Align = alBottom
         TabOrder = 1
         ExplicitTop = 79
-        ExplicitWidth = 521
+        ExplicitWidth = 519
         inherited ModelCube: TRbwModelCube
           Hint = 
             'Click to change row|Click to change the selected row forward or ' +
@@ -239,7 +239,7 @@ inherited frmGoPhast: TfrmGoPhast
           Selection2 = 0.010000000000000000
         end
         inherited rulHorizontal: TRbwRuler
-          Width = 472
+          Width = 470
           RulerMajorTickLength = -10
           RulerMinorTickLength = -5
           RulerTextPosition = tpInside
@@ -250,25 +250,25 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited ZoomBox: TQRbwZoomBox2
         Top = 0
-        Width = 472
+        Width = 470
         Height = 79
         TabOrder = 0
         Image32.Left = 1
         Image32.Top = 1
-        Image32.Width = 470
+        Image32.Width = 468
         Image32.Height = 77
         Image32.Align = alClient
         Image32.ExplicitLeft = 1
         Image32.ExplicitTop = 1
-        Image32.ExplicitWidth = 470
+        Image32.ExplicitWidth = 468
         Image32.ExplicitHeight = 77
         ExplicitTop = 0
-        ExplicitWidth = 472
+        ExplicitWidth = 470
         ExplicitHeight = 79
       end
     end
     inline frame3DView: Tframe3DView
-      Left = 531
+      Left = 529
       Top = 0
       Width = 229
       Height = 133
@@ -278,7 +278,7 @@ inherited frmGoPhast: TfrmGoPhast
       ParentDoubleBuffered = False
       TabOrder = 1
       TabStop = True
-      ExplicitLeft = 531
+      ExplicitLeft = 529
       ExplicitWidth = 229
       ExplicitHeight = 133
       inherited glWidModelView: TGLWidget
@@ -291,8 +291,8 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object sbMain: TStatusBar
     Left = 0
-    Top = 480
-    Width = 760
+    Top = 468
+    Width = 758
     Height = 28
     Hint = 'Drag with the mouse to resize status bar panels'
     Panels = <
@@ -318,7 +318,7 @@ inherited frmGoPhast: TfrmGoPhast
   object cbControlBar: TControlBar
     Left = 0
     Top = 0
-    Width = 760
+    Width = 758
     Height = 100
     Align = alTop
     AutoSize = True
@@ -3135,7 +3135,7 @@ inherited frmGoPhast: TfrmGoPhast
     end
     object acImportSutraMesh: TAction
       Category = 'File'
-      Caption = 'Sutra Mesh'
+      Caption = 'SUTRA Mesh'
       Enabled = False
       OnExecute = acImportSutraMeshExecute
     end
@@ -3144,7 +3144,7 @@ inherited frmGoPhast: TfrmGoPhast
     Left = 104
     Top = 128
     Bitmap = {
-      494C010148004D00080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010148004D00040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003001000001002000000000000030
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -5788,7 +5788,7 @@ inherited frmGoPhast: TfrmGoPhast
     Left = 176
     Top = 80
     Bitmap = {
-      494C010160006500080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010160006500040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000009001000001002000000000000090
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -9226,7 +9226,9 @@ inherited frmGoPhast: TfrmGoPhast
     Top = 240
   end
   object dlgOpenImportSutraMesh: TOpenDialog
-    Filter = 'Argus ONE quadrilateral mesh (*.exp)|*.exp|All files (*.*)|*.*'
+    Filter = 
+      'Known mesh types|*.exp;*.msh|Argus ONE quadrilateral mesh (*.exp' +
+      ')|*.exp|Gmsh mesh (*.msh)|*.msh|All files (*.*)|*.*'
     Left = 448
     Top = 64
   end

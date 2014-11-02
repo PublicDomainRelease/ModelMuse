@@ -680,7 +680,7 @@ begin
     if Model.IsLayerSimulated(LayerIndex) then
     begin
       WriteArray(DataArray, LayerIndex, DataSetName + ' '
-        + Model.ModflowLayerBottomDescription(LayerIndex));
+        + Model.ModflowLayerBottomDescription(LayerIndex), StrNoValueAssigned);
     end;
   end;
 end;
@@ -1132,7 +1132,7 @@ begin
           DataSetName := 'Data Set 32: RetardationFactorCB ';
         end;
         WriteArray(RetardationDataArray, LayerIndex, DataSetName
-          + Model.ModflowLayerBottomDescription(LayerIndex));
+          + Model.ModflowLayerBottomDescription(LayerIndex), StrNoValueAssigned);
       end;
 
       ErrorRoot := Format(StrThereIsAnIllegal,

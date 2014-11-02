@@ -60,7 +60,7 @@ resourcestring
   StrUnsupportedLengthU = 'Unsupported length units for MODPATH-PLOT';
   StrTheLengthUnitsOf1 = 'The length units of the model are centimeters. MODP' +
   'ATH-PLOT will treat the units as feet';
-  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
+//  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
   StrWritingDataSets7and8 = '  Writing Data Sets 7 and 8';
 
 const
@@ -189,7 +189,7 @@ begin
         Inc(Layer);
         WriteArray(PorosityArray, Layer, 'Data Set 5: POR' + ' Layer '
           + IntToStr(LayerCount) + ': '
-          + LayerGroup.AquiferName);
+          + LayerGroup.AquiferName, StrNoValueAssigned);
       end;
     end
     else
@@ -197,7 +197,7 @@ begin
       Inc(Layer);
       WriteArray(PorosityArray, Layer, 'Data Set 5: PorCB' + ' Layer '
         + IntToStr(LayerCount) + ': '
-        + LayerGroup.AquiferName);
+        + LayerGroup.AquiferName, StrNoValueAssigned);
     end;
   end;
 end;
@@ -228,7 +228,7 @@ begin
       if Model.IsLayerSimulated(LayerIndex) then
       begin
         WriteArray(DataArray, LayerIndex, DataSetName + ' '
-          + Model.ModflowLayerBottomDescription(LayerIndex));
+          + Model.ModflowLayerBottomDescription(LayerIndex), StrNoValueAssigned);
       end;
     end;
   end;
@@ -498,7 +498,7 @@ begin
     if Model.IsLayerSimulated(LayerIndex) then
     begin
       WriteArray(DataArray, LayerIndex, DataSetName + ' '
-        + Model.ModflowLayerBottomDescription(LayerIndex));
+        + Model.ModflowLayerBottomDescription(LayerIndex), StrNoValueAssigned);
     end;
   end;
 end;
@@ -606,14 +606,14 @@ begin
       Inc(Layer);
       WriteArray(PorosityArray, Layer, 'Data Set 7: Porosity' + ' Layer '
         + IntToStr(LayerCount) + ': '
-        + LayerGroup.AquiferName);
+        + LayerGroup.AquiferName, StrNoValueAssigned);
     end
     else
     begin
       Inc(Layer);
       WriteArray(PorosityArray, Layer, 'Data Set 8: PorosityCB' + ' Layer '
         + IntToStr(LayerCount) + ': '
-        + LayerGroup.AquiferName);
+        + LayerGroup.AquiferName, StrNoValueAssigned);
     end;
   end;
 end;

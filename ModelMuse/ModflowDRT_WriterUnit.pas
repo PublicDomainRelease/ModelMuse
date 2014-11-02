@@ -40,9 +40,9 @@ uses ModflowTimeUnit, frmErrorsAndWarningsUnit,
 
 resourcestring
   StrWritingDRNPackage = 'Writing DRN Package input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSets2and3 = '  Writing Data Sets 2 and 3.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSets2and3 = '  Writing Data Sets 2 and 3.';
   StrWritingDataSets4to6 = '  Writing Data Sets 4 to 6.';
 
 { TModflowDRT_Writer }

@@ -511,6 +511,11 @@ resourcestring
   StrWritingDataSet34 = '  Writing Data Set 34.';
   StrWritingDataSet35 = '  Writing Data Set 35.';
   StrWritingDataSet36 = '  Writing Data Set 36.';
+  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
+  StrWritingDataSets5to7 = '  Writing Data Sets 5 to 7.';
+  StrWritingDataSets5to8 = '  Writing Data Sets 5 to 8.';
+  StrWritingDataSets2and3 = '  Writing Data Sets 2 and 3.';
+
   {@name is used as the default name for a new data set.
 
   @longcode(#

@@ -33,7 +33,7 @@ uses Windows,
   frameScreenObjectFmpPrecipUnit, frameScreenObjectFmpEvapUnit,
   frameScreenObjectCropIDUnit, frameScreenObjectCfpPipesUnit,
   frameScreenObjectCfpFixedUnit, frameScreenObjectSwrUnit,
-  frameScreenObjectSwrReachUnit, ModflowSwrReachUnit;
+  frameScreenObjectSwrReachUnit, ModflowSwrReachUnit, frameScreenObjectMnw1Unit;
 
   { TODO : Consider making this a property sheet like the Object Inspector that
   could stay open at all times.  Boundary conditions and vertices might be
@@ -302,6 +302,8 @@ type
     btnCaptionFont: TButton;
     grpCaption: TGroupBox;
     grpComment: TGroupBox;
+    jvspMNW1: TJvStandardPage;
+    frameMNW1: TframeScreenObjectMnw1;
     // @name changes which check image is displayed for the selected item
     // in @link(jvtlModflowBoundaryNavigator).
     procedure jvtlModflowBoundaryNavigatorMouseDown(Sender: TObject;
@@ -1353,6 +1355,7 @@ type
     FRES_Node: TJvPageIndexNode;
     FLAK_Node: TJvPageIndexNode;
     FMNW2_Node: TJvPageIndexNode;
+    FMNW1_Node: TJvPageIndexNode;
     FSFR_Node: TJvPageIndexNode;
     FSTR_Node: TJvPageIndexNode;
     FUZF_Node: TJvPageIndexNode;
@@ -1858,8 +1861,11 @@ type
     procedure GetGages(ListOfScreenObjects: TList);
     procedure SetGages(List: TList);
     procedure CreateMnw2Node;
+    procedure CreateMnw1Node;
     procedure GetMnw2Boundary(const ScreenObjectList: TList);
     procedure Mnw2Changed(Sender: TObject);
+    procedure GetMnw1Boundary(const ScreenObjectList: TList);
+    procedure Mnw1Changed(Sender: TObject);
     procedure CreateHydmodNode(AScreenObject: TScreenObject);
     procedure GetHydmod(const ScreenObjectList: TList);
     procedure GetChildModels(const ScreenObjectList: TList);
@@ -2155,7 +2161,7 @@ uses Math, StrUtils, JvToolEdit, frmGoPhastUnit, AbstractGridUnit,
   ModflowFmpPrecipitationUnit, ModflowFmpEvapUnit, ModflowFmpCropSpatialUnit,
   ModflowFmpWellUnit, ModflowCfpPipeUnit, ModflowCfpFixedUnit,
   ModflowCfpRechargeUnit, ModflowSwrUnit, ModflowSwrDirectRunoffUnit,
-  ObjectLabelUnit;
+  ObjectLabelUnit, ModflowMnw1Unit;
 
 resourcestring
   StrConcentrationObserv = 'Concentration Observations: ';
@@ -2262,6 +2268,10 @@ resourcestring
   StrCRCHConduitRechar = 'CRCH: Conduit Recharge';
   StrYouCanOnlyDefine = 'You can only define conduits in CFP with objects th' +
   'at have one %s formula on the Properties tab.';
+  StrThereAreTooManyI = 'There are too many imported values for %s. The extr' +
+  'a values will be deleted.';
+  StrThereAreTooFewIm = 'There are too few imported values for %s. Default v' +
+  'alues will be added.';
 //  StrMassOrEnergyFlux = 'Mass or Energy Flux';
 
 {$R *.dfm}
@@ -2809,6 +2819,10 @@ begin
     begin
       // do nothing
     end
+    else if jvtlModflowBoundaryNavigator.Selected = FMNW1_Node then
+    begin
+      // do nothing
+    end
     else if jvtlModflowBoundaryNavigator.Selected = FSFR_Node then
     begin
       // do nothing
@@ -3057,6 +3071,7 @@ begin
   CreateHydmodNode(AScreenObject);
   CreateHobNode(AScreenObject);
   CreateLakNode;
+  CreateMnw1Node;
   CreateMnw2Node;
   CreateRchNode(AScreenObject);
   CreateResNode(AScreenObject);
@@ -3597,6 +3612,7 @@ begin
         BoundaryNodeList.Add(FETS_Node);
         BoundaryNodeList.Add(FRES_Node);
         BoundaryNodeList.Add(FLAK_Node);
+        BoundaryNodeList.Add(FMNW1_Node);
         BoundaryNodeList.Add(FMNW2_Node);
         BoundaryNodeList.Add(FSFR_Node);
         BoundaryNodeList.Add(FSTR_Node);
@@ -3824,6 +3840,13 @@ begin
 
     XWidth := Abs(ZoomBox.X(ZoomBox.Width) - ZoomBox.X(0));
     YWidth := Abs(ZoomBox.Y(ZoomBox.Height) - ZoomBox.Y(0));
+
+    if (frmGoPhast.ModelSelection = msSutra22)
+      and (frmGoPhast.PhastModel.SutraMesh.MeshType = mtProfile) then
+    begin
+      YWidth := YWidth * frmGoPhast.PhastModel.Exaggeration;
+    end;
+
     DefaultValue := Min(XWidth,YWidth)/20;
     if DefaultValue > 0 then
     begin
@@ -3987,6 +4010,14 @@ begin
     end;
   end;
   frameSwrReach.frameSwr.FrameLoaded := Value;
+end;
+
+procedure TfrmScreenObjectProperties.Mnw1Changed(Sender: TObject);
+begin
+  if (FMNW1_Node <> nil) and (FMNW1_Node.StateIndex <> 3) then
+  begin
+    FMNW1_Node.StateIndex := 2;
+  end;
 end;
 
 procedure TfrmScreenObjectProperties.Mnw2Changed(Sender: TObject);
@@ -4403,6 +4434,7 @@ begin
 
   reDataSetFormula.DoubleBuffered := False;
   frameMnw2.OnChange := Mnw2Changed;
+  frameMnw1.OnChange := Mnw1Changed;
   frameFhbHead.OnChange := FhbHeadChanged;
   frameFhbFlow.OnChange := FhbFlowChanged;
   frameScreenObjectFarm.OnChange := FarmChanged;
@@ -5635,6 +5667,13 @@ begin
     frameMNW2.SetData(FNewProperties,
       (FMNW2_Node.StateIndex = 2),
       (FMNW2_Node.StateIndex = 1) and frmGoPhast.PhastModel.Mnw2IsSelected);
+  end;
+
+  if (FMNW1_Node <> nil) then
+  begin
+    frameMNW1.SetData(FNewProperties,
+      (FMNW1_Node.StateIndex = 2),
+      (FMNW1_Node.StateIndex = 1) and frmGoPhast.PhastModel.Mnw1IsSelected);
   end;
 
   if (FHFB_Node <> nil) then
@@ -7767,6 +7806,7 @@ var
   ValueIndex: Integer;
   RowCount: Integer;
   RowIndex: Integer;
+  ExistingCount: Integer;
 begin
   Inc(ColIndex);
   RowCount := ValueStorage.Count + 1;
@@ -7782,6 +7822,51 @@ begin
   end
   else
   begin
+    if rdgImportedData.RowCount < RowCount then
+    begin
+      ValueStorage.Count := rdgImportedData.RowCount-1;
+      RowCount := ValueStorage.Count + 1;
+      Beep;
+      MessageDlg(Format(StrThereAreTooManyI, [ColumnCaption]), mtWarning, [mbOK], 0);
+    end
+    else if rdgImportedData.RowCount > RowCount then
+    begin
+      Beep;
+      MessageDlg(Format(StrThereAreTooFewIm, [ColumnCaption]), mtWarning, [mbOK], 0);
+      ExistingCount := ValueStorage.Count;
+      ValueStorage.Count := rdgImportedData.RowCount-1;
+      case ValueStorage.DataType of
+        rdtDouble:
+          begin
+            for ValueIndex := ExistingCount+1 to ValueStorage.Count - 1 do
+            begin
+              ValueStorage.RealValues[ValueIndex] := 0;
+            end;
+          end;
+        rdtInteger:
+          begin
+            for ValueIndex := ExistingCount+1 to ValueStorage.Count - 1 do
+            begin
+              ValueStorage.IntValues[ValueIndex] := 0;
+            end;
+          end;
+        rdtBoolean:
+          begin
+            for ValueIndex := ExistingCount+1 to ValueStorage.Count - 1 do
+            begin
+              ValueStorage.BooleanValues[ValueIndex] := False;
+            end;
+          end;
+        rdtString:
+          begin
+            for ValueIndex := ExistingCount+1 to ValueStorage.Count - 1 do
+            begin
+              ValueStorage.StringValues[ValueIndex] := '""';
+            end;
+          end;
+      end;
+      RowCount := ValueStorage.Count + 1;
+    end;
     Assert(rdgImportedData.RowCount = RowCount)
   end;
   rdgImportedData.Cells[ColIndex, 0] := ColumnCaption;
@@ -10370,6 +10455,23 @@ begin
   end;
 end;
 
+procedure TfrmScreenObjectProperties.CreateMnw1Node;
+var
+  Node: TJvPageIndexNode;
+begin
+  FMNW1_Node := nil;
+  if frmGoPhast.PhastModel.Mnw1IsSelected then
+  begin
+    Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
+      frmGoPhast.PhastModel.ModflowPackages.MNW1Package.PackageIdentifier)
+      as TJvPageIndexNode;
+    Node.PageIndex := jvspMNW1.PageIndex;
+    frameMNW1.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FMNW1_Node := Node;
+  end;
+end;
+
 procedure TfrmScreenObjectProperties.CreateResNode(AScreenObject: TScreenObject);
 var
   Node: TJvPageIndexNode;
@@ -11136,6 +11238,32 @@ begin
     FSTR_Node.StateIndex := Ord(State)+1;
   end;
   frameScreenObjectSTR.GetData(FNewProperties);
+end;
+
+procedure TfrmScreenObjectProperties.GetMnw1Boundary(
+  const ScreenObjectList: TList);
+var
+  State: TCheckBoxState;
+  ScreenObjectIndex: integer;
+  AScreenObject: TScreenObject;
+  Boundary: TMnw1Boundary;
+begin
+  if not frmGoPhast.PhastModel.Mnw1IsSelected then
+  begin
+    Exit;
+  end;
+  State := cbUnchecked;
+  for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+  begin
+    AScreenObject := ScreenObjectList[ScreenObjectIndex];
+    Boundary := AScreenObject.ModflowMnw1Boundary;
+    UpdateBoundaryState(Boundary, ScreenObjectIndex, State);
+  end;
+  if FMNW1_Node <> nil then
+  begin
+    FMNW1_Node.StateIndex := Ord(State)+1;
+  end;
+  frameMNW1.GetData(FNewProperties);
 end;
 
 procedure TfrmScreenObjectProperties.GetMnw2Boundary(const ScreenObjectList: TList);
@@ -12491,6 +12619,7 @@ begin
   GetUzfBoundary(AScreenObjectList);
   GetSfrBoundary(AScreenObjectList);
   GetStrBoundary(AScreenObjectList);
+  GetMnw1Boundary(AScreenObjectList);
   GetMnw2Boundary(AScreenObjectList);
   GetFhbHeadBoundary(AScreenObjectList);
   GetFhbFlowBoundary(AScreenObjectList);
@@ -12712,7 +12841,8 @@ begin
     Assert(Boundary <> nil);
     if ShouldStoreBoundary(Node, Boundary) then
     begin
-      if (Frame.clbParameters.Items.Count > 0) and not (Frame.clbParameters.State[0] in [cbChecked, cbGrayed]) then
+      if (Frame.clbParameters.Items.Count > 0)
+        and not (Frame.clbParameters.State[0] in [cbChecked, cbGrayed]) then
       begin
         Boundary.Values.Clear
       end
@@ -14902,6 +15032,18 @@ begin
     or (DataGrid.Owner is TframeFlowTable) then
   begin
     ResultType := rdtDouble;
+  end
+  else if  (DataGrid.Owner = frameMNW1) then
+  begin
+    ResultType := rdtDouble;
+    case TMnw1Columns(ACol) of
+      mcDesiredPumpingRate, mcWaterQuality, mcWellRadius, mcConductance,
+        mcSkinFactor, mcLimitingWaterLevel, mcReferenceElevation,
+        mcNonLinearLossCoefficient, mcMinimumActiveRate,
+        mcReactivationPumpingRate: ResultType := rdtDouble;
+      mcWaterQualityGroup: ResultType := rdtInteger;
+      else Assert(False);
+    end;
   end
   else if (DataGrid.Owner is TframeSutraBoundary) then
   begin

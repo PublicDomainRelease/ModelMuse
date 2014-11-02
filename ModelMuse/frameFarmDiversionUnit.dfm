@@ -241,6 +241,9 @@ inherited frameFarmDiversion: TframeFarmDiversion
       ExplicitTop = 27
       ExplicitWidth = 49
     end
+    inherited cbMultiCheck: TCheckBox
+      TabOrder = 8
+    end
     object comboSfrObjects: TComboBox
       Left = 40
       Top = 27

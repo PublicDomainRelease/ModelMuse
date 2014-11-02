@@ -51,13 +51,13 @@ resourcestring
   StrEvaluatingRESPacka = 'Evaluating RES Package data.';
   StrWritingStressP = '    Writing Stress Period %d';
   StrWritingRESPackage = 'Writing RES Package input.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSet3 = '  Writing Data Set 3.';
-  StrWritingDataSet4 = '  Writing Data Set 4.';
-  StrWritingDataSet5 = '  Writing Data Set 5.';
-  StrWritingDataSet6 = '  Writing Data Set 6.';
-  StrWritingDataSet7 = '  Writing Data Set 7.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSet3 = '  Writing Data Set 3.';
+//  StrWritingDataSet4 = '  Writing Data Set 4.';
+//  StrWritingDataSet5 = '  Writing Data Set 5.';
+//  StrWritingDataSet6 = '  Writing Data Set 6.';
+//  StrWritingDataSet7 = '  Writing Data Set 7.';
 
 { TModflowRES_Writer }
 
@@ -199,7 +199,7 @@ begin
     DataArray := Model.DataArrayManager.GetDataSetByName(rsResLayer);
     Assert(DataArray <> nil);
 //    DataArray := PhastModel.DataSets[ArrayIndex];
-    WriteArray(DataArray, 0, ' # Data Set 3: IRESL');
+    WriteArray(DataArray, 0, ' # Data Set 3: IRESL', StrNoValueAssigned);
   end;
 end;
 
@@ -211,7 +211,7 @@ begin
   DataArray := Model.DataArrayManager.GetDataSetByName(rsResBottom);
   Assert(DataArray <> nil);
 //  DataArray := PhastModel.DataSets[ArrayIndex];
-  WriteArray(DataArray, 0, ' # Data Set 4: BRES');
+  WriteArray(DataArray, 0, ' # Data Set 4: BRES', StrNoValueAssigned);
 end;
 
 procedure TModflowRES_Writer.WriteDataSet5;
@@ -222,7 +222,7 @@ begin
   DataArray := Model.DataArrayManager.GetDataSetByName(rsResKv);
   Assert(DataArray <> nil);
 //  DataArray := PhastModel.DataSets[ArrayIndex];
-  WriteArray(DataArray, 0, ' # Data Set 5: HCres');
+  WriteArray(DataArray, 0, ' # Data Set 5: HCres', StrNoValueAssigned);
 end;
 
 procedure TModflowRES_Writer.WriteDataSet6;
@@ -233,7 +233,7 @@ begin
   DataArray := Model.DataArrayManager.GetDataSetByName(rsResBedThickness);
   Assert(DataArray <> nil);
 //  DataArray := PhastModel.DataSets[ArrayIndex];
-  WriteArray(DataArray, 0, ' # Data Set 6: Rbthck');
+  WriteArray(DataArray, 0, ' # Data Set 6: Rbthck', StrNoValueAssigned);
 end;
 
 procedure TModflowRES_Writer.WriteDataSet7;

@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
-<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
-  <title translate="true">MNW2: Multi-Node Well Package Pane</title>
+<topic template="Default" lasteditedby="rbwinst-pr" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+  <title translate="true">MNW2: Multi-Node Well Package (Version 2) Pane</title>
   <body>
     <header>
-      <para styleclass="Heading1"><text styleclass="Heading1" translate="true">MNW2: Multi-Node Well Package Pane</text></para>
+      <para styleclass="Heading1"><text styleclass="Heading1" translate="true">MNW2: Multi-Node Well Package (Version 2) Pane</text></para>
     </header>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The </text><text styleclass="Strong" translate="true">MNW2: Multi-Node Well package</text><text styleclass="Normal" translate="true"> pane is on the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MODFLOW_Features_Tab" styleclass="Normal" style="font-weight:bold;" translate="true">MODFLOW Features</link><text styleclass="Normal" translate="true"> tab of the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Object_Properties_Dialog_Box" styleclass="Normal" style="font-weight:bold;" translate="true">Object Properties</link><text styleclass="Normal" translate="true"> dialog box. &#160;Each object in which the MNW2 package is active defines one multi-node well.</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The </text><text styleclass="Strong" translate="true">MNW2: Multi-Node Well package</text><text styleclass="Normal" translate="true"> pane has five tabs. &#160;Only the tabs that contain options that can be used for the multi-node well that is being &#160;edited will be visible.</text></para>
@@ -16,10 +16,10 @@
     <para styleclass="Normal"><text styleclass="Normal" translate="true">It is relatively simple to draw a vertical multi-node well; use a point object drawn on the top view of the model. &#160;The elevations determined by the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Properties_Tab" anchor="HigherZ" styleclass="Strong" translate="true">Higher Z coordinate</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Properties_Tab" anchor="HigherZ" styleclass="Strong" translate="true">Lower Z coordinate</link><text styleclass="Normal" translate="true"> on the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Properties_Tab" styleclass="Strong" translate="true">Properties</link><text styleclass="Normal" translate="true"> tab will define the location of the well screen (unless well screens are defined on the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Well_Screens" styleclass="Strong" translate="true">Well Screens</link><text styleclass="Normal" translate="true"> tab instead).</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">Drawing a horizontal multi-node well is also relatively simple; use a line object with a single </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Properties_Tab" anchor="Z_Coordinate" styleclass="Strong" translate="true">Z coordinate</link><text styleclass="Normal" translate="true"> drawn on the top view of the model. </text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">Drawing a slanted multi-node well can be accomplished using a line object with a single </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Properties_Tab" anchor="Z_Coordinate" styleclass="Strong" translate="true">Z coordinate</link><text styleclass="Normal" translate="true"> drawn on the top view of the model. However, in that case, the formula for the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Properties_Tab" anchor="Z_Coordinate" styleclass="Strong" translate="true">Z coordinate</link><text styleclass="Normal" translate="true"> must vary along the length of the object. &#160;One function that can be used for that purpose is </text><link displaytype="text" defaultstyle="true" type="topiclink" href="VertexInterpolate" styleclass="Strong" translate="true">VertexInterpolate</link><text styleclass="Normal" translate="true">. In the figure below, the formula for the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Properties_Tab" anchor="Z_Coordinate" styleclass="Strong" translate="true">Z coordinate</link><text styleclass="Normal" translate="true"> of the blue line object is &quot;VertexInterpolate(-3, -11)&quot;. &#160;On the front view of the model, the line representing the object is drawn through the center of each cell intersected by the object.</text></para>
-    <para styleclass="Normal"><table rowcount="2" colcount="1" style="cell-padding:0px; cell-spacing:0px; border-width:0px; cell-border-width:0px;">
+    <para styleclass="Normal"><table rowcount="2" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Normal" style="text-align:center;"><image src="SlantedWell1.bmp" scale="50.00%" styleclass="Image Caption"></image></para>
+          <para styleclass="Normal" style="text-align:center;"><image src="SlantedWell1.bmp" scale="50.00%" width="333" height="290" styleclass="Image Caption"></image></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -34,10 +34,10 @@
       <li styleclass="Bullet List"><text styleclass="Bullet List" translate="true">Case(ObjectCurrentSectionIndex, -11., VertexInterpolate(0, -11, -21))</text></li>
     </list>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">For the first section, the higher and lower z coordinates work out to be 0 and -11 respectively so they define the vertical section of the well. &#160;The elevation for the second section are interpolated between vertexes 2 and 3 which define a line that slopes from an elevation of -11 to an elevation of -21.</text></para>
-    <para styleclass="Normal"><table rowcount="2" colcount="1" style="cell-padding:0px; cell-spacing:0px; border-width:0px; cell-border-width:0px;">
+    <para styleclass="Normal"><table rowcount="2" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Normal" style="text-align:center;"><image src="SlantedWell2.bmp" scale="50.00%" styleclass="Image Caption"></image></para>
+          <para styleclass="Normal" style="text-align:center;"><image src="SlantedWell2.bmp" scale="50.00%" width="333" height="290" styleclass="Image Caption"></image></para>
         </td>
       </tr>
       <tr style="vertical-align:top">

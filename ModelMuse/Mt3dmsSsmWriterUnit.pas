@@ -12,7 +12,6 @@ type
   private
     MXSS: Integer;
     FBoundaryCellsPerStressPeriod: TIntegerList;
-    procedure CountCells(var MaximumNumberOfCells: Integer);
     procedure WriteBoundaryArrays(const FormatString: string;
       BoundaryID: integer; List: TValueCellList);
     procedure WriteDataSet1;
@@ -22,6 +21,7 @@ type
     procedure WriteDataSets7and8(StressPeriod: integer; List: TValueCellList);
     procedure WriteStressPeriods; reintroduce;
   protected
+    procedure CountCells(var MaximumNumberOfCells: Integer); override;
     procedure Evaluate; override;
     class function Extension: string; override;
     function Package: TModflowPackageSelection; override;
@@ -56,8 +56,8 @@ resourcestring
   StrWritingEvapot = '      Writing Evapotranspiration Concentration';
   StrWritingPoint = '      Writing Point Source Concentrations';
   StrWritingSSMPackage = 'Writing SSM Package input.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
   StrWritingStressP = '    Writing Stress Period %d';
   StrTransferringDat = '    Transferring Data for %s';
 

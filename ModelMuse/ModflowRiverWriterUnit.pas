@@ -53,11 +53,11 @@ resourcestring
   StrTheFollowingRiver = 'The following River observation names may be valid' +
   ' for MODFLOW but they are not valid for UCODE.';
   StrWritingRIVPackage = 'Writing RIV Package input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
-  StrWritingDataSets5to7 = '  Writing Data Sets 5 to 7.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
+//  StrWritingDataSets5to7 = '  Writing Data Sets 5 to 7.';
   StrRiverStageIsBelow = 'River stage is below the bottom of the cell at the' +
   ' following locations.';
 

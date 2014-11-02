@@ -350,6 +350,7 @@ begin
     end;
     Undo := TUndoGlobalVariables.Create(FNewGlobals, OldNames, NewNames);
     frmGoPhast.UndoStack.Submit(Undo);
+    GetData;
   finally
     NewNames.Free;
     OldNames.Free;
@@ -587,7 +588,6 @@ begin
   rdgGlobalVariables.Cells[1,0] := StrType;
   rdgGlobalVariables.Cells[2,0] := StrValue;
   rdgGlobalVariables.Cells[3,0] := StrComment;
-  FNewGlobals := TGlobalVariables.Create(nil);
   GetData;
 end;
 
@@ -694,6 +694,7 @@ var
   GlobalVariable: TGlobalVariable;
   RowIndex: integer;
 begin
+  FNewGlobals := TGlobalVariables.Create(nil);
   FNewGlobals.Assign(frmGoPhast.PhastModel.GlobalVariables);
   rdgGlobalVariables.BeginUpdate;
   try

@@ -20,7 +20,7 @@ type
   }
   TNodeType = (ntInner, ntEdge, ntSubDomain);
 
-  TRenumberingAlgorithm = (CuthillMcKee, raSloanRandolph);
+  TRenumberingAlgorithm = (raNone, CuthillMcKee, raSloanRandolph);
 
   IElement = interface;
 

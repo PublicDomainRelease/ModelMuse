@@ -39,7 +39,7 @@ type
     procedure Loaded; override;
     { Private declarations }
   public
-    procedure GetData;
+    procedure GetData; override;
     // @name sets the @link(TDataArray) used to color the @link(TCustomModelGrid).
     procedure SetData; override;
     procedure UpdateLabelsAndLegend;
@@ -387,6 +387,7 @@ var
   TimeIndex: Integer;
   AllTimes: TRealList;
 begin
+  inherited;
   Handle;
   FGettingData := True;
   try

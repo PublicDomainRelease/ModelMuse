@@ -52,8 +52,9 @@ inherited frmRenumberingMethod: TfrmRenumberingMethod
     Width = 286
     Height = 90
     Caption = 'Renumbering method'
-    ItemIndex = 0
+    ItemIndex = 1
     Items.Strings = (
+      'none'
       'Cuthill and McKee (1969)'
       'Sloan and Randolph (1983)')
     TabOrder = 1

@@ -29,7 +29,8 @@ interface
 
 uses
   Windows, Generics.Collections, Generics.Defaults, FastGEO, SysUtils,
-  IntListUnit, MeshRenumbering, QuadTreeClass, MeshRenumberingTypes;
+  IntListUnit, MeshRenumbering, QuadTreeClass, MeshRenumberingTypes,
+  JvCreateProcess, GoPhastTypes, SubPolygonUnit;
 
 Type
   TPolygon2DArray = array of TPolygon2D;
@@ -510,6 +511,8 @@ Type
     FNodes: TNodeList;
     // @name holds @link(TSegment)s around the edge of the @classname.
     FSegments: TSegmentObjectList;
+    // @name is used with Gmsh
+    FSubPoly: TSubPolygon;
 {$IFDEF TEST}
   public
 {$ENDIF}
@@ -578,6 +581,9 @@ Type
     // ANode.
     function IndexOfNode(ANode: TNode): Integer;
     procedure AssignConstraintNodes;
+    // @name is used to remove straight line segments projecting from a boundary.
+    // It is used in @link(TQuadMeshCreator.GenerateMeshWithGmsh).
+    procedure RemoveProjections;
 {$IFDEF TEST}
   public
     function Center: TPoint2D;
@@ -651,6 +657,8 @@ Type
       write SetElementNumber;
     // @name is the number of active nodes in an IElement.
     property NodeCount: Integer read GetActiveNodeCount;
+    // name is used with Gmsh
+    function IsBoundaryInside(AnotherBoundary: TBoundary): boolean;
   {$IFDEF TEST}
     // name is only used in tests.
     property NodeList: TNodeList read FNodes;
@@ -664,6 +672,12 @@ Type
   // @name is used in sorting @link(TBoundary)s based on the number of
   // @link(TNodeInBoundary) that they contain.
   TBoundaryCountComparer = class(TBoundaryComparer)
+  public
+    function Compare(const Left, Right: TBoundary): Integer; override;
+  end;
+
+  // Sort boundaries in order of decreasing area.
+  TBoundaryAreaComparer = class(TBoundaryComparer)
   public
     function Compare(const Left, Right: TBoundary): Integer; override;
   end;
@@ -727,6 +741,7 @@ Type
     // another @link(TBoundary).
     FIncludedBoundaries: TObjectList<TBoundaryList>;
     FRenumberingAlgorithm: TRenumberingAlgorithm;
+    FGmshTerminated: Boolean;
     procedure GetConnectedOpenBoundaries(OpenBoundaryList: TBoundaryList; BlindEndsBoundaryList: TBoundaryList);
     // @name fills ClosedBoundaries with all the closed @link(TBoundary)s.
     // LinkedClosedBoundaries and LinkedOpenBoundaries are filled with lists
@@ -789,6 +804,7 @@ Type
     function GetActiveNode(Index: Integer): INode;
     procedure SetRenumberingAlgorithm(const Value: TRenumberingAlgorithm);
     procedure AssignConstraintNodes;
+//    procedure GmshTerminate(Sender: TObject; ExitCode: DWORD);
     {$IFDEF TEST}
     // @name is only used in testing.
     property BoundaryCount: Integer read GetBoundaryCount;
@@ -921,6 +937,7 @@ Type
     // @link(AdjustNodes) to adjust the positions of the nodes according
     // to the method specified in @link(NodeAdjustmentMethod).
     procedure GenerateMesh;
+    procedure GenerateMeshWithGmsh(const GMshLocation: string; Exaggeration: double);
     // @name adjusts the positions of the nodes according
     // to the method specified in @link(NodeAdjustmentMethod).
     procedure AdjustNodes;
@@ -947,7 +964,8 @@ Type
     property ElementCount: Integer read GetActiveElementCount;
     // Use @name to access the @link(IElement)s of the generated mesh.
     property Elements[Index: Integer]: IElement read GetActiveElement;
-    property RenumberingAlgorithm: TRenumberingAlgorithm read FRenumberingAlgorithm write SetRenumberingAlgorithm;
+    property RenumberingAlgorithm: TRenumberingAlgorithm
+      read FRenumberingAlgorithm write SetRenumberingAlgorithm;
     {$IFDEF TEST}
     // @name is used only for testing.
     property Boundaries: TBoundaryObjectList read FBoundaries;
@@ -1040,7 +1058,8 @@ implementation
 
 uses
   Math, ConvexHullUnit, Dialogs, RealListUnit, GPC_Classes, gpc,
-  CuthillMcKeeRenumbering;
+  CuthillMcKeeRenumbering, TempFiles, Classes, ImportQuadMesh, IOUtils,
+  frmGoPhastUnit, SutraMeshUnit;
 
 type
   TColliniears = array [0 .. 5] of boolean;
@@ -2122,6 +2141,37 @@ begin
   end;
 end;
 
+procedure TBoundary.RemoveProjections;
+var
+  ProjectionsDeleted: Boolean;
+  NodeIndex: integer;
+begin
+  repeat
+    ProjectionsDeleted := False;
+    for NodeIndex := FNodes.Count - 1 downto 0 do
+    begin
+      if (NodeIndex < FNodes.Count) and (NodeIndex >= 2) then
+      begin
+        if FNodes[NodeIndex] = FNodes[NodeIndex-2] then
+        begin
+          FNodes.Delete(NodeIndex);
+          FNodes.Delete(NodeIndex-1);
+          ProjectionsDeleted := True;
+        end;
+      end;
+    end;
+    if FNodes.Count >= 3 then
+    begin
+      if FNodes[1] = FNodes[FNodes.Count-2] then
+      begin
+        FNodes.Delete(FNodes.Count-1);
+        FNodes.Delete(0);
+        ProjectionsDeleted := True;
+      end;
+    end;
+  until not ProjectionsDeleted;
+end;
+
 procedure TBoundary.RemoveSelfFromAllNodes;
 var
   NodeIndex: Integer;
@@ -2139,12 +2189,26 @@ var
   Poly: TPolygon2D;
   index: Integer;
 begin
-  SetLength(Poly, FSegments.Count);
-  for index := 0 to FSegments.Count - 1 do
+  result := 0;
+  if FSegments.Count > 0 then
   begin
-    Poly[index] := FSegments[index].FNode1.Location;
+    SetLength(Poly, FSegments.Count);
+    for index := 0 to FSegments.Count - 1 do
+    begin
+      Poly[index] := FSegments[index].FNode1.Location;
+    end;
+    Result := Abs(FastGEO.Area(Poly));
+  end
+  else if FNodes.Count > 0 then
+  begin
+    SetLength(Poly, FNodes.Count-1);
+    for index := 0 to FNodes.Count - 2 do
+    begin
+      Poly[index] := FNodes[index].Location;
+    end;
+    Result := Abs(FastGEO.Area(Poly));
   end;
-  Result := Abs(FastGEO.Area(Poly));
+
 end;
 
 procedure TBoundary.AssignConstraintNodes;
@@ -2349,6 +2413,7 @@ end;
 
 destructor TBoundary.Destroy;
 begin
+  FSubPoly.Free;
   FSegments.Free;
   FSubParts.Free;
   FNodes.Free;
@@ -2505,6 +2570,35 @@ begin
     Assert(NumberOfNodesToInsert >= 1);
     FSegments[SegmentIndex].InsertNodes(NumberOfNodesToInsert);
   end;
+end;
+
+function TBoundary.IsBoundaryInside(AnotherBoundary: TBoundary): boolean;
+var
+  NodeIndex: Integer;
+  FPoints: TRealPointArray;
+  APoint: TPoint2D;
+  ANode: TNode;
+begin
+  for NodeIndex := 0 to AnotherBoundary.FNodes.Count - 1 do
+  begin
+    ANode := AnotherBoundary.FNodes[NodeIndex];
+    if FNodes.IndexOf(ANode) >= 0 then
+    begin
+      result := False;
+      Exit;
+    end;
+  end;
+  if FSubPoly = nil then
+  begin
+    SetLength(FPoints, FNodes.Count);
+    for NodeIndex := 0 to FNodes.Count - 1 do
+    begin
+      FPoints[NodeIndex] := FNodes[NodeIndex].FLocation;
+    end;
+    FSubPoly := TSubPolygon.Create(FPoints, FNodes.Count, 0, 0)
+  end;
+  APoint := AnotherBoundary.FNodes[0].FLocation;
+  Result := FSubPoly.IsPointInside(APoint.X, APoint.y);
 end;
 
 procedure TBoundary.RenumberNodes;
@@ -7211,6 +7305,259 @@ begin
 {$ENDIF}
 end;
 
+//procedure TQuadMeshCreator.GmshTerminate(Sender: TObject; ExitCode: DWORD);
+//begin
+//  FGmshTerminated := True;
+//end;
+
+procedure TQuadMeshCreator.GenerateMeshWithGmsh(const GMshLocation: string;
+  Exaggeration: double);
+const
+  FiveSeconds = 1/24/3600*5;
+var
+  GmshFileName: string;
+  NodeIndex: Integer;
+  ANode: TNode;
+  GmshFile: TStringList;
+  ALine: string;
+  CommandLine: string;
+//  BoundaryIndex: Integer;
+  LineIndex: Integer;
+  ABoundary: TBoundary;
+  PriorNode: TNode;
+  NewNodeIndex: Integer;
+  LineLoopIndex: Integer;
+  StartLineIndex: Integer;
+  StringBuilder: TStringBuilder;
+  PriorNodeIndex: Integer;
+  OptionFile: TStringList;
+  OptionFileName: string;
+  AProcessComp: TJvCreateProcess;
+  MeshFileName: string;
+  StartTime: TDateTime;
+  CurrentDir: string;
+//  UsedLoops: array of boolean;
+  AnotherBoundary: TBoundary;
+  InnerLinesStart: Integer;
+  InnerBoundaryIndex: Integer;
+//  BoundaryComparer: TBoundaryAreaComparer;
+  GroupIndex: Integer;
+  BoundaryList: TBoundaryList;
+  Mesh: TSutraMesh3D;
+begin
+{$IFDEF DEBUG}
+//  OutputDebugString('SAMPLING ON');
+{$ENDIF}
+  Initialize;
+  BreakClosedBoundariesThatIntersectOuterBoundary;
+  IntersectBoundaries;
+  BreakOpenBoundaries;
+  DeleteDisconnectedBoundaries;
+  MergeClosedBoundaries;
+  StoreClosedBoundaryPolygons;
+  BreakOpenBoundaries;
+  DeleteExternalBoundaries;
+  ExtractClosedBoundaries;
+//  MergeOpenNodeBoundaries2;
+  MergeOpenWithClosedBoundaries;
+//  MergeOpenNodeBoundaries;
+  MergeOpenNodeBoundaries3;
+  ArrangeBoundaries;
+
+  GmshFileName := TempFileName;
+  StringBuilder := TStringBuilder.Create;
+  GmshFile := TStringList.Create;
+  try
+    for NodeIndex := 0 to FNodes.Count - 1 do
+    begin
+      ANode := FNodes[NodeIndex];
+      ALine := Format('Point(%0:d) = {%1:g, %2:g, 0, %3:g};',
+        [NodeIndex+1, ANode.X, ANode.Y, ANode.DesiredSpacing*2]);
+      GmshFile.Add(ALine);
+    end;
+
+    LineLoopIndex := 0;
+    LineIndex := 0;
+    for GroupIndex := 0 to FIncludedBoundaries.Count - 1 do
+    begin
+      BoundaryList := FIncludedBoundaries[GroupIndex];
+
+      StartLineIndex := LineIndex;
+      ABoundary := BoundaryList[0];
+      Assert(ABoundary.FNodes[0] = ABoundary.FNodes[ABoundary.FNodes.Count-1]);
+      PriorNode := ABoundary.FNodes[0];
+      PriorNodeIndex := FNodes.IndexOf(PriorNode);
+      for NodeIndex := 1 to ABoundary.FNodes.Count - 1 do
+      begin
+        ANode := ABoundary.FNodes[NodeIndex];
+        if ANode <> PriorNode then
+        begin
+          NewNodeIndex := FNodes.IndexOf(ANode);
+          ALine := Format('Line(%0:d) = {%1:d, %2:d};',
+            [LineIndex + 1, PriorNodeIndex+1, NewNodeIndex+1]);
+          GmshFile.Add(ALine);
+          PriorNodeIndex := NewNodeIndex;
+          Inc(LineIndex);
+        end;
+        PriorNode := ANode;
+      end;
+      InnerLinesStart := LineIndex;
+      for InnerBoundaryIndex := 1 to BoundaryList.Count - 1 do
+      begin
+        AnotherBoundary := BoundaryList[InnerBoundaryIndex];
+        if AnotherBoundary.Area = 0 then
+        begin
+          Continue;
+        end;
+        AnotherBoundary.RemoveProjections;
+
+
+        PriorNode := AnotherBoundary.FNodes.Last;
+        PriorNodeIndex := FNodes.IndexOf(PriorNode);
+        for NodeIndex := AnotherBoundary.FNodes.Count - 2 downto 0 do
+        begin
+          ANode := AnotherBoundary.FNodes[NodeIndex];
+          if ANode <> PriorNode then
+          begin
+            NewNodeIndex := FNodes.IndexOf(ANode);
+            ALine := Format('Line(%0:d) = {%1:d, %2:d};',
+              [LineIndex + 1, PriorNodeIndex+1, NewNodeIndex+1]);
+            GmshFile.Add(ALine);
+            PriorNodeIndex := NewNodeIndex;
+            Inc(LineIndex);
+          end;
+          PriorNode := ANode;
+        end;
+      end;
+
+      StringBuilder.Clear;
+      StringBuilder.Append('Line Loop(');
+      StringBuilder.Append(LineLoopIndex+1);
+      StringBuilder.Append(') = {');
+      for NodeIndex := StartLineIndex to InnerLinesStart-1 do
+      begin
+        StringBuilder.Append(NodeIndex+1);
+        if NodeIndex < LineIndex-1 then
+        begin
+          StringBuilder.Append(', ');
+        end;
+      end;
+
+      for NodeIndex := InnerLinesStart to LineIndex-1 do
+      begin
+        StringBuilder.Append(-(NodeIndex+1));
+        if NodeIndex < LineIndex-1 then
+        begin
+          StringBuilder.Append(', ');
+        end;
+      end;
+      StringBuilder.Append('};');
+      ALine := StringBuilder.ToString;
+      GmshFile.Add(ALine);
+      ALine := Format('Plane Surface(%0:d) = {%0:d};', [LineLoopIndex+1]);
+      GmshFile.Add(ALine);
+      Inc(LineLoopIndex);
+    end;
+
+    GmshFile.SaveToFile(GmshFileName);
+
+    OptionFile := TStringList.Create;
+    try
+      OptionFile.Add('Mesh.RecombineAll = 1;');
+      OptionFile.Add('Mesh.SubdivisionAlgorithm = 1;');
+      OptionFileName := GmshFileName + '.opt';
+      OptionFile.SaveToFile(OptionFileName);
+    finally
+      OptionFile.Free;
+    end;
+  finally
+    GmshFile.Free;
+    StringBuilder.Free;
+  end;
+
+  MeshFileName := ChangeFileExt(GmshFileName, '.msh');
+  CurrentDir := GetCurrentDir;
+
+  AProcessComp := TJvCreateProcess.Create(nil);
+  try
+    SetCurrentDir(ExtractFileDir(GmshFileName));
+    CommandLine := Format('%0:s %1:s -2 -o %2:s', [GMshLocation, ExtractFileName(GmshFileName), ExtractFileName(MeshFileName)]);
+    AProcessComp.WaitForTerminate := False;
+    AProcessComp.CommandLine := CommandLine;
+    FGmshTerminated := False;
+    try
+      AProcessComp.Run;
+    except on E: EOSError do
+      begin
+        Beep;
+        MessageDlg(E.message, mtError, [mbOK], 0);
+        Exit;
+      end;
+    end;
+    StartTime := Now;
+    while not FileExists(MeshFileName) do
+    begin
+      if Now - StartTime > FiveSeconds then
+      begin
+        Beep;
+        MessageDlg('Gmsh failed.', mtError, [mbOK], 0);
+        Exit;
+//        StartTime := Now;
+      end;
+      Sleep(100);
+    end;
+    StartTime := TFile.GetLastWriteTime(MeshFileName);
+    while True do
+    begin
+      Sleep(100);
+      if TFile.GetLastWriteTime(MeshFileName) = StartTime then
+      begin
+        break;
+      end
+      else
+      begin
+        StartTime := TFile.GetLastWriteTime(MeshFileName);
+      end;
+    end;
+  finally
+    AProcessComp.Free;
+    SetCurrentDir(CurrentDir);
+  end;
+
+  Assert(FileExists(MeshFileName));
+  ImportSutraMeshFromFile(MeshFileName, Exaggeration, False);
+
+  DeleteFile(OptionFileName);
+  DeleteFile(MeshFileName);
+
+  Mesh := frmGoPhast.PhastModel.Mesh;
+  case RenumberingAlgorithm of
+    raNone: ;
+    CuthillMcKee:
+      begin
+        CuthillMcKeeRenumbering.RenumberMesh(Mesh.Mesh2D);
+        Mesh.Mesh2D.Nodes.SortByNodeNumber;
+        if Mesh.MeshType = mt3D then
+        begin
+          Mesh.SimpleRenumber;
+        end;
+      end;
+    raSloanRandolph:
+      begin
+        MeshRenumbering.RenumberMesh(Mesh.Mesh2D);
+        Mesh.Mesh2D.Nodes.SortByNodeNumber;
+        if Mesh.MeshType = mt3D then
+        begin
+          Mesh.SimpleRenumber;
+        end;
+      end
+    else Assert(False);
+  end;
+{$IFDEF DEBUG}
+//  OutputDebugString('SAMPLING OFF');
+{$ENDIF}
+end;
+
 procedure TQuadMeshCreator.GenerateSegments;
 var
   Index: Integer;
@@ -8222,6 +8569,18 @@ begin
     end;
   finally
     ClosedBoundaries.Free;
+  end;
+
+  for BoundaryIndex := 0 to FBoundaries.Count - 1 do
+  begin
+    ABoundary := FBoundaries[BoundaryIndex];
+    for NodeIndex := ABoundary.FNodes.Count - 1 downto 1 do
+    begin
+      if ABoundary.FNodes[NodeIndex] = ABoundary.FNodes[NodeIndex-1] then
+      begin
+        ABoundary.FNodes.Delete(NodeIndex);
+      end;
+    end;
   end;
 
 end;
@@ -9624,6 +9983,7 @@ begin
   FNodes.OwnsObjects := False;
 
   case RenumberingAlgorithm of
+    raNone: ; // do nothing.
     CuthillMcKee: CuthillMcKeeRenumbering.RenumberMesh(self);
     raSloanRandolph: MeshRenumbering.RenumberMesh(self);
     else Assert(False);
@@ -12585,6 +12945,13 @@ begin
   begin
     Result := -(Ord(Right.Direction) - Ord(Left.Direction));
   end;
+end;
+
+{ TBoundaryAreaComparer }
+
+function TBoundaryAreaComparer.Compare(const Left, Right: TBoundary): Integer;
+begin
+  Result := Sign(Right.Area - Left.Area);
 end;
 
 initialization

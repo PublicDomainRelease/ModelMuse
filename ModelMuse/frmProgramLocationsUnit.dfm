@@ -4,8 +4,8 @@ inherited frmProgramLocations: TfrmProgramLocations
   Caption = 'MODFLOW Program Locations'
   ClientHeight = 586
   ClientWidth = 623
-  ExplicitWidth = 641
-  ExplicitHeight = 631
+  ExplicitWidth = 639
+  ExplicitHeight = 624
   PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
@@ -15,7 +15,6 @@ inherited frmProgramLocations: TfrmProgramLocations
     Height = 41
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 471
     DesignSize = (
       623
       41)
@@ -59,7 +58,6 @@ inherited frmProgramLocations: TfrmProgramLocations
     Height = 545
     Align = alClient
     TabOrder = 0
-    ExplicitHeight = 471
     object jvrltModflow2005: TJvRollOut
       Left = 1
       Top = 1
@@ -450,8 +448,6 @@ inherited frmProgramLocations: TfrmProgramLocations
       Caption = 'MF2005-FMP2'
       ImageOptions.Images = ilShowHide
       TabOrder = 11
-      ExplicitLeft = 2
-      ExplicitTop = 431
       DesignSize = (
         621
         82)
@@ -527,7 +523,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     Left = 448
     Top = 48
     Bitmap = {
-      494C01010200280068000C000C00FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010200050008000C000C00FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000300000000C00000001002000000000000009
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

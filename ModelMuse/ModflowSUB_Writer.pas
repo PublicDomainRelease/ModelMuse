@@ -118,15 +118,15 @@ resourcestring
   StrModelMuseDoesNotC = 'ModelMuse does not currently support the use of th' +
   'e Subsidence package in MODFLOW-LGR.';
   StrWritingSUBPackage = 'Writing SUB Package input.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSet3 = '  Writing Data Set 3.';
-  StrWritingDataSet4 = '  Writing Data Set 4.';
-  StrWritingDataSets5to8 = '  Writing Data Sets 5 to 8.';
-  StrWritingDataSet9 = '  Writing Data Set 9.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSet3 = '  Writing Data Set 3.';
+//  StrWritingDataSet4 = '  Writing Data Set 4.';
+//  StrWritingDataSets5to8 = '  Writing Data Sets 5 to 8.';
+//  StrWritingDataSet9 = '  Writing Data Set 9.';
   StrWritingDataSets10to14 = '  Writing Data Sets 10 to 14.';
-  StrWritingDataSet15 = '  Writing Data Set 15.';
-  StrWritingDataSet16 = '  Writing Data Set 16.';
+//  StrWritingDataSet15 = '  Writing Data Set 15.';
+//  StrWritingDataSet16 = '  Writing Data Set 16.';
 
 function TMaterialZone.ID: Integer;
 var
@@ -824,7 +824,7 @@ begin
   for Index := 0 to FRNB_List.Count - 1 do
   begin
     DataArray := FRNB_List[Index];
-    WriteArray(DataArray, 0, 'RNB');
+    WriteArray(DataArray, 0, 'RNB', StrNoValueAssigned);
     Model.DataArrayManager.AddDataSetToCache(DataArray);
   end;
   Model.DataArrayManager.CacheDataArrays;
@@ -860,24 +860,24 @@ begin
     if FSubPackage.ReadDelayRestartFileName = '' then
     begin
       DataArray := FDstart_List[Index];
-      WriteArray(DataArray, 0, 'Dstart');
+      WriteArray(DataArray, 0, 'Dstart', StrNoValueAssigned);
       Model.DataArrayManager.AddDataSetToCache(DataArray);
 
       DataArray := FDHC_List[Index];
-      WriteArray(DataArray, 0, 'DHC');
+      WriteArray(DataArray, 0, 'DHC', StrNoValueAssigned);
       Model.DataArrayManager.AddDataSetToCache(DataArray);
     end;
 
     DataArray := FDCOM_List[Index];
-    WriteArray(DataArray, 0, 'DCOM');
+    WriteArray(DataArray, 0, 'DCOM', StrNoValueAssigned);
     Model.DataArrayManager.AddDataSetToCache(DataArray);
     
     DataArray := FDZ_List[Index];
-    WriteArray(DataArray, 0, 'DZ');
+    WriteArray(DataArray, 0, 'DZ', StrNoValueAssigned);
     Model.DataArrayManager.AddDataSetToCache(DataArray);
     
     DataArray := FNZ_List[Index];
-    WriteArray(DataArray, 0, 'NZ');
+    WriteArray(DataArray, 0, 'NZ', StrNoValueAssigned);
     // This one isn't cached because it is temporary
   end;
   Model.DataArrayManager.CacheDataArrays;
@@ -891,16 +891,16 @@ begin
   for Index := 0 to FHC_List.Count - 1 do
   begin
     DataArray := FHC_List[Index];
-    WriteArray(DataArray, 0, 'HC');
+    WriteArray(DataArray, 0, 'HC', StrNoValueAssigned);
     Model.DataArrayManager.AddDataSetToCache(DataArray);
     DataArray := FSfe_List[Index];
-    WriteArray(DataArray, 0, 'Sfe');
+    WriteArray(DataArray, 0, 'Sfe', StrNoValueAssigned);
     Model.DataArrayManager.AddDataSetToCache(DataArray);
     DataArray := FSfv_List[Index];
-    WriteArray(DataArray, 0, 'Sfv');
+    WriteArray(DataArray, 0, 'Sfv', StrNoValueAssigned);
     Model.DataArrayManager.AddDataSetToCache(DataArray);
     DataArray := FCom_List[Index];
-    WriteArray(DataArray, 0, 'Com');
+    WriteArray(DataArray, 0, 'Com', StrNoValueAssigned);
     Model.DataArrayManager.AddDataSetToCache(DataArray);
   end;
   Model.DataArrayManager.CacheDataArrays;

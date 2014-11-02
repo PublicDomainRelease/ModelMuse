@@ -185,7 +185,7 @@ uses
 resourcestring
   StrWritingDataSet2a = '  Writing Data Set 2a.';
   StrWritingDataSet2c = '  Writing Data Set 2c.';
-  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
+//  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
   StrWritingDataSets = '  Writing Data Sets 21 to 36.';
   StrSoilS = 'Soil: %s';
   StrCapillaryFringe = 'Capillary Fringe';
@@ -3237,7 +3237,7 @@ begin
   try
     FWriteLocation := wlOpenClose;
     FOpenCloseFileName := ExtractFileName(FOpenCloseFileName);
-    WriteArray(DataArray, 0, 'Data set 8: SID');
+    WriteArray(DataArray, 0, 'Data set 8: SID', StrNoValueAssigned);
   finally
     FreeAndNil(FOpenCloseFileStream);
     FWriteLocation := wlMain;
@@ -3513,7 +3513,7 @@ begin
   try
     FWriteLocation := wlOpenClose;
     FOpenCloseFileName := ExtractFileName(FOpenCloseFileName);
-    WriteArray(DataArray, 0, 'Data set 6: FID');
+    WriteArray(DataArray, 0, 'Data set 6: FID', StrNoValueAssigned);
   finally
     FreeAndNil(FOpenCloseFileStream);
     FWriteLocation := wlMain;
@@ -3600,7 +3600,7 @@ begin
   try
     FWriteLocation := wlOpenClose;
     FOpenCloseFileName := ExtractFileName(FOpenCloseFileName);
-    WriteArray(DataArray, 0, 'Data set 5: GSURF');
+    WriteArray(DataArray, 0, 'Data set 5: GSURF', StrNoValueAssigned);
   finally
     FreeAndNil(FOpenCloseFileStream);
     FWriteLocation := wlMain;

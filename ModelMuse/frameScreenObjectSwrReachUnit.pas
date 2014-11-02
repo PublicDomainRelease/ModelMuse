@@ -52,7 +52,6 @@ type
     FClearedConnections: boolean;
     procedure FillListOfScreenObjects(ListOfScreenObjects: TList;
       List: TScreenObjectEditCollection);
-    procedure ClearGrid(Grid: TRbwDataGrid4);
     { Private declarations }
   public
     procedure InitializeFrame;
@@ -97,20 +96,6 @@ begin
   inherited;
   cbMultilayer.AllowGrayed := False;
 
-end;
-
-procedure TframeScreenObjectSwrReach.ClearGrid(Grid: TRbwDataGrid4);
-var
-  RowIndex: Integer;
-  ColIndex: Integer;
-begin
-  for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
-  begin
-    for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
-    begin
-     Grid.Cells[ColIndex, RowIndex] := '';
-    end;
-  end;
 end;
 
 procedure TframeScreenObjectSwrReach.FillListOfScreenObjects(

@@ -73,8 +73,8 @@ resourcestring
   'kage is invalid for the following objects.  The cell method has been used' +
   ' instead.';
   StrWritingHYDMODPacka = 'Writing HYDMOD Package input.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
 
 { TModflowHydmodWriter }
 

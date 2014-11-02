@@ -93,9 +93,9 @@ uses OrderedCollectionUnit, ModflowUnitNumbers, frmProgressUnit, Forms,
 
 resourcestring
   StrWritingSPackageI = 'Writing %s Package input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSets2and3 = '  Writing Data Sets 2 and 3.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSets2and3 = '  Writing Data Sets 2 and 3.';
 
 { TCustomMultZoneWriter }
 
@@ -218,7 +218,7 @@ begin
           end;
           WriteArray(DataArray, ArrayIndex, ArrayType + ' array for '
             + Param.ParameterName + ' in '
-            + Model.ModflowLayerBottomDescription(ArrayIndex));
+            + Model.ModflowLayerBottomDescription(ArrayIndex), StrNoValueAssigned);
         end;
       end;
       Model.DataArrayManager.CacheDataArrays;
@@ -246,7 +246,7 @@ begin
 
           // Data set 3
           Description := UsedParam.Description;
-          WriteArray(DataArray, 0, Description);
+          WriteArray(DataArray, 0, Description, StrNoValueAssigned);
           Model.DataArrayManager.CacheDataArrays;
           DataArray.CacheData;
         end;

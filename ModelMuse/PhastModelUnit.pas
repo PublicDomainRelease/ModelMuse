@@ -403,6 +403,17 @@ const
   StrSWR_BoundaryType = 'SWR Boundary Type';
   StrSWR_GeometryNumber = 'SWR Geometry Number';
 
+  StrMNW1DesiredPumping = 'MNW1 Desired Pumping Rate';
+  StrMNW1WaterQuality = 'MNW1 Water Quality';
+  StrMNW1WellRadius = 'MNW1 Well Radius';
+  StrMNW1Conductance = 'MNW1 Conductance';
+  StrMNW1Skin = 'MNW1 Skin';
+  StrMNW1LimitingWater = 'MNW1 Limiting Water Level';
+  StrMNW1ReferenceEleva = 'MNW1 Reference Elevation';
+  StrMNW1WaterQualityG = 'MNW1 Water Quality Group';
+  StrMNW1NonlinearLoss = 'MNW1 Nonlinear Loss Coefficient';
+  StrMNW1MinimumPumping = 'MNW1 Minimum Pumping Rate';
+  StrMNW1ReactivationPu = 'MNW1 Reactivation Pumping Rate';
 
 const
   StrMT3DMS = 'MT3DMS';
@@ -672,6 +683,7 @@ type
     FModflowLgr2Location: string;
     FModflowFmpLocation: string;
     FModflowCfpLocation: string;
+    FGmshLocation: string;
     function GetTextEditorLocation: string;
     procedure SetModflowLocation(const Value: string);
     function RemoveQuotes(const Value: string): string;
@@ -688,6 +700,7 @@ type
     procedure SetModflowLgr2Location(const Value: string);
     procedure SetModflowFmpLocation(const Value: string);
     procedure SetModflowCfpLocation(const Value: string);
+    procedure SetGmshLocation(const Value: string);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create;
@@ -723,6 +736,7 @@ type
       write SetSutra22Location;
     property ModflowCfpLocation: string read FModflowCfpLocation
       write SetModflowCfpLocation;
+    property GmshLocation: string read FGmshLocation write SetGmshLocation;
   end;
 
   {
@@ -1781,6 +1795,7 @@ that affects the model output should also have a comment. }
     FHufKzNotifier: TObserver;
     FHufSsNotifier: TObserver;
     FHufSyNotifier: TObserver;
+//    FMeshFileName: string;
 
     function GetSomeSegmentsUpToDate: boolean; virtual; abstract;
     procedure SetSomeSegmentsUpToDate(const Value: boolean); virtual; abstract;
@@ -2083,10 +2098,12 @@ that affects the model output should also have a comment. }
     procedure UpdateSwrReachNumber(Sender: TObject);
     function GetModelInputFiles: TStrings;
     function GetFilesToArchive: TStrings;
+//    procedure ImportFromGmshOnTerminate(Sender: TObject; ExitCode: DWORD);
   protected
     function GetParentModel: TCustomModel; virtual;
     procedure GenerateIrregularMesh(var ErrorMessage: string);
     procedure GenerateFishNetMesh(var ErrorMessage: string); virtual;
+    procedure GenerateMeshUsingGmsh(var ErrorMessage: string);
   var
     LakWriter: TObject;
     SfrWriter: TObject;
@@ -2195,6 +2212,8 @@ that affects the model output should also have a comment. }
       virtual; abstract;
     procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection);
       virtual; abstract;
+    function GetContourLabelSpacing: Integer; virtual; abstract;
+    procedure SetContourLabelSpacing(const Value: Integer);virtual; abstract;
   public
     property ParentModel: TCustomModel read GetParentModel;
     procedure DrawSfrStreamLinkages(const BitMap: TBitmap32;
@@ -2556,6 +2575,19 @@ that affects the model output should also have a comment. }
     procedure InvalidateMfSfrDownstreamUnsatKz(Sender: TObject);
     procedure InvalidateMfRchLayer(Sender: TObject);
     procedure InvalidateMfConduitRecharge(Sender: TObject);
+
+    procedure InvalidateMnw1DesiredPumpingRate(Sender: TObject);
+    procedure InvalidateMnw1WaterQuality(Sender: TObject);
+    procedure InvalidateMnw1WellRadius(Sender: TObject);
+    procedure InvalidateMnw1Conductance(Sender: TObject);
+    procedure InvalidateMnw1SkinFactor(Sender: TObject);
+    procedure InvalidateMnw1LimitingWaterLevel(Sender: TObject);
+    procedure InvalidateMnw1ReferenceElevation(Sender: TObject);
+    procedure InvalidateMnw1WaterQualityGroup(Sender: TObject);
+    procedure InvalidateMnw1NonLinearLossCoefficient(Sender: TObject);
+    procedure InvalidateMnw1MinimumPumpingRate(Sender: TObject);
+    procedure InvalidateMnw1ReactivationPumpingRate(Sender: TObject);
+
     function GetScreenObjectByName(AName: string): TScreenObject; virtual; abstract;
     // @name sets the event handlers for the discharge routing array in
     // the UZF package.
@@ -2878,6 +2910,8 @@ that affects the model output should also have a comment. }
       write SetSwrStructures;
     property SwrObservations: TSwrObsCollection read FSwrObservations
       write SetSwrObservations;
+    property ContourLabelSpacing: Integer read GetContourLabelSpacing
+      write SetContourLabelSpacing default 100;
   end;
 
   TMapping = record
@@ -3111,6 +3145,7 @@ that affects the model output should also have a comment. }
     FFmpSoils: TSoilCollection;
     FFmpClimate: TClimateCollection;
     FFmpAllotment: TAllotmentCollection;
+    FContourLabelSpacing: integer;
 //    FSutraOutputControl: TSutraOutputControl;
     // See @link(Exaggeration).
     function GetExaggeration: double;
@@ -3379,6 +3414,8 @@ that affects the model output should also have a comment. }
     procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection); override;
     procedure SetModelSelection(const Value: TModelSelection); override;
     procedure GenerateFishNetMesh(var ErrorMessage: string); override;
+    function GetContourLabelSpacing: Integer; override;
+    procedure SetContourLabelSpacing(const Value: Integer); override;
   public
     procedure RefreshGlobalVariables(CompilerList: TList);
     procedure CreateGlobalVariables;
@@ -3804,6 +3841,8 @@ that affects the model output should also have a comment. }
     function LakIsSelected: Boolean;
     function LpfIsSelected: Boolean;
     function Mnw2IsSelected: Boolean;
+    function Mnw1IsSelected: Boolean;
+    function Mnw1LossTypes: TMnw1LossTypes;
     function MODPATHIsSelected: Boolean;
     procedure ModpathHeadWarning;
     function Mt3dmsIsSelected: Boolean;
@@ -4220,6 +4259,8 @@ that affects the model output should also have a comment. }
     procedure SetStrStreamLinkPlot(const Value: TSfrStreamLinkPlot); override;
     function GetSwrReachConnectionsPlot: TSwrReachConnectionsPlot; override;
     procedure SetSwrReachConnectionsPlot(const Value: TSwrReachConnectionsPlot); override;
+    function GetContourLabelSpacing: Integer; override;
+    procedure SetContourLabelSpacing(const Value: Integer); override;
   public
     property CanUpdateGrid: Boolean read FCanUpdateGrid write SetCanUpdateGrid;
     function LayerGroupUsed(LayerGroup: TLayerGroup): boolean; override;
@@ -6640,10 +6681,76 @@ const
   //       Bug fix: Output files from MODPATH version 5 are now archived.
   //     '3.3.0.0' Enhancement: The Global variables dialog box has been
   //         converted to a non-modal dialog box.
+  //     '3.3.0.1' Bug fix: It is now possible to paste data from the clipboard
+  //         into a table in the "Import Gridded Data" dialog box when the
+  //         data set into which the data is imported is a boolean data set.
+  //       Bug fix: A corrupted name for MODFLOW or another model no longer
+  //          prevents the MODFLOW Program Locations dialog  box from being
+  //          opened.
+  //     '3.3.0.2' Bug fix: (Not in released version). Fixed bug in setting
+  //         formulas for objects that define SFR streams and MNW2 wells.
+  //     '3.3.0.3' Bug fix: When the user imports a mesh, the mesh may have
+  //         errors in it such as nodes that are not part of any element or
+  //         elements whose nodes are in a clockwise rather than
+  //         counterclockwise orientation. ModelMuse now fixes such errors.
+  //       Bug fix: ModelMuse now displays an error message instead of
+  //         generating a bug report when attempting to import a raster
+  //         file before generating a grid or mesh.
+  //     '3.3.0.4' Bug fix: Fixed bug that could cause the SUTRA mesh to be
+  //         corrupted if it was renumbered.
+  //       Bug fix: Fixed bug that could cause an access violation when
+  //         clicking on the graph of head observation results.
+  //     '3.3.0.5' Bug fix: fixed bug that could cause an assertion failure
+  //         when editing an object with corrupted or missing imported values.
+  //     '3.3.0.6' Bug fix: Fixed bug when attempting to import a model from a
+  //         directory in which the user does not have write privileges.
+  //     '3.3.0.7' Bug fix: Fixed bug that would cause an access violation in
+  //         the Global Variables dialog box if it wasn't closed after
+  //         clicking the Apply button.
+  //     '3.3.0.8' Bug fix: Fixed bug that could cause and assertion failure
+  //         in models with a stress period with a length of zero.
+  //       Bug fix: During grid generation, if the number of cells is too large,
+  //         an error message will be displayed and grid generation will be
+  //         canceled.
+  //       Enhancement: During grid generation, if the number of cells in
+  //         the new grid will be larger than 1,000,000, a warning message
+  //         will be displayed and the user will be give an opportunity to
+  //         cancel grid generation.
+  //     '3.3.0.9' Enhancement: The user can now specify the spacing between
+  //         contours labels.
+  //       Enhancement: The user can now control the spacing of contour labels.
+  //       Enhancement: In the Export Image dialog box, the font used for the
+  //         scale can be changed.
+  //       Bug fix: In the Export Image dialog box, contour labels are now
+  //         drawn over the entire image.
+  //     '3.3.0.10' Enhancement: Added support for generating meshes for SUTRA
+  //         using Gmsh.
+  //     '3.3.0.11' Bug fix: Fixed bug importing the the reach length in the
+  //         SFR package in models in which some reaches in segments with
+  //         multiple reaches were on a different layer from other reaches.
+  //       Bug fix: Fixed a bug that could cause access violations when
+  //         exporting the SFR input file.
+  //       Bug fix: Fixed a bug that could cause data set values to be
+  //         calculated incorrectly  or a variety of other errors due to
+  //         mishandling of temporary files.
+  //       Enhancement: ModelMuse now warns about linkages between SFR
+  //         segments that are separated by more than one row or column.
+  //       Bug fix: Fixed bug that could cause program locations to incorrectly
+  //         revert to their default values.
+  //    '3.4.0.0' Enhancement: ModelMuse will now warn the user if no values
+  //         are assigned for some types of data that vary with time.
+  //       Bug fix: Fixed bugs that could cause access violation in the
+  //         Object Properties dialog box when editing streams in the SFR
+  //         package in MODFLOW.
+  //      Enhancement: Support for the MNW1 package added.
+  //      Bug fix: If values are entered in the time step length calculator
+  //        that result in a math error, the time step length is now set to
+  //        zero and an error message is displayed instead of a bug report
+  //        being generated.
 
 const
   // version number of ModelMuse.
-  IModelVersion = '3.3.0.0';
+  IModelVersion = '3.4.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -6740,7 +6847,7 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
   SutraBoundaryWriterUnit, QuadtreeClass, frmMeshInformationUnit,
   MeshRenumberingTypes, ModflowStrWriterUnit, ModflowFhbWriterUnit,
   ModflowFmpWriterUnit, ModflowCfpWriterUnit, ModflowSwiWriterUnit,
-  ModflowSwrWriterUnit, SolidGeom;
+  ModflowSwrWriterUnit, SolidGeom, ModflowMnw1Writer, ImportQuadMesh;
 
 resourcestring
   StrMpathDefaultPath = 'C:\WRDAPP\Mpath.5_0\setup\Mpathr5_0.exe';
@@ -6878,7 +6985,11 @@ resourcestring
   StrSwrReachGroup = 'SWR_Reach_Group_Number';
   StrSwrRoutingType = 'SWR_Routing_Type';
   StrSwrReachLength = 'SWR_Reach_Length';
-
+  StrDefaultGmshPath = 'C:\Gmsh\gmsh-2.8.6-svn-Windows\gmsh.exe';
+  StrGmsh = 'Gmsh';
+  StrInvalidStressPerio = 'Invalid stress period length';
+  StrInModelMuseAllStr = 'In ModelMuse all stress periods must have a length' +
+  ' greater than or equal to zero.';
 
 const
   StatFlagStrings : array[Low(TStatFlag)..High(TStatFlag)] of string
@@ -7531,7 +7642,7 @@ var
 begin
   inherited;
 //  FUnitNumbers := TUnitNumbers.Create(self);
-
+  FContourLabelSpacing := 100;
 
   FGlobalVariables := TGlobalVariables.Create(self);
   FFishnetMeshGenerator := TFishnetMeshGenerator.Create(self);
@@ -8718,7 +8829,8 @@ end;
 
 function TCustomModel.SwrIsSelected: Boolean;
 begin
-  result := ModflowPackages.SwrPackage.IsSelected;
+  result := (ModelSelection in ModflowSelection)
+    and ModflowPackages.SwrPackage.IsSelected;
 end;
 
 function TCustomModel.SwrSelected(Sender: TObject): Boolean;
@@ -9455,7 +9567,8 @@ begin
     end;
 
     ActiveDataSet := FDataArrayManager.GetDataSetByName(rsActive);
-    if (ActiveDataSet <> nil) and (CrossSection <> nil) then
+    if (ActiveDataSet <> nil) and (CrossSection <> nil)
+      and not (csDestroying in ComponentState)  then
     begin
       ActiveDataSet.TalksTo(CrossSection);
     end;
@@ -11014,6 +11127,11 @@ end;
 function TPhastModel.GetContourFont: TFont;
 begin
   result := FContourFont
+end;
+
+function TPhastModel.GetContourLabelSpacing: Integer;
+begin
+  result := FContourLabelSpacing;
 end;
 
 function TPhastModel.GetCurrentScreenObject(VD: TViewDirection): TScreenObject;
@@ -12590,6 +12708,52 @@ begin
   end;
 end;
 
+function TPhastModel.Mnw1IsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.Mnw1Package.IsSelected;
+  if not result and frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.Mnw1Package.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.Mnw1LossTypes: TMnw1LossTypes;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := [];
+  if ModflowPackages.Mnw1Package.IsSelected then
+  begin
+    Include(result, ModflowPackages.Mnw1Package.LossType);
+  end;
+  if not LgrUsed then
+  begin
+    Exit;
+  end;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    if ChildModel <> nil then
+    begin
+      if ChildModel.ModflowPackages.Mnw1Package.IsSelected then
+      begin
+        Include(result, ChildModel.ModflowPackages.Mnw1Package.LossType);
+      end;
+    end;
+  end;
+end;
+
 function TPhastModel.MaxChildLayersPerLayer(LayerIndex: Integer): integer;
 var
   Range: TGridRange;
@@ -14025,30 +14189,38 @@ begin
       end;
     end;
   end;
-  if FileVersionEqualOrEarlier('2.18.1.0')
-    and
-    (FormulaManager.FunctionUsed(ObjectCurrentSegmentAngle)
-    or FormulaManager.FunctionUsed(ObjectDegrees)
-    or FormulaManager.FunctionUsed(ObjectDegreesLimited)
-    or FormulaManager.FunctionUsed(ObjectCurSegLength)
-    or FormulaManager.FunctionUsed(ObjectCurrentVertexX)
-    or FormulaManager.FunctionUsed(ObjectCurrentVertexY)
-    or FormulaManager.FunctionUsed(ObjectCurrentVertexZ)
-    ) then
+
+  if FileVersionEqualOrEarlier('3.3.0.10') then
   begin
+    // Changed how intersected objects are used so that if the length
+    // of intersection is small enough, it is treated as not intersecting.
     FDataArrayManager.InvalidateAllDataSets;
   end;
 
-  if (Grid <> nil) and (Grid.GridAngle <> 0)
-    and FileVersionEqualOrEarlier('2.6.0.3')
-    and (FormulaManager.FunctionUsed(StrVertexInterpolate)
-    or FormulaManager.FunctionUsed(StrNodeInterpolate)) then
-  begin
-    // The VertexInterpolate function gave incorrect results in
-    // versions '2.6.0.3' and earlier if the grid was rotated.
-    // NodeInterpolate is a synonym for VertexInterpolate.
-    FDataArrayManager.InvalidateAllDataSets;
-  end;
+//  if FileVersionEqualOrEarlier('2.18.1.0')
+//    and
+//    (FormulaManager.FunctionUsed(ObjectCurrentSegmentAngle)
+//    or FormulaManager.FunctionUsed(ObjectDegrees)
+//    or FormulaManager.FunctionUsed(ObjectDegreesLimited)
+//    or FormulaManager.FunctionUsed(ObjectCurSegLength)
+//    or FormulaManager.FunctionUsed(ObjectCurrentVertexX)
+//    or FormulaManager.FunctionUsed(ObjectCurrentVertexY)
+//    or FormulaManager.FunctionUsed(ObjectCurrentVertexZ)
+//    ) then
+//  begin
+//    FDataArrayManager.InvalidateAllDataSets;
+//  end;
+
+//  if (Grid <> nil) and (Grid.GridAngle <> 0)
+//    and FileVersionEqualOrEarlier('2.6.0.3')
+//    and (FormulaManager.FunctionUsed(StrVertexInterpolate)
+//    or FormulaManager.FunctionUsed(StrNodeInterpolate)) then
+//  begin
+//    // The VertexInterpolate function gave incorrect results in
+//    // versions '2.6.0.3' and earlier if the grid was rotated.
+//    // NodeInterpolate is a synonym for VertexInterpolate.
+//    FDataArrayManager.InvalidateAllDataSets;
+//  end;
   if FileVersionEqualOrEarlier('2.6.0.8') then
   begin
     // Modpath zone incorrectly limited to values >= 0 in
@@ -14060,22 +14232,25 @@ begin
       ModpathZone.Invalidate;
     end;
   end;
-  if (Grid <> nil) and (Grid.GridAngle <> 0)
-    and FileVersionEqualOrEarlier('2.7.0.9')
-    and FormulaManager.FunctionUsed(StrInterpolatedVertexValues) then
-  begin
-    // The InterpolatedVertexValue function gave incorrect results in
-    // versions '2.7.0.9' and earlier if the grid was rotated.
-    FDataArrayManager.InvalidateAllDataSets;
-  end;
-  if FileVersionEqualOrEarlier('2.7.0.13')
-    and (FormulaManager.FunctionUsed(StrHufKx)
-    or FormulaManager.FunctionUsed(StrHufKy)
-    or FormulaManager.FunctionUsed(StrHufKz)
-    or FormulaManager.FunctionUsed(StrHufSytp)) then
-  begin
-    FDataArrayManager.InvalidateAllDataSets;
-  end;
+
+//  if (Grid <> nil) and (Grid.GridAngle <> 0)
+//    and FileVersionEqualOrEarlier('2.7.0.9')
+//    and FormulaManager.FunctionUsed(StrInterpolatedVertexValues) then
+//  begin
+//    // The InterpolatedVertexValue function gave incorrect results in
+//    // versions '2.7.0.9' and earlier if the grid was rotated.
+//    FDataArrayManager.InvalidateAllDataSets;
+//  end;
+
+//  if FileVersionEqualOrEarlier('2.7.0.13')
+//    and (FormulaManager.FunctionUsed(StrHufKx)
+//    or FormulaManager.FunctionUsed(StrHufKy)
+//    or FormulaManager.FunctionUsed(StrHufKz)
+//    or FormulaManager.FunctionUsed(StrHufSytp)) then
+//  begin
+//    FDataArrayManager.InvalidateAllDataSets;
+//  end;
+
 //  if FileVersionEqualOrEarlier('2.8.0.16')
 //    and ModflowPackages.RchPackage.IsSelected then
 //  begin
@@ -14086,6 +14261,7 @@ begin
 //  begin
 //    ModflowPackages.UzfPackage.AssignmentMethod := umAssign;
 //  end;
+
   if FileVersionEqualOrEarlier('2.8.0.18') then
   begin
     LakeIDArray := DataArrayManager.GetDataSetByName(rsLakeID);
@@ -14103,18 +14279,19 @@ begin
       LakeIDArray.Invalidate;
     end;
   end;
+
   // angles
-  if (Grid <> nil) and (Grid.GridAngle <> 0)
-    and FileVersionEqualOrEarlier('2.9.1.9')
-    and (FormulaManager.FunctionUsed(ObjectCurrentSegmentAngle)
-    or FormulaManager.FunctionUsed(ObjectDegrees)
-    or FormulaManager.FunctionUsed(ObjectDegreesLimited)) then
-  begin
-    // The VertexInterpolate function gave incorrect results in
-    // versions '2.6.0.3' and earlier if the grid was rotated.
-    // NodeInterpolate is a synonym for VertexInterpolate.
-    FDataArrayManager.InvalidateAllDataSets;
-  end;
+//  if (Grid <> nil) and (Grid.GridAngle <> 0)
+//    and FileVersionEqualOrEarlier('2.9.1.9')
+//    and (FormulaManager.FunctionUsed(ObjectCurrentSegmentAngle)
+//    or FormulaManager.FunctionUsed(ObjectDegrees)
+//    or FormulaManager.FunctionUsed(ObjectDegreesLimited)) then
+//  begin
+//    // The VertexInterpolate function gave incorrect results in
+//    // versions '2.6.0.3' and earlier if the grid was rotated.
+//    // NodeInterpolate is a synonym for VertexInterpolate.
+//    FDataArrayManager.InvalidateAllDataSets;
+//  end;
 
   if FileVersionEqualOrEarlier('2.11.0.5')
     and not ModflowPackages.NwtPackage.IsSelected then
@@ -14144,6 +14321,7 @@ begin
       end;
     end;
   end;
+
   if FileVersionEqualOrEarlier('2.16.1.1')
     and ModflowPackages.ModPath.IsSelected then
   begin
@@ -17838,6 +18016,61 @@ begin
   ModflowPackages.WelPackage.MfWellPumpage.Invalidate;
 end;
 
+procedure TCustomModel.InvalidateMnw1Conductance(Sender: TObject);
+begin
+  ModflowPackages.Mnw1Package.MfConductance.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMnw1DesiredPumpingRate(Sender: TObject);
+begin
+  ModflowPackages.Mnw1Package.MfDesiredPumpingRate.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMnw1LimitingWaterLevel(Sender: TObject);
+begin
+  ModflowPackages.Mnw1Package.MfLimitingWaterLevel.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMnw1MinimumPumpingRate(Sender: TObject);
+begin
+  ModflowPackages.Mnw1Package.MfMinimumPumpingRate.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMnw1NonLinearLossCoefficient(Sender: TObject);
+begin
+  ModflowPackages.Mnw1Package.MfNonLinearLossCoefficient.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMnw1ReactivationPumpingRate(Sender: TObject);
+begin
+  ModflowPackages.Mnw1Package.MfReactivationPumpingRate.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMnw1ReferenceElevation(Sender: TObject);
+begin
+  ModflowPackages.Mnw1Package.MfReferenceElevation.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMnw1SkinFactor(Sender: TObject);
+begin
+  ModflowPackages.Mnw1Package.MfSkinFactor.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMnw1WaterQuality(Sender: TObject);
+begin
+  ModflowPackages.Mnw1Package.MfWaterQuality.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMnw1WaterQualityGroup(Sender: TObject);
+begin
+  ModflowPackages.Mnw1Package.MfWaterQualityGroup.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMnw1WellRadius(Sender: TObject);
+begin
+  ModflowPackages.Mnw1Package.MfWellRadius.Invalidate;
+end;
+
 procedure TCustomModel.InvalidateMt3dmsChemSources(Sender: TObject);
 begin
   ModflowPackages.Mt3dmsSourceSink.Concentrations.Invalidate;
@@ -18575,6 +18808,15 @@ begin
   FContourFont.Assign(Value);
 end;
 
+procedure TPhastModel.SetContourLabelSpacing(const Value: Integer);
+begin
+  if FContourLabelSpacing <> Value then
+  begin
+    FContourLabelSpacing := Value;
+    Invalidate(self);
+  end;
+end;
+
 procedure TPhastModel.SetUnits(const Value: TUnits);
 begin
   FUnits.Assign(Value);
@@ -18794,6 +19036,10 @@ begin
   else if APackage = frmGoPhast.PhastModel.ModflowPackages.Mnw2Package then
   begin
     result := Mnw2IsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.Mnw1Package then
+  begin
+    result := Mnw1IsSelected;
   end
   else if APackage = frmGoPhast.PhastModel.ModflowPackages.BcfPackage then
   begin
@@ -20129,6 +20375,7 @@ begin
     Sutra22Location := SourceLocations.Sutra22Location;
     ModflowFmpLocation := SourceLocations.ModflowFmpLocation;
     ModflowCfpLocation := SourceLocations.ModflowCfpLocation;
+    GmshLocation := SourceLocations.GmshLocation;
   end
   else
   begin
@@ -20151,6 +20398,7 @@ begin
   Sutra22Location := KSutraDefaultPath;
   ModflowFmpLocation := strModflowFmpDefaultPath;
   ModflowCfpLocation := strModflowCfpDefaultPath;
+  GMshLocation := StrDefaultGmshPath;
   ADirectory := GetCurrentDir;
   try
     SetCurrentDir(ExtractFileDir(ParamStr(0)));
@@ -20246,11 +20494,19 @@ begin
   begin
     Mt3dmsLocation := strMt3dmsDefaultPath;
   end;
+
   Sutra22Location := IniFile.ReadString(StrProgramLocations, KSutra22,
     KSutraDefaultPath);
   if (Sutra22Location = '') and FileExists(KSutraDefaultPath) then
   begin
     Sutra22Location := KSutraDefaultPath;
+  end;
+
+  GmshLocation := IniFile.ReadString(StrProgramLocations, StrGmsh,
+    StrDefaultGmshPath);
+  if (GmshLocation = '') and FileExists(StrDefaultGmshPath) then
+  begin
+    GmshLocation := StrDefaultGmshPath;
   end;
 
   ADirectory := GetCurrentDir;
@@ -20303,6 +20559,11 @@ begin
   begin
     result := FTextEditorLocation
   end;
+end;
+
+procedure TProgramLocations.SetGmshLocation(const Value: string);
+begin
+  FGmshLocation := RemoveQuotes(Value);
 end;
 
 procedure TProgramLocations.SetModelMateLocation(const Value: string);
@@ -20394,6 +20655,7 @@ begin
   IniFile.WriteString(StrProgramLocations, KSutra22, Sutra22Location);
   IniFile.WriteString(StrProgramLocations, strModflowFmp, ModflowFmpLocation);
   IniFile.WriteString(StrProgramLocations, strModflowCFP, ModflowCfpLocation);
+  IniFile.WriteString(StrProgramLocations, StrGmsh, GmshLocation);
 end;
 
 { TDataSetClassification }
@@ -21749,6 +22011,386 @@ begin
   end;
 end;
 
+//procedure TCustomModel.ImportFromGmshOnTerminate(Sender: TObject; ExitCode: DWORD);
+//begin
+//  Assert(FileExists(FMeshFileName));
+//  ImportSutraMeshFromFile(FMeshFileName);
+//end;
+
+procedure TCustomModel.GenerateMeshUsingGmsh(var ErrorMessage: string);
+var
+  List: TList;
+  ScreenObjectIndex: integer;
+  ScreenObject: TScreenObject;
+  Area: double;
+  BiggestIndex: Integer;
+  ObjectArea: Real;
+  MeshCreator: TQuadMeshCreator;
+  SectionIndex: Integer;
+  NodeIndex: Integer;
+  ABoundary: TBoundary;
+  ANode: TNode;
+  FirstNode: TNode;
+  SutraNode: TSutraNode2D;
+//  AdjustIndex: Integer;
+  MeshNode: INode;
+  ElementIndex: Integer;
+  SutraElement: TSutraElement2D;
+  MeshElement: IElement;
+  StartIndex: Integer;
+  EndIndex: Integer;
+  Exag: Extended;
+  InvalidMesh: boolean;
+  OuterElementIndex: integer;
+  OuterElement: TSutraElement2D;
+  InnerElementIndex: integer;
+  InnerElement: TSutraElement2D;
+  InnerNodeIndex: integer;
+  NodeTree: TRbwQuadTree;
+  ALocation: TPoint2D;
+  Data: TPointerArray;
+  SearchX: double;
+  SearchY: double;
+  NodeList: TNodeList;
+  NodeScreenObjectsList: TList;
+  MaxX: double;
+  MinX: double;
+  MaxY: double;
+  MinY: double;
+  Epsilon: double;
+  CellSize: Real;
+  PointItem: TPointValuesItem;
+  SizePosition: Integer;
+  {$IFDEF DEBUG}
+//  StartTime: TDateTime;
+//  EndTime: TDateTime;
+  {$ENDIF}
+begin
+  if SutraMesh.MeshType = mtProfile then
+  begin
+    Exag := frmGoPhast.PhastModel.Exaggeration;
+  end
+  else
+  begin
+    Exag := 1;
+  end;
+  List := TList.Create;
+  try
+    for ScreenObjectIndex := 0 to ScreenObjectCount - 1 do
+    begin
+      ScreenObject := ScreenObjects[ScreenObjectIndex];
+      if ScreenObject.CellSizeUsed and (ScreenObject.ViewDirection = vdTop)
+        and not ScreenObject.Deleted then
+      begin
+        List.Add(ScreenObject);
+      end;
+    end;
+    if List.Count = 0 then
+    begin
+      ErrorMessage := StrNoObjects;
+      Exit;
+    end;
+    Area := 0;
+    BiggestIndex := -1;
+    for ScreenObjectIndex := 0 to List.Count - 1 do
+    begin
+      ScreenObject := List[ScreenObjectIndex];
+      ObjectArea := ScreenObject.ScreenObjectArea;
+      if ObjectArea > Area then
+      begin
+        Area := ObjectArea;
+        BiggestIndex := ScreenObjectIndex;
+      end;
+    end;
+    if BiggestIndex < 0 then
+    begin
+      ErrorMessage := StrNoPolygons;
+      Exit;
+    end;
+
+    if BiggestIndex > 0 then
+    begin
+      List.Exchange(0, BiggestIndex);
+    end;
+
+    MeshCreator := TQuadMeshCreator.Create;
+    try
+      InvalidMesh := False;
+      MeshCreator.NodeAdjustmentMethod := namGiuliani;
+      MeshCreator.RenumberingAlgorithm := SutraMesh.Mesh2D.MeshGenControls.RenumberingAlgorithm;
+
+      NodeTree := TRbwQuadTree.Create(nil);
+      NodeList := TNodeList.Create;
+      NodeScreenObjectsList := TList.Create;
+      try
+        if List.Count > 0 then
+        begin
+          ScreenObject := List[0];
+          MaxX := ScreenObject.MaxX;
+          MinX := ScreenObject.MinX;
+          MaxY := ScreenObject.MaxY;
+          MinY := ScreenObject.MinY;
+        end
+        else
+        begin
+          MaxX := 0;
+          MinX := 0;
+          MaxY := 0;
+          MinY := 0;
+        end;
+        for ScreenObjectIndex := 0 to List.Count - 1 do
+        begin
+          ScreenObject := List[ScreenObjectIndex];
+          MaxX := Max(MaxX, ScreenObject.MaxX);
+          MinX := Min(MinX, ScreenObject.MinX);
+          MaxY := Max(MaxY, ScreenObject.MaxY);
+          MinY := Min(MinY, ScreenObject.MinY);
+        end;
+        Epsilon := Sqrt(Sqr(MaxX-MinX) + Sqr(MaxY-MinY))/1e7;
+        for ScreenObjectIndex := 0 to List.Count - 1 do
+        begin
+          ScreenObject := List[ScreenObjectIndex];
+          for SectionIndex := 0 to ScreenObject.SectionCount - 1 do
+          begin
+            ABoundary := MeshCreator.AddBoundary(ScreenObject.CellSize);
+            FirstNode := nil;
+            StartIndex := ScreenObject.SectionStart[SectionIndex];
+            EndIndex := ScreenObject.SectionEnd[SectionIndex];
+            if ScreenObject.SectionClosed[SectionIndex] then
+            begin
+              Dec(EndIndex);
+            end;
+            for NodeIndex := StartIndex to EndIndex do
+            begin
+              ALocation := ScreenObject.Points[NodeIndex];
+              ANode := nil;
+              if NodeTree.Count > 0 then
+              begin
+                SearchX := ALocation.x;
+                SearchY := ALocation.y;
+                NodeTree.FindClosestPointsData(SearchX, SearchY, Data);
+                if (Abs(SearchX - ALocation.x)<Epsilon) and (Abs(SearchY - ALocation.y)<Epsilon) then
+                begin
+                  ANode := Data[0];
+//                  if ScreenObject.CellSize < ANode.DesiredSpacing then
+                  begin
+                    ANode.DesiredSpacing := ScreenObject.CellSize;
+                  end;
+                end;
+              end;
+
+              if ANode = nil then
+              begin
+                CellSize := ScreenObject.CellSize;
+                PointItem := ScreenObject.PointPositionValues.
+                  GetItemByPosition(NodeIndex);
+                if PointItem <> nil then
+                begin
+                  SizePosition := PointItem.IndexOfName(StrMeshElementSize);
+                  if SizePosition >= 0 then
+                  begin
+                    CellSize := (PointItem.Values.Items[SizePosition] as TPointValue).Value;
+                  end;
+                end;
+
+                ANode := TNode.Create(MeshCreator, CellSize);
+                ANode.Location := ALocation;
+                ANode.Y := ANode.Y*Exag;
+                NodeTree.AddPoint(ALocation.x, ALocation.y, ANode);
+                NodeList.Add(ANode);
+                NodeScreenObjectsList.Add(ScreenObject);
+              end;
+              if FirstNode = nil then
+              begin
+                FirstNode := ANode;
+              end;
+              ABoundary.AddNode(ANode);
+            end;
+            if ScreenObject.SectionClosed[SectionIndex] then
+            begin
+              ABoundary.AddNode(FirstNode);
+            end;
+          end;
+        end;
+        { TODO -cSUTRA : Consider moving this inside TQuadMeshCreator.GenerateMesh }
+        for NodeIndex := 0 to NodeList.Count - 1 do
+        begin
+          ANode := NodeList[NodeIndex];
+          StartIndex := List.IndexOf(NodeScreenObjectsList[NodeIndex])+1;
+          for ScreenObjectIndex := StartIndex to List.Count - 1 do
+          begin
+            ScreenObject := List[ScreenObjectIndex];
+//            if (ScreenObject <> NodeScreenObjectsList[NodeIndex])
+//              and (ANode.DesiredSpacing > ScreenObject.CellSize) then
+            begin
+              SearchX := ANode.x;
+              SearchY := ANode.y/Exag;
+              if ScreenObject.IsPointInside(SearchX, SearchY, SectionIndex) then
+              begin
+                ANode.DesiredSpacing := ScreenObject.CellSize;
+              end;
+            end;
+          end;
+        end;
+      finally
+        NodeTree.Free;
+        NodeList.Free;
+        NodeScreenObjectsList.Free;
+      end;
+
+      SutraMesh.Mesh2D.MeshGenControls.Apply;
+
+  {$IFDEF DEBUG}
+//      StartTime := Now;
+//      OutputDebugString('SAMPLING ON');
+
+  {$ENDIF}
+//      try
+      MeshCreator.GenerateMeshWithGmsh(ProgramLocations.GmshLocation, Exag);
+//        ImportFromGmshOnTerminate, FMeshFileName;
+      Exit;
+//      except on E: EInvalidElement do
+//        begin
+//          InvalidMesh := True;
+//        end;
+//      end;
+
+//      for AdjustIndex := 1 to 5 do
+//      begin
+//        MeshCreator.AdjustNodes;
+//      end;
+//      MeshCreator.FixFinalTriangularElements;
+  {$IFDEF DEBUG}
+//      OutputDebugString('SAMPLING OFF');
+
+//      EndTime := Now;
+  {$ENDIF}
+
+
+      if FSutraMesh = nil then
+      begin
+        FSutraMesh := TSutraMesh3D.Create(self);
+        FSutraMesh.OnMeshTypeChanged := frmGoPhast.SutraMeshTypeChanged;
+        if Self is TPhastModel then
+        begin
+          TPhastModel(Self).SutraLayerStructure.Loaded;
+        end;
+      end;
+      FSutraMesh.BeginUpdate;
+      try
+        FSutraMesh.Mesh2D.BeginUpdate;
+        try
+          FSutraMesh.Clear;
+          FSutraMesh.Mesh2D.Nodes.Capacity := MeshCreator.NodeCount;
+          FSutraMesh.Mesh2D.Elements.Capacity := MeshCreator.ElementCount;
+          for NodeIndex := 0 to MeshCreator.NodeCount - 1 do
+          begin
+            SutraNode := FSutraMesh.Mesh2D.Nodes.Add;
+            MeshNode := MeshCreator.Nodes[NodeIndex];
+            SutraNode.AssignINode(MeshNode);
+            SutraNode.Y := SutraNode.Y/Exag;
+          end;
+          for ElementIndex := 0 to MeshCreator.ElementCount - 1 do
+          begin
+            SutraElement := FSutraMesh.Mesh2D.Elements.Add;
+            MeshElement := MeshCreator.Elements[ElementIndex];
+            SutraElement.AssignIElement(MeshElement);
+//            SutraElement.SetCorrectOrienatation;
+          end;
+
+          for NodeIndex := 0 to FSutraMesh.Mesh2D.Nodes.Count - 1 do
+          begin
+            SutraNode := FSutraMesh.Mesh2D.Nodes[NodeIndex];
+            for OuterElementIndex := SutraNode.ElementCount - 2 downto 0 do
+            begin
+              OuterElement := SutraNode.Elements[OuterElementIndex];
+              for InnerElementIndex := SutraNode.ElementCount - 1 downto OuterElementIndex+1 do
+              begin
+                InnerElement := SutraNode.Elements[InnerElementIndex];
+                if OuterElement.HasSameNodes(InnerElement) then
+                begin
+//                  SutraNode.RemoveElement(InnerElement);
+                  for InnerNodeIndex := 0 to InnerElement.Nodes.Count - 1 do
+                  begin
+                    InnerElement.Nodes[InnerNodeIndex].Node.RemoveElement(InnerElement);
+                  end;
+                  InnerElement.Free;
+                end;
+              end;
+            end;
+          end;
+        finally
+          FSutraMesh.Mesh2D.EndUpdate;
+        end;
+
+        for ElementIndex := 0 to FSutraMesh.Mesh2D.Elements.Count - 1 do
+        begin
+          SutraElement := FSutraMesh.Mesh2D.Elements[ElementIndex];
+          if SutraElement.Nodes.Count <> 4 then
+          begin
+            InvalidMesh := True;
+          end
+          else
+          begin
+            if not SutraElement.ElementOK then
+            begin
+              InvalidMesh := True;
+            end;
+          end;
+          if InvalidMesh then
+          begin
+            break;
+          end;
+        end;
+
+//        FSutraMesh.UpdateElevations;
+      finally
+        DataArrayManager.InvalidateAllDataSets;
+        DataArrayManager.CreateInitialDataSets;
+
+//        FSutraMesh.NodeDrawingChoice := dcEdge;
+//        FSutraMesh.ElementDrawingChoice := dcAll;
+        FSutraMesh.ElevationsNeedUpdating := true;
+
+        FSutraMesh.EndUpdate;
+      end;
+      frmGoPhast.InvalidateGrid;
+  {$IFDEF DEBUG}
+//      ShowMessage('Elapsed time in seconds = '
+//        + FloatToStr((EndTime-StartTime)*24*3600));
+  {$ENDIF}
+
+      if (frmMeshInformation <> nil) and frmMeshInformation.Visible then
+      begin
+        frmMeshInformation.GetData
+      end;
+      if InvalidMesh then
+      begin
+        Application.ProcessMessages;
+//        try
+//          MeshCreator.CheckInvalidElements;
+//        except
+//          on E: EInvalidElement do
+//          begin
+            Beep;
+            MessageDlg(StrOneOrMoreInvalid, mtError, [mbOK], 0);
+//            if ShowAForm(TfrmMeshGenerationControlVariables) = mrOK then
+//            begin
+//              GenerateIrregularMesh(ErrorMessage);
+//              Exit;
+//            end;
+//          end;
+//        end;
+
+      end;
+    finally
+      MeshCreator.Free;
+    end;
+  finally
+    List.Free;
+  end;
+end;
+
 procedure TCustomModel.GenerateFishNetMesh(var ErrorMessage: string);
 begin
 end;
@@ -21770,6 +22412,10 @@ begin
       mgmIrregular:
         begin
           GenerateIrregularMesh(ErrorMessage);
+        end;
+      mgmGmsh:
+        begin
+          GenerateMeshUsingGmsh(ErrorMessage);
         end;
       else
         Assert(False);
@@ -22468,6 +23114,10 @@ end;
 
 procedure TCustomModel.CrossSectionChanged(Sender: TObject);
 begin
+  if csDestroying in ComponentState then
+  begin
+    Exit;
+  end;
   Assert(Sender = FCrossSection);
   if not FCrossSection.UpToDate then
   begin
@@ -26503,6 +27153,7 @@ begin
   frmErrorsAndWarnings.RemoveWarningGroup(self, StrAddedTimes);
   frmErrorsAndWarnings.RemoveWarningGroup(self, StrMultiplierWarning);
   frmErrorsAndWarnings.RemoveWarningGroup(self, StrCropAddedTimes);
+  frmErrorsAndWarnings.RemoveErrorGroup(self, StrInvalidStressPerio);
 
 
   ModflowFullStressPeriods.Clear;
@@ -26518,6 +27169,11 @@ begin
       StressPeriod := ModflowStressPeriods[TimeIndex];
       TimeList.AddUnique(StressPeriod.StartTime);
       TimeList.AddUnique(StressPeriod.EndTime);
+      if StressPeriod.StartTime >= StressPeriod.EndTime then
+      begin
+        frmErrorsAndWarnings.AddError(self, StrInvalidStressPerio,
+          StrInModelMuseAllStr);
+      end;
       if UzfLakUsed and (StressPeriod.TimeStepMultiplier <> 1) then
       begin
         ShowUzfLakeWarning := True;
@@ -26555,8 +27211,15 @@ begin
       end;
     end;
 
-    Assert(TimeList.Count >= 2);
-    F_SP_Epsilon := (TimeList[1] - TimeList[0]);
+    Assert(TimeList.Count >= 1);
+    if TimeList.Count >= 2 then
+    begin
+      F_SP_Epsilon := (TimeList[1] - TimeList[0]);
+    end
+    else
+    begin
+      F_SP_Epsilon := 0;
+    end;
     for TimeIndex := 2 to TimeList.Count - 1 do
     begin
       F_SP_Epsilon := Min(F_SP_Epsilon,
@@ -26655,13 +27318,20 @@ begin
       TimeIndex := 0;
       for StressPeriodIndex := 0 to ModflowStressPeriods.Count - 1 do
       begin
-        if TimeIndex+1 >= TimeList.Count then
+        if (TimeIndex+1 >= TimeList.Count) and (TimeList.Count > 1) then
         begin
           break;
         end;
         StressPeriod := ModflowStressPeriods[StressPeriodIndex];
         StartTime := TimeList[TimeIndex];
-        EndTime := TimeList[TimeIndex+1];
+        if TimeList.Count > 1 then
+        begin
+          EndTime := TimeList[TimeIndex+1];
+        end
+        else
+        begin
+          EndTime := StartTime;
+        end;
         While (EndTime <= StressPeriod.EndTime) do
         begin
           NewStressPeriod :=
@@ -27576,6 +28246,7 @@ var
   SwiWriter: TSwiWriter;
   CfpWriter: TModflowCfpWriter;
   SwrWriter: TModflowSwrWriter;
+  Mnw1Writer: TModflowMNW1_Writer;
 begin
   // Note: MODFLOW can not read Unicode text files.
 
@@ -28055,6 +28726,24 @@ begin
         Exit;
       end;
       if ModflowPackages.ResPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+
+      Mnw1Writer := TModflowMNW1_Writer.Create(self, etExport);
+      try
+        Mnw1Writer.WriteFile(FileName);
+      finally
+        Mnw1Writer.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.Mnw1Package.IsSelected then
       begin
         frmProgressMM.StepIt;
       end;
@@ -30295,6 +30984,11 @@ begin
   result := ParentModel.GetContourFont;
 end;
 
+function TChildModel.GetContourLabelSpacing: Integer;
+begin
+  result := ParentModel.GetContourLabelSpacing;
+end;
+
 function TChildModel.GetDisplayName: string;
 begin
   result := ModelName;
@@ -30713,6 +31407,11 @@ end;
 procedure TChildModel.SetContourFont(const Value: TFont);
 begin
   ParentModel.ContourFont := Value;
+end;
+
+procedure TChildModel.SetContourLabelSpacing(const Value: Integer);
+begin
+  ParentModel.SetContourLabelSpacing(Value);
 end;
 
 procedure TChildModel.SetCouplingMethod(const Value: TCouplingMethod);

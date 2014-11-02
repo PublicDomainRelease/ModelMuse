@@ -6,8 +6,8 @@ inherited frmExportImage: TfrmExportImage
   ClientWidth = 721
   ShowHint = True
   OnClose = FormClose
-  ExplicitWidth = 737
-  ExplicitHeight = 557
+  ExplicitWidth = 739
+  ExplicitHeight = 564
   PixelsPerInch = 120
   TextHeight = 18
   object JvNetscapeSplitter2: TJvNetscapeSplitter
@@ -238,18 +238,16 @@ inherited frmExportImage: TfrmExportImage
         end
       end
       object cpText: TCategoryPanel
-        Top = 386
-        Height = 30
+        Top = 30
+        Height = 386
         Caption = 'Text'
-        Collapsed = True
         TabOrder = 1
         OnExpand = cpTextExpand
-        ExpandedHeight = 386
         object pnlText: TPanel
           Left = 0
           Top = 0
           Width = 245
-          Height = 0
+          Height = 360
           Align = alClient
           TabOrder = 0
           object lblTitle: TLabel
@@ -330,20 +328,30 @@ inherited frmExportImage: TfrmExportImage
             TabOrder = 2
             OnClick = btnFontClick
           end
+          object btnScaleFont: TButton
+            Left = 16
+            Top = 216
+            Width = 90
+            Height = 25
+            Caption = 'Scale font'
+            TabOrder = 3
+            OnClick = btnScaleFontClick
+          end
         end
       end
       object cpView: TCategoryPanel
         Top = 0
-        Height = 386
+        Height = 30
         Caption = 'View'
+        Collapsed = True
         TabOrder = 0
         OnExpand = cpViewExpand
-        ExplicitWidth = 185
+        ExpandedHeight = 386
         object Panel3: TPanel
           Left = 0
           Top = 0
           Width = 245
-          Height = 360
+          Height = 0
           Align = alClient
           TabOrder = 0
           object lblSelectedView: TLabel

@@ -109,6 +109,9 @@ inherited frameDeliveryGrid: TframeDeliveryGrid
       Caption = 'How used'
       Enabled = False
     end
+    inherited cbMultiCheck: TCheckBox
+      TabOrder = 2
+    end
     object comboHowUsed: TComboBox
       Left = 255
       Top = 30

@@ -56,14 +56,14 @@ begin
         // Data set 5
         DataArray := DataArrayManager.GetDataSetByName(StrTransmissivity);
         Assert(DataArray <> nil);
-        WriteArray(DataArray, Layer, 'Tran');
+        WriteArray(DataArray, Layer, 'Tran', StrNoValueAssigned);
       end;
     1, 3:
       begin
         // Data set 6
         DataArray := DataArrayManager.GetDataSetByName(rsKx);
         Assert(DataArray <> nil);
-        WriteArray(DataArray, Layer, 'HY');
+        WriteArray(DataArray, Layer, 'HY', StrNoValueAssigned);
       end;
   end;
 end;
@@ -243,7 +243,7 @@ begin
   begin
     DataArray := Model.DataArrayManager.GetDataSetByName(rsWetDry);
     Assert(DataArray <> nil);
-    WriteArray(DataArray, Layer, 'WETDRY');
+    WriteArray(DataArray, Layer, 'WETDRY', StrNoValueAssigned);
   end;
 end;
 
@@ -256,7 +256,7 @@ begin
   begin
     DataArray := Model.DataArrayManager.GetDataSetByName(rsSpecificYield);
     Assert(DataArray <> nil);
-    WriteArray(DataArray, Layer, 'Sf2');
+    WriteArray(DataArray, Layer, 'Sf2', StrNoValueAssigned);
   end;
 end;
 
@@ -268,7 +268,7 @@ begin
   begin
     DataArray := Model.DataArrayManager.GetDataSetByName(StrVerticalConductance);
     Assert(DataArray <> nil);
-    WriteArray(DataArray, LayerIndex, 'Vcont');
+    WriteArray(DataArray, LayerIndex, 'Vcont', StrNoValueAssigned);
   end;
 end;
 
@@ -297,7 +297,7 @@ begin
       Assert(False);
     end;
     Assert(DataArray <> nil);
-    WriteArray(DataArray, Layer, 'Sf1');
+    WriteArray(DataArray, Layer, 'Sf1', StrNoValueAssigned);
   end;
 end;
 

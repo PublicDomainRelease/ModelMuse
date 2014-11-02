@@ -1,11 +1,11 @@
 inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
-  Width = 578
+  Width = 586
   Height = 406
   HelpKeyword = 'Import_Surfer_Grid_File'
   Caption = 'Import Surfer Grid File'
-  ExplicitWidth = 578
+  ExplicitWidth = 586
   ExplicitHeight = 406
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   inherited lblDataSet: TLabel
     Top = 124
@@ -31,7 +31,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
   end
   inherited comboInterpolators: TComboBox
     Top = 213
-    TabOrder = 5
+    TabOrder = 3
     ExplicitTop = 213
   end
   inherited cbEnclosedCells: TCheckBox
@@ -47,6 +47,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
   inherited cbIntersectedCells: TCheckBox
     Top = 245
     Width = 329
+    TabOrder = 4
     ExplicitTop = 245
     ExplicitWidth = 329
   end
@@ -54,6 +55,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
     Left = 8
     Top = 276
     Width = 321
+    TabOrder = 5
     ExplicitLeft = 8
     ExplicitTop = 276
     ExplicitWidth = 321
@@ -195,7 +197,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
   object rgFilterMethod: TRadioGroup [13]
     Left = 346
     Top = 178
-    Width = 174
+    Width = 214
     Height = 140
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Filter method'
@@ -207,7 +209,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
       'Point closest to cell center'
       'None')
     TabOrder = 2
-    ExplicitWidth = 208
+    ExplicitWidth = 206
   end
   inherited OpenDialogFile: TOpenDialog
     Filter = 'Surfer grid file (*.grd, *.dat)|*.grd;*.dat|All files (*.*)|*.*'

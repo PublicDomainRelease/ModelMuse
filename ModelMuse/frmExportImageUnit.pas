@@ -67,6 +67,7 @@ type
     rdgDataSets: TRbwDataGrid4;
     vstDataSets: TVirtualStringTree;
     cbHeadObsLegend: TCheckBox;
+    btnScaleFont: TButton;
     procedure FormCreate(Sender: TObject); override;
     procedure seImageHeightChange(Sender: TObject);
     procedure seImageWidthChange(Sender: TObject);
@@ -113,6 +114,7 @@ type
     procedure cpViewExpand(Sender: TObject);
     procedure cpTextExpand(Sender: TObject);
     procedure cbHeadObsLegendClick(Sender: TObject);
+    procedure btnScaleFontClick(Sender: TObject);
   private
     FShouldDraw: Boolean;
     FTextItems: TList;
@@ -135,6 +137,7 @@ type
     FShouldStop: Boolean;
     FRightOffset: Integer;
     FRunning: Boolean;
+    FScaleFont: TFont;
     procedure GetData;
     procedure DrawImageAfterDelay;
     procedure DrawTitle(DrawingRect: TRect; ACanvas: TCanvas;
@@ -616,6 +619,18 @@ begin
   end;
 end;
 
+procedure TfrmExportImage.btnScaleFontClick(Sender: TObject);
+begin
+  inherited;
+  fdTextFont.Font := FScaleFont;
+  if fdTextFont.Execute then
+  begin
+    FScaleFont.Assign(fdTextFont.Font);
+    FQuerySaveSettings := True;
+    DrawImage;
+  end;
+end;
+
 procedure TfrmExportImage.btnStopClick(Sender: TObject);
 begin
   inherited;
@@ -960,7 +975,13 @@ begin
     end;
     if ShowLegend then
     begin
-      PhastModel.ColorLegend.Draw(ACanvas, 10, LegendY, ColorRect);
+      if frmDisplayData = nil then
+      begin
+        Application.CreateForm(TfrmDisplayData, frmDisplayData);
+      end;
+      UpdateFrmDisplayData(True);
+      PhastModel.ColorLegend.Draw(ACanvas, 10, LegendY, ColorRect,
+        frmDisplayData.frameColorGrid.LegendFont);
     end;
   end;
 end;
@@ -1138,6 +1159,8 @@ var
   ViewDirection: TViewDirection;
   Ruler: TRbwRuler;
   RightHorizontalRulerOffset: integer;
+  TextHeight: Integer;
+//  RulerLinePosition: Integer;
 begin
   if cbHorizontalScale.Checked then
   begin
@@ -1146,10 +1169,11 @@ begin
     begin
       Inc(RightHorizontalRulerOffset, 60);
     end;
-    ACanvas.Font := Font;
+    ACanvas.Font := FScaleFont;
     ACanvas.Pen.Color := clBlack;
     ACanvas.Pen.Style := psSolid;
     HRuler := TRulerPainter.Create(nil);
+    TextHeight := ACanvas.TextHeight('0');
     try
       ViewDirection := TViewDirection(comboView.ItemIndex);
       Ruler := nil;
@@ -1195,8 +1219,11 @@ begin
       else
         Assert(False);
       end;
+      HRuler.RulerMajorTickLength := Sign(Ruler.RulerMajorTickLength)*(TextHeight+2) div 2;
+      HRuler.RulerMinorTickLength := HRuler.RulerMajorTickLength div 2;
+      HRuler.RulerLinePosition := Ruler.RulerLinePosition - 20 + TextHeight;
       HRuler.DrawRuler(ACanvas, DrawingRect, RulerRect);
-      DrawingRect.Bottom := RulerRect.Top - 20;
+      DrawingRect.Bottom := RulerRect.Top - TextHeight;
     finally
       HRuler.Free;
     end;
@@ -1213,12 +1240,15 @@ var
   ViewDirection: TViewDirection;
   VRuler: TRulerPainter;
   RulerRect: TRect;
+  RulerPostion: Integer;
+  TextHeight: integer;
 begin
   if cbVerticalScale.Checked then
   begin
-    ACanvas.Font := Font;
+    ACanvas.Font := FScaleFont;
     ACanvas.Pen.Color := clBlack;
     ACanvas.Pen.Style := psSolid;
+    ACanvas.Font := FScaleFont;
     VRuler := TRulerPainter.Create(nil);
     try
       ViewDirection := TViewDirection(comboView.ItemIndex);
@@ -1233,6 +1263,7 @@ begin
       else
         Assert(False);
       end;
+      TextHeight := ACanvas.TextHeight('0');
       VRuler.Assign(Ruler.Painter);
       VRuler.RulerPosition := rpRight;
       VRuler.RulerStart := sBottomRight;
@@ -1264,8 +1295,11 @@ begin
       else
         Assert(False);
       end;
+      VRuler.RulerMajorTickLength := Sign(Ruler.RulerMajorTickLength)*(TextHeight+2) div 2;
+      VRuler.RulerMinorTickLength := VRuler.RulerMajorTickLength div 2;
+      VRuler.RulerLinePosition := Ruler.RulerLinePosition - 20 + TextHeight;
       VRuler.DrawRuler(ACanvas, DrawingRect, RulerRect);
-      DrawingRect.Right := RulerRect.Left - 20;
+      DrawingRect.Right := RulerRect.Left - TextHeight;
     finally
       VRuler.Free;
     end;
@@ -2809,7 +2843,13 @@ begin
     end;
     if ShowLegend then
     begin
-      PhastModel.ContourLegend.Draw(ACanvas, 10, LegendY, ContourRect);
+      if frmDisplayData = nil then
+      begin
+        Application.CreateForm(TfrmDisplayData, frmDisplayData);
+      end;
+      UpdateFrmDisplayData(True);
+      PhastModel.ContourLegend.Draw(ACanvas, 10, LegendY, ContourRect,
+        frmDisplayData.frameContourData.LegendFont);
       LegendY := ContourRect.Bottom + 40;
     end;
   end;
@@ -2997,6 +3037,9 @@ end;
 procedure TfrmExportImage.FormCreate(Sender: TObject);
 begin
   inherited;
+  FScaleFont := TFont.Create;
+  FScaleFont.Assign(Font);
+
   rdgDataSets.Cells[1,0] := StrDataSets;
   FDataSetDummyObjects := TObjectList.Create;
   FCanDraw := False;
@@ -3029,6 +3072,7 @@ begin
   FDefaultFont.Free;
   FTextItems.Free;
   FModelImage.Free;
+  FScaleFont.Free;
 end;
 
 procedure TfrmExportImage.GetData;

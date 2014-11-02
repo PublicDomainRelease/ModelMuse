@@ -57,11 +57,11 @@ resourcestring
   StrTheFollowingCHDOb = 'The following CHD observation names may be valid f' +
   'or MODFLOW but they are not valid for UCODE.';
   StrWritingCHDPackage = 'Writing CHD Package input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
-  StrWritingDataSets5to7 = '  Writing Data Sets 5 to 7.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
+//  StrWritingDataSets5to7 = '  Writing Data Sets 5 to 7.';
 
 { TModflowCHD_Writer }
 

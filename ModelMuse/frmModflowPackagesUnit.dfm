@@ -5,8 +5,8 @@ inherited frmModflowPackages: TfrmModflowPackages
   ClientHeight = 555
   ClientWidth = 782
   OnResize = FormResize
-  ExplicitWidth = 798
-  ExplicitHeight = 593
+  ExplicitWidth = 800
+  ExplicitHeight = 600
   PixelsPerInch = 120
   TextHeight = 18
   object JvNetscapeSplitter1: TJvNetscapeSplitter
@@ -27,7 +27,7 @@ inherited frmModflowPackages: TfrmModflowPackages
     Top = 0
     Width = 595
     Height = 514
-    ActivePage = jvspSWR
+    ActivePage = jvspMNW1
     PropagateEnable = False
     Align = alClient
     OnChange = jvplPackagesChange
@@ -2155,9 +2155,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         object tabSfrParameters: TTabSheet
           Caption = 'Parameters'
           ImageIndex = 1
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object splitSFR: TSplitter
             Left = 0
             Top = 257
@@ -3371,6 +3368,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Top = 296
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitLeft = 359
               ExplicitTop = 296
               ExplicitHeight = 28
@@ -3393,6 +3391,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Top = 190
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitTop = 190
               ExplicitHeight = 28
             end
@@ -3406,11 +3405,13 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboEvtSink: TJvImageComboBox
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboRchSource: TJvImageComboBox
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitHeight = 28
             end
           end
@@ -3539,11 +3540,13 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboWeakSource: TJvImageComboBox
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboStopOption: TJvImageComboBox
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboBudget: TJvImageComboBox
@@ -3568,31 +3571,37 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboUzfIface: TJvImageComboBox
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboMnw2Iface: TJvImageComboBox
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboResIface: TJvImageComboBox
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboSfrIface: TJvImageComboBox
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboEtsIface: TJvImageComboBox
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboLakIface: TJvImageComboBox
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               TabOrder = 12
               ExplicitHeight = 28
             end
@@ -3638,6 +3647,7 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboTimeMethod: TJvImageComboBox
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited rdeParticleInterval: TRbwDataEntry
@@ -3929,7 +3939,7 @@ inherited frmModflowPackages: TfrmModflowPackages
       Width = 595
       Height = 514
       HelpType = htKeyword
-      HelpKeyword = 'MNW2_Multi_Node_Well_Package'
+      HelpKeyword = 'MNW1_Multi-Node_Well_Package_V'
       Caption = 'jvspMNW2'
       inline framePkgMnw2: TframePackageMnw2
         Left = 0
@@ -3971,6 +3981,7 @@ inherited frmModflowPackages: TfrmModflowPackages
           Top = 379
           Height = 28
           ItemHeight = 22
+          ItemIndex = -1
           ExplicitTop = 379
           ExplicitHeight = 28
         end
@@ -4486,6 +4497,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Top = 114
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitTop = 114
               ExplicitHeight = 28
             end
@@ -4493,6 +4505,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Top = 173
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitTop = 173
               ExplicitHeight = 28
             end
@@ -4502,6 +4515,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Height = 28
               DroppedWidth = 557
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitTop = 236
               ExplicitWidth = 557
               ExplicitHeight = 28
@@ -5539,6 +5553,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Width = 118
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitLeft = 2
               ExplicitTop = 130
               ExplicitWidth = 118
@@ -5566,6 +5581,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Width = 119
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitLeft = 1
               ExplicitTop = 223
               ExplicitWidth = 119
@@ -5781,6 +5797,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Height = 28
               DroppedWidth = 358
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitLeft = 2
               ExplicitTop = 63
               ExplicitWidth = 358
@@ -5905,6 +5922,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Width = 230
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitWidth = 230
               ExplicitHeight = 28
             end
@@ -5913,6 +5931,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Height = 28
               DroppedWidth = 230
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitWidth = 230
               ExplicitHeight = 28
             end
@@ -7196,6 +7215,7 @@ inherited frmModflowPackages: TfrmModflowPackages
           inherited comboSaveConcType: TJvImageComboBox
             Height = 28
             ItemHeight = 22
+            ItemIndex = -1
             ExplicitHeight = 28
           end
           inherited cbLogTransform: TCheckBox
@@ -7225,6 +7245,7 @@ inherited frmModflowPackages: TfrmModflowPackages
           inherited comboSaveMassFluxType: TJvImageComboBox
             Height = 28
             ItemHeight = 22
+            ItemIndex = -1
             ExplicitHeight = 28
           end
         end
@@ -7438,11 +7459,13 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboDampingMode: TJvImageComboBox
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboAcnvg: TJvImageComboBox
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited seMcnvg: TJvSpinEdit
@@ -7457,6 +7480,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Top = 280
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitTop = 280
               ExplicitHeight = 28
             end
@@ -8556,6 +8580,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Height = 28
               DroppedWidth = 346
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitWidth = 346
               ExplicitHeight = 28
             end
@@ -8866,6 +8891,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Top = 318
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitTop = 318
               ExplicitHeight = 28
             end
@@ -8880,6 +8906,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Top = 420
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitTop = 420
               ExplicitHeight = 28
             end
@@ -9399,6 +9426,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Width = 243
               Height = 28
               ItemHeight = 22
+              ItemIndex = -1
               ExplicitWidth = 243
               ExplicitHeight = 28
             end
@@ -9422,6 +9450,140 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
             item
               Control = framePkgSWR.memoComments
+            end>
+        end
+      end
+    end
+    object jvspMNW1: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 595
+      Height = 514
+      HelpType = htKeyword
+      HelpKeyword = 'MNW1_Multi_Node_Well_Package_V'
+      Caption = 'jvspMNW1'
+      inline framePkgMnw1: TframePackageMnw1
+        Left = 0
+        Top = 0
+        Width = 595
+        Height = 514
+        Align = alClient
+        TabOrder = 0
+        TabStop = True
+        inherited lblComments: TLabel
+          Width = 76
+          Height = 18
+          ExplicitWidth = 76
+          ExplicitHeight = 18
+        end
+        inherited lblPackage: TLabel
+          Width = 78
+          Height = 18
+          ExplicitWidth = 78
+          ExplicitHeight = 18
+        end
+        inherited lblMaxIterations: TLabel
+          Width = 347
+          Height = 18
+          ExplicitWidth = 347
+          ExplicitHeight = 18
+        end
+        inherited lblLosstype: TLabel
+          Width = 164
+          Height = 18
+          ExplicitWidth = 164
+          ExplicitHeight = 18
+        end
+        inherited lblLossExponent: TLabel
+          Width = 201
+          Height = 18
+          ExplicitWidth = 201
+          ExplicitHeight = 18
+        end
+        inherited lblWellFileName: TLabel
+          Width = 223
+          Height = 18
+          ExplicitWidth = 223
+          ExplicitHeight = 18
+        end
+        inherited lblByNode: TLabel
+          Width = 318
+          Height = 18
+          ExplicitWidth = 318
+          ExplicitHeight = 18
+        end
+        inherited lblQSum: TLabel
+          Width = 310
+          Height = 18
+          ExplicitWidth = 310
+          ExplicitHeight = 18
+        end
+        inherited lblByNodeFrequency: TLabel
+          Width = 73
+          Height = 18
+          ExplicitWidth = 73
+          ExplicitHeight = 18
+        end
+        inherited lblQSumFrequency: TLabel
+          Width = 73
+          Height = 18
+          ExplicitWidth = 73
+          ExplicitHeight = 18
+        end
+        inherited seMaxIterations: TJvSpinEdit
+          Height = 26
+          ExplicitHeight = 26
+        end
+        inherited comboLosstype: TJvImageComboBox
+          Height = 28
+          ItemHeight = 22
+          ItemIndex = -1
+          ExplicitHeight = 28
+        end
+        inherited fedWellFileName: TJvFilenameEdit
+          Height = 26
+          ExplicitHeight = 26
+        end
+        inherited fedByNode: TJvFilenameEdit
+          Height = 26
+          ExplicitHeight = 26
+        end
+        inherited fedQSum: TJvFilenameEdit
+          Height = 26
+          ExplicitHeight = 26
+        end
+        inherited comboByNodeFrequency: TJvImageComboBox
+          Height = 28
+          ItemHeight = 22
+          ExplicitHeight = 28
+        end
+        inherited comboQSumFrequency: TJvImageComboBox
+          Height = 28
+          ItemHeight = 22
+          ExplicitHeight = 28
+        end
+        inherited rcSelectionController: TRbwController
+          ControlList = <
+            item
+              Control = framePkgMnw1.lblComments
+            end
+            item
+              Control = framePkgMnw1.memoComments
+            end
+            item
+              Control = framePkgMnw1.seMaxIterations
+            end
+            item
+              Control = framePkgMnw1.comboLosstype
+            end
+            item
+              Control = framePkgMnw1.fedWellFileName
+            end
+            item
+              Control = framePkgMnw1.fedByNode
+            end
+            item
+              Control = framePkgMnw1.fedQSum
             end>
         end
       end

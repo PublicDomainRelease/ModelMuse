@@ -306,8 +306,10 @@ var
   index: Integer;
   Comparer: TElementValueComparer;
   ElNumber: Integer;
+  VE: double;
 begin
 
+  VE := frmGoPhast.PhastModel.Exaggeration;
   Mesh := frmGoPhast.PhastModel.Mesh;
   BinSize := seBinSize.AsInteger;
   if BinSize <= 0 then
@@ -346,11 +348,23 @@ begin
         Continue;
       end;
       Node1 := AnElement2D.Nodes[2].Node.Location;
+      if Mesh.MeshType = mtProfile then
+      begin
+        Node1.Y := Node1.Y*VE;
+      end;
       Node2 := AnElement2D.Nodes[3].Node.Location;
+      if Mesh.MeshType = mtProfile then
+      begin
+        Node2.Y := Node2.Y*VE;
+      end;
       BadElement := False;
       for NodeIndex := 0 to AnElement2D.Nodes.Count - 1 do
       begin
         Node3 := AnElement2D.Nodes[NodeIndex].Node.Location;
+        if Mesh.MeshType = mtProfile then
+        begin
+          Node3.Y := Node3.Y*VE;
+        end;
         Angle := OrientedVertexAngle(Node1, Node2, Node3, CounterClockwise);
         Assert(Angle >= 0);
         if Angle >= 180 then
@@ -468,9 +482,18 @@ var
   index: Integer;
   Comparer: TElementValueComparer;
   ElNumber: Integer;
+  VE: double;
 begin
 
   Mesh := frmGoPhast.PhastModel.Mesh;
+  if Mesh.MeshType = mtProfile then
+  begin
+    VE := frmGoPhast.PhastModel.Exaggeration;
+  end
+  else
+  begin
+    VE := 1;
+  end;
   BinSize := seAspectRatioBinSize.Value;
   if BinSize <= 0 then
   begin
@@ -508,7 +531,7 @@ begin
       end;
 
 
-        AspectRatio := AnElement2D.AspectRatio;
+        AspectRatio := AnElement2D.AspectRatio(VE);
         SortItem := TEleValueSortItem.Create;
         EleAngleSortList.Add(SortItem);
         SortItem.ElementNumber := ElNumber;

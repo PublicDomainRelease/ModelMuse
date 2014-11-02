@@ -3864,8 +3864,9 @@ Type
       write SetStageAssignmentMethod Stored True;
   end;
 
-{$IFDEF MNW1}
-  TMnw1LossType = (mltSkin, mltLinear, mltNonLinear);
+  TMnw1LossType = (mlt1Skin, mlt1Linear, mlt1NonLinear);
+  TMnw1LossTypes = set of TMnw1LossType;
+  TMnw1PrintFrequency = (mpfOutputControl, mpfAll);
 
   //  inferred  values
   //  kspref reference stress period for calculating drawdown.
@@ -3880,6 +3881,33 @@ Type
     FWellFileName: string;
     FQSumFileName: string;
     FByNodeFileName: string;
+    FQSumPrintFrequency: TMnw1PrintFrequency;
+    FByNodePrintFrequency: TMnw1PrintFrequency;
+    FMfDesiredPumpingRate: TModflowBoundaryDisplayTimeList;
+    FMfSkinFactor: TModflowBoundaryDisplayTimeList;
+    FMfReactivationPumpingRate: TModflowBoundaryDisplayTimeList;
+    FMfWellRadius: TModflowBoundaryDisplayTimeList;
+    FMfWaterQualityGroup: TModflowBoundaryDisplayTimeList;
+    FMfWaterQuality: TModflowBoundaryDisplayTimeList;
+    FMfConductance: TModflowBoundaryDisplayTimeList;
+    FMfNonLinearLossCoefficient: TModflowBoundaryDisplayTimeList;
+    FMfLimitingWaterLevel: TModflowBoundaryDisplayTimeList;
+    FMfReferenceElevation: TModflowBoundaryDisplayTimeList;
+    FMfMinimumPumpingRate: TModflowBoundaryDisplayTimeList;
+
+    procedure InitializeMnw1(Sender: TObject);
+    procedure GetDesiredPumpingRateUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetWaterQualityUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetWellRadiusUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetConductanceUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetSkinUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetLimitingWaterLevelUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetReferenceElevationUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetWaterQualityGroupUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetNonLinearLossCoefficientUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetMinimumPumpingRateUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetReactivationPumpingRateUseList(Sender: TObject; NewUseList: TStringList);
+
     function GetLossExponent: Double;
     procedure SetByNodeFileName(const Value: string);
     procedure SetLossExponent(const Value: Double);
@@ -3888,6 +3916,9 @@ Type
     procedure SetQSumFileName(const Value: string);
     procedure SetStoredLossExponent(const Value: TRealStorage);
     procedure SetWellFileName(const Value: string);
+    procedure SetByNodePrintFrequency(const Value: TMnw1PrintFrequency);
+    procedure SetQSumPrintFrequency(const Value: TMnw1PrintFrequency);
+    procedure GetUseList(ParameterIndex: Integer; NewUseList: TStringList);
   public
     procedure Assign(Source: TPersistent); override;
     { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
@@ -3895,16 +3926,51 @@ Type
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure InitializeVariables; override;
+    // PLossMNW
     property LossExponent: Double read GetLossExponent write  SetLossExponent;
+
+    property MfDesiredPumpingRate: TModflowBoundaryDisplayTimeList
+      read FMfDesiredPumpingRate;
+    property MfWaterQuality: TModflowBoundaryDisplayTimeList
+      read FMfWaterQuality;
+    property MfWellRadius: TModflowBoundaryDisplayTimeList
+      read FMfWellRadius;
+    property MfConductance: TModflowBoundaryDisplayTimeList
+      read FMfConductance;
+    property MfSkinFactor: TModflowBoundaryDisplayTimeList
+      read FMfSkinFactor;
+    property MfLimitingWaterLevel: TModflowBoundaryDisplayTimeList
+      read FMfLimitingWaterLevel;
+    property MfReferenceElevation: TModflowBoundaryDisplayTimeList
+      read FMfReferenceElevation;
+    property MfWaterQualityGroup: TModflowBoundaryDisplayTimeList
+      read FMfWaterQualityGroup;
+    property MfNonLinearLossCoefficient: TModflowBoundaryDisplayTimeList
+      read FMfNonLinearLossCoefficient;
+    property MfMinimumPumpingRate: TModflowBoundaryDisplayTimeList
+      read FMfMinimumPumpingRate;
+    property MfReactivationPumpingRate: TModflowBoundaryDisplayTimeList
+      read FMfReactivationPumpingRate;
   published
-    property MaxMnwIterations: integer read FMaxMnwIterations write SetMaxMnwIterations;
+    // NOMOITER
+    property MaxMnwIterations: integer read FMaxMnwIterations
+      write SetMaxMnwIterations;
+    // LOSSTYPE
     property LossType: TMnw1LossType read FLossType write SetLossType;
-    property StoredLossExponent: TRealStorage read FStoredLossExponent write SetStoredLossExponent;
+    // PLossMNW
+    property StoredLossExponent: TRealStorage read FStoredLossExponent
+      write SetStoredLossExponent;
+    // iunw1
     property WellFileName: string read FWellFileName write SetWellFileName;
+    // iunby
     property ByNodeFileName: string read FByNodeFileName write SetByNodeFileName;
+    property ByNodePrintFrequency: TMnw1PrintFrequency
+      read FByNodePrintFrequency write SetByNodePrintFrequency;
+    // iunqs
     property QSumFileName: string read FQSumFileName write SetQSumFileName;
+    property QSumPrintFrequency: TMnw1PrintFrequency read FQSumPrintFrequency
+      write SetQSumPrintFrequency;
   end;
-{$ENDIF}
 
 const
   KMaxRainfallForStepAdjustment = 0.15;
@@ -3933,7 +3999,7 @@ uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
   ModflowFmpPrecipitationUnit, ModflowFmpCropUnit, ModflowFmpCropSpatialUnit,
   ModflowFmpWellUnit, ModflowCfpWriterUnit, ModflowCfpRechargeUnit,
   ModflowSwrWriterUnit, ModflowSwrUnit, ModflowSwrDirectRunoffUnit,
-  ModflowSwrReachUnit;
+  ModflowSwrReachUnit, ModflowMnw1Writer, ModflowMnw1Unit;
 
 resourcestring
   StrLengthUnitsForMod = 'Length units for model are undefined';
@@ -15109,7 +15175,6 @@ end;
 
 { TMnw1Package }
 
-{$IFDEF MNW1}
 procedure TMnw1Package.Assign(Source: TPersistent);
 var
   MnwSource: TMnw1Package;
@@ -15123,6 +15188,8 @@ begin
     WellFileName := MnwSource.WellFileName;
     ByNodeFileName := MnwSource.ByNodeFileName;
     QSumFileName := MnwSource.QSumFileName;
+    ByNodePrintFrequency := MnwSource.ByNodePrintFrequency;
+    QSumPrintFrequency := MnwSource.QSumPrintFrequency;
   end;
   inherited;
 end;
@@ -15133,12 +15200,134 @@ begin
   FStoredLossExponent := TRealStorage.Create;
   FStoredLossExponent.OnChange := OnValueChanged;
   InitializeVariables;
+
+  if Model <> nil then
+  begin
+    FMfDesiredPumpingRate := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfDesiredPumpingRate.OnInitialize := InitializeMnw1;
+    FMfDesiredPumpingRate.OnGetUseList := GetDesiredPumpingRateUseList;
+    FMfDesiredPumpingRate.OnTimeListUsed := PackageUsed;
+    FMfDesiredPumpingRate.Name := StrMNW1DesiredPumping;
+    FMfDesiredPumpingRate.Orientation := dso3D;
+    AddTimeList(FMfDesiredPumpingRate);
+
+    FMfWaterQuality := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfWaterQuality.OnInitialize := InitializeMnw1;
+    FMfWaterQuality.OnGetUseList := GetWaterQualityUseList;
+    FMfWaterQuality.OnTimeListUsed := PackageUsed;
+    FMfWaterQuality.Name := StrMNW1WaterQuality;
+    FMfWaterQuality.Orientation := dso3D;
+    AddTimeList(FMfWaterQuality);
+
+    FMfWellRadius := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfWellRadius.OnInitialize := InitializeMnw1;
+    FMfWellRadius.OnGetUseList := GetWellRadiusUseList;
+    FMfWellRadius.OnTimeListUsed := PackageUsed;
+    FMfWellRadius.Name := StrMNW1WellRadius;
+    FMfWellRadius.Orientation := dso3D;
+    AddTimeList(FMfWellRadius);
+
+    FMfConductance := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfConductance.OnInitialize := InitializeMnw1;
+    FMfConductance.OnGetUseList := GetConductanceUseList;
+    FMfConductance.OnTimeListUsed := PackageUsed;
+    FMfConductance.Name := StrMNW1Conductance;
+    FMfConductance.Orientation := dso3D;
+    AddTimeList(FMfConductance);
+
+    FMfSkinFactor := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfSkinFactor.OnInitialize := InitializeMnw1;
+    FMfSkinFactor.OnGetUseList := GetSkinUseList;
+    FMfSkinFactor.OnTimeListUsed := PackageUsed;
+    FMfSkinFactor.Name := StrMNW1Skin;
+    FMfSkinFactor.Orientation := dso3D;
+    AddTimeList(FMfSkinFactor);
+
+    FMfLimitingWaterLevel := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfLimitingWaterLevel.OnInitialize := InitializeMnw1;
+    FMfLimitingWaterLevel.OnGetUseList := GetLimitingWaterLevelUseList;
+    FMfLimitingWaterLevel.OnTimeListUsed := PackageUsed;
+    FMfLimitingWaterLevel.Name := StrMNW1LimitingWater;
+    FMfLimitingWaterLevel.Orientation := dso3D;
+    AddTimeList(FMfLimitingWaterLevel);
+
+    FMfReferenceElevation := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfReferenceElevation.OnInitialize := InitializeMnw1;
+    FMfReferenceElevation.OnGetUseList := GetReferenceElevationUseList;
+    FMfReferenceElevation.OnTimeListUsed := PackageUsed;
+    FMfReferenceElevation.Name := StrMNW1ReferenceEleva;
+    FMfReferenceElevation.Orientation := dso3D;
+    AddTimeList(FMfReferenceElevation);
+
+    FMfWaterQualityGroup := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfWaterQualityGroup.OnInitialize := InitializeMnw1;
+    FMfWaterQualityGroup.OnGetUseList := GetWaterQualityGroupUseList;
+    FMfWaterQualityGroup.OnTimeListUsed := PackageUsed;
+    FMfWaterQualityGroup.Name := StrMNW1WaterQualityG;
+    FMfWaterQualityGroup.Orientation := dso3D;
+    AddTimeList(FMfWaterQualityGroup);
+
+    FMfNonLinearLossCoefficient := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfNonLinearLossCoefficient.OnInitialize := InitializeMnw1;
+    FMfNonLinearLossCoefficient.OnGetUseList := GetNonLinearLossCoefficientUseList;
+    FMfNonLinearLossCoefficient.OnTimeListUsed := PackageUsed;
+    FMfNonLinearLossCoefficient.Name := StrMNW1NonlinearLoss;
+    FMfNonLinearLossCoefficient.Orientation := dso3D;
+    AddTimeList(FMfNonLinearLossCoefficient);
+
+    FMfMinimumPumpingRate := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfMinimumPumpingRate.OnInitialize := InitializeMnw1;
+    FMfMinimumPumpingRate.OnGetUseList := GetMinimumPumpingRateUseList;
+    FMfMinimumPumpingRate.OnTimeListUsed := PackageUsed;
+    FMfMinimumPumpingRate.Name := StrMNW1MinimumPumping;
+    FMfMinimumPumpingRate.Orientation := dso3D;
+    AddTimeList(FMfMinimumPumpingRate);
+
+    FMfReactivationPumpingRate := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfReactivationPumpingRate.OnInitialize := InitializeMnw1;
+    FMfReactivationPumpingRate.OnGetUseList := GetReactivationPumpingRateUseList;
+    FMfReactivationPumpingRate.OnTimeListUsed := PackageUsed;
+    FMfReactivationPumpingRate.Name := StrMNW1ReactivationPu;
+    FMfReactivationPumpingRate.Orientation := dso3D;
+    AddTimeList(FMfReactivationPumpingRate);
+
+  end;
+
 end;
 
 destructor TMnw1Package.Destroy;
 begin
+  FMfReactivationPumpingRate.Free;
+  FMfMinimumPumpingRate.Free;
+  FMfNonLinearLossCoefficient.Free;
+  FMfWaterQualityGroup.Free;
+  FMfReferenceElevation.Free;
+  FMfLimitingWaterLevel.Free;
+  FMfSkinFactor.Free;
+  FMfConductance.Free;
+  FMfWellRadius.Free;
+  FMfWaterQuality.Free;
+  FMfDesiredPumpingRate.Free;
   FStoredLossExponent.Free;
   inherited;
+end;
+
+procedure TMnw1Package.GetConductanceUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  GetUseList(ConductancePosition, NewUseList);
+end;
+
+procedure TMnw1Package.GetDesiredPumpingRateUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  GetUseList(DesiredPumpingRatePosition, NewUseList);
+end;
+
+procedure TMnw1Package.GetLimitingWaterLevelUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  GetUseList(LimitingWaterLevelPosition, NewUseList);
 end;
 
 function TMnw1Package.GetLossExponent: Double;
@@ -15146,20 +15335,159 @@ begin
   result := FStoredLossExponent.Value;
 end;
 
+procedure TMnw1Package.GetMinimumPumpingRateUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  GetUseList(MinimumPumpingRatePosition, NewUseList);
+end;
+
+procedure TMnw1Package.GetNonLinearLossCoefficientUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  GetUseList(NonLinearLossCoefficientPosition, NewUseList);
+end;
+
+procedure TMnw1Package.GetReactivationPumpingRateUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  GetUseList(ReactivationPumpingRatePosition, NewUseList);
+end;
+
+procedure TMnw1Package.GetReferenceElevationUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  GetUseList(ReferenceElevationPosition, NewUseList);
+end;
+
+procedure TMnw1Package.GetSkinUseList(Sender: TObject; NewUseList: TStringList);
+begin
+  GetUseList(SkinFactorPosition, NewUseList);
+end;
+
+procedure TMnw1Package.InitializeMnw1(Sender: TObject);
+var
+  List: TModflowBoundListOfTimeLists;
+  Mnw1Writer: TModflowMNW1_Writer;
+begin
+  MfDesiredPumpingRate.CreateDataSets;
+  MfWaterQuality.CreateDataSets;
+  MfWellRadius.CreateDataSets;
+  MfConductance.CreateDataSets;
+  MfSkinFactor.CreateDataSets;
+  MfLimitingWaterLevel.CreateDataSets;
+  MfReferenceElevation.CreateDataSets;
+  MfWaterQualityGroup.CreateDataSets;
+  MfNonLinearLossCoefficient.CreateDataSets;
+  MfMinimumPumpingRate.CreateDataSets;
+  MfReactivationPumpingRate.CreateDataSets;
+
+  List := TModflowBoundListOfTimeLists.Create;
+  Mnw1Writer := TModflowMNW1_Writer.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfDesiredPumpingRate);
+    List.Add(MfWaterQuality);
+    List.Add(MfWellRadius);
+    List.Add(MfConductance);
+    List.Add(MfSkinFactor);
+    List.Add(MfLimitingWaterLevel);
+    List.Add(MfReferenceElevation);
+    List.Add(MfWaterQualityGroup);
+    List.Add(MfNonLinearLossCoefficient);
+    List.Add(MfMinimumPumpingRate);
+    List.Add(MfReactivationPumpingRate);
+
+    Mnw1Writer.UpdateDisplay(List);
+  finally
+    Mnw1Writer.Free;
+    List.Free;
+  end;
+  MfDesiredPumpingRate.ComputeAverage;
+  MfWaterQuality.ComputeAverage;
+  MfWellRadius.ComputeAverage;
+  MfConductance.ComputeAverage;
+  MfSkinFactor.ComputeAverage;
+  MfLimitingWaterLevel.ComputeAverage;
+  MfReferenceElevation.ComputeAverage;
+  MfWaterQualityGroup.ComputeAverage;
+  MfNonLinearLossCoefficient.ComputeAverage;
+  MfMinimumPumpingRate.ComputeAverage;
+  MfReactivationPumpingRate.ComputeAverage;
+end;
+
 procedure TMnw1Package.InitializeVariables;
 begin
   inherited;
   LossExponent := 1;
   MaxMnwIterations := 9999;
-  LossType := mltSkin;
+  LossType := mlt1Skin;
   WellFileName := '';
   ByNodeFileName := '';
   QSumFileName := '';
+  ByNodePrintFrequency := mpfOutputControl;
+  QSumPrintFrequency := mpfOutputControl;
+end;
+
+procedure TMnw1Package.GetUseList(ParameterIndex: Integer; NewUseList: TStringList);
+var
+  Item: TMnw1Item;
+  ScreenObjectIndex: Integer;
+  Boundary: TMnw1Boundary;
+  LocalModel: TCustomModel;
+  ScreenObject: TScreenObject;
+  ValueIndex: Integer;
+begin
+  { TODO -cRefactor : Consider replacing FModel with a TNotifyEvent or interface. }
+  LocalModel := FModel as TCustomModel;
+  for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
+    if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    Boundary := ScreenObject.ModflowMnw1Boundary;
+    if (Boundary <> nil) and Boundary.Used then
+    begin
+      for ValueIndex := 0 to Boundary.Values.Count - 1 do
+      begin
+        Item := Boundary.Values[ValueIndex] as TMnw1Item;
+        UpdateUseList(ParameterIndex, NewUseList, Item);
+      end;
+    end;
+  end;
+end;
+
+procedure TMnw1Package.GetWaterQualityGroupUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  GetUseList(WaterQualityGroupPosition, NewUseList);
+end;
+
+procedure TMnw1Package.GetWaterQualityUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  GetUseList(WaterQualityPosition, NewUseList);
+end;
+
+procedure TMnw1Package.GetWellRadiusUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  GetUseList(WellRadiusPosition, NewUseList);
 end;
 
 procedure TMnw1Package.SetByNodeFileName(const Value: string);
 begin
   SetStringProperty(FByNodeFileName, Value);
+end;
+
+procedure TMnw1Package.SetByNodePrintFrequency(
+  const Value: TMnw1PrintFrequency);
+begin
+  if FByNodePrintFrequency <> Value then
+  begin
+    FByNodePrintFrequency := Value;
+    InvalidateModel;
+  end;
 end;
 
 procedure TMnw1Package.SetLossExponent(const Value: Double);
@@ -15174,7 +15502,6 @@ begin
     FLossType := Value;
     InvalidateModel;
   end;
-
 end;
 
 procedure TMnw1Package.SetMaxMnwIterations(const Value: integer);
@@ -15187,6 +15514,15 @@ begin
   SetStringProperty(FQSumFileName, Value);
 end;
 
+procedure TMnw1Package.SetQSumPrintFrequency(const Value: TMnw1PrintFrequency);
+begin
+  if FQSumPrintFrequency <> Value then
+  begin
+    FQSumPrintFrequency := Value;
+    InvalidateModel;
+  end;
+end;
+
 procedure TMnw1Package.SetStoredLossExponent(const Value: TRealStorage);
 begin
   FStoredLossExponent.Assign(Value);
@@ -15196,6 +15532,5 @@ procedure TMnw1Package.SetWellFileName(const Value: string);
 begin
   SetStringProperty(FWellFileName, Value);
 end;
-{$ENDIF}
 
 end.

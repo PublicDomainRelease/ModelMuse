@@ -34,8 +34,8 @@ type
     property FirstCheckColumn: Integer read FFirstCheckColumn
       write FFirstCheckColumn;
     property OnValidCell: TValidCellEvent read FOnValidCell write FOnValidCell;
-    property OnValidCheckCell: TValidCellEvent read FOnValidCheckCell write FOnValidCheckCell;
-    procedure ClearGrid;
+    property OnValidCheckCell: TValidCellEvent read FOnValidCheckCell
+      write FOnValidCheckCell;
     { Public declarations }
   end;
 
@@ -86,26 +86,6 @@ begin
   finally
     Grid.EndUpdate
   end
-end;
-
-procedure TframeFormulaGrid.ClearGrid;
-var
-  RowIndex: Integer;
-  ColIndex: Integer;
-begin
-  Grid.BeginUpdate;
-  try
-    for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
-    begin
-      for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
-      begin
-        Grid.Cells[ColIndex,RowIndex] := '';
-        Grid.Checked[ColIndex,RowIndex] := False;
-      end;
-    end;
-  finally
-    Grid.EndUpdate;
-  end;
 end;
 
 procedure TframeFormulaGrid.edFormulaChange(Sender: TObject);

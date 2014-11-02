@@ -99,9 +99,9 @@ resourcestring
   'e but no evapotranspiration segments have been defined for any stress per' +
   'iod.';
   StrWritingETSPackage = 'Writing ETS Package input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSets2and3 = '  Writing Data Sets 2 and 3.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSets2and3 = '  Writing Data Sets 2 and 3.';
   StrWritingDataSets4to11 = '  Writing Data Sets 4 to 11.';
   StrWritingStressP = '    Writing Stress Period %d';
   StrNoParametersHaveB = 'No parameters have been defined for the Evapotrans' +

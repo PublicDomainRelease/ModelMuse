@@ -5,7 +5,7 @@ unit GridGeneration;
 
 interface
 
-uses Classes;
+uses Windows, Classes, Dialogs, Forms, Controls;
 
 {@name is used to create the grid based on
   @link(ScreenObjectUnit.TScreenObject)s.
@@ -56,7 +56,8 @@ function GenGridErrorMessage: string;
 implementation
 
 uses frmGoPhastUnit, ScreenObjectUnit, AbstractGridUnit, GoPhastTypes, Math,
-  Contnrs, RealListUnit, frmGoToUnit, frmSmoothGridUnit, UndoItems, FastGEO;
+  Contnrs, RealListUnit, frmGoToUnit, frmSmoothGridUnit, UndoItems, FastGEO,
+  SysUtils;
 
 resourcestring
   StrFailedToGenerateG = 'Failed to generate grid';
@@ -73,6 +74,11 @@ resourcestring
   'yer boundary would have been created.  This probably means that you need ' +
   'to create an object on the front or side view of the model in which you s' +
   'pecify the cell size.';
+  StrUnableToGenerateG = 'Unable to generate grid. The grid would have had ' +
+  'more than %d cells. Check that the objects you are using to define the grid' +
+  ' have reasonable values for the grid cell size.';
+  StrTheNewGridWillHa = 'The new grid will have %.0n cells. Do you want to con' +
+  'tinue?';
 
 type
   TZone = class(TObject)
@@ -473,6 +479,8 @@ var
   PositionIndex: integer;
   UndoCreateGrid: TUndoCreateGrid;
   DomainCount: integer;
+  NewNumElements: integer;
+  AMessage: string;
   procedure GetMinMax(const PointArray: TRealPointArray;
     out MinX, MaxX, MinY, MaxY: real);
   var
@@ -797,6 +805,49 @@ begin
           UndoCreateGrid.FNewLayerElevations := Positions;
           SetLength(UndoCreateGrid.FNewLayerElevations,
             Length(UndoCreateGrid.FNewLayerElevations));
+        end;
+
+        try
+          if frmGoPhast.ModelSelection = msPhast then
+          begin
+            NewNumElements := Length(UndoCreateGrid.FNewLayerElevations) *
+              Length(UndoCreateGrid.FNewRows)
+              * Length(UndoCreateGrid.FNewColumns);
+          end
+          else
+          begin
+            NewNumElements := frmGoPhast.PhastModel.LayerStructure.LayerCount *
+              Length(UndoCreateGrid.FNewRows)
+              * Length(UndoCreateGrid.FNewColumns);
+          end;
+          if NewNumElements >= 1000000 then
+          begin
+            Beep;
+            AMessage := Format(StrTheNewGridWillHa, [NewNumElements + 0.0]);
+            if MessageDlg(AMessage, mtWarning, [mbYes, mbNo], 0, mbNo) = mrNo then
+            begin
+              UndoCreateGrid.Free;
+              // This prevents a wanning message from being displayed.
+              ErrorMessage := '';
+              Exit;
+            end;
+          end;
+        except
+          on EIntOverflow do
+          begin
+            Beep;
+            ErrorMessage := Format(StrUnableToGenerateG, [MAXINT]);
+            UndoCreateGrid.Free;
+            Exit;
+          end;
+          on ERangeError do
+          begin
+            Beep;
+            ErrorMessage := Format(StrUnableToGenerateG, [MAXINT]);
+            UndoCreateGrid.Free;
+            Exit;
+          end;
+
         end;
         frmGoPhast.UndoStack.Submit(UndoCreateGrid);
 

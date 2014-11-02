@@ -218,6 +218,8 @@ resourcestring
   StrVersionS = 'Version: %s';
   StrProgramFailedToTe = 'Screen output' + sLineBreak
     + 'Program failed to terminate normally';
+  StrTheModelIsStillR = 'The model is still running. Closing ModelMonitor wi' +
+  'll also halt the model. Do you want to close ModelMonitor?';
 
 const
   WarningColor = clYellow;
@@ -548,7 +550,15 @@ procedure TfrmMonitor.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   timerReadOutput.Enabled := False;
   AppEvents.OnIdle := nil;
-  while FReading1 or FReading2 do
+  if jvcpRunModel.State in [psRunning, psWaiting] then
+  begin
+    Beep;
+    if not (MessageDlg(StrTheModelIsStillR, mtWarning, [mbYes, mbNo], 0) = mrYes) then
+    begin
+      CanClose := False;
+    end;
+  end;
+//  while FReading1 or FReading2 do
   begin
     // wait
   end;
@@ -562,6 +572,8 @@ procedure TfrmMonitor.FormCreate(Sender: TObject);
 var
   VerInfo: TJvVersionInfo;
 begin
+  FReading1 := False;
+  FReading2 := False;
   // The ItemHeight property seems to get lost all the time.
   treeNavigation.ItemHeight := 28;
 

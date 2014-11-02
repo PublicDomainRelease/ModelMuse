@@ -4,8 +4,8 @@ inherited frmPhastLocation: TfrmPhastLocation
   Caption = 'PHAST Program Location'
   ClientHeight = 131
   ClientWidth = 496
-  ExplicitWidth = 504
-  ExplicitHeight = 165
+  ExplicitWidth = 512
+  ExplicitHeight = 169
   PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
@@ -14,7 +14,7 @@ inherited frmPhastLocation: TfrmPhastLocation
     Width = 496
     Height = 41
     Align = alBottom
-    TabOrder = 0
+    TabOrder = 1
     DesignSize = (
       496
       41)
@@ -24,9 +24,10 @@ inherited frmPhastLocation: TfrmPhastLocation
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
+      Kind = bkHelp
+      NumGlyphs = 2
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnOK: TBitBtn
       Left = 320
@@ -34,9 +35,10 @@ inherited frmPhastLocation: TfrmPhastLocation
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
+      Kind = bkOK
+      NumGlyphs = 2
       TabOrder = 1
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnCancel: TBitBtn
       Left = 408
@@ -44,8 +46,9 @@ inherited frmPhastLocation: TfrmPhastLocation
       Width = 83
       Height = 27
       Anchors = [akTop, akRight]
-      TabOrder = 2
       Kind = bkCancel
+      NumGlyphs = 2
+      TabOrder = 2
     end
   end
   object Panel1: TPanel
@@ -54,7 +57,7 @@ inherited frmPhastLocation: TfrmPhastLocation
     Width = 496
     Height = 90
     Align = alClient
-    TabOrder = 1
+    TabOrder = 0
     DesignSize = (
       496
       90)

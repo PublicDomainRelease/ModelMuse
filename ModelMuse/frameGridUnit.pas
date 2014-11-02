@@ -3,7 +3,7 @@ unit frameGridUnit;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Buttons, ExtCtrls, Grids, RbwDataGrid4, StdCtrls, Mask, JvExMask,
   JvSpin;
 
@@ -27,6 +27,7 @@ type
     procedure SetEnabled(Value: boolean); override;
   public
     procedure ClearSelectedRow;
+    procedure ClearGrid;
     { Public declarations }
   end;
 
@@ -138,6 +139,26 @@ begin
   end;
   Grid.RowCount := NewRowCount;
   sbDelete.Enabled := seNumber.AsInteger > 0;
+end;
+
+procedure TframeGrid.ClearGrid;
+var
+  RowIndex: Integer;
+  ColIndex: Integer;
+begin
+  Grid.BeginUpdate;
+  try
+    for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
+    begin
+      for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
+      begin
+        Grid.Cells[ColIndex, RowIndex] := '';
+        Grid.Checked[ColIndex, RowIndex] := False;
+      end;
+    end;
+  finally
+    Grid.EndUpdate;
+  end;
 end;
 
 end.

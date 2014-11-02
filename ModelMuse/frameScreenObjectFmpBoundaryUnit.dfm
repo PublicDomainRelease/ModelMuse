@@ -22,6 +22,7 @@ inherited frameScreenObjectFmpBoundary: TframeScreenObjectFmpBoundary
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -44,6 +45,7 @@ inherited frameScreenObjectFmpBoundary: TframeScreenObjectFmpBoundary
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -66,6 +68,7 @@ inherited frameScreenObjectFmpBoundary: TframeScreenObjectFmpBoundary
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end>
     end

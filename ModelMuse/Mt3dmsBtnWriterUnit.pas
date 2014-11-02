@@ -65,25 +65,25 @@ resourcestring
   + 'apply to observations specified through the TOB package.';
   StrWritingMT3DMSBTNP = 'Writing MT3DMS BTN Package input.';
   StrWritingDataSets1and2 = '  Writing Data Sets 1 and 2.';
-  StrWritingDataSet3 = '  Writing Data Set 3.';
-  StrWritingDataSet4 = '  Writing Data Set 4.';
-  StrWritingDataSet5 = '  Writing Data Set 5.';
-  StrWritingDataSet6 = '  Writing Data Set 6.';
-  StrWritingDataSet7 = '  Writing Data Set 7.';
-  StrWritingDataSet8 = '  Writing Data Set 8.';
-  StrWritingDataSet9 = '  Writing Data Set 9.';
-  StrWritingDataSet10 = '  Writing Data Set 10.';
-  StrWritingDataSet11 = '  Writing Data Set 11.';
-  StrWritingDataSet12 = '  Writing Data Set 12.';
-  StrWritingDataSet13 = '  Writing Data Set 13.';
-  StrWritingDataSet14 = '  Writing Data Set 14.';
-  StrWritingDataSet15 = '  Writing Data Set 15.';
-  StrWritingDataSet16 = '  Writing Data Set 16.';
-  StrWritingDataSet17 = '  Writing Data Set 17.';
-  StrWritingDataSet18 = '  Writing Data Set 18.';
-  StrWritingDataSet19 = '  Writing Data Set 19.';
-  StrWritingDataSet20 = '  Writing Data Set 20.';
-  StrWritingDataSet21 = '  Writing Data Set 21.';
+//  StrWritingDataSet3 = '  Writing Data Set 3.';
+//  StrWritingDataSet4 = '  Writing Data Set 4.';
+//  StrWritingDataSet5 = '  Writing Data Set 5.';
+//  StrWritingDataSet6 = '  Writing Data Set 6.';
+//  StrWritingDataSet7 = '  Writing Data Set 7.';
+//  StrWritingDataSet8 = '  Writing Data Set 8.';
+//  StrWritingDataSet9 = '  Writing Data Set 9.';
+//  StrWritingDataSet10 = '  Writing Data Set 10.';
+//  StrWritingDataSet11 = '  Writing Data Set 11.';
+//  StrWritingDataSet12 = '  Writing Data Set 12.';
+//  StrWritingDataSet13 = '  Writing Data Set 13.';
+//  StrWritingDataSet14 = '  Writing Data Set 14.';
+//  StrWritingDataSet15 = '  Writing Data Set 15.';
+//  StrWritingDataSet16 = '  Writing Data Set 16.';
+//  StrWritingDataSet17 = '  Writing Data Set 17.';
+//  StrWritingDataSet18 = '  Writing Data Set 18.';
+//  StrWritingDataSet19 = '  Writing Data Set 19.';
+//  StrWritingDataSet20 = '  Writing Data Set 20.';
+//  StrWritingDataSet21 = '  Writing Data Set 21.';
   StrTheFile0sWas = 'The file "%0:s" was designated as the file containing i' +
   'nitial concentrations for the species "%1:s". However, the file does not ' +
   'exist.';
@@ -128,7 +128,7 @@ begin
     if Model.IsLayerSimulated(LayerIndex) then
     begin
       WriteArray(DataArray, LayerIndex, Format(StrDZLayerD,
-        [Model.DataSetLayerToModflowLayer(LayerIndex)]));
+        [Model.DataSetLayerToModflowLayer(LayerIndex)]), StrNoValueAssigned);
     end;
   end;
 end;
@@ -145,7 +145,7 @@ begin
     if Model.IsLayerSimulated(LayerIndex) then
     begin
       WriteArray(DataArray, LayerIndex, Format(StrPRSITYLayerD,
-        [Model.DataSetLayerToModflowLayer(LayerIndex)]));
+        [Model.DataSetLayerToModflowLayer(LayerIndex)]), StrNoValueAssigned);
     end;
   end;
 end;
@@ -162,7 +162,7 @@ begin
     if Model.IsLayerSimulated(LayerIndex) then
     begin
       WriteArray(DataArray, LayerIndex, Format(StrICBUNDLayerD,
-        [Model.DataSetLayerToModflowLayer(LayerIndex)]));
+        [Model.DataSetLayerToModflowLayer(LayerIndex)]), StrNoValueAssigned);
     end;
   end;
 end;
@@ -333,7 +333,8 @@ var
         begin
           WriteArray(DataArray, LayerIndex,
             Format(StrDataSet13SCONC,
-            [Item.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]));
+            [Item.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]),
+            StrNoValueAssigned);
         end;
       end;
     end;

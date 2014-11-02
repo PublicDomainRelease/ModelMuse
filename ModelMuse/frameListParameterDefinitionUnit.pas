@@ -133,7 +133,7 @@ var
   RowIndex: Integer;
   Parameter: TModflowParameter;
 begin
-  for RowIndex := 1 to dgParameters.RowCount - 1 do
+  for RowIndex := 1 to seNumberOfParameters.AsInteger - 1 do
   begin
     Parameter := dgParameters.Objects[0,RowIndex] as TModflowParameter;
     if Parameter <> nil then

@@ -5,10 +5,7 @@ inherited frameColorGrid: TframeColorGrid
     Width = 608
     ExplicitWidth = 608
     inherited tabSelection: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 27
       ExplicitWidth = 600
-      ExplicitHeight = 397
       DesignSize = (
         600
         397)
@@ -97,19 +94,13 @@ inherited frameColorGrid: TframeColorGrid
       end
     end
     inherited tabFilters: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 27
       ExplicitWidth = 600
-      ExplicitHeight = 397
       DesignSize = (
         600
         397)
     end
     inherited tabLegend: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 27
       ExplicitWidth = 600
-      ExplicitHeight = 397
       inherited imLegend: TImage
         Width = 382
         ExplicitWidth = 395

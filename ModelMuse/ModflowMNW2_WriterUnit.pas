@@ -118,12 +118,12 @@ resourcestring
   StrEvaluatingS = '    Evaluating %s';
   StrEvaluatingMNW2Pack = 'Evaluating MNW2 Package data.';
   StrWritingMNW2Package = 'Writing MNW2 Package input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
   StrWritingMNWIPackage = 'Writing MNWI Package input.';
-  StrWritingDataSet3 = '  Writing Data Set 3.';
+//  StrWritingDataSet3 = '  Writing Data Set 3.';
 
 //  StrTheFollowingObject
 

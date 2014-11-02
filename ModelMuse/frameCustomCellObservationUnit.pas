@@ -165,12 +165,18 @@ var
   ColIndex: Integer;
   RowIndex: Integer;
 begin
-  for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
-  begin
+  Grid.BeginUpdate;
+  try
     for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
     begin
-      Grid.Cells[ColIndex, RowIndex] := '';
+      for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
+      begin
+        Grid.Cells[ColIndex,RowIndex] := '';
+        Grid.Checked[ColIndex,RowIndex] := False;
+      end;
     end;
+  finally
+    Grid.EndUpdate;
   end;
 end;
 

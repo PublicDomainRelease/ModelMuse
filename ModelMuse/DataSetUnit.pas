@@ -38,7 +38,7 @@ type
     btMfChd, btMfEts, btMfEt, btMfRch, btMfSfr, btMfStr, btMfUzf, btMfObs,
     btMfMnw, btMt3dSsm, btMfHfb, btSutraSpecifiedPressure, btSutraSpecifiedHead,
     btSutraSpecConcTemp, btSutraFluidFlux, btMassEnergyFlux, btMfFhb, btCFP,
-    btMfFarm, btSWR);
+    btMfFarm, btSWR, btMnw1);
 
   TBoundaryTypes = set of TBoundaryType;
 
@@ -1506,6 +1506,7 @@ resourcestring
   StrTheFormulaForThe = 'The formula for the "%0:s" data set is invalid beca' +
   'use the data set or global variable "%1:s" does not exist.';
   StrMODFLOWSWR = 'MODFLOW SWR';
+  StrMODFLOWMNW1 = 'MODFLOW MNW1';
 
 { TDataArray }
 
@@ -5728,6 +5729,7 @@ begin
   if result then
   begin
     result := FRealValues.IsValue[Layer, Row, Col];
+    FPriorResult := result;
   end;
 end;
 
@@ -5856,6 +5858,7 @@ function TIntegerSparseDataSet.GetIsValue(
 begin
   result := inherited GetIsValue(Layer, Row, Col)
     and FIntegerValues.IsValue[Layer, Row, Col];
+  FPriorResult := result;
 end;
 
 procedure TIntegerSparseDataSet.GetMinMaxStoredLimits(out LayerMin, RowMin,
@@ -6746,14 +6749,26 @@ begin
   begin
     Result := btSWR;
   end
+  else if (Name = StrMNW1DesiredPumping)
+    or (Name = StrMNW1WaterQuality)
+    or (Name = StrMNW1WellRadius)
+    or (Name = StrMNW1Conductance)
+    or (Name = StrMNW1Skin)
+    or (Name = StrMNW1LimitingWater)
+    or (Name = StrMNW1ReferenceEleva)
+    or (Name = StrMNW1WaterQualityG)
+    or (Name = StrMNW1NonlinearLoss)
+    or (Name = StrMNW1MinimumPumping)
+    or (Name = StrMNW1ReactivationPu)
+    then
+  begin
+    result := btMnw1;
+  end
   else
   begin
     result := btUndefined;
   end;
-
 end;
-
-
 
 function TCustomTimeList.GetClassification: string;
 begin
@@ -6880,7 +6895,11 @@ begin
       btSWR:
         begin
           Result := StrMODFLOWSWR;
-        end
+        end;
+      btMnw1:
+        begin
+          Result := StrMODFLOWMNW1;
+        end;
       else
         Assert(False);
     end;

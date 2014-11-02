@@ -20,6 +20,8 @@ type
     lblAlgorithm: TLabel;
     lblContourInterval: TLabel;
     rdeContourInterval: TRbwDataEntry;
+    seLabelSpacing: TJvSpinEdit;
+    lblSpacing: TLabel;
     procedure cbSpecifyContoursClick(Sender: TObject);
     procedure btnEditContoursClick(Sender: TObject);
     procedure virttreecomboDataSetsChange(Sender: TObject);
@@ -45,7 +47,7 @@ type
     procedure Loaded; override;
     function CanColorDataSet(DataArray: TDataArray): boolean; override;
   public
-    procedure GetData;
+    procedure GetData; override;
     procedure SetData; override;
     procedure ContourData(AnObject: TObject);
     procedure UpdateLabelsAndLegend;
@@ -359,6 +361,7 @@ var
   ContourColors: TColorParameters;
   VirtNoneNode: PVirtualNode;
 begin
+  inherited;
   Handle;
 
   FGettingData := True;
@@ -381,6 +384,8 @@ begin
     begin
       Exit;
     end;
+
+    seLabelSpacing.AsInteger := frmGoPhast.PhastModel.ContourLabelSpacing;
 
     GetDataSets;
     UpdateTopFrontAndSideItems;
@@ -542,6 +547,7 @@ begin
   try
     frmGoPhast.PhastModel.ContourFont := FContourFont;
     frmGoPhast.PhastModel.ShowContourLabels := cbLabelContours.Checked;
+    frmGoPhast.PhastModel.ContourLabelSpacing := seLabelSpacing.AsInteger;
 
     RetrieveSelectedObject(AnObject);
     ContourData(AnObject);

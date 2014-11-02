@@ -23,17 +23,17 @@ implementation
 
 uses
   Forms, frmErrorsAndWarningsUnit, ModflowUnitNumbers, CustomModflowWriterUnit,
-  frmProgressUnit, LayerStructureUnit;
+  frmProgressUnit, LayerStructureUnit, GoPhastTypes;
 
 resourcestring
   StrWritingUPWPackage = 'Writing UPW Package input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSet3 = '  Writing Data Set 3.';
-  StrWritingDataSet4 = '  Writing Data Set 4.';
-  StrWritingDataSet5 = '  Writing Data Set 5.';
-  StrWritingDataSet6 = '  Writing Data Set 6.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSet3 = '  Writing Data Set 3.';
+//  StrWritingDataSet4 = '  Writing Data Set 4.';
+//  StrWritingDataSet5 = '  Writing Data Set 5.';
+//  StrWritingDataSet6 = '  Writing Data Set 6.';
 
 { TModflowLPF_Writer }
 

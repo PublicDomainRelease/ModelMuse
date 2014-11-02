@@ -23,7 +23,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
     Top = 22
     Width = 609
     Height = 426
-    ActivePage = tabDischargeAdjustment
+    ActivePage = tabWellScreens
     Align = alClient
     TabOrder = 1
     object tabBasic: TTabSheet
@@ -237,7 +237,6 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         end
         inherited comboLocationChoice: TJvImageComboBox
           Left = 173
-          ItemIndex = -1
           OnChange = framePumpLocationMethodcomboLocationChoiceChange
           ExplicitLeft = 173
         end

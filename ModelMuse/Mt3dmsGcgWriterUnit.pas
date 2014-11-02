@@ -18,12 +18,12 @@ type
 implementation
 
 uses
-  ModflowUnitNumbers, frmProgressUnit;
+  ModflowUnitNumbers, frmProgressUnit, GoPhastTypes;
 
 resourcestring
   StrWritingMT3DMSGcgP = 'Writing MT3DMS gcg Package input.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
 
 { TMt3dmsGcgWriter }
 

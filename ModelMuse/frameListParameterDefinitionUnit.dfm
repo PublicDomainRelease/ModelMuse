@@ -19,8 +19,8 @@ object frameListParameterDefinition: TframeListParameterDefinition
     object lblNumParameters: TLabel
       Left = 63
       Top = 9
-      Width = 130
-      Height = 16
+      Width = 108
+      Height = 13
       Caption = 'Number of parameters'
     end
     object btnDelete: TBitBtn

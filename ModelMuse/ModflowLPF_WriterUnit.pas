@@ -72,14 +72,14 @@ resourcestring
   'ause it is not applied to any cells.  Check that %1:s is set to "True" in' +
   ' at least one simulated unit.';
   StrWritingLPFPackage = 'Writing LPF Package input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSet3 = '  Writing Data Set 3.';
-  StrWritingDataSet4 = '  Writing Data Set 4.';
-  StrWritingDataSet5 = '  Writing Data Set 5.';
-  StrWritingDataSet6 = '  Writing Data Set 6.';
-  StrWritingDataSet7 = '  Writing Data Set 7.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSet3 = '  Writing Data Set 3.';
+//  StrWritingDataSet4 = '  Writing Data Set 4.';
+//  StrWritingDataSet5 = '  Writing Data Set 5.';
+//  StrWritingDataSet6 = '  Writing Data Set 6.';
+//  StrWritingDataSet7 = '  Writing Data Set 7.';
   StrWritingDataSet16 = '  Writing Data Set 16 for layer %d';
   StrWETDRY0sLayer1 = 'WETDRY %0:s Layer %1:d';
   StrWritingDataSetN = '  Writing Data Set %0:d for layer %1:d';
@@ -501,7 +501,7 @@ begin
     DataArray := Model.DataArrayManager.GetDataSetByName(rsWetDry);
     Assert(DataArray <> nil);
     WriteArray(DataArray, ArrayIndex,
-    Format(StrWETDRY0sLayer1, [Group.AquiferName, MFLayerIndex]));
+    Format(StrWETDRY0sLayer1, [Group.AquiferName, MFLayerIndex]), StrNoValueAssigned);
   end;
 end;
 
@@ -529,7 +529,7 @@ begin
         DataArray := Model.DataArrayManager.GetDataSetByName(rsModflow_CBKz);
         Assert(DataArray <> nil);
         WriteArray(DataArray, ArrayIndex + 1, 'VKCB ' + NextGroup.AquiferName
-          + ' Layer ' + IntToStr(MFLayerIndex));
+          + ' Layer ' + IntToStr(MFLayerIndex), StrNoValueAssigned);
         CheckArray(DataArray, ArrayIndex, Format(StrNegativeSValue, [rsKz]),
           cvmGreaterEqual, 0, etError);
       end;
@@ -557,7 +557,7 @@ begin
       DataArray := Model.DataArrayManager.GetDataSetByName(rsSpecificYield);
       Assert(DataArray <> nil);
       WriteArray(DataArray, ArrayIndex, 'SY ' + Group.AquiferName
-        + ' Layer ' + IntToStr(MFLayerIndex));
+        + ' Layer ' + IntToStr(MFLayerIndex), StrNoValueAssigned);
       CheckArray(DataArray, ArrayIndex,
         Format(StrNegativeSValue, [rsSpecificYield]),
         cvmGreaterEqual, 0, etError);
@@ -586,7 +586,7 @@ begin
       DataArray := Model.DataArrayManager.GetDataSetByName(rsSpecific_Storage);
       Assert(DataArray <> nil);
       WriteArray(DataArray, ArrayIndex, 'SS ' + Group.AquiferName
-        + ' Layer ' + IntToStr(MFLayerIndex));
+        + ' Layer ' + IntToStr(MFLayerIndex), StrNoValueAssigned);
       CheckArray(DataArray, ArrayIndex, Format(StrNegativeSValue,
         [rsSpecific_Storage]), cvmGreaterEqual, 0, etError);
     end;
@@ -610,7 +610,7 @@ begin
     DataArray := Model.DataArrayManager.GetDataSetByName(rsVerticalAnisotropy);
     Assert(DataArray <> nil);
     WriteArray(DataArray, ArrayIndex, 'VKA ' + Group.AquiferName
-      + ' Layer ' + IntToStr(MFLayerIndex));
+      + ' Layer ' + IntToStr(MFLayerIndex), StrNoValueAssigned);
     if Model.Grid.LayerCount > 1 then
     begin
       CheckArray(DataArray, ArrayIndex, Format(StrNegativeOrZeroS,
@@ -636,7 +636,7 @@ begin
     DataArray := Model.DataArrayManager.GetDataSetByName(rsKz);
     Assert(DataArray <> nil);
     WriteArray(DataArray, ArrayIndex, 'VKA ' + Group.AquiferName
-      + ' Layer ' + IntToStr(MFLayerIndex));
+      + ' Layer ' + IntToStr(MFLayerIndex), StrNoValueAssigned);
     if Model.Grid.LayerCount > 1 then
     begin
       CheckArray(DataArray, ArrayIndex, Format(StrNegativeSValue,
@@ -662,7 +662,7 @@ begin
     DataArray := Model.DataArrayManager.GetDataSetByName(rsHorizontalAnisotropy);
     Assert(DataArray <> nil);
     WriteArray(DataArray, ArrayIndex, 'HANI ' + Group.AquiferName
-      + ' Layer ' + IntToStr(MFLayerIndex));
+      + ' Layer ' + IntToStr(MFLayerIndex), StrNoValueAssigned);
       CheckArray(DataArray, ArrayIndex, Format(StrNegativeSValue,
         [rsHorizontalAnisotropy]), cvmGreaterEqual, 0, etError);
   end;
@@ -686,7 +686,7 @@ begin
     DataArray := Model.DataArrayManager.GetDataSetByName(rsKx);
     Assert(DataArray <> nil);
     WriteArray(DataArray, ArrayIndex, 'HK ' + Group.AquiferName + ' Layer '
-      + IntToStr(MFLayerIndex));
+      + IntToStr(MFLayerIndex), StrNoValueAssigned);
     CheckArray(DataArray, ArrayIndex, Format(StrNegativeSValue,
       [rsKx]), cvmGreaterEqual, 0, etError);
   end;

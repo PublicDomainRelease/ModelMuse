@@ -63,6 +63,9 @@ type
       ParentNode, Node: PVirtualNode;
       var InitialStates: TVirtualNodeInitStates);
     procedure cbMultipleDataRowsClick(Sender: TObject);
+    procedure GridMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     FGrids: TList;
     FRealIgnoreValues: array of double;
@@ -72,6 +75,9 @@ type
     FStoredClassifications: TList;
     FSelectedVirtNode: PVirtualNode;
     FShouldClick: Boolean;
+    FSelectedGrid: TRbwDataGrid4;
+    FSelectedCol: Integer;
+    FSelectedRow: Integer;
     procedure InitializeGridForCellList(DataSet: TDataArray);
     procedure InitializeGridForGriddedData(Grid: TRbwDataGrid4;
       ColumnFormat: TRbwColumnFormat4; ColumnsForward, RowsForward: Boolean);
@@ -149,7 +155,7 @@ implementation
 
 uses
   Contnrs, RbwParser, frmGoPhastUnit, ClassificationUnit,PhastModelUnit,
-  UndoItems, GIS_Functions, frmShowHideObjectsUnit;
+  UndoItems, GIS_Functions, frmShowHideObjectsUnit, Clipbrd;
 
 resourcestring
   StrImportGriddedData = 'import gridded data';
@@ -677,6 +683,14 @@ begin
     Grid.AutoMultiEdit := True;
   end;
   Grid.Parent := pcGriddedData.Pages[0];
+end;
+
+procedure TfrmImportGriddedData.GridMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  inherited;
+  FSelectedGrid := Sender as TRbwDataGrid4;
+  FSelectedGrid.MouseToCell(X, Y, FSelectedCol, FSelectedRow);
 end;
 
 procedure TfrmImportGriddedData.rdgIgnoreValuesEndUpdate(Sender: TObject);
@@ -1518,6 +1532,7 @@ var
   RowIndex: Integer;
   ClearColumn: Boolean;
 begin
+  Grid.OnMouseDown := GridMouseDown;
   Grid.BeginUpdate;
   try
     Grid.Align := alClient;
@@ -1797,6 +1812,24 @@ begin
   inherited;
   FStoredClassifications.Free;
   FGrids.Free;
+end;
+
+procedure TfrmImportGriddedData.FormKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  inherited;
+  // This only works because frmImportGriddedData.KeyPreview is true.
+
+  if (ssCtrl in Shift) and (Key = 86) then
+  begin
+    if (ActiveControl = FSelectedGrid)
+      and (FSelectedCol >= FSelectedGrid.FixedCols)
+      and (FSelectedRow >= FSelectedGrid.FixedRows)
+      and (FSelectedGrid.Columns[FSelectedCol].Format = rcf4Boolean) then
+    begin
+      FSelectedGrid.DistributeText(FSelectedCol, FSelectedRow, Clipboard.AsText);
+    end;
+  end;
 end;
 
 procedure TfrmImportGriddedData.FormResize(Sender: TObject);

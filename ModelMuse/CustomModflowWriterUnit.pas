@@ -186,7 +186,8 @@ type
         identifying the data set being written.)
     }
     procedure WriteArray(const DataArray: TDataArray; const LayerIndex: integer;
-      const ArrayName: string; CacheArray: Boolean = True);
+      const ArrayName: string;  NoValueAssignedAnnotation: string;
+      CacheArray: Boolean = True);
     // @name writes value to the output file using the U2DINT format in MODFLOW
     // or the IARRAY array reader in MT3DMS depending on the value of
     // @link(FArrayWritingFormat)
@@ -354,6 +355,11 @@ type
       DisplayArray: TModflowBoundaryDisplayDataArray; DataTypeIndex: Integer;
       List: TList; DefaultValue: double; DataType: TRbwDataType;
       UpdateMethod: TUpdateMethod);
+    // @name counts the maximum number of cells used in any stress period. This
+    // value is returned in MaximumNumberOfCells.
+    procedure CountCells(var MaximumNumberOfCells: integer); virtual;
+    procedure GetITMP(var ITMP: integer; TimeIndex: integer;
+      var List: TValueCellList);
   public
     // @name creates and instance of @classname.
     Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
@@ -475,9 +481,10 @@ type
    files that allow for both parameter and non-parameter cells.}
   TCustomListWriter = class(TCustomParameterTransientWriter)
   protected
+
     // @name counts the maximum number of cells used in any stress period. This
     // value is returned in MaximumNumberOfCells.
-    procedure CountCells(var MaximumNumberOfCells: Integer);
+    procedure CountCells(var MaximumNumberOfCells: Integer); override;
     // @name counts the number of parameters and the maximum number of cells
     // defined by parameters. If a parameter has no cells associated with it,
     // its name will be erased from FParamValues which will cause a warning
@@ -781,7 +788,10 @@ resourcestring
   StrLayerRowColObject = 'Layer, Row, Col = [%0:d, %1:d, %2:d] defined by the object %3:s';
   StrEvaluatingS = '  Evaluating %s';
   StrEvaluatingSData = 'Evaluating %s data.';
-
+  StrWritingStressPer = '  Writing Stress Period %d';
+  StrNoBoundaryConditio1 = 'No boundary conditions for the %0:s in one or mor' +
+  'e stress periods.';
+  StrStressPeriod0d = 'Stress Period %0:d';
 
 const
   // @name is the comment assigned to locations in a @link(TDataArray) where
@@ -807,9 +817,6 @@ resourcestring
   StrTheSInputFileCa = 'The %s input file can not be created.';
   StrInTheBoundaryPack = 'In the boundary package related to the %s package,' +
   ' no boundaries were defined.';
-  StrNoBoundaryConditio1 = 'No boundary conditions for the %0:s in one or mor' +
-  'e stress periods.';
-  StrStressPeriod0d = 'Stress Period %0:d';
   StrErrorFlowObservatEarly = 'Error; Flow Observation = %0:s Early Times = ' +
   '%1:s';
   StrErrorFlowObservatLate = 'Error; Flow Observation = %0:s Late Times = ' +
@@ -830,12 +837,12 @@ resourcestring
   StrWriting0sFor = '    Writing %0:s for Layer %1:d';
   StrWritingArray = '    Writing array';
   StrWritingParamter = '    Writing paramter: %s';
-  StrWritingStressPer = '  Writing Stress Period %d';
   StrLayer0dRow1 = 'Layer: %0:d; Row: %1:d; Column: %2:d';
   StrInputFileDoesNot = 'Input file does not exist.';
   StrTheRequiredInputF = 'The required input file "%s" does not exist.';
   StrNoParametersAreBe = 'No parameters are being used in one or more stress' +
   ' periods in the %s package.';
+  StrNoValuesAssignedT = 'No values assigned to the following data sets';
 
 var
 //  NameFile: TStringList;
@@ -1492,12 +1499,16 @@ begin
 end;
 
 procedure TCustomModflowWriter.WriteArray(const DataArray: TDataArray;
-  const LayerIndex: integer; const ArrayName: string; CacheArray: Boolean = True);
+  const LayerIndex: integer; const ArrayName: string;
+  NoValueAssignedAnnotation: string; CacheArray: Boolean = True);
 var
   RealValue: double;
   IntValue: integer;
   BoolValue: Boolean;
   Uniform: boolean;
+  UnassignedAnnotation: Boolean;
+  RowIndex: integer;
+  ColIndex: integer;
 begin
   Assert(DataArray <> nil);
   if ArrayName <> '' then
@@ -1536,6 +1547,31 @@ begin
           WriteConstantU2DINT(ArrayName, IntValue);
         end;
       else Assert(False);
+    end;
+    UnassignedAnnotation := True;
+    for RowIndex := 0 to DataArray.RowCount - 1 do
+    begin
+      for ColIndex := 0 to DataArray.ColumnCount - 1 do
+      begin
+        if DataArray.Annotation[LayerIndex, RowIndex, ColIndex]
+          <> NoValueAssignedAnnotation then
+        begin
+          UnassignedAnnotation := False;
+        end;
+      end;
+    end;
+    if UnassignedAnnotation then
+    begin
+      if DataArray.Name <> '' then
+      begin
+        frmErrorsAndWarnings.AddWarning(Model, StrNoValuesAssignedT,
+          DataArray.Name);
+      end
+      else
+      begin
+        frmErrorsAndWarnings.AddWarning(Model, StrNoValuesAssignedT,
+          ArrayName);
+      end;
     end;
   end
   else
@@ -2076,6 +2112,24 @@ begin
 
 end;
 
+procedure TCustomTransientWriter.CountCells(var MaximumNumberOfCells: Integer);
+var
+  StressPeriodIndex: Integer;
+  List: TValueCellList;
+begin
+  MaximumNumberOfCells := 0;
+  for StressPeriodIndex := 0 to FValues.Count - 1 do
+  begin
+    List := FValues[StressPeriodIndex];
+    if List.Count > MaximumNumberOfCells then
+    begin
+      MaximumNumberOfCells := List.Count;
+    end;
+    List.Cache;
+  end;
+
+end;
+
 constructor TCustomTransientWriter.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
@@ -2317,16 +2371,17 @@ var
   StressPeriodIndex: Integer;
   MaximumParamCells : integer;
 begin
-  MaximumNumberOfCells := 0;
-  for StressPeriodIndex := 0 to FValues.Count - 1 do
-  begin
-    List := FValues[StressPeriodIndex];
-    if List.Count > MaximumNumberOfCells then
-    begin
-      MaximumNumberOfCells := List.Count;
-    end;
-    List.Cache;
-  end;
+  inherited CountCells(MaximumNumberOfCells);
+//  MaximumNumberOfCells := 0;
+//  for StressPeriodIndex := 0 to FValues.Count - 1 do
+//  begin
+//    List := FValues[StressPeriodIndex];
+//    if List.Count > MaximumNumberOfCells then
+//    begin
+//      MaximumNumberOfCells := List.Count;
+//    end;
+//    List.Cache;
+//  end;
 
   MaximumParamCells := 0;
   for StressPeriodIndex := 0 to FValues.Count - 1 do
@@ -2636,13 +2691,11 @@ var
   CellIndex: Integer;
   ITMP: Integer;
   NP: Integer;
-  List, PriorList: TValueCellList;
+  List: TValueCellList;
   ParamValues: TList;
   ParamIndex: Integer;
   ParametersUsed: TStringList;
   TimeIndex: Integer;
-  PriorCell: TValueCell;
-  IdenticalValues: Boolean;
 begin
   FUsedInstanceNames.Clear;
   ParamValues := TList.Create;
@@ -2661,31 +2714,7 @@ begin
           ParametersUsed, ParamValues, False);
 
         NP := ParametersUsed.Count;
-        List := FValues[TimeIndex];
-        ITMP := List.Count;
-        if TimeIndex > 0 then
-        begin
-          PriorList := FValues[TimeIndex-1];
-          if (List.Count = PriorList.Count) and (List.Count > 0) then
-          begin
-            IdenticalValues := True;
-            for CellIndex := 0 to List.Count - 1 do
-            begin
-              Cell := List[CellIndex] as TValueCell;
-              PriorCell := PriorList[CellIndex] as TValueCell;
-              if not Cell.IsIdentical(PriorCell) then
-              begin
-                IdenticalValues := False;
-                break;
-              end;
-            end;
-            if IdenticalValues then
-            begin
-              ITMP := -1;
-            end;
-          end;
-          PriorList.Cache;
-        end;
+        GetITMP(ITMP, TimeIndex, List);
         if (ITMP = 0) and (NP = 0) then
         begin
           frmErrorsAndWarnings.AddWarning(Model,
@@ -3604,7 +3633,8 @@ end;
 
 procedure TCustomModflowWriter.WriteTransient2DArray(const Comment: string;
   DataTypeIndex: Integer; DataType: TRbwDataType; DefaultValue: Double;
-  List: TList; AssignmentMethod: TUpdateMethod; AdjustForLGR: boolean; var TransientArray: TDataArray;
+  List: TList; AssignmentMethod: TUpdateMethod; AdjustForLGR: boolean;
+  var TransientArray: TDataArray;
   FreeArray: boolean = True);
 var
   ColIndex: Integer;
@@ -3617,6 +3647,7 @@ var
   ListIndex: integer;
   CellListIndex: Integer;
   DummyAnnotation: string;
+  ValuesAssigned: Boolean;
   procedure AssignCellValues(CellList: TValueCellList);
   var
     CellIndex: Integer;
@@ -3751,7 +3782,7 @@ begin
     begin
       Model.AdjustDataArray(ExportArray);
     end;
-    WriteArray(ExportArray, 0, Comment, False);
+    WriteArray(ExportArray, 0, Comment, DummyAnnotation, False);
   finally
     if FreeArray then
     begin
@@ -5029,6 +5060,42 @@ procedure TCustomPackageWriter.ShowNoBoundaryError
 begin
   frmErrorsAndWarnings.AddError(Model, NoDefinedErrorRoot,
     Format(StrTheSPackageHasB, [Package.PackageIdentifier]));
+end;
+
+procedure TCustomTransientWriter.GetITMP(var ITMP: integer; TimeIndex: integer;
+  var List: TValueCellList);
+var
+  PriorList: TValueCellList;
+  IdenticalValues: boolean;
+  Cell: TValueCell;
+  CellIndex: integer;
+  PriorCell: TValueCell;
+begin
+  List := FValues[TimeIndex];
+  ITMP := List.Count;
+  if TimeIndex > 0 then
+  begin
+    PriorList := FValues[TimeIndex - 1];
+    if (List.Count = PriorList.Count) and (List.Count > 0) then
+    begin
+      IdenticalValues := True;
+      for CellIndex := 0 to List.Count - 1 do
+      begin
+        Cell := List[CellIndex] as TValueCell;
+        PriorCell := PriorList[CellIndex] as TValueCell;
+        if not Cell.IsIdentical(PriorCell) then
+        begin
+          IdenticalValues := False;
+          break;
+        end;
+      end;
+      if IdenticalValues then
+      begin
+        ITMP := -1;
+      end;
+    end;
+    PriorList.Cache;
+  end;
 end;
 
 end.

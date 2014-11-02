@@ -55,7 +55,7 @@ type
     property Changing: Boolean read FChanging write FChanging;
 {$ENDIF}
     procedure DoChange;
-    procedure ClearGrid(Grid: TRbwDataGrid4);
+//    procedure ClearGrid(Grid: TRbwDataGrid4);
     { Private declarations }
   public
     property DataChanged: Boolean read FChanged;
@@ -94,19 +94,19 @@ type
 
 {$R *.dfm}
 
-procedure TframeFarmDiversion.ClearGrid(Grid: TRbwDataGrid4);
-var
-  RowIndex: Integer;
-  ColIndex: Integer;
-begin
-  for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
-  begin
-    for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
-    begin
-      Grid.Cells[ColIndex,RowIndex] := ''
-    end;
-  end;
-end;
+//procedure TframeFarmDiversion.ClearGrid(Grid: TRbwDataGrid4);
+//var
+//  RowIndex: Integer;
+//  ColIndex: Integer;
+//begin
+//  for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
+//  begin
+//    for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
+//    begin
+//      Grid.Cells[ColIndex,RowIndex] := ''
+//    end;
+//  end;
+//end;
 
 procedure TframeFarmDiversion.comboMethodChange(Sender: TObject);
 var
@@ -333,7 +333,7 @@ begin
         end;
         if not FirstDelivReturns.IsSame(DelivReturns) then
         begin
-          ClearGrid(Grid);
+          ClearGrid;
           seNumber.AsInteger := 0;
           seNumber.OnChange(seNumber);
           comboMethod.ItemIndex := 0;
@@ -343,7 +343,7 @@ begin
     end
     else
     begin
-      ClearGrid(Grid);
+      ClearGrid;
       seNumber.AsInteger := 0;
       seNumber.OnChange(seNumber);
       comboMethod.ItemIndex := 0;
@@ -698,7 +698,7 @@ begin
     comboSfrObjects.Items.EndUpdate
   end;
   Grid.BeginUpdate;
-  ClearGrid(Grid);
+  ClearGrid;
   try
     FirstFormulaColumn := Succ(Ord(dtcEnd));
     Grid.ColCount := 5;

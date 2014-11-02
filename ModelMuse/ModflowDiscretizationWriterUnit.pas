@@ -17,22 +17,22 @@ type
 implementation
 
 uses ModflowUnitNumbers, frmProgressUnit, Forms, FastGEO, ModelMuseUtilities,
-  frmGoPhastUnit, ModflowOptionsUnit;
+  frmGoPhastUnit, ModflowOptionsUnit, GoPhastTypes;
 
 resourcestring
   StrWritingDiscretizati = 'Writing Discretization Package input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSet3 = '  Writing Data Set 3.';
-  StrWritingDataSet4 = '  Writing Data Set 4.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSet3 = '  Writing Data Set 3.';
+//  StrWritingDataSet4 = '  Writing Data Set 4.';
   StrCheckingColumnWi = '  Checking column widths.';
   StrCheckingRowHeigh = '  Checking row height.';
   StrCheckingRowToCo = '  Checking row to column size ratios.';
-  StrWritingDataSet5 = '  Writing Data Set 5.';
-  StrWritingDataSet6 = '  Writing Data Set 6.';
+//  StrWritingDataSet5 = '  Writing Data Set 5.';
+//  StrWritingDataSet6 = '  Writing Data Set 6.';
   StrCheckingElevation = '  Checking elevations.';
-  StrWritingDataSet7 = '  Writing Data Set 7.';
+//  StrWritingDataSet7 = '  Writing Data Set 7.';
 
 { TModflowDiscretizationWriter }
 

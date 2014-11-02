@@ -146,6 +146,10 @@ const
   StrSwrObs = 'SWR_OBS';
   StrSwrDirectRunoff = 'SWR_DirectRunoff';
   StrSwrConvergenceHistory = 'SWR_ConvergenceHistory';
+  StrMNW1 = 'MNW1';
+  StrMnw1WellOutput = 'MNW1_WellOutput';
+  StrMnw1ByNode = 'MNW1_ByNode';
+  StrMnw1QSum = 'MNW1_QSum';
 
   Solvers: array[0..5] of string = (StrPCG, StrPCGN, StrGMG, StrSIP, StrDE4, StrNWT);
   FlowPackages: array[0..3] of string = (StrLPF, StrHUF2, StrBCF, StrUPW);
@@ -447,6 +451,10 @@ const
   SWR_Obs_Unit = 179;
   SWR_DirectRunoff_Unit = 180;
   SWR_ConvergenceHistory_Unit = 181;
+  MNW1_Unit = 182;
+  MNW1_WellOutputUnit = 183;
+  MNW1_ByNodeUnit = 184;
+  MNW1_QSumUnit = 185;
 
   GageOutputStartUnit = 20205;
 
@@ -646,6 +654,11 @@ begin
   AddItem(StrSwrObs, SWR_Obs_Unit);
   AddItem(StrSwrDirectRunoff, SWR_DirectRunoff_Unit);
   AddItem(StrSwrConvergenceHistory, SWR_ConvergenceHistory_Unit);
+  AddItem(StrMNW1, MNW1_Unit);
+  AddItem(StrMnw1WellOutput, MNW1_WellOutputUnit);
+  AddItem(StrMnw1ByNode, MNW1_ByNodeUnit);
+  AddItem(StrMnw1QSum, MNW1_QSumUnit);
+
 
 
 

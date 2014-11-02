@@ -57,6 +57,8 @@ resourcestring
   StrTheNameOfTheMODF = 'The name of the MODFLOW Name file can not contain a' +
   'ny spaces.';
   StrReadingStressPerio = 'Reading Stress Period %s';
+  StrAbortingModelMuse = 'Aborting.  ModelMuse was unable to create %0:s. Pl' +
+  'ease correct this problem. The error message was %1:s.';
 
 procedure TfrmImportModflow.btnOKClick(Sender: TObject);
 var
@@ -97,18 +99,27 @@ begin
     YOrigin := StrToFloat(rdeY.Text);
     GridAngle := StrToFloat(rdeGridAngle.Text) * Pi/180;
 
-    OldFile := ExtractFileDir(edNameFile.FileName) + '\old.txt';
-    if cbOldStream.Checked then
-    begin
-      With TStringList.Create do
+    try
+      OldFile := ExtractFileDir(edNameFile.FileName) + '\old.txt';
+      if cbOldStream.Checked then
       begin
-        SaveToFile(OldFile);
-        Free;
+        With TStringList.Create do
+        begin
+          SaveToFile(OldFile);
+          Free;
+        end;
+      end
+      else
+      begin
+        DeleteFile(OldFile);
       end;
-    end
-    else
-    begin
-      DeleteFile(OldFile);
+    except on E: EFCreateError do
+      begin
+        Beep;
+        MessageDlg(Format(StrAbortingModelMuse, [OldFile, E.Message]), mtError, [mbOK], 0);
+        ModalResult := mrNone;
+        Exit;
+      end;
     end;
 
     ListFileName := '';

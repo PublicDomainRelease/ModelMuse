@@ -2021,7 +2021,7 @@ resourcestring
   ' export the SUTRA input files.';
   StrTheBandwidthHasCh = 'The bandwidth has changed from %0:d to %1:d.';
   StrNowMightBeAGood = 'Now might be a good time to activate the Upstream We' +
-  'ighting (UPW) package in MODFLOW-NWT.';
+  'ighting (UPW) Flow and the NWT Solver packages in MODFLOW-NWT.';
   StrAnErrorOccuredWhe = 'An error occured when trying to convert the model ' +
   'data from a binary format to a text format. Try saving in a different for' +
   'mat such as a ModelMuse binary file (.gpb).';
@@ -3989,6 +3989,8 @@ begin
   PhastModel.UpdateTimeLists;
   PhastModel.Name := 'PhastModel';
   PhastModel.UpToDate := True;
+
+  ReadIniFile;
 
 end;
 
@@ -6576,7 +6578,7 @@ begin
       ContourExporter := TContourExtractor.Create(PhastModel);
       try
         ContourExporter.CreateShapes(PhastModel.ContourLegend.Values,
-          ContourDataSet, sdShapefile.FileName);
+          ContourDataSet, sdShapefile.FileName, PhastModel.ContourLabelSpacing);
       finally
         ContourExporter.Free;
       end;
@@ -6961,31 +6963,35 @@ begin
     Mesh := PhastModel.Mesh;
     if Mesh <> nil then
     begin
-      if Mesh.MeshType = mtProfile then
-      begin
-        Limits := Mesh.MeshLimits(vdTop, Mesh.CrossSection.Angle);
-        ZHeight := Limits.MaxY - Limits.MinY;
-        if ZHeight > 0 then
-        begin
-          XWidth := Limits.MaxX - Limits.MinX;
-          if XWidth > 0 then
+      case Mesh.MeshType of
+        mt2D: result := 1;
+        mtProfile:
           begin
-            GetExag;
+            Limits := Mesh.MeshLimits(vdTop, Mesh.CrossSection.Angle);
+            ZHeight := Limits.MaxY - Limits.MinY;
+            if ZHeight > 0 then
+            begin
+              XWidth := Limits.MaxX - Limits.MinX;
+              if XWidth > 0 then
+              begin
+                GetExag;
+              end;
+            end;
           end;
-        end;
-      end
-      else
-      begin
-        Limits := Mesh.MeshLimits(vdFront, Mesh.CrossSection.Angle);
-        ZHeight := Limits.MaxZ - Limits.MinZ;
-        if ZHeight > 0 then
-        begin
-          XWidth := Limits.MaxX - Limits.MinX;
-          if XWidth > 0 then
+        mt3D:
           begin
-            GetExag;
+            Limits := Mesh.MeshLimits(vdFront, Mesh.CrossSection.Angle);
+            ZHeight := Limits.MaxZ - Limits.MinZ;
+            if ZHeight > 0 then
+            begin
+              XWidth := Limits.MaxX - Limits.MinX;
+              if XWidth > 0 then
+              begin
+                GetExag;
+              end;
+            end;
           end;
-        end;
+        else Assert(False);
       end;
     end;
   end;
@@ -8493,6 +8499,10 @@ var
   Index: Integer;
   AScreenObject: TScreenObject;
 begin
+  if csDestroying in ComponentState then
+  begin
+    Exit;
+  end;
   if ChangingSelection then
   begin
     Exit;
@@ -9039,6 +9049,8 @@ begin
           PhastModel.SutraLayerStructure.Loaded;
           PhastModel.UpdateSutraTimeListNames;
           PhastModel.SutraMesh.Loading := True;
+          PhastModel.SutraMesh.DeleteUnconnectedNodes;
+          PhastModel.SutraMesh.SetCorrectElementOrientation;
           PhastModel.SutraMesh.CheckUpdateElevations;
           PhastModel.SutraMesh.Loading := False;
           PhastModel.FishnetMeshGenerator.Loaded;
@@ -11624,25 +11636,39 @@ begin
               0:
                 begin
                   case RenumberAlg of
-                    CuthillMcKee: CuthillMcKeeRenumbering.RenumberMesh(Mesh.Mesh2D);
-                    raSloanRandolph: MeshRenumbering.RenumberMesh(Mesh.Mesh2D);
+                    raNone: ;
+                    CuthillMcKee:
+                      begin
+                        CuthillMcKeeRenumbering.RenumberMesh(Mesh.Mesh2D);
+                        if Mesh.MeshType = mt3D then
+                        begin
+                          Mesh.SimpleRenumber;
+                        end;
+                      end;
+                    raSloanRandolph:
+                      begin
+                        MeshRenumbering.RenumberMesh(Mesh.Mesh2D);
+                        if Mesh.MeshType = mt3D then
+                        begin
+                          Mesh.SimpleRenumber;
+                        end;
+                      end
+                    else Assert(False);
                   end;
-                  if Mesh.MeshType = mt3D then
-                  begin
-                    Mesh.SimpleRenumber;
-                  end;
-
                 end;
               1:
                 begin
                   Assert(Mesh.MeshType = mt3D);
                   case RenumberAlg of
+                    raNone: ;
                     CuthillMcKee: CuthillMcKeeRenumbering.RenumberMesh(Mesh);
                     raSloanRandolph: MeshRenumbering.RenumberMesh(Mesh);
+                    else Assert(False);
                   end;
                 end
               else Assert(False);
             end;
+            Mesh.Mesh2D.Nodes.SortByNodeNumber;
             Undo.UpdateNumbers;
             UndoStack.Submit(Undo);
           except
@@ -11656,8 +11682,6 @@ begin
           frameFrontView.MagnificationChanged := True;
           InvalidateAllViews;
         end;
-
-
 
         MessageDlg(Format(StrTheBandwidthHasCh, [OldBandWidth, NewBandWidth]),
           mtInformation, [mbOK], 0);

@@ -93,18 +93,18 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="48" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="49" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
-          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="50" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
           </list>
-          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="51" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-OWHM</text></li>
           </list>
         </td>
@@ -152,7 +152,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">IWL2CB is a flag and a unit number.</text></para>
-                      <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="52" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IWL2CB &gt; 0, it is the unit number on which cell-by-cell flow terms will be recorded whenever </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" anchor="ICBCFL" styleclass="Normal" translate="true">ICBCFL</link><text styleclass="Normal" translate="true"> is set &#160;</text><text styleclass="New Materials" translate="true">or &quot;Save Budget&quot; is specified</text><text styleclass="Normal" translate="true"> in </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" styleclass="Normal" translate="true">Output Control</link><text styleclass="Normal" translate="true">.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IWL2CB = 0, cell-by-cell flow terms will not be printed or recorded.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IWL2CB &lt; 0, </text><text styleclass="New Materials" translate="true">The absolute value of IWL2CB is the unit number on which cell-by-cell flow terms will be recorded whenever </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" anchor="ICBCFL" styleclass="New Materials" translate="true">ICBCFL</link><text styleclass="New Materials" translate="true"> is set or &quot;Save Budget&quot; is specified and</text><text styleclass="Normal" translate="true"> well recharge, water-levels in the well and cell, drawdown in the well, and the flow-rate-weighted water-quality value of the IQWGRP will be printed whenever ICBCFL is set </text><text styleclass="New Materials" translate="true">or &quot;Save Budget&quot; is specified</text><text styleclass="Normal" translate="true">.</text></li>
@@ -205,7 +205,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="LOSSTYPE" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">LOSSTYPE is a flag to determine the user-specified model for well loss.</text></para>
-                      <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="53" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If LOSSTYPE is set to SKIN, head loss is defined with skin. Model is linear.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If LOSSTYPE is set to LINEAR, head loss is defined with coefficient B. Model is linear.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If LOSSTYPE is set to NONLINEAR, head loss is defined with coefficients B and C. Model is nonlinear.</text></li>
@@ -364,7 +364,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">ITMP is a flag.</text></para>
-                      <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="54" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ITMP &lt; 0, wells from previous stress period will be reused and input from item 5 will not be read.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ITMP =, 0 no wells will be simulated and input from item 5 will not be read.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ITMP &gt; 0, is the number of records of drawdown-limited well data that will be read for the current stress period. If the key ADD is not detected on record 4, the maximum number of drawdown-limited wells for the current stress period will be ITMP. If the key ADD is detected on record 4, ITMP wells will be added to the existing list of drawdown-limited wells.</text></li>
@@ -450,6 +450,7 @@
                       <para styleclass="Code Example"><text styleclass="Code Example" translate="true"> &#160; &#160; &#160; &#160; 1 &#160; &#160; &#160; &#160;5 &#160; &#160; &#160; &#160;5 &#160; &#160; &#160; 0.1</text></para>
                       <para styleclass="Code Example"><text styleclass="Code Example" translate="true"> &#160; &#160; &#160; &#160; 2 &#160; &#160; &#160; &#160;5 &#160; &#160; &#160; &#160;5 &#160; &#160; &#160; 0.1 MN</text></para>
                       <para styleclass="Code Example"><text styleclass="Code Example" translate="true"> &#160; &#160; &#160; &#160; 3 &#160; &#160; &#160; &#160;5 &#160; &#160; &#160; &#160;5 &#160; &#160; &#160; 0.1 MN</text></para>
+                      <para styleclass="Normal"><text styleclass="New Materials" translate="true">When </text><text styleclass="New Materials" style="font-style:italic;" translate="true">MULTI</text><text styleclass="New Materials" translate="true"> is used, the well should always be aligned along a column, row, or layer.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -466,7 +467,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="Rw" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Rw is a flag and a variable used to define the cell-to-well conductance.</text></para>
-                      <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="55" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If Rw &gt; 0, The variable represents the radius of the well and the cell-to-well conductance is calculated with eq. 5 as formulated by Peaceman (1983).</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If Rw = 0, the head in the cell is assumed to be equivalent to the head in the well and the cell-to-well conductance is set to 1,000 times the transmissivity of the cell. The cell is NOT allowed to be part of a multi-node well.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If Rw &lt; 0, the absolute value of the variable is the cell-to-well conductance.</text></li>
@@ -566,7 +567,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">(</text><text styleclass="Keywords" translate="true">SITE</text><text styleclass="Normal" translate="true">: is an optional label for identifying wells. An individual file of time, discharge, water level MNWsite) in well, concentration, net-inflow, net-outflow, and node-by-node flows will be written for each well with a unique MNWsite label. Individual well files are tab delimited. Only one label should be applied to a multi-node well.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">(</text><text styleclass="Keywords" translate="true">SITE</text><text styleclass="Normal" translate="true">: is an optional label for identifying wells. An individual file of time, discharge, water level MNWsite) in well, concentration, net-inflow, net-outflow, and node-by-node flows will be written for each well with a unique MNWsite label. Individual well files are tab delimited. Only one label should be applied to a multi-node well. </text><text styleclass="New Materials" translate="true">MNWsite can be up to 32 characters in length. MNWsite can not contain space or tab characters.</text></para>
                     </td>
                   </tr>
                 </table></para>

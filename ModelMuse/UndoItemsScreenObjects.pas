@@ -3083,6 +3083,8 @@ var
   PointIndex: Integer;
   TempPoints: TRealPointArray;
   LocalEpsilon: double;
+  P1: TPoint2D;
+  P2: TPoint2D;
   function NearlyTheSame(const A, B: real): boolean;
   begin
     result := A = B;
@@ -3156,7 +3158,8 @@ begin
         try
           OtherScreenObject := StoredObjects[0];
           AnotherPoint := OtherScreenObject.Points[0];
-          if (APoint.x = AnotherPoint.x) and (APoint.y = AnotherPoint.y) then
+          if NearlyTheSame(APoint.x, AnotherPoint.x)
+            and NearlyTheSame(APoint.y, AnotherPoint.y) then
           begin
             // The first point of ScreenObject is at the same location as
             // the first point of OtherScreenObject
@@ -3183,7 +3186,16 @@ begin
                 AnotherPoint.X, AnotherPoint.Y, OtherScreenObject));
               if not ScreenObject.Closed then
               begin
-                FQuadTree.AddPoint(AnotherPoint.X, AnotherPoint.Y, ScreenObject);
+                P1 := ScreenObject.Points[0];
+                P2 := ScreenObject.Points[ScreenObject.Count-1];
+                if NearlyTheSame(P1.x, P2.x) and NearlyTheSame(P1.y, P2.y) then
+                begin
+                  ScreenObject.Points[ScreenObject.Count-1] := ScreenObject.Points[0];
+                end
+                else
+                begin
+                  FQuadTree.AddPoint(AnotherPoint.X, AnotherPoint.Y, ScreenObject);
+                end;
               end;
               OtherScreenObject.Deleted := True;
             finally
@@ -3193,7 +3205,8 @@ begin
           else
           begin
             AnotherPoint := OtherScreenObject.Points[OtherScreenObject.Count-1];
-            Assert((APoint.x = AnotherPoint.x) and (APoint.y = AnotherPoint.y));
+            Assert(NearlyTheSame(APoint.x, AnotherPoint.x)
+              and NearlyTheSame(APoint.y, AnotherPoint.y));
             TempScreenObject := TScreenObject.Create(nil);
             try
               // The first point of ScreenObject is at the same location as

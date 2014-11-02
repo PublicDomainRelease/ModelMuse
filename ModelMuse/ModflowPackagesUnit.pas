@@ -59,9 +59,7 @@ type
     FConduitFlowProcess: TConduitFlowProcess;
     FSwiPackage: TSwiPackage;
     FSwrPackage: TSwrPackage;
-  {$IFDEF MNW1}
     FMnw1Package: TMnw1Package;
-  {$ENDIF}
     procedure SetChdBoundary(const Value: TChdPackage);
     procedure SetLpfPackage(const Value: TLpfSelection);
     procedure SetPcgPackage(const Value: TPcgSelection);
@@ -111,9 +109,7 @@ type
     procedure SetConduitFlowProcess(const Value: TConduitFlowProcess);
     procedure SetSwiPackage(const Value: TSwiPackage);
     procedure SetSwrPackage(const Value: TSwrPackage);
-  {$IFDEF MNW1}
     procedure SetMnw1Package(const Value: TMnw1Package);
-  {$ENDIF}
   public
     procedure Assign(Source: TPersistent); override;
     { TODO -cRefactor : Consider replacing Model with an interface. }
@@ -216,9 +212,7 @@ type
       write SetConduitFlowProcess;
     property SwiPackage: TSwiPackage read FSwiPackage write SetSwiPackage;
     property SwrPackage: TSwrPackage read FSwrPackage write SetSwrPackage;
-  {$IFDEF MNW1}
     property Mnw1Package: TMnw1Package read FMnw1Package write SetMnw1Package;
-  {$ENDIF}
     // Assign, Create, Destroy, SelectedModflowPackageCount
     // and Reset must be updated each time a new package is added.
   end;
@@ -360,9 +354,7 @@ begin
     ConduitFlowProcess := SourcePackages.ConduitFlowProcess;
     SwiPackage := SourcePackages.SwiPackage;
     SwrPackage := SourcePackages.SwrPackage;
-  {$IFDEF MNW1}
     Mnw1Package := SourcePackages.Mnw1Package;
-  {$ENDIF}
   end
   else
   begin
@@ -609,12 +601,10 @@ begin
   FSwrPackage.Classification := StrSurfaceWaterRoutin;
   FSwrPackage.SelectionType := stCheckBox;
 
-{$IFDEF MNW1}
   FMnw1Package := TMnw1Package.Create(Model);
-  FSwrPackage.PackageIdentifier := StrMNW1MultiNodeWel;
-  FSwrPackage.Classification := BC_HeadDependentFlux;
-  FSwrPackage.SelectionType := stCheckBox;
-{$ENDIF}
+  FMnw1Package.PackageIdentifier := StrMNW1MultiNodeWel;
+  FMnw1Package.Classification := BC_HeadDependentFlux;
+  FMnw1Package.SelectionType := stCheckBox;
 end;
 
 destructor TModflowPackages.Destroy;
@@ -668,9 +658,7 @@ begin
   FPcgPackage.Free;
   FModPath.Free;
   FMnw2Package.Free;
-{$IFDEF MNW1}
   FMnw1Package.Free;
-{$ENDIF}
   inherited;
 end;
 
@@ -724,9 +712,7 @@ begin
   ConduitFlowProcess.InitializeVariables;
   SwiPackage.InitializeVariables;
   SwrPackage.InitializeVariables;
-{$IFDEF MNW1}
   Mnw1Package.InitializeVariables;
-{$ENDIF}
 end;
 
 function TModflowPackages.SelectedModflowPackageCount: integer;
@@ -919,12 +905,10 @@ begin
     Inc(Result);
   end;
 
-{$IFDEF MNW1}
   if Mnw1Package.IsSelected then
   begin
     Inc(Result);
   end;
-{$ENDIF}
 
   // Don't count Modpath or ZoneBudget
   // because they are exported seperately from MODFLOW.
@@ -1045,12 +1029,10 @@ begin
   FLpfPackage.Assign(Value);
 end;
 
-{$IFDEF MNW1}
 procedure TModflowPackages.SetMnw1Package(const Value: TMnw1Package);
 begin
   FMnw1Package.Assign(Value);
 end;
-{$ENDIF}
 
 procedure TModflowPackages.SetMnw2Package(const Value: TMultinodeWellSelection);
 begin

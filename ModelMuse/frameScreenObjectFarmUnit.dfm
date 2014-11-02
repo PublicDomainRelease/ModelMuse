@@ -89,7 +89,9 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
             ExplicitLeft = 406
           end
           inherited seNumber: TJvSpinEdit
+            Height = 24
             OnChange = frameFormulaGridCropsseNumberChange
+            ExplicitHeight = 24
           end
         end
         inherited Grid: TRbwDataGrid4
@@ -259,7 +261,9 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
             ExplicitLeft = 406
           end
           inherited seNumber: TJvSpinEdit
+            Height = 24
             OnChange = frameFormulaGridCostsseNumberChange
+            ExplicitHeight = 24
           end
         end
         inherited Grid: TRbwDataGrid4
@@ -554,10 +558,13 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
             ExplicitLeft = 217
             ExplicitTop = 6
           end
+          inherited seNumber: TJvSpinEdit
+            Height = 24
+            ExplicitHeight = 24
+          end
           inherited comboMethod: TComboBox
             Left = 276
             ExplicitLeft = 276
-            ExplicitHeight = 24
           end
         end
         inherited Grid: TRbwDataGrid4
@@ -576,9 +583,6 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
             EditLabel.ExplicitLeft = 0
             EditLabel.ExplicitTop = -19
             EditLabel.ExplicitWidth = 51
-          end
-          inherited comboPositionChoice: TComboBox
-            ExplicitHeight = 24
           end
         end
       end
@@ -627,10 +631,13 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
             ExplicitLeft = 217
             ExplicitTop = 6
           end
+          inherited seNumber: TJvSpinEdit
+            Height = 24
+            ExplicitHeight = 24
+          end
           inherited comboMethod: TComboBox
             Left = 276
             ExplicitLeft = 276
-            ExplicitHeight = 24
           end
         end
         inherited Grid: TRbwDataGrid4
@@ -655,9 +662,6 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
             EditLabel.ExplicitLeft = 0
             EditLabel.ExplicitTop = -19
             EditLabel.ExplicitWidth = 51
-          end
-          inherited comboPositionChoice: TComboBox
-            ExplicitHeight = 24
           end
         end
       end
@@ -719,6 +723,10 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
             Caption = 'Number of delivery types '
             ExplicitWidth = 64
             ExplicitHeight = 48
+          end
+          inherited seNumber: TJvSpinEdit
+            Height = 24
+            ExplicitHeight = 24
           end
         end
         inherited Grid: TRbwDataGrid4
@@ -830,7 +838,9 @@ inherited frameScreenObjectFarm: TframeScreenObjectFarm
             ExplicitLeft = 406
           end
           inherited seNumber: TJvSpinEdit
+            Height = 24
             OnChange = frameFormulaGridWaterRightsseNumberChange
+            ExplicitHeight = 24
           end
         end
         inherited Grid: TRbwDataGrid4

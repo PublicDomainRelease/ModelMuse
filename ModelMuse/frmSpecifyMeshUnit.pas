@@ -345,6 +345,9 @@ begin
       Mesh.Elements.Delete(Mesh.Elements.Count-1);
     end;
 
+    Mesh.DeleteUnconnectedNodes;
+    Mesh.SetCorrectElementOrientation;
+
     Undo.UpdateNewMesh(frmGoPhast.PhastModel.SutraMesh);
     frmGoPhast.UndoStack.Submit(Undo);
   except

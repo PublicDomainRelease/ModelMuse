@@ -22,7 +22,7 @@ type
 implementation
 
 uses ModflowUnitNumbers, ModflowTimeUnit, frmErrorsAndWarningsUnit, 
-  frmProgressUnit, Forms;
+  frmProgressUnit, Forms, GoPhastTypes;
 
 resourcestring
   StrStressPeriod0d = 'Stress period: %0:d; Starting Time: %1:g';
@@ -31,8 +31,8 @@ resourcestring
   StrWritingDataSet3 = '    Writing Data Set 3 for stress period %0:d; time ' +
   'step %1:d';
   StrWritingOutputContr = 'Writing Output Control input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
   StrStressPeriodWarning = 'One or more transient stress periods are reference '
     + 'periods for calculating drawdown';
 

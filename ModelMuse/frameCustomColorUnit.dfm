@@ -10,15 +10,11 @@ object frameCustomColor: TframeCustomColor
     Top = 0
     Width = 570
     Height = 428
-    ActivePage = tabSelection
+    ActivePage = tabLegend
     Align = alClient
     TabOrder = 0
     object tabSelection: TTabSheet
       Caption = 'Selection'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         562
         397)
@@ -247,10 +243,6 @@ object frameCustomColor: TframeCustomColor
     object tabFilters: TTabSheet
       Caption = 'Filters'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         562
         397)
@@ -410,10 +402,6 @@ object frameCustomColor: TframeCustomColor
       Caption = 'Legend'
       ImageIndex = 2
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object imLegend: TImage
         Left = 218
         Top = 0
@@ -445,7 +433,7 @@ object frameCustomColor: TframeCustomColor
         end
         object lblColorLegendRows: TLabel
           Left = 8
-          Top = 339
+          Top = 303
           Width = 92
           Height = 16
           Anchors = [akLeft, akBottom]
@@ -467,7 +455,7 @@ object frameCustomColor: TframeCustomColor
         end
         object seLegendRows: TJvSpinEdit
           Left = 8
-          Top = 360
+          Top = 324
           Width = 121
           Height = 24
           CheckMaxValue = False
@@ -483,7 +471,7 @@ object frameCustomColor: TframeCustomColor
           Left = 8
           Top = 59
           Width = 184
-          Height = 274
+          Height = 238
           Anchors = [akLeft, akTop, akBottom]
           Color = clBtnFace
           ColCount = 1
@@ -528,6 +516,15 @@ object frameCustomColor: TframeCustomColor
           OnEndUpdate = rdgLegendEndUpdate
           WordWrapRowCaptions = False
         end
+        object btnFont: TButton
+          Left = 8
+          Top = 360
+          Width = 75
+          Height = 25
+          Caption = 'Font'
+          TabOrder = 3
+          OnClick = btnFontClick
+        end
       end
     end
   end
@@ -536,5 +533,14 @@ object frameCustomColor: TframeCustomColor
     OnTimer = timerLegendTimer
     Left = 264
     Top = 40
+  end
+  object dlgFontLegend: TFontDialog
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    Left = 160
+    Top = 352
   end
 end

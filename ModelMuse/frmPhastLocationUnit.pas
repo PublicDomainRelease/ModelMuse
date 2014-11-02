@@ -96,6 +96,7 @@ var
 begin
   Locations := TProgramLocations.Create;
   try
+    Locations.Assign(frmGoPhast.PhastModel.ProgramLocations);
     Locations.PhastLocation := fedPhast.FileName;
     Undo := TUndoChangeProgramLocations.Create(Locations);
     frmGoPhast.UndoStack.Submit(Undo);

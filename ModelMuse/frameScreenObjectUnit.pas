@@ -21,6 +21,8 @@ type
     // set the ending time to be the ending time to be the ending time of the
     // same stress period.
     procedure UpdateNextTimeCell(DataGrid: TRbwDataGrid4; ACol, ARow: Integer);
+    procedure ClearGrid(Grid: TRbwDataGrid4); virtual;
+
   public
     // @name is used in @link(TframeScreenObjectParam.clbParametersStateChange
     // TframeScreenObjectParam.clbParametersStateChange) to prevent grayed
@@ -35,6 +37,26 @@ type
 implementation
 
 {$R *.dfm}
+
+procedure TframeScreenObject.ClearGrid(Grid: TRbwDataGrid4);
+var
+  RowIndex: Integer;
+  ColIndex: Integer;
+begin
+  Grid.BeginUpdate;
+  try
+    for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
+    begin
+      for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
+      begin
+        Grid.Cells[ColIndex,RowIndex] := '';
+        Grid.Checked[ColIndex,RowIndex] := False;
+      end;
+    end;
+  finally
+    Grid.EndUpdate;
+  end;
+end;
 
 constructor TframeScreenObject.Create(AOwner: TComponent);
 begin

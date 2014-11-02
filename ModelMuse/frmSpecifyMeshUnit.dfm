@@ -87,6 +87,7 @@ inherited frmSpecifyMesh: TfrmSpecifyMesh
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -109,6 +110,7 @@ inherited frmSpecifyMesh: TfrmSpecifyMesh
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = False
             end
             item
@@ -131,6 +133,7 @@ inherited frmSpecifyMesh: TfrmSpecifyMesh
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = False
             end>
           ExplicitWidth = 495
@@ -141,10 +144,6 @@ inherited frmSpecifyMesh: TfrmSpecifyMesh
     object tabElements: TTabSheet
       Caption = 'Elements'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       inline frameElements: TframeGrid
         Left = 0
         Top = 0
@@ -210,6 +209,7 @@ inherited frmSpecifyMesh: TfrmSpecifyMesh
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -232,6 +232,7 @@ inherited frmSpecifyMesh: TfrmSpecifyMesh
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = False
             end
             item
@@ -254,6 +255,7 @@ inherited frmSpecifyMesh: TfrmSpecifyMesh
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = False
             end
             item
@@ -276,6 +278,7 @@ inherited frmSpecifyMesh: TfrmSpecifyMesh
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = False
             end
             item
@@ -298,6 +301,7 @@ inherited frmSpecifyMesh: TfrmSpecifyMesh
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = False
             end>
           ExplicitWidth = 495

@@ -41,7 +41,7 @@ uses
   frameMt3dmsChemReactionPkgUnit, frameMt3dmsTransObsPkgUnit, Mt3dmsTimesUnit,
   framePackagePcgnUnit, framePackageWellUnit, framePackageStrUnit,
   framePackageFrmUnit, frameRadioGridUnit, framePackageCFPUnit,
-  framePackageSwiUnit, framePackageSwrUnit;
+  framePackageSwiUnit, framePackageSwrUnit, framePackageMnw1Unit;
 
 type
 
@@ -212,6 +212,8 @@ type
     framePackageSWI: TframePackageSWI;
     jvspSWR: TJvStandardPage;
     framePkgSWR: TframePackageSwr;
+    jvspMNW1: TJvStandardPage;
+    framePkgMnw1: TframePackageMnw1;
     procedure tvPackagesChange(Sender: TObject; Node: TTreeNode);
     procedure btnOKClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject); override;
@@ -2712,6 +2714,9 @@ begin
 
   Packages.PcgnPackage.Frame := framePackagePcgn;
   FPackageList.Add(Packages.PcgnPackage);
+
+  Packages.Mnw1Package.Frame := framePkgMnw1;
+  FPackageList.Add(Packages.Mnw1Package);
 
   Packages.Mnw2Package.Frame := framePkgMnw2;
   FPackageList.Add(Packages.Mnw2Package);

@@ -131,30 +131,94 @@ begin
   FModel := Model;
   frmGoPhast.ReadIniFile;
   Locations := frmGoPhast.PhastModel.ProgramLocations;
-  fedModflow.FileName := Locations.ModflowLocation;
-  fedTextEditor.FileName := Locations.TextEditorLocation;
+
+  try
+    fedModflow.FileName := Locations.ModflowLocation;
+  except on EComboEditError do
+    fedModflow.FileName := '';
+  end;
+
+  try
+    fedTextEditor.FileName := Locations.TextEditorLocation;
+  except on EComboEditError do
+    fedTextEditor.FileName := '';
+  end;
+
   if Model.ModflowPackages.ModPath.MpathVersion = mp5 then
   begin
-    fedModpath.FileName := Locations.ModPathLocation;
+    try
+      fedModpath.FileName := Locations.ModPathLocation;
+    except on EComboEditError do
+      fedModpath.FileName := '';
+    end;
     jvrltModpath.Caption := 'MODPATH v5';
     htlblModPath.Caption := LinkString(
       'http://water.usgs.gov/nrp/gwsoftware/modpath5/modpath5.html');
   end
   else
   begin
-    fedModpath.FileName := Locations.ModPathLocationVersion6;
+    try
+      fedModpath.FileName := Locations.ModPathLocationVersion6;
+    except on EComboEditError do
+      fedModpath.FileName := '';
+    end;
     jvrltModpath.Caption := 'MODPATH v6';
     htlblModPath.Caption := LinkString('http://water.usgs.gov/ogw/modpath/');
   end;
-  fedModelMonitor.FileName := Locations.ModelMonitorLocation;
-  fedZonebudget.FileName := Locations.ZoneBudgetLocation;
-  fedModelMate.FileName := Locations.ModelMateLocation;
-  fedModflowLgr.FileName := Locations.ModflowLgrLocation;
-  fedModflowLgr2.FileName := Locations.ModflowLgr2Location;
-  fedModflowNwt.FileName := Locations.ModflowNwtLocation;
-  fedMt3dms.FileName := Locations.Mt3dmsLocation;
-  fedModflowFmp.FileName := Locations.ModflowFmpLocation;
-  fedModflowCfp.FileName := Locations.ModflowCfpLocation;
+
+  try
+    fedModelMonitor.FileName := Locations.ModelMonitorLocation;
+  except on EComboEditError do
+    fedModelMonitor.FileName := ''
+  end;
+
+  try
+    fedZonebudget.FileName := Locations.ZoneBudgetLocation;
+  except on EComboEditError do
+    fedZonebudget.FileName := '';
+  end;
+
+  try
+    fedModelMate.FileName := Locations.ModelMateLocation;
+  except on EComboEditError do
+    fedModelMate.FileName := '';
+  end;
+
+  try
+    fedModflowLgr.FileName := Locations.ModflowLgrLocation;
+  except on EComboEditError do
+    fedModflowLgr.FileName := '';
+  end;
+
+  try
+    fedModflowLgr2.FileName := Locations.ModflowLgr2Location;
+  except on EComboEditError do
+    fedModflowLgr2.FileName := '';
+  end;
+
+  try
+    fedModflowNwt.FileName := Locations.ModflowNwtLocation;
+  except on EComboEditError do
+    fedModflowNwt.FileName := '';
+  end;
+
+  try
+    fedMt3dms.FileName := Locations.Mt3dmsLocation;
+  except on EComboEditError do
+    fedMt3dms.FileName := '';
+  end;
+
+  try
+    fedModflowFmp.FileName := Locations.ModflowFmpLocation;
+  except on EComboEditError do
+    fedModflowFmp.FileName := '';
+  end;
+
+  try
+    fedModflowCfp.FileName := Locations.ModflowCfpLocation;
+  except on EComboEditError do
+    fedModflowCfp.FileName := '';
+  end;
 
   HighlightControls;
 end;
@@ -166,6 +230,7 @@ var
 begin
   Locations := TProgramLocations.Create;
   try
+    Locations.Assign(frmGoPhast.PhastModel.ProgramLocations);
     Locations.ModflowLocation := fedModflow.FileName;
     Locations.TextEditorLocation := fedTextEditor.FileName;
     if FModel.ModflowPackages.ModPath.MpathVersion = mp5 then

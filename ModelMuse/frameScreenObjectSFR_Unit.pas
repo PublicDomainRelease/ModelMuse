@@ -1402,12 +1402,19 @@ var
   RowIndex: Integer;
   ColIndex: Integer;
 begin
-  for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
+  if Grid is TRbwDataGrid4 then
   begin
-    for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
+    ClearGrid(TRbwDataGrid4(Grid));
+  end
+  else
+  begin
+    for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
     begin
-      Grid.Cells[ColIndex,RowIndex] := '';
-    end;
+      for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
+      begin
+        Grid.Cells[ColIndex,RowIndex] := '';
+      end;
+    end
   end;
 end;
 
@@ -2390,7 +2397,7 @@ begin
     end;
   end;
 
-  if not dgSfrRough.Drawing then
+  if (not dgSfrRough.Drawing) and (ARow >= 1) then
   begin
     TimePeriod := ARow -1;
     // The cross section is only read for the first stress period
@@ -2469,7 +2476,7 @@ begin
       Exit;
     end;
     CanSelect := 4 in IcalcRowSet(ARow);
-    if not dgTableTime.Drawing then
+    if (not dgTableTime.Drawing) and (ARow >= 1) then
     begin
       TimePeriod := ARow -1;
       frameFlowTable1.DisplayData(TimePeriod);

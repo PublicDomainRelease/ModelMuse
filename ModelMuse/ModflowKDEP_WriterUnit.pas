@@ -27,14 +27,14 @@ implementation
 
 uses PhastModelUnit, OrderedCollectionUnit, ModflowUnitNumbers,
   frmProgressUnit, DataSetUnit, HufDefinition, frmErrorsAndWarningsUnit,
-  ModflowParameterUnit, Forms;
+  ModflowParameterUnit, Forms, GoPhastTypes;
 
 resourcestring
   StrWritingKDEPFileIn = 'Writing KDEP file input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
   NoClusters = 'The following parameters in the HUF2 package are not used with '
     + 'any hydrogeologic units.';
 
@@ -81,7 +81,7 @@ begin
   if IFKDEP > 0 then
   begin
     RSArray := Model.DataArrayManager.GetDataSetByName(StrHufReferenceSurface);
-    WriteArray(RSArray, 0, ' # Data Set 2: RS');
+    WriteArray(RSArray, 0, ' # Data Set 2: RS', StrNoValueAssigned);
     Model.DataArrayManager.CacheDataArrays;
   end;
 end;

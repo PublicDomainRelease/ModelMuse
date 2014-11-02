@@ -66,16 +66,16 @@ resourcestring
   StrEvaluatingUZFPacka = 'Evaluating UZF Package data.';
   StrEvaluatingS = '    Evaluating %s.';
   StrWritingUZFPackage = 'Writing UZF Package input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSet3 = '  Writing Data Set 3.';
-  StrWritingDataSet4 = '  Writing Data Set 4.';
-  StrWritingDataSet5 = '  Writing Data Set 5.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSet3 = '  Writing Data Set 3.';
+//  StrWritingDataSet4 = '  Writing Data Set 4.';
+//  StrWritingDataSet5 = '  Writing Data Set 5.';
   StrWritingDataSet6 = '  Writing Data Set 6a.';
   StrWritingDataSet6b = '  Writing Data Set 6b.';
-  StrWritingDataSet7 = '  Writing Data Set 7.';
-  StrWritingDataSet8 = '  Writing Data Set 8.';
+//  StrWritingDataSet7 = '  Writing Data Set 7.';
+//  StrWritingDataSet8 = '  Writing Data Set 8.';
   StrWritingDataSets9to16 = '  Writing Data Sets 9 to 16.';
   StrWritingStressP = '    Writing Stress Period %d';
 
@@ -490,7 +490,7 @@ var
   IUZFBND: TDataArray;
 begin
   IUZFBND := Model.DataArrayManager.GetDataSetByName(StrUzfLayer);
-  WriteArray(IUZFBND, 0, 'Data Set 2: IUZFBND');
+  WriteArray(IUZFBND, 0, 'Data Set 2: IUZFBND', StrNoValueAssigned);
 end;
 
 procedure TModflowUzfWriter.WriteDataSet3;
@@ -500,7 +500,7 @@ begin
   if IRUNFLG > 0 then
   begin
     IRUNBND := Model.DataArrayManager.GetDataSetByName(StrUzfDischargeRouting);
-    WriteArray(IRUNBND, 0, 'Data Set 3: IRUNBND');
+    WriteArray(IRUNBND, 0, 'Data Set 3: IRUNBND', StrNoValueAssigned);
   end;
 end;
 
@@ -511,7 +511,7 @@ begin
   if IUZFOPT = 1 then
   begin
     VKS := Model.DataArrayManager.GetDataSetByName(StrUzfVerticalK);
-    WriteArray(VKS, 0, 'Data Set 4: VKS');
+    WriteArray(VKS, 0, 'Data Set 4: VKS', StrNoValueAssigned);
   end;
 end;
 
@@ -520,7 +520,7 @@ var
   EPS: TDataArray;
 begin
   EPS := Model.DataArrayManager.GetDataSetByName(StrUzfBrooksCoreyEpsilon);
-  WriteArray(EPS, 0, 'Data Set 5: EPS');
+  WriteArray(EPS, 0, 'Data Set 5: EPS', StrNoValueAssigned);
 end;
 
 procedure TModflowUzfWriter.WriteDataSet6a;
@@ -532,11 +532,11 @@ begin
     {$IFDEF FMP}, msModflowFmp {$ENDIF}
     {, msModflowCfp}] then
   begin
-    WriteArray(THTS, 0, 'Data Set 6a: THTS');
+    WriteArray(THTS, 0, 'Data Set 6a: THTS', StrNoValueAssigned);
   end
   else
   begin
-    WriteArray(THTS, 0, 'Data Set 6: THTS');
+    WriteArray(THTS, 0, 'Data Set 6: THTS', StrNoValueAssigned);
   end;
 end;
 
@@ -550,7 +550,7 @@ begin
     and Model.ModflowPackages.UzfPackage.SpecifyResidualWaterContent then
   begin
     THTR := Model.DataArrayManager.GetDataSetByName(StrUzfReisidualWaterContent);
-    WriteArray(THTR, 0, 'Data Set 6b: THTR');
+    WriteArray(THTR, 0, 'Data Set 6b: THTR', StrNoValueAssigned);
   end;
 end;
 
@@ -565,7 +565,7 @@ begin
       and Model.ModflowPackages.UzfPackage.SpecifyInitialWaterContent) then
   begin
     THTI := Model.DataArrayManager.GetDataSetByName(StrUzfInitialUnsaturatedWaterContent);
-    WriteArray(THTI, 0, 'Data Set 7: THTI');
+    WriteArray(THTI, 0, 'Data Set 7: THTI', StrNoValueAssigned);
   end;
 end;
 

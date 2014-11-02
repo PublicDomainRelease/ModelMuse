@@ -41,7 +41,7 @@ uses
   ModflowFmpPrecipitationUnit, ModflowFmpEvapUnit, ModflowFmpCropSpatialUnit,
   ModflowCfpPipeUnit, ModflowCfpFixedUnit, ModflowCfpRechargeUnit,
   ModflowSwrUnit, ModflowSwrDirectRunoffUnit, ModflowSwrReachUnit,
-  ObjectLabelUnit;
+  ObjectLabelUnit, ModflowMnw1Unit;
 
 type
   //
@@ -1405,6 +1405,7 @@ view. }
     FSwrStage: TSwrStageBoundary;
     FSwrDirectRunoff: TSwrDirectRunoffBoundary;
     FSwrReaches: TSwrReachBoundary;
+    FModflowMnw1Boundary: TMnw1Boundary;
   public
     procedure Invalidate;
     { TODO -cRefactor : Consider replacing Model with an interface. }
@@ -1446,6 +1447,8 @@ view. }
     property ModflowHfbBoundary: THfbBoundary read FModflowHfbBoundary
       write FModflowHfbBoundary;
     property ModflowGage: TStreamGage read FModflowGage Write FModflowGage;
+    property ModflowMnw1Boundary: TMnw1Boundary read FModflowMnw1Boundary
+      write FModflowMnw1Boundary;
     property ModflowMnw2Boundary: TMnw2Boundary read FModflowMnw2Boundary
       write FModflowMnw2Boundary;
     property ModflowHydmodData: THydmodData read FModflowHydmodData
@@ -2593,6 +2596,9 @@ view. }
     procedure SetModflowSwrReaches(const Value: TSwrReachBoundary);
     function StoreModflowSwrReaches: Boolean;
     procedure SetObjectLabel(const Value: TObjectLabel);
+    function GetModflowMnw1Boundary: TMnw1Boundary;
+    procedure SetModflowMnw1Boundary(const Value: TMnw1Boundary);
+    function StoreModflowMnw1Boundary: Boolean;
     property SubPolygonCount: integer read GetSubPolygonCount;
     property SubPolygons[Index: integer]: TSubPolygon read GetSubPolygon;
     procedure DeleteExtraSections;
@@ -3137,6 +3143,7 @@ view. }
     procedure CreateHfbBoundary;
     procedure CreateHeadObservations;
     procedure CreateGagBoundary;
+    procedure CreateMnw1Boundary;
     procedure CreateMnw2Boundary;
     procedure CreateMt3dmsConcBoundary;
     procedure CreateMt3dmsTransObservations;
@@ -3765,6 +3772,8 @@ having them take care of the subscriptions. }
     // ModelMuse predating the initial release of ModelMuse.
     property ModflowHfbBoundary: THfbBoundary read GetModflowHfbBoundary
       write SetModflowHfbBoundary stored StoreModflowHfbBoundary;
+    property ModflowMnw1Boundary: TMnw1Boundary read GetModflowMnw1Boundary
+      write SetModflowMnw1Boundary stored StoreModflowMnw1Boundary;
     property ModflowMnw2Boundary: TMnw2Boundary read GetModflowMnw2Boundary
       write SetModflowMnw2Boundary stored StoreModflowMnw2Boundary;
     property ModflowFhbHeadBoundary: TFhbHeadBoundary read GetModflowFhbHeadBoundary
@@ -6182,6 +6191,7 @@ begin
   ModflowHfbBoundary := AScreenObject.ModflowHfbBoundary;
   ModflowStreamGage := AScreenObject.ModflowStreamGage;
   ModflowMnw2Boundary := AScreenObject.ModflowMnw2Boundary;
+  ModflowMnw1Boundary := AScreenObject.ModflowMnw1Boundary;
   Mt3dmsConcBoundary := AScreenObject.Mt3dmsConcBoundary;
   Mt3dmsTransObservations := AScreenObject.Mt3dmsTransObservations;
   ModflowHydmodData := AScreenObject.ModflowHydmodData;
@@ -10809,13 +10819,48 @@ var
   IncreasingY: Boolean;
   IncreasingX: Boolean;
   Procedure AddSomeSegments;
+  const
+    MinimumCellFraction = 1e-7;
+    MinimumDepthFraction = 1/10E12;
   var
     Eps: double;
     BlockTop: double;
     BlockBottom: double;
     Elevation1: double;
     Elevation2: double;
+    SegLength: Double;
+    Grid: TCustomModelGrid;
+    Diagonal: double;
+    CellCoord: T3DCellCoordinates;
   begin
+    SegLength := ASegment.SegmentLength;
+    if SegLength > 0 then
+    begin
+      Grid := LocalModel.Grid;
+
+      Diagonal := 0;
+      case EvaluatedAt of
+        eaBlocks:
+          begin
+            Diagonal := Sqrt(Sqr(Grid.ColumnWidth[ASegment.Col])
+              + Sqr(Grid.RowWidth[ASegment.Row]));
+          end;
+        eaNodes:
+          begin
+            CellCoord := Grid.CellCoordinates[ASegment.Col, ASegment.Row, 0];
+            Diagonal := Sqrt(Sqr(CellCoord.Col1_Row1_Lay1.x - CellCoord.Col2_Row2_Lay2.x)
+              + Sqr(CellCoord.Col1_Row1_Lay1.y - CellCoord.Col2_Row2_Lay2.y));
+          end;
+        else
+          Assert(False);
+      end;
+
+      if (Diagonal = 0) or (SegLength/Diagonal < MinimumCellFraction) then
+      begin
+        FreeAndNil(ASegment);
+        Exit;
+      end;
+    end;
     BlockBottom := 0;
     BlockTop := 0;
     if ElevationCount in [ecOne, ecTwo] then
@@ -10934,7 +10979,7 @@ var
         end;
       ecTwo:
         begin
-          Eps := Max(Abs(BlockTop), Abs(BlockBottom))/10E12;
+          Eps := Max(Abs(BlockTop), Abs(BlockBottom))*MinimumDepthFraction;
           if ((BlockTop > Elevation2+Eps)
             or ((BlockTop = Elevation2) and (ASegment.Layer = 0)))
             and (BlockBottom < Elevation1-Eps) then
@@ -12425,6 +12470,23 @@ begin
   begin
     CreateLakBoundary;
     ModflowBoundaries.FModflowLakBoundary.Assign(Value);
+  end;
+end;
+
+procedure TScreenObject.SetModflowMnw1Boundary(const Value: TMnw1Boundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FModflowMnw1Boundary <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FModflowMnw1Boundary);
+  end
+  else
+  begin
+    CreateMnw1Boundary;
+    ModflowBoundaries.FModflowMnw1Boundary.Assign(Value);
   end;
 end;
 
@@ -28969,6 +29031,12 @@ begin
     or (RiverBoundary.Solution.Count > 0));
 end;
 
+function TScreenObject.StoreModflowMnw1Boundary: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowMnw1Boundary <> nil) and ModflowMnw1Boundary.Used;
+end;
+
 function TScreenObject.StoreModflowMnw2Boundary: Boolean;
 begin
   result := (FModflowBoundaries <> nil)
@@ -29699,6 +29767,23 @@ begin
   else
   begin
     result := ModflowBoundaries.FModflowLakBoundary;
+  end;
+end;
+
+function TScreenObject.GetModflowMnw1Boundary: TMnw1Boundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateMnw1Boundary;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FModflowMnw1Boundary;
   end;
 end;
 
@@ -33767,6 +33852,14 @@ begin
   end;
 end;
 
+procedure TScreenObject.CreateMnw1Boundary;
+begin
+  if (ModflowBoundaries.FModflowMnw1Boundary = nil) then
+  begin
+    ModflowBoundaries.FModflowMnw1Boundary := TMnw1Boundary.Create(FModel, self);
+  end;
+end;
+
 procedure TScreenObject.CreateMnw2Boundary;
 begin
   if (ModflowBoundaries.FModflowMnw2Boundary = nil) then
@@ -36373,6 +36466,21 @@ begin
     FModflowMnw2Boundary.Assign(Source.FModflowMnw2Boundary);
   end;
 
+{$IFDEF SWR}
+  if Source.FModflowMnw1Boundary = nil then
+  begin
+    FreeAndNil(FModflowMnw1Boundary);
+  end
+  else
+  begin
+    if FModflowMnw1Boundary = nil then
+    begin
+      FModflowMnw1Boundary := TMnw1Boundary.Create(nil, nil);
+    end;
+    FModflowMnw1Boundary.Assign(Source.FModflowMnw1Boundary);
+  end;
+{$ENDIF}
+
   if Source.FModflowHydmodData = nil then
   begin
     FreeAndNil(FModflowHydmodData);
@@ -36627,6 +36735,7 @@ end;
 
 destructor TModflowBoundaries.Destroy;
 begin
+  FModflowMnw1Boundary.Free;
   FSwrRain.Free;
   FSwrEvap.Free;
   FSwrStage.Free;
@@ -36910,6 +37019,11 @@ begin
 //  begin
 //    FModflowGage.Invalidate;
 //  end;
+
+  if FModflowMnw1Boundary <> nil then
+  begin
+    FModflowMnw1Boundary.Invalidate;
+  end;
 
   if FModflowMnw2Boundary <> nil then
   begin
@@ -37266,6 +37380,13 @@ begin
 //  begin
 //    FModflowGage.StopTalkingToAnyone;
 //  end;
+
+{$IFDEF MNW2}
+  if FModflowMnw1Boundary <> nil then
+  begin
+    FModflowMnw1Boundary.StopTalkingToAnyone;
+  end;
+{$ENDIF}
 
   if FModflowMnw2Boundary <> nil then
   begin

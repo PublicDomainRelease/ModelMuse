@@ -428,8 +428,7 @@ resourcestring
   StrIfYouHaveAnyUnus = 'If you have any unused objects, now might be a good' +
   ' time to delete them.';
   StrErrorForFormulaFo = 'Error for formula for data set "%0:s"; %1:s';
-  StrDoYouWishToDoYo = 'Do you wish to Do you wish to restore the old formul' +
-  'a?';
+  StrDoYouWishToDoYo = 'Do you wish to restore the old formula?';
   StrSMixtureFormula = '%s Mixture Formula';
   StrDefinedByParamet = '%s (defined by parameters)';
 

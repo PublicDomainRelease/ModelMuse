@@ -123,8 +123,18 @@ var
   PointValueItem: TPointValue;
   Row: Integer;
   PointPositionValues: TPointPositionValues;
+  AColumn: TRbwColumn4;
 begin
   FScreenObject := ScreenObject;
+
+  if (frmGoPhast.ModelSelection = msSutra22) and FScreenObject.CellSizeUsed then
+  begin
+    AColumn := rdgValues.Columns[0];
+    AColumn.ComboUsed := True;
+    AColumn.PickList.Add('Mesh Element Size');
+  end;
+
+
   FSelectedVertex := SelectedVertex;
   Names := TStringList.Create;
   try

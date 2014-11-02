@@ -19,7 +19,7 @@ type
   private
     FChanging: Boolean;
     FOnChange: TNotifyEvent;
-    procedure ClearGrid;
+    procedure ClearFmpGrid;
     procedure AssignFirstItem(ScreenObject: TScreenObject);
     { Private declarations }
   protected
@@ -74,23 +74,9 @@ begin
   end;
 end;
 
-procedure TframeScreenObjectFmpBoundary.ClearGrid;
-var
-  RowIndex: Integer;
-  ColIndex: Integer;
+procedure TframeScreenObjectFmpBoundary.ClearFmpGrid;
 begin
-  dgModflowBoundary.BeginUpdate;
-  try
-    for RowIndex := 1 to dgModflowBoundary.RowCount - 1 do
-    begin
-      for ColIndex := 0 to dgModflowBoundary.ColCount - 1 do
-      begin
-        dgModflowBoundary.Cells[ColIndex,RowIndex] := '';
-      end;
-    end;
-  finally
-    dgModflowBoundary.EndUpdate;
-  end;
+  ClearGrid(dgModflowBoundary);
 end;
 
 procedure TframeScreenObjectFmpBoundary.dgModflowBoundarySetEditText(
@@ -161,14 +147,14 @@ begin
               or (dgModflowBoundary.Cells[Ord(pcValue), ItemIndex+1]
               <> AnItem.BoundaryFormula[0]) then
             begin
-              ClearGrid;
+              ClearFmpGrid;
               Exit;
             end;
           end;
         end
         else
         begin
-          ClearGrid;
+          ClearFmpGrid;
           break;
         end;
       end;
@@ -183,7 +169,7 @@ end;
 
 procedure TframeScreenObjectFmpBoundary.InitializeControls;
 begin
-  ClearGrid;
+  ClearFmpGrid;
   dgModflowBoundary.Cells[Ord(pcStartTime), 0] := StrStartingTime;
   dgModflowBoundary.Cells[Ord(pcEndTime), 0] := StrEndingTime;
   GetStartTimes(Ord(pcStartTime));

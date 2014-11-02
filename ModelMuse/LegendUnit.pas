@@ -48,7 +48,7 @@ type
     procedure AutoAssignValues;
     function AssignFractions: Boolean;
     procedure Draw(Canvas: TCanvas; StartX, StartY: integer;
-      out LegendRect: TRect);
+      out LegendRect: TRect; Font: TFont);
     property Fractions: TValueArrayStorage read GetFractions write SetFractions;
     property Contours: TContours read FContours write FContours;
   published
@@ -754,7 +754,7 @@ begin
 end;
 
 procedure TLegend.Draw(Canvas: TCanvas; StartX, StartY: integer;
-  out LegendRect: TRect);
+  out LegendRect: TRect; Font: TFont);
 var
   Index: Integer;
   X: Integer;
@@ -782,6 +782,8 @@ begin
   LegendRect.Top := StartY;
   LegendRect.Left := StartX;
   LegendRect.BottomRight := LegendRect.TopLeft;
+
+  Canvas.Font.Assign(Font);
 
   TextHeight := Canvas.TextHeight('0');
   DeltaY := (TextHeight * 3) div 2;

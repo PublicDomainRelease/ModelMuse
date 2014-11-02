@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics,
   Controls, Forms, Dialogs, frmCustomGoPhastUnit, Grids,
   RbwDataGrid4, StdCtrls, Buttons, ExtCtrls, UndoItems,
-  SutraMeshUnit, ArgusDataEntry;
+  SutraMeshUnit, ArgusDataEntry, Mask, JvExMask, JvToolEdit, JvExStdCtrls,
+  JvHtControls, JvPageList, JvExControls;
 
 type
   TMeshControlType = (mtcNone, mtcGrowthRate, mctSplittingAngle,
@@ -17,10 +18,12 @@ type
   private
     FOldControls: TMeshGenerationControls;
     FNewControls: TMeshGenerationControls;
+    FOldGmshLocation: string;
+    FNewGmshLocation: string;
   protected
     function Description: string; override;
   public
-    constructor Create(var Controls: TMeshGenerationControls);
+    constructor Create(var Controls: TMeshGenerationControls; const GmshLocation: string);
     destructor Destroy; override;
     procedure DoCommand; override;
     procedure Undo; override;
@@ -36,10 +39,18 @@ type
     rgMethod: TRadioGroup;
     pnlTop: TPanel;
     rgRenumberingMethod: TRadioGroup;
+    htlblGmsh: TJvHTLabel;
+    fedGmsh: TJvFilenameEdit;
+    lblGmsh: TLabel;
+    jvplMesh: TJvPageList;
+    jvspFishnet: TJvStandardPage;
+    jvspIrregular: TJvStandardPage;
+    jvspGmsh: TJvStandardPage;
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
     procedure btnResetDefaultsClick(Sender: TObject);
     procedure rgMethodClick(Sender: TObject);
+    procedure fedGmshChange(Sender: TObject);
   private
     procedure GetData;
     procedure SetData;
@@ -55,7 +66,7 @@ type
 implementation
 
 uses
-  frmGoPhastUnit, MeshRenumberingTypes;
+  frmGoPhastUnit, MeshRenumberingTypes, SutraOptionsUnit;
 
 resourcestring
   StrSplittingAngle = 'Splitting angle';
@@ -92,6 +103,19 @@ begin
   end;
 end;
 
+procedure TfrmMeshGenerationControlVariables.fedGmshChange(Sender: TObject);
+begin
+  inherited;
+  if FileExists(fedGmsh.FileName) then
+  begin
+    fedGmsh.Color := clWindow;
+  end
+  else
+  begin
+    fedGmsh.Color := clRed;
+  end;
+end;
+
 procedure TfrmMeshGenerationControlVariables.FormCreate(Sender: TObject);
 begin
   inherited;
@@ -117,21 +141,25 @@ var
 begin
   MeshGenControls := frmGoPhast.PhastModel.SutraMesh.Mesh2D.MeshGenControls;
   AssignValues(MeshGenControls);
+  fedGmsh.FileName := frmGoPhast.PhastModel.ProgramLocations.GmshLocation;
+  fedGmshChange(nil);
+  rgMethodClick(nil);
 end;
 
 procedure TfrmMeshGenerationControlVariables.rgMethodClick(Sender: TObject);
 begin
   inherited;
-  rdgControlVariables.Enabled := rgMethod.ItemIndex = 1;
-//  rdeGrowthRate.Enabled := rdgControlVariables.Enabled;
-  if rdgControlVariables.Enabled then
-  begin
-    rdgControlVariables.Color := clWindow;
-  end
-  else
-  begin
-    rdgControlVariables.Color := clBtnFace;
-  end;
+  jvplMesh.ActivePageIndex := rgMethod.ItemIndex
+//  rdgControlVariables.Enabled := rgMethod.ItemIndex = 1;
+////  rdeGrowthRate.Enabled := rdgControlVariables.Enabled;
+//  if rdgControlVariables.Enabled then
+//  begin
+//    rdgControlVariables.Color := clWindow;
+//  end
+//  else
+//  begin
+//    rdgControlVariables.Color := clBtnFace;
+//  end;
 end;
 
 procedure TfrmMeshGenerationControlVariables.SetData;
@@ -188,7 +216,7 @@ begin
       Exit;
     end;
 
-    Undo := TUndoChangeMeshGenControls.Create(MeshGenControls);
+    Undo := TUndoChangeMeshGenControls.Create(MeshGenControls, fedGmsh.FileName);
     frmGoPhast.UndoStack.Submit(Undo);
   finally
     MeshGenControls.Free;
@@ -199,7 +227,7 @@ procedure TfrmMeshGenerationControlVariables.AssignValues(MeshGenControls
   : TMeshGenerationControls);
 begin
   case MeshGenControls.MeshGenerationMethod of
-    mgmFishnet, mgmIrregular:
+    mgmFishnet, mgmIrregular, mgmGmsh:
       begin
         rgMethod.ItemIndex := Ord(MeshGenControls.MeshGenerationMethod);
       end;
@@ -217,7 +245,18 @@ begin
     else Assert(False);
   end;
 
-  rgRenumberingMethod.ItemIndex := Ord(MeshGenControls.RenumberingAlgorithm);
+  if frmGoPhast.PhastModel.SutraOptions.PresSolutionMethod = psmDirect then
+  begin
+    rgRenumberingMethod.ItemIndex := Ord(MeshGenControls.RenumberingAlgorithm);
+    if rgRenumberingMethod.ItemIndex = 0 then
+    begin
+      rgRenumberingMethod.ItemIndex := 1;
+    end;
+  end
+  else
+  begin
+    rgRenumberingMethod.ItemIndex := 0;
+  end;
 
   rdgControlVariables.Cells[Ord(mtlVariable), Ord(mctSplittingAngle)] :=
     FloatToStr(MeshGenControls.SplittingAngle.Value);
@@ -250,8 +289,10 @@ end;
 { TUndoChangeMeshGenControls }
 
 constructor TUndoChangeMeshGenControls.Create(var Controls
-  : TMeshGenerationControls);
+  : TMeshGenerationControls; const GmshLocation: string);
 begin
+  FOldGmshLocation := frmGoPhast.PhastModel.ProgramLocations.GmshLocation;
+  FNewGmshLocation := GmshLocation;
   FOldControls := TMeshGenerationControls.Create(nil);
   FOldControls.Assign(frmGoPhast.PhastModel.SutraMesh.Mesh2D.MeshGenControls);
   FNewControls := Controls;
@@ -272,6 +313,7 @@ end;
 
 procedure TUndoChangeMeshGenControls.DoCommand;
 begin
+  frmGoPhast.PhastModel.ProgramLocations.GmshLocation := FNewGmshLocation;
   frmGoPhast.PhastModel.SutraMesh.Mesh2D.MeshGenControls := FNewControls;
   frmGoPhast.PhastModel.SutraMesh.Mesh2D.MeshGenControls.Apply;
   inherited;
@@ -279,6 +321,7 @@ end;
 
 procedure TUndoChangeMeshGenControls.Undo;
 begin
+  frmGoPhast.PhastModel.ProgramLocations.GmshLocation := FOldGmshLocation;
   frmGoPhast.PhastModel.SutraMesh.Mesh2D.MeshGenControls := FOldControls;
   frmGoPhast.PhastModel.SutraMesh.Mesh2D.MeshGenControls.Apply;
   inherited;

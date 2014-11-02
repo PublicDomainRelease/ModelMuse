@@ -40,7 +40,7 @@ type
     procedure InitializeEpsilon;
   public
     procedure CreateShapes(ValueList: TValueArrayStorage; DataArray: TDataArray;
-      FileName: string);
+      FileName: string; LabelSpacing: integer);
     { TODO -cRefactor : Consider replacing Model with an interface. }
     //
     Constructor Create(Model: TBaseModel);
@@ -404,7 +404,7 @@ begin
 end;
 
 procedure TContourExtractor.CreateShapes(ValueList: TValueArrayStorage;
-  DataArray: TDataArray; FileName: string);
+  DataArray: TDataArray; FileName: string; LabelSpacing: integer);
 var
   ContourCreator: TContourCreator;
   ValueIndex: Integer;
@@ -622,7 +622,7 @@ begin
               if Assigned(Grid) then
               begin
                 FPointLists:= TObjectList.Create;
-                ContourCreator:= TContourCreator.Create;
+                ContourCreator:= TContourCreator.Create(LabelSpacing);
                 try
                   InitializeEpsilon;
                   ContourCreator.EvaluatedAt := DataArray.EvaluatedAt;

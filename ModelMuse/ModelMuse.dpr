@@ -552,7 +552,9 @@ uses
   frameSwrObsDisplayUnit in 'frameSwrObsDisplayUnit.pas' {frameSwrObsDisplay: TFrame},
   frmConsoleLinesUnit in 'frmConsoleLinesUnit.pas' {frmConsoleLines},
   ModflowMnw1Unit in 'ModflowMnw1Unit.pas',
-  ModflowMnwWriter in 'ModflowMnwWriter.pas';
+  ModflowMnw1Writer in 'ModflowMnw1Writer.pas',
+  framePackageMnw1Unit in 'framePackageMnw1Unit.pas' {framePackageMnw1: TFrame},
+  frameScreenObjectMnw1Unit in 'frameScreenObjectMnw1Unit.pas' {frameScreenObjectMnw1: TFrame};
 
 {$R *.res}
 {#BACKUP ModelMuse.cfg}

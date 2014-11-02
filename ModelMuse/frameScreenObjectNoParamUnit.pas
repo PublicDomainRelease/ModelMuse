@@ -88,7 +88,7 @@ type
     procedure SetDeletedCells(ACol, ARow: integer; const Value: boolean);
     { Private declarations }
   protected
-    procedure LayoutMultiRowEditControls;
+    procedure LayoutMultiRowEditControls; virtual;
   public
     property ConductanceColumn: Integer read FConductanceColumn write FConductanceColumn;
     procedure ClearDeletedCells;
@@ -381,21 +381,26 @@ var
   RowIndex: Integer;
   TempOptions: TGridOptions;
 begin
-  for RowIndex := dgModflowBoundary.FixedRows to
-    dgModflowBoundary.RowCount - 1 do
-  begin
-    for ColIndex := FLastTimeColumn+1 to dgModflowBoundary.ColCount - 1 do
+  dgModflowBoundary.BeginUpdate;
+  try
+    for RowIndex := dgModflowBoundary.FixedRows to
+      dgModflowBoundary.RowCount - 1 do
     begin
-      if dgModflowBoundary.IsSelectedCell(ColIndex, RowIndex) then
+      for ColIndex := FLastTimeColumn+1 to dgModflowBoundary.ColCount - 1 do
       begin
-        dgModflowBoundary.Cells[ColIndex, RowIndex] := rdeFormula.Text;
-        if Assigned(dgModflowBoundary.OnSetEditText) then
+        if dgModflowBoundary.IsSelectedCell(ColIndex, RowIndex) then
         begin
-          dgModflowBoundary.OnSetEditText(
-            dgModflowBoundary,ColIndex,RowIndex, rdeFormula.Text);
+          dgModflowBoundary.Cells[ColIndex, RowIndex] := rdeFormula.Text;
+          if Assigned(dgModflowBoundary.OnSetEditText) then
+          begin
+            dgModflowBoundary.OnSetEditText(
+              dgModflowBoundary,ColIndex,RowIndex, rdeFormula.Text);
+          end;
         end;
       end;
     end;
+  finally
+    dgModflowBoundary.EndUpdate;
   end;
   TempOptions := dgModflowBoundary.Options;
   try

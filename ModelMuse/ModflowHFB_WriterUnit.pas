@@ -100,11 +100,11 @@ resourcestring
   StrEvaluatingHFBPacka = 'Evaluating HFB Package data.';
   StrWritingHFB6Package = 'Writing HFB6 Package input.';
   StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSets2and3 = '  Writing Data Sets 2 and 3.';
-  StrWritingDataSet4 = '  Writing Data Set 4.';
-  StrWritingDataSet5 = '  Writing Data Set 5.';
-  StrWritingDataSet6 = '  Writing Data Set 6.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSets2and3 = '  Writing Data Sets 2 and 3.';
+//  StrWritingDataSet4 = '  Writing Data Set 4.';
+//  StrWritingDataSet5 = '  Writing Data Set 5.';
+//  StrWritingDataSet6 = '  Writing Data Set 6.';
   Str0sIn1s = '%0:s in %1:s.';
 
 { TModflowHfb_Writer }

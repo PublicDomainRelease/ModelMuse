@@ -36,15 +36,15 @@ resourcestring
   StrTheFile1sMustH = 'The file %0:s must have an extension equal to "%1:s".';
   StrLayer0dRow1 = 'Layer: %0:d; Row: %1:d; Column: %2:d';
   StrWritingBasicPackag = 'Writing Basic Package input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSet3 = '  Writing Data Set 3.';
-  StrWritingDataSet4 = '  Writing Data Set 4.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSet3 = '  Writing Data Set 3.';
+//  StrWritingDataSet4 = '  Writing Data Set 4.';
   StrCheckingStarting = '  Checking starting heads.';
   StrInitialHeadIsBelo = 'Initial Head is below or equal to the bottom of the layer.';
-  StrThereIsNoHydrauli = 'There is no hydraulic connection between the follo' +
-  'wing cells.';
+  StrThereIsNoHydrauli = 'At least one of the following active cells is '
+    + 'hydraulically isolated.';
   StrLayerRowColumn = '(Layer, Row, Column) = (%0:d, %1:d,%2:d) and (%3:d, %' +
   '4:d, %5:d)';
   StrCheckingModelConne = 'Checking model connectivity';
@@ -630,7 +630,7 @@ begin
       if Model.IsLayerSimulated(LayerIndex) then
       begin
         WriteArray(DataArray, LayerIndex, DataSetName + ' '
-          + Model.ModflowLayerBottomDescription(LayerIndex));
+          + Model.ModflowLayerBottomDescription(LayerIndex), StrNoValueAssigned);
       end;
     end;
   end;

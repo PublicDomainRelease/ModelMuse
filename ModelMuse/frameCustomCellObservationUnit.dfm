@@ -40,16 +40,17 @@ object frameCustomCellObservation: TframeCustomCellObservation
       end
       object Panel2: TPanel
         Left = 0
-        Top = 165
+        Top = 162
         Width = 560
         Height = 76
         Align = alBottom
         TabOrder = 2
+        ExplicitTop = 165
         object lblNumberOfTimes: TLabel
           Left = 63
           Top = 9
-          Width = 78
-          Height = 13
+          Width = 95
+          Height = 16
           Caption = 'Number of times'
         end
         object seTimes: TJvSpinEdit
@@ -85,7 +86,7 @@ object frameCustomCellObservation: TframeCustomCellObservation
         Left = 0
         Top = 35
         Width = 560
-        Height = 130
+        Height = 127
         Align = alClient
         FixedCols = 0
         RowCount = 2
@@ -104,7 +105,6 @@ object frameCustomCellObservation: TframeCustomCellObservation
         OnColSize = rdgObservationsColSize
         ColorRangeSelection = False
         OnHorizontalScroll = rdgObservationsHorizontalScroll
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = False
@@ -126,6 +126,7 @@ object frameCustomCellObservation: TframeCustomCellObservation
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -148,6 +149,7 @@ object frameCustomCellObservation: TframeCustomCellObservation
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -170,6 +172,7 @@ object frameCustomCellObservation: TframeCustomCellObservation
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -198,6 +201,7 @@ object frameCustomCellObservation: TframeCustomCellObservation
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -220,8 +224,11 @@ object frameCustomCellObservation: TframeCustomCellObservation
             WordWrapCaptions = False
             WordWrapCells = True
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end>
+        WordWrapRowCaptions = False
+        ExplicitHeight = 130
         ColWidths = (
           64
           64
@@ -239,16 +246,17 @@ object frameCustomCellObservation: TframeCustomCellObservation
       ExplicitHeight = 0
       object Panel4: TPanel
         Left = 0
-        Top = 165
+        Top = 162
         Width = 560
         Height = 76
         Align = alBottom
         TabOrder = 2
+        ExplicitTop = 165
         object lblNumberOfLayers: TLabel
           Left = 64
           Top = 9
-          Width = 82
-          Height = 13
+          Width = 98
+          Height = 16
           Caption = 'Number of layers'
         end
         object seLayers: TJvSpinEdit
@@ -304,7 +312,7 @@ object frameCustomCellObservation: TframeCustomCellObservation
         Left = 0
         Top = 35
         Width = 560
-        Height = 130
+        Height = 127
         Align = alClient
         ColCount = 2
         FixedCols = 0
@@ -322,7 +330,6 @@ object frameCustomCellObservation: TframeCustomCellObservation
         SelectedRowOrColumnColor = clAqua
         UnselectableColor = clBtnFace
         ColorRangeSelection = False
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = False
@@ -346,6 +353,7 @@ object frameCustomCellObservation: TframeCustomCellObservation
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -368,8 +376,11 @@ object frameCustomCellObservation: TframeCustomCellObservation
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
+        WordWrapRowCaptions = False
+        ExplicitHeight = 130
       end
     end
   end
@@ -392,8 +403,8 @@ object frameCustomCellObservation: TframeCustomCellObservation
     object lblTreatment: TLabel
       Left = 200
       Top = 6
-      Width = 50
-      Height = 13
+      Width = 60
+      Height = 16
       Caption = 'Treatment'
     end
     object edObsName: TLabeledEdit
@@ -401,8 +412,8 @@ object frameCustomCellObservation: TframeCustomCellObservation
       Top = 22
       Width = 137
       Height = 21
-      EditLabel.Width = 88
-      EditLabel.Height = 13
+      EditLabel.Width = 104
+      EditLabel.Height = 16
       EditLabel.Caption = 'Observation name'
       MaxLength = 12
       OEMConvert = True
@@ -414,7 +425,7 @@ object frameCustomCellObservation: TframeCustomCellObservation
       Left = 200
       Top = 22
       Width = 145
-      Height = 21
+      Height = 24
       Style = csDropDownList
       ItemIndex = 0
       TabOrder = 1

@@ -19,7 +19,7 @@ uses
 Type
   TDrawingChoice = (dcAll, dcEdge);
   TMeshType = (mt2D, mtProfile, mt3D);
-  TMeshGenerationMethod = (mgmFishnet, mgmIrregular, mgmUnknown);
+  TMeshGenerationMethod = (mgmFishnet, mgmIrregular, mgmGmsh, mgmUnknown);
 
   TCustomSutraMesh = class;
 
@@ -131,6 +131,8 @@ Type
     property MinY: Double read GetMinY;
   end;
 
+  TSutraNode2DArray = array of TSutraNode2D;
+
   TSutraNode2DLeaf = class(TRangeTreeLeaf)
   private
     FNode: TSutraNode2D;
@@ -179,6 +181,7 @@ Type
     function GetNodesLocations: TRbwQuadTree;
     function GetMesh2D: TSutraMesh2D;
   public
+    procedure SortByNodeNumber;
     { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
     //
     constructor Create(Model: TBaseModel; ParentMesh: TSutraMesh3D);
@@ -274,7 +277,6 @@ Type
     function GetMinX: Double;
     function GetMinY: Double;
     procedure SetSelected(const Value: Boolean);
-    function GetAspectRatio: Double;
   protected
     function GetActiveNode(Index: Integer): INode;
     function GetActiveNodeCount: integer;
@@ -301,7 +303,7 @@ Type
     // @name makes sure that the @link(TSutraNode2D)s in this @classname
     // are oriented in a counterclockwise order.
     procedure SetCorrectOrienatation;
-    property AspectRatio: Double read GetAspectRatio;
+    function AspectRatio(VerticalExaggeration: Double = 1): Double;
   published
     property Nodes: TSutraNodeNumber2D_Collection read FNodes write SetNodes;
   end;
@@ -541,6 +543,8 @@ Type
     function MeshOutline: TPolygon2D;
     procedure Renumber;
     property DrawElementCenters: boolean read FDrawElementCenters write SetDrawElementCenters;
+    procedure DeleteUnconnectedNodes;
+    procedure SetCorrectElementOrientation;
   published
     property Nodes: TSutraNode2D_Collection read FNodes write SetNodes;
     property Elements: TSutraElement2D_Collection read FElements
@@ -1049,6 +1053,8 @@ Type
     function DefaultCrossSectionLocation: TSegment2D;
     property OnMeshTypeChanged: TNotifyEvent read FOnMeshTypeChanged
       write FOnMeshTypeChanged;
+    procedure DeleteUnconnectedNodes;
+    procedure SetCorrectElementOrientation;
   published
     property Nodes: TSutraNode3D_Collection read FNodes write SetNodes stored False;
     property Elements: TSutraElement3D_Collection read FElements
@@ -2248,6 +2254,34 @@ begin
   UpperBoundary := Node2D.MaxY;
 end;
 
+procedure TSutraNode2D_Collection.SortByNodeNumber;
+var
+  ANodeList: TList<TSutraNode2D>;
+  NodeIndex: Integer;
+  ANode: TSutraNode2D;
+begin
+  ANodeList := TList<TSutraNode2D>.Create;
+  try
+    ANodeList.Capacity := Count;
+    for NodeIndex := 0 to Count - 1 do
+    begin
+      ANodeList.Add(nil);
+    end;
+    for NodeIndex := 0 to Count - 1 do
+    begin
+      ANode := Items[NodeIndex];
+      ANodeList[ANode.FNumber] := ANode;
+    end;
+    for NodeIndex := 0 to ANodeList.Count - 1 do
+    begin
+      ANode := ANodeList[NodeIndex];
+      ANode.Index := NodeIndex;
+    end;
+  finally
+    ANodeList.Free;
+  end;
+end;
+
 function TSutraNode2D_Collection.TopContainingCell(
   APoint: TPoint2D): T2DTopCell;
 var
@@ -2707,7 +2741,7 @@ begin
   result := Nodes.Count;
 end;
 
-function TSutraElement2D.GetAspectRatio: Double;
+function TSutraElement2D.AspectRatio(VerticalExaggeration: Double = 1): Double;
 var
   Node1: TSutraNode2D;
   Node2: TSutraNode2D;
@@ -2718,15 +2752,30 @@ var
   TestDistance: FastGeo.TFloat;
   MinDistance: FastGeo.TFloat;
   LongDistance: Extended;
-  TempNode: TSutraNode2D;
-  begin
+  P1: TPoint2D;
+  P2: TPoint2D;
+  P3: TPoint2D;
+  P4: TPoint2D;
+  TempP: TPoint2D;
+begin
   Assert(Nodes.Count = 4);
   Node1 := Nodes[0].Node;
   Node2 := Nodes[1].Node;
   Node3 := Nodes[2].Node;
   Node4 := Nodes[3].Node;
-  Distance13 := Distance(Node1.Location, Node3.Location);
-  Distance24 := Distance(Node2.Location, Node4.Location);
+  P1 := Node1.Location;
+  P2 := Node2.Location;
+  P3 := Node3.Location;
+  P4 := Node4.Location;
+  if (VerticalExaggeration <> 1) and (VerticalExaggeration <> 0) then
+  begin
+    P1.y := P1.y*VerticalExaggeration;
+    P2.y := P2.y*VerticalExaggeration;
+    P3.y := P3.y*VerticalExaggeration;
+    P4.y := P4.y*VerticalExaggeration;
+  end;
+  Distance13 := Distance(P1, P3);
+  Distance24 := Distance(P2, P4);
   if Distance13 > Distance24 then
   begin
     LongDistance := Distance13;
@@ -2734,34 +2783,34 @@ var
   else
   begin
     LongDistance := Distance24;
-    TempNode := Node1;
-    Node1 := Node2;
-    Node2 := Node3;
-    Node3 := Node4;
-    Node4 := TempNode
+    TempP := P1;
+    P1 := P2;
+    P2 := P3;
+    P3 := P4;
+    P4 := TempP
   end;
   if LongDistance <= 0 then
   begin
     result := 0;
     Exit;
   end;
-  TestDistance := MinimumDistanceFromPointToSegment(Node2.Location,
-    EquateSegment(Node1.Location, Node4.Location));
+  TestDistance := MinimumDistanceFromPointToSegment(P2,
+    EquateSegment(P1, P4));
   MinDistance := TestDistance;
-  TestDistance := MinimumDistanceFromPointToSegment(Node2.Location,
-    EquateSegment(Node3.Location, Node4.Location));
+  TestDistance := MinimumDistanceFromPointToSegment(P2,
+    EquateSegment(P3, P4));
   if TestDistance < MinDistance then
   begin
     MinDistance := TestDistance;
   end;
-  TestDistance := MinimumDistanceFromPointToSegment(Node4.Location,
-    EquateSegment(Node1.Location, Node2.Location));
+  TestDistance := MinimumDistanceFromPointToSegment(P4,
+    EquateSegment(P1, P2));
   if TestDistance < MinDistance then
   begin
     MinDistance := TestDistance;
   end;
-  TestDistance := MinimumDistanceFromPointToSegment(Node4.Location,
-    EquateSegment(Node3.Location, Node2.Location));
+  TestDistance := MinimumDistanceFromPointToSegment(P4,
+    EquateSegment(P3, P2));
   if TestDistance < MinDistance then
   begin
     MinDistance := TestDistance;
@@ -3361,6 +3410,29 @@ begin
   FDrawElementNumbers := False;
 end;
 
+procedure TSutraMesh2D.DeleteUnconnectedNodes;
+var
+  NodeIndex: Integer;
+  RenumberingNeeded: boolean;
+begin
+  RenumberingNeeded := False;
+  for NodeIndex := FNodes.Count - 1 downto 0 do
+  begin
+    if FNodes[NodeIndex].ElementCount = 0 then
+    begin
+      FNodes.Delete(NodeIndex);
+      RenumberingNeeded := True;
+    end;
+  end;
+  if RenumberingNeeded then
+  begin
+    for NodeIndex := 0 to FNodes.Count - 1 do
+    begin
+      FNodes[NodeIndex].Number := NodeIndex;
+    end;
+  end;
+end;
+
 destructor TSutraMesh2D.Destroy;
 begin
   FElements.Free;
@@ -3490,7 +3562,8 @@ begin
         Contourer.Mesh := Self.Mesh3D;
         Contourer.ZoomBox := ZoomBox;
         Contourer.DrawContours(SelectedLayer,
-          frmGoPhast.PhastModel.ContourColorParameters, vdTop);
+          frmGoPhast.PhastModel.ContourColorParameters, vdTop,
+          frmGoPhast.PhastModel.ContourLabelSpacing);
       finally
         Contourer.Free;
       end;
@@ -3880,6 +3953,7 @@ var
   OutlineCount: Integer;
   NextNode: TSutraNode2D;
   PriorNodes: TSutraNode2D_List;
+  AllInnerNodes: Boolean;
   function GetNextOutlineNode(ANode: TSutraNode2D): TSutraNode2D;
   var
     ElementIndex: Integer;
@@ -3888,11 +3962,21 @@ var
     NodePosition: Integer;
     function IsNextEdgeNode: boolean;
     begin
-      result := (AnotherNode.NodeType <> ntInner)
-        and (AnotherNode.SumOfAngles < 359.9)
-        and (AnotherNode <> ANode)
-        and (AnotherNode <> FirstNode)
-        and (PriorNodes.IndexOf(AnotherNode) < 0);
+      if AllInnerNodes then
+      begin
+        result := (AnotherNode.SumOfAngles < 359.9)
+          and (AnotherNode <> ANode)
+          and (AnotherNode <> FirstNode)
+          and (PriorNodes.IndexOf(AnotherNode) < 0);
+      end
+      else
+      begin
+        result := (AnotherNode.NodeType <> ntInner)
+          and (AnotherNode.SumOfAngles < 359.9)
+          and (AnotherNode <> ANode)
+          and (AnotherNode <> FirstNode)
+          and (PriorNodes.IndexOf(AnotherNode) < 0);
+      end;
     end;
   begin
     result := nil;
@@ -3936,6 +4020,7 @@ begin
     PriorNodes := TSutraNode2D_List.Create;
     try
 
+      AllInnerNodes := True;
       FirstNode := nil;
       for NodeIndex := 0 to Nodes.Count - 1 do
       begin
@@ -3943,13 +4028,27 @@ begin
           and (Nodes[NodeIndex].SumOfAngles < 359.9) then
         begin
           FirstNode := Nodes[NodeIndex];
+          AllInnerNodes := False;
           break;
+        end;
+      end;
+      if FirstNode = nil then
+      begin
+
+        for NodeIndex := 0 to Nodes.Count - 1 do
+        begin
+          if (Nodes[NodeIndex].SumOfAngles < 359.9) then
+          begin
+            FirstNode := Nodes[NodeIndex];
+            break;
+          end;
         end;
       end;
       Assert(FirstNode <> nil);
       result[0] := FirstNode.Location;
       OutlineCount := 1;
       NextNode := GetNextOutlineNode(FirstNode);
+      Assert(NextNode <> nil);
       PriorNodes.Add(NextNode);
       while NextNode <> nil do
       begin
@@ -3980,6 +4079,7 @@ begin
   Nodes.InvalidateNodeIntervals;
 
   case MeshGenControls.RenumberingAlgorithm of
+    raNone: ;
     CuthillMcKee: CuthillMcKeeRenumbering.RenumberMesh(self);
     raSloanRandolph: MeshRenumbering.RenumberMesh(self);
     else Assert(False);
@@ -4035,6 +4135,16 @@ begin
 
 
 
+end;
+
+procedure TSutraMesh2D.SetCorrectElementOrientation;
+var
+  ElementIndex: Integer;
+begin
+  for ElementIndex := 0 to Elements.Count -1 do
+  begin
+    Elements[ElementIndex].SetCorrectOrienatation;
+  end;
 end;
 
 procedure TSutraMesh2D.SetDrawElementCenters(const Value: boolean);
@@ -6835,7 +6945,8 @@ begin
         Contourer.Mesh := Self;
         Contourer.ZoomBox := ZoomBox;
         Contourer.DrawContours(SelectedLayer,
-          frmGoPhast.PhastModel.ContourColorParameters, vdFront);
+          frmGoPhast.PhastModel.ContourColorParameters, vdFront,
+          frmGoPhast.PhastModel.ContourLabelSpacing);
       finally
         Contourer.Free;
       end;
@@ -7363,6 +7474,11 @@ begin
   result[2].x := Limits.MaxX + Width / 10;
   result[1].y := MidY;
   result[2].y := MidY;
+end;
+
+procedure TSutraMesh3D.DeleteUnconnectedNodes;
+begin
+  Mesh2D.DeleteUnconnectedNodes;
 end;
 
 procedure TSutraMesh3D.UpdateNodeNumbers;
@@ -7987,6 +8103,11 @@ end;
 procedure TSutraMesh3D.SetCanDraw(const Value: boolean);
 begin
   FCanDraw := Value;
+end;
+
+procedure TSutraMesh3D.SetCorrectElementOrientation;
+begin
+  Mesh2D.SetCorrectElementOrientation;
 end;
 
 procedure TSutraMesh3D.SetCrossSection(const Value: TCrossSection);
@@ -9770,7 +9891,7 @@ begin
           AnElement2D := ANode2D.Elements[ElementIndex];
           NodePosition := AnElement2D.FNodes.IndexOfNode(ANode2D);
 
-          AnotherNode := nil;
+//          AnotherNode := nil;
           if NodePosition > 0 then
           begin
             AnotherNode := AnElement2D.FNodes[NodePosition-1].Node;
@@ -9827,6 +9948,7 @@ begin
           PriorNode := nil;
           FirstNode := ANode2D;
           repeat
+            AnotherNode := nil;
             for NeighborIndex := 0 to ANode2D.FNeighborNodes.Count - 1 do
             begin
               AnotherNode := ANode2D.FNeighborNodes[NeighborIndex];
@@ -9846,6 +9968,7 @@ begin
               ANode2D := AnotherNode;
               break;
             end;
+            Assert(AnotherNode <> nil);
             if (APolyList.Count > 1) and (AnotherNode = FirstNode) then
             begin
               EdgeNodes.Pack;

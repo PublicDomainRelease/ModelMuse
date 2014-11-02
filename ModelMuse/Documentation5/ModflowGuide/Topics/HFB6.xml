@@ -54,8 +54,8 @@
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="release.txt" styleclass="Normal" translate="true">release.txt</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="ofr-00-92-errata.pdf" styleclass="Normal" translate="true">ofr-00-92-errata.pdf</link></li>
           </list>
-          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
-            <li styleclass="Normal"><text styleclass="Citation" translate="true">Hanson, R.T., Boyce, S.E., Schmid, Wolfgang, Hughes, J.D., Mehl, S.M., Leake, S.A., Maddock, Thomas, III, and Niswonger, R.G., 2014, One-Water Hydrologic Flow Model (MODFLOW-OWHM): U.S. Geological Survey Techniques and Methods 6–A51, 120 p., </text><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.usgs.gov/tm/06/a51/" target="_blank" styleclass="Citation" translate="true">http://pubs.usgs.gov/tm/06/a51/</link><text styleclass="Citation" translate="true">.</text></li>
+          <list id="21" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="weblink" href="http://dx.doi.org/10.3133/tm6A51" target="_blank" styleclass="Citation" translate="true">Hanson, R.T., Boyce, S.E., Schmid, Wolfgang, Hughes, J.D., Mehl, S.M., Leake, S.A., Maddock, Thomas, III, and Niswonger, R.G., 2014, One-Water Hydrologic Flow Model (MODFLOW-OWHM): U.S. Geological Survey Techniques and Methods 6–A51, 120 p., http://dx.doi.org/10.3133/tm6A51.</link></li>
           </list>
         </td>
       </tr>
@@ -261,7 +261,7 @@
               </td>
             </tr>
           </table></para>
-          <para styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:0px; tabstops:none;"><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/><text styleclass="Normal" translate="true">If IROW1=IROW2 and ICOL1=ICOL2 and ABS(Layer2- Layer)=1, then there is no flow routing, but instead the barrier is changed to a vertical barrier between layers and will work with any solver package. </text><conditional-text type="END"/></para>
+          <para styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:0px; tabstops:none;"><snippet src="HFB_OWHM_modifications"/></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -407,6 +407,7 @@
                   </tr>
                 </table></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><snippet src="HFB_Layer2"/><conditional-text type="END"/></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><snippet src="HFB_OWHM_modifications"/></para>
               </td>
             </tr>
           </table></para>

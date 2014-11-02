@@ -182,13 +182,14 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
           CheckMax = False
           CheckMin = False
           ComboUsed = True
-          Format = rcf4String
+          Format = rcf4Real
           LimitToList = False
           MaxLength = 0
           ParentButtonFont = False
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -211,6 +212,7 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -233,8 +235,10 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end>
+      WordWrapRowCaptions = False
     end
   end
 end

@@ -33,11 +33,11 @@ resourcestring
   StrALLayerD = 'Data Set 1: AL, Layer: %d';
   StrDMCOEFLayerD = 'Data Set 4: DMCOEF; Species: %0:s; Layer: %1:d';
   StrWritingMT3DMSDSPP = 'Writing MT3DMS DSP Package input.';
-  StrWritingDataSet0 = '  Writing Data Set 0.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSet3 = '  Writing Data Set 3.';
-  StrWritingDataSet4 = '  Writing Data Set 4.';
+//  StrWritingDataSet0 = '  Writing Data Set 0.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSet3 = '  Writing Data Set 3.';
+//  StrWritingDataSet4 = '  Writing Data Set 4.';
 
 { TMt3dmsDspWriter }
 
@@ -84,7 +84,7 @@ begin
     if Model.IsLayerSimulated(LayerIndex) then
     begin
       WriteArray(DataArray, LayerIndex, Format(StrALLayerD,
-        [Model.DataSetLayerToModflowLayer(LayerIndex)]));
+        [Model.DataSetLayerToModflowLayer(LayerIndex)]), StrNoValueAssigned);
     end;
   end;
 end;
@@ -123,7 +123,7 @@ begin
         if Model.IsLayerSimulated(LayerIndex) then
         begin
           WriteArray(DataArray, LayerIndex, Format(StrDMCOEFLayerD,
-            [ChemItem.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]));
+            [ChemItem.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]), StrNoValueAssigned);
         end;
       end;
     end;

@@ -40,6 +40,6 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><conditional-text type="END"/></para>
+    <para style="margin-bottom:13px; line-height:1.15;"><text styleclass="Normal" translate="true">Note: If you have multiple wells located at the same layer, row, and column that are linked to different tabfiles, then the tabfiles will be applied in the order that they appear here. For example if you specify 3 identical wells with the same layer, row and column, but with each linked to a different tabfile and then have a stress period with only 2 of the 3 wells identical wells specified. When this occurs only the first two tabfiles read in here are applied and the third is ignored. This does not apply to identical wells that use the same tabfile, but have different scale factors.</text><conditional-text type="END"/></para>
   </body>
 </topic>

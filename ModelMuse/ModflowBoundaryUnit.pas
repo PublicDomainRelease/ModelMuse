@@ -444,6 +444,8 @@ type
       ItemIndex: Integer; DataSets: TList; ListOfTimeLists: TList;
       AModel: TBaseModel);
   strict protected
+    procedure AssignDirectlySpecifiedValues(AnItem: TCustomModflowBoundaryItem;
+      BoundaryStorage: TCustomBoundaryStorage); virtual;
     { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name is a virtual abstract method used to set the values of the
     // cell locations in @link(Boundaries) for a particular time period.
@@ -3122,6 +3124,14 @@ begin
   end;
 end;
 
+procedure TCustomListArrayBoundColl.AssignDirectlySpecifiedValues(
+  AnItem: TCustomModflowBoundaryItem;
+  BoundaryStorage: TCustomBoundaryStorage);
+begin
+
+end;
+
+
 procedure TCustomListArrayBoundColl.EvaluateListBoundaries(AModel: TBaseModel);
 var
   ItemIndex: integer;
@@ -3340,6 +3350,7 @@ begin
 
                 LocalModel.DataArrayManager.CacheDataArrays;
               end;
+
             finally
               Variables.Free;
               DataSets.Free;
@@ -3447,6 +3458,9 @@ begin
           DataSets.Free;
         end;
       end;
+      AssignDirectlySpecifiedValues(AnItem, Boundaries[ItemCount, AModel]);
+
+
       Inc(ItemCount);
 
       if ObservationsPresent then

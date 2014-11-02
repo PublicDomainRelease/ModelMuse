@@ -33,7 +33,7 @@ type
     FOnChange: TNotifyEvent;
 {$IFDEF FMP}
     FChanging: Boolean;
-    procedure ClearGrid(Grid: TRbwDataGrid4);
+//    procedure ClearGrid(Grid: TRbwDataGrid4);
     property Changing: Boolean read FChanging write FChanging;
     procedure CheckValidCell(Sender: TObject; ACol, ARow: Integer; var ValidCell: Boolean);
     procedure GetValidHowUsed(ColIndex, RowIndex: Integer; var ValidCell: Boolean);
@@ -87,19 +87,19 @@ begin
     and (((ACol-2) mod DeliveryColumns) <> Ord(dcHowUsed));
 end;
 
-procedure TframeDeliveryGrid.ClearGrid(Grid: TRbwDataGrid4);
-var
-  RowIndex: Integer;
-  ColIndex: Integer;
-begin
-  for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
-  begin
-    for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
-    begin
-      Grid.Cells[ColIndex,RowIndex] := ''
-    end;
-  end;
-end;
+//procedure TframeDeliveryGrid.ClearGrid(Grid: TRbwDataGrid4);
+//var
+//  RowIndex: Integer;
+//  ColIndex: Integer;
+//begin
+//  for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
+//  begin
+//    for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
+//    begin
+//      Grid.Cells[ColIndex,RowIndex] := ''
+//    end;
+//  end;
+//end;
 
 {$ENDIF}
 
@@ -196,7 +196,7 @@ begin
       if not FirstFarm.DeliveryParamCollection.IsSame(
         AFarm.DeliveryParamCollection) then
       begin
-        ClearGrid(Grid);
+        ClearGrid;
         seNumberOfDeliveryTypes.AsInteger := 0;
         seNumberOfDeliveryTypes.OnChange(seNumberOfDeliveryTypes);
         seNumber.AsInteger := 0;
@@ -207,7 +207,7 @@ begin
     MaxCount := Max(MaxCount, FirstFarm.DeliveryParamCollection.Count);
     if MaxCount = 0 then
     begin
-      ClearGrid(Grid);
+      ClearGrid;
       seNumberOfDeliveryTypes.AsInteger := 0;
       seNumberOfDeliveryTypes.OnChange(seNumberOfDeliveryTypes);
       seNumber.AsInteger := 0;
@@ -526,7 +526,7 @@ var
 begin
 {$IFDEF FMP}
   FirstFormulaColumn := Succ(Ord(dtcEnd));
-  ClearGrid(Grid);
+  ClearGrid;
   OnValidCell := CheckValidCell;
   Grid.Cells[Ord(dtcStart), 0] := StrStartingTime;
   Grid.Cells[Ord(dtcEnd), 0] := StrEndingTime;

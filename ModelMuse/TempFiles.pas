@@ -172,6 +172,13 @@ begin
   GetTempFileName(PChar(DirName), PChar('MM_' + IntToStr(TemporaryFiles.Count)),
     0, Buffer);
   result := Buffer;
+  while TemporaryFiles.IndexOf(result) >= 0 do
+  begin
+    TemporaryFiles.Add(result);
+    GetTempFileName(PChar(DirName), PChar('MM_' + IntToStr(TemporaryFiles.Count)),
+      0, Buffer);
+    result := Buffer;
+  end;
 //  result := TempFileName;
 //  result := IncludeTrailingPathDelimiter(DirName) + 'MM.tmp';
 //  if FileExists(result) then
@@ -256,6 +263,13 @@ begin
   GetTempFileName(PChar(CurrentTempDir), PChar('MM_' + IntToStr(TemporaryFiles.Count)),
     0, Buffer);
   result := Buffer;
+  while TemporaryFiles.IndexOf(result) >= 0 do
+  begin
+    TemporaryFiles.Add(result);
+    GetTempFileName(PChar(CurrentTempDir), PChar('MM_' + IntToStr(TemporaryFiles.Count)),
+      0, Buffer);
+    result := Buffer;
+  end;
   TemporaryFiles.Add(result);
 end;
 
@@ -814,6 +828,7 @@ initialization
     ClearAppSpecificTempDirectory;
   end;
   TemporaryFiles:= TStringList.Create;
+  TemporaryFiles.Sorted := True;
   Directories := TStringList.Create;
   Directories.Sorted := True;
   ZipFiles := TStringList.Create;

@@ -4,9 +4,9 @@ inherited frmTimeStepLengthCalculator: TfrmTimeStepLengthCalculator
   Caption = 'Time Step Length Calculator'
   ClientHeight = 163
   ClientWidth = 471
-  ExplicitWidth = 479
-  ExplicitHeight = 197
-  PixelsPerInch = 96
+  ExplicitWidth = 489
+  ExplicitHeight = 208
+  PixelsPerInch = 120
   TextHeight = 18
   object lblNumSteps: TLabel
     Left = 8
@@ -61,8 +61,7 @@ inherited frmTimeStepLengthCalculator: TfrmTimeStepLengthCalculator
     Top = 127
     Width = 145
     Height = 22
-    ItemHeight = 18
-    TabOrder = 1
+    TabOrder = 6
     Text = '1'
     OnChange = seNumStepsChange
     DataType = dtReal
@@ -76,8 +75,7 @@ inherited frmTimeStepLengthCalculator: TfrmTimeStepLengthCalculator
     Top = 79
     Width = 145
     Height = 22
-    ItemHeight = 18
-    TabOrder = 2
+    TabOrder = 1
     Text = '0'
     OnChange = seNumStepsChange
     DataType = dtReal
@@ -92,8 +90,7 @@ inherited frmTimeStepLengthCalculator: TfrmTimeStepLengthCalculator
     Anchors = [akLeft, akTop, akRight]
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 18
-    TabOrder = 3
+    TabOrder = 2
     Text = '0'
     DataType = dtReal
     Max = 1.000000000000000000
@@ -105,8 +102,9 @@ inherited frmTimeStepLengthCalculator: TfrmTimeStepLengthCalculator
     Width = 79
     Height = 34
     Anchors = [akTop, akRight]
-    TabOrder = 4
     Kind = bkCancel
+    NumGlyphs = 2
+    TabOrder = 5
   end
   object btnOK: TBitBtn
     Left = 297
@@ -114,8 +112,9 @@ inherited frmTimeStepLengthCalculator: TfrmTimeStepLengthCalculator
     Width = 83
     Height = 34
     Anchors = [akTop, akRight]
-    TabOrder = 5
     Kind = bkOK
+    NumGlyphs = 2
+    TabOrder = 4
   end
   object btnHelp: TBitBtn
     Left = 207
@@ -123,8 +122,9 @@ inherited frmTimeStepLengthCalculator: TfrmTimeStepLengthCalculator
     Width = 84
     Height = 34
     Anchors = [akTop, akRight]
-    TabOrder = 6
-    OnClick = btnHelpClick
     Kind = bkHelp
+    NumGlyphs = 2
+    TabOrder = 3
+    OnClick = btnHelpClick
   end
 end

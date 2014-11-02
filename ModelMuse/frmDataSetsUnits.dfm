@@ -13,27 +13,29 @@ inherited frmDataSets: TfrmDataSets
   ExplicitTop = -60
   ExplicitWidth = 656
   ExplicitHeight = 507
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 19
   object Splitter1: TSplitter
-    Left = 315
+    Left = 313
     Top = 0
     Width = 5
-    Height = 401
+    Height = 394
     Align = alRight
     ExplicitLeft = 325
     ExplicitHeight = 405
   end
   object pnlButtons: TPanel
     Left = 0
-    Top = 401
-    Width = 640
+    Top = 394
+    Width = 638
     Height = 41
     Align = alBottom
     ParentColor = True
     TabOrder = 2
+    ExplicitTop = 401
+    ExplicitWidth = 640
     DesignSize = (
-      640
+      638
       41)
     object btnOK: TBitBtn
       Left = 434
@@ -108,18 +110,20 @@ inherited frmDataSets: TfrmDataSets
   end
   object sbStatusBar: TStatusBar
     Left = 0
-    Top = 442
-    Width = 640
+    Top = 435
+    Width = 638
     Height = 27
     Panels = <>
     ParentColor = True
     SimplePanel = True
+    ExplicitTop = 442
+    ExplicitWidth = 640
   end
   object tvDataSets: TTreeView
     Left = 0
     Top = 0
-    Width = 315
-    Height = 401
+    Width = 313
+    Height = 394
     Align = alClient
     HideSelection = False
     Indent = 21
@@ -128,20 +132,28 @@ inherited frmDataSets: TfrmDataSets
     ReadOnly = True
     TabOrder = 0
     OnChange = tvDataSetsChange
+    ExplicitWidth = 315
+    ExplicitHeight = 401
   end
   object pcDataSets: TJvPageControl
-    Left = 320
+    Left = 318
     Top = 0
     Width = 320
-    Height = 401
+    Height = 394
     ActivePage = tabBasic
     Align = alRight
     TabOrder = 1
+    ExplicitLeft = 320
+    ExplicitHeight = 401
     object tabBasic: TTabSheet
       Caption = 'Basic'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         312
-        367)
+        360)
       object lblName: TLabel
         Left = 3
         Top = 3
@@ -524,6 +536,10 @@ inherited frmDataSets: TfrmDataSets
     object tabComment: TTabSheet
       Caption = 'Comment'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Splitter2: TSplitter
         Left = 0
         Top = 175
@@ -545,11 +561,10 @@ inherited frmDataSets: TfrmDataSets
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 306
+          Width = 69
           Height = 19
           Align = alTop
           Caption = 'Comment'
-          ExplicitWidth = 69
         end
         object reComment: TRichEdit
           AlignWithMargins = True
@@ -567,21 +582,21 @@ inherited frmDataSets: TfrmDataSets
       end
       object pnlDescription: TPanel
         Left = 0
-        Top = 180
+        Top = 173
         Width = 312
         Height = 187
         Align = alBottom
         BevelOuter = bvNone
         TabOrder = 1
+        ExplicitTop = 180
         object lblAssociatedDataSets: TLabel
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 306
+          Width = 164
           Height = 19
           Align = alTop
           Caption = 'Associated model data'
-          ExplicitWidth = 164
         end
         object memoAssociatedDataSets: TMemo
           AlignWithMargins = True

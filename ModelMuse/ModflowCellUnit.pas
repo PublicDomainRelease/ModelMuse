@@ -147,6 +147,8 @@ type
     function AreIntegerValuesIdentical(AnotherList: TValueCellList;
       DataIndex: integer): boolean;
     procedure Clear; override;
+    function Last: TValueCell;
+    function First: TValueCell;
   end;
 
 procedure WriteCompInt(Stream: TStream; Value: integer);
@@ -205,7 +207,10 @@ var
 begin
   StringLength := Length(Value);
   WriteCompInt(Stream, StringLength);
-  Stream.WriteBuffer(Pointer(Value)^, ByteLength(Value));
+  if StringLength > 0 then
+  begin
+    Stream.WriteBuffer(Pointer(Value)^, ByteLength(Value));
+  end;
 end;
 
 function ReadCompStringSimple(Stream: TStream): string;
@@ -213,8 +218,15 @@ var
   CommentLength: Integer;
 begin
   Stream.Read(CommentLength, SizeOf(CommentLength));
-  SetString(result, nil, CommentLength);
-  Stream.Read(Pointer(result)^, CommentLength * SizeOf(Char));
+  if CommentLength > 0 then
+  begin
+    SetString(result, nil, CommentLength);
+    Stream.Read(Pointer(result)^, CommentLength * SizeOf(Char));
+  end
+  else
+  begin
+    result := ''
+  end;
 end;
 
 function ReadCompString(Stream: TStream; Annotations: TStringList): string;
@@ -401,6 +413,11 @@ begin
   FTempFileNames.Free;
 end;
 
+function TValueCellList.First: TValueCell;
+begin
+  result := inherited First as TValueCell
+end;
+
 function TValueCellList.GetCount: integer;
 begin
   result := FCachedCount + inherited Count;
@@ -410,6 +427,11 @@ function TValueCellList.GetItem(Index: integer): TValueCell;
 begin
   CheckRestore;
   result := inherited Items[Index] as TValueCell;
+end;
+
+function TValueCellList.Last: TValueCell;
+begin
+  result := inherited Last as TValueCell
 end;
 
 procedure TValueCellList.Restore;

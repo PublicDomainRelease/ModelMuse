@@ -51,7 +51,7 @@ uses ModflowGridUnit, AbstractGridUnit, ScreenObjectUnit, GoPhastTypes,
   frmErrorsAndWarningsUnit, ModflowFhbUnit, StrUtils,
   ModflowSwrReachGeometryUnit, ModflowSwrReachUnit, ModflowSwrUnit,
   ModflowSwrDirectRunoffUnit, ModflowSwrStructureUnit, ModflowSwrTabfilesUnit,
-  CustomModflowWriterUnit, ModflowSwrObsUnit;
+  CustomModflowWriterUnit, ModflowSwrObsUnit, ModflowMnw1Unit;
 
 resourcestring
   StrErrorInSPackage = 'Error in %s package input. In the first stress perio' +
@@ -3081,6 +3081,86 @@ Type
     Destructor Destroy; override;
   end;
 
+  TMnw1Cell = class(TLocation)
+    Qdes: double;
+    QWval: double;
+    Rw: double;
+    Skin: double;
+    Hlim: double;
+    Href: double;
+    DD: boolean;
+    Iwgrp: integer;
+    Cp_C: double;
+    QCUT: boolean;
+    QPercentCUT: boolean;
+    Qfrcmn: double;
+    Qfrcmx: double;
+    Site: string;
+    Multi: boolean;
+    Mn: boolean;
+    function SameLocation(OtherCell: TMnw1Cell): boolean;
+    procedure Assign(Source: TMnw1Cell);
+  end;
+
+  TMnw1Cells = class(TObjectList<TMnw1Cell>)
+    StartingStressPeriod: integer;
+    EndingStressPeriod: integer;
+    function SameLocations(OtherCells: TMnw1Cells): boolean;
+  end;
+
+  TMnw1Well = class(TObjectList<TMnw1Cells>)
+  end;
+
+  TMnw1OutputFile = class(TObject)
+    FileName: string;
+    Flag: string;
+    UnitNumber: integer;
+    AllTime: boolean;
+  end;
+
+  TMnw1OutputFiles = TObjectList<TMnw1OutputFile>;
+
+  TMnw1Importer = class(TPackageImporter)
+  private
+    FWells: TObjectList<TMnw1Well>;
+    FWellPriorStressPeriod: TList<TMnw1Well>;
+    FWellCurrentStressPeriod: TList<TMnw1Well>;
+    NOMOITER: integer;
+    KSPREF: integer;
+    FLossType: TMnw1LossType;
+    PLossMNW: double;
+    FCurrentStressPeriod: integer;
+    FMnw1OutputFiles: TMnw1OutputFiles;
+    FAdd: Boolean;
+    itmp: integer;
+    FCellsCurrentStressPeriod: TList<TMnw1Cell>;
+    FMnw1Package: TMnw1Package;
+    procedure ReadDataSet1;
+    procedure ReadDataSet2Version1;
+    procedure ReadDataSet2Version2;
+    procedure ReadMnwFilePrefix;
+    procedure ReadDataSet3;
+    procedure AssignAllTimeFlag;
+    procedure ReadDataSet4;
+    procedure ReadAddNewWells;
+    procedure ReadDataSet5_1;
+    procedure ReadQCUT;
+    procedure ReadQPercentCUT;
+    procedure ReadActivationPumpingRate;
+    procedure ReadCp_C;
+    procedure ReadSiteLabel;
+    procedure ReadDataSet5_2;
+    procedure ExpandMulti;
+    procedure AssignCellToWells;
+    procedure HandleCellsFromPriorStressPeriod;
+  protected
+    procedure ReadData(const ALabel: string); override;
+    procedure HandlePackage; override;
+  public
+    Constructor Create(Importer: TModflow2005Importer);
+    destructor Destroy; override;
+  end;
+
   TSubLayerAssignment = class(TArrayMember)
     Layer: integer;
   end;
@@ -4150,7 +4230,7 @@ begin
   FPackageIdentifiers.AddObject('EVT:', TEvtImporter.Create(self, MZImporter));
   GHB := TGhbImporter.Create(self);
   FPackageIdentifiers.AddObject('GHB:', GHB);
-  FPackageIdentifiers.AddObject('MNW:', nil);
+  FPackageIdentifiers.AddObject('MNW1:', TMnw1Importer.Create(self));
   Mnw2 := TMnw2Importer.Create(self);
   FPackageIdentifiers.AddObject('MNW2:', Mnw2);
   FPackageIdentifiers.AddObject('MNWI:', TMnwiImporter.Create(self, Mnw2));
@@ -7419,13 +7499,16 @@ begin
   begin
     ReadDataSet1;
   end
-  else
-  begin if ALabel =
+  else if ALabel =
     'HCLOSEPCG,RCLOSEPCG,RELAXPCG,NBPOL,IPRPCG,MUTPCG,DAMPPCG:' then
   begin
       ReadDataSet2;
   end
   else
+  begin
+  {$IFDEF DEBUG}
+    ShowMessage(ALabel);
+  {$ENDIF}
     Assert(False);
   end;
 end;
@@ -11069,7 +11152,7 @@ begin
   end;
 
   FPointLists:= TObjectList.Create;
-  ContourCreator:= TContourCreator.Create;
+  ContourCreator:= TContourCreator.Create(100);
   try
     InitializeEpsilon;
 
@@ -11179,7 +11262,7 @@ begin
 
   FPointLists:= TObjectList.Create;
 
-  ContourCreator:= TContourCreator.Create;
+  ContourCreator:= TContourCreator.Create(100);
   try
     InitializeEpsilon;
 
@@ -11309,7 +11392,7 @@ begin
   end;
 
   FPointLists:= TObjectList.Create;
-  ContourCreator:= TContourCreator.Create;
+  ContourCreator:= TContourCreator.Create(100);
   try
     ContourCreator.EvaluatedAt := eaBlocks;
     InitializeEpsilon;
@@ -13507,7 +13590,9 @@ begin
       end;
 
     end;
-    Item.ReachLength := rsObjectImportedValuesR + '("RCHLEN") * ObjectIntersectLength';
+    Item.ReachLength := 'If(' + StrObjectIntersectLength + ' > 0., ('
+      + rsObjectImportedValuesR + '("RCHLEN") * ' + StrObjectIntersectLength
+      + '), ' + rsObjectImportedValuesR + '("RCHLEN"))';
   end
   else
   begin
@@ -28926,7 +29011,8 @@ begin
   result := 'SWI_Observation';
 end;
 
-procedure TPackageImporter.AddBoundaryPoints(List: TList; Index: integer; ObjectType: TObjectType; var AScreenObject: TScreenObject);
+procedure TPackageImporter.AddBoundaryPoints(List: TList; Index: integer;
+  ObjectType: TObjectType; var AScreenObject: TScreenObject);
 var
   Boundary: TLocation;
 begin
@@ -32683,6 +32769,935 @@ function TSwrStructureTableItem.IsSame(
 begin
   result := (STRELEV = ATableItem.STRELEV)
     and (STRQ = ATableItem.STRQ)
+end;
+
+{ TMnw1Importer }
+
+constructor TMnw1Importer.Create(Importer: TModflow2005Importer);
+begin
+  inherited Create(Importer, 'MNW1');
+  FWells := TObjectList<TMnw1Well>.Create;
+  FMnw1OutputFiles := TMnw1OutputFiles.Create;
+  FWellPriorStressPeriod := TList<TMnw1Well>.Create;
+  FWellCurrentStressPeriod := TList<TMnw1Well>.Create;
+  FCellsCurrentStressPeriod := TList<TMnw1Cell>.Create;
+  FCurrentStressPeriod := -1;
+end;
+
+destructor TMnw1Importer.Destroy;
+begin
+  FCellsCurrentStressPeriod.Free;
+  FWellCurrentStressPeriod.Free;
+  FWellPriorStressPeriod.Free;
+  FMnw1OutputFiles.Free;
+  FWells.Free;
+  inherited;
+end;
+
+procedure TMnw1Importer.HandleCellsFromPriorStressPeriod;
+begin
+  ExpandMulti;
+  AssignCellToWells;
+end;
+
+procedure TMnw1Importer.ExpandMulti;
+var
+  NewCell: TMnw1Cell;
+  StartCell: TMnw1Cell;
+  InnerCellIndex: Integer;
+  Direction: Integer;
+  CellIndex: Integer;
+  MaxDiff: Integer;
+  ACell: TMnw1Cell;
+begin
+  for CellIndex := FCellsCurrentStressPeriod.Count - 1 downto 0 do
+  begin
+    ACell := FCellsCurrentStressPeriod[CellIndex];
+    if ACell.Multi then
+    begin
+      StartCell := FCellsCurrentStressPeriod[CellIndex - 1];
+      MaxDiff := MaxIntValue([Abs(ACell.Layer - StartCell.Layer),
+        Abs(ACell.Row - StartCell.Row), Abs(ACell.Column - StartCell.Column)]);
+      if ACell.Layer <> StartCell.Layer then
+      begin
+        Direction := Sign(ACell.Layer - StartCell.Layer);
+        for InnerCellIndex := 1 to MaxDiff - 1 do
+        begin
+          NewCell := TMnw1Cell.Create;
+          NewCell.Assign(ACell);
+          NewCell.Layer := NewCell.Layer - InnerCellIndex * Direction;
+          NewCell.Qdes := 0;
+          FCellsCurrentStressPeriod.Insert(CellIndex, NewCell);
+        end;
+      end
+      else if ACell.Row <> StartCell.Row then
+      begin
+        Direction := Sign(ACell.Row - StartCell.Row);
+        for InnerCellIndex := 1 to MaxDiff - 1 do
+        begin
+          NewCell := TMnw1Cell.Create;
+          NewCell.Assign(ACell);
+          NewCell.Row := NewCell.Row - InnerCellIndex * Direction;
+          NewCell.Qdes := 0;
+          FCellsCurrentStressPeriod.Insert(CellIndex, NewCell);
+        end;
+      end
+      else if ACell.Column <> StartCell.Column then
+      begin
+        Direction := Sign(ACell.Column - StartCell.Column);
+        for InnerCellIndex := 1 to MaxDiff - 1 do
+        begin
+          NewCell := TMnw1Cell.Create;
+          NewCell.Assign(ACell);
+          NewCell.Column := NewCell.Column - InnerCellIndex * Direction;
+          NewCell.Qdes := 0;
+          FCellsCurrentStressPeriod.Insert(CellIndex, NewCell);
+        end;
+      end
+      else
+      begin
+        Assert(False);
+      end;
+    end;
+  end;
+end;
+
+procedure TMnw1Importer.ReadDataSet5_2;
+var
+  Href: Double;
+  Hlim: Double;
+  Iwgrp: Double;
+  QWval: Double;
+  Rw: Double;
+  Skin: Double;
+  ACell: TMnw1Cell;
+begin
+  Read(FImporter.FFile, QWval);
+  Read(FImporter.FFile, Rw);
+  Read(FImporter.FFile, Skin);
+  Read(FImporter.FFile, Hlim);
+  Read(FImporter.FFile, Href);
+  Readln(FImporter.FFile, Iwgrp);
+  ACell := FCellsCurrentStressPeriod.Last;
+  ACell.QWval := QWval;
+  ACell.Rw := Rw;
+  ACell.Skin := Skin;
+  ACell.Hlim := Hlim;
+  ACell.Href := Href;
+  ACell.Iwgrp := Round(Iwgrp);
+end;
+
+procedure TMnw1Importer.ReadSiteLabel;
+var
+  Site: string;
+  ACell: TMnw1Cell;
+begin
+  Readln(FImporter.FFile, Site);
+  ACell := FCellsCurrentStressPeriod.Last;
+  ACell.Site := Trim(Site);
+  if ACell.Site = 'NO-PRINT' then
+  begin
+    ACell.Site := '';
+  end;
+end;
+
+procedure TMnw1Importer.ReadCp_C;
+var
+  Cp_C: Double;
+  ACell: TMnw1Cell;
+begin
+  Readln(FImporter.FFile, Cp_C);
+  ACell := FCellsCurrentStressPeriod.Last;
+  ACell.Cp_C := Cp_C;
+end;
+
+procedure TMnw1Importer.ReadActivationPumpingRate;
+var
+  ACell: TMnw1Cell;
+  Qfrcmx: Double;
+  Qfrcmn: Double;
+begin
+  Read(FImporter.FFile, Qfrcmn);
+  Readln(FImporter.FFile, Qfrcmx);
+  ACell := FCellsCurrentStressPeriod.Last;
+  ACell.Qfrcmn := Qfrcmn;
+  ACell.Qfrcmx := Qfrcmx;
+end;
+
+procedure TMnw1Importer.ReadQPercentCUT;
+begin
+  FCellsCurrentStressPeriod.Last.QPercentCUT := True;
+end;
+
+procedure TMnw1Importer.ReadQCUT;
+begin
+  FCellsCurrentStressPeriod.Last.QCUT := True;
+end;
+
+procedure TMnw1Importer.ReadDataSet5_1;
+var
+  ACell: TMnw1Cell;
+  Qdes: Double;
+  Column: Integer;
+  Layer: Integer;
+  Row: Integer;
+begin
+  Read(FImporter.FFile, Layer);
+  Read(FImporter.FFile, Row);
+  Read(FImporter.FFile, Column);
+  Readln(FImporter.FFile, Qdes);
+  ACell := TMnw1Cell.Create;
+  FCellsCurrentStressPeriod.Add(ACell);
+  ACell.Layer := Layer;
+  ACell.Row := Row;
+  ACell.Column := Column;
+  ACell.Qdes := Qdes;
+end;
+
+procedure TMnw1Importer.ReadAddNewWells;
+begin
+  FAdd := True;
+end;
+
+procedure TMnw1Importer.ReadDataSet4;
+var
+  WellIndex: Integer;
+  AWell: TMnw1Well;
+begin
+  Inc(FCurrentStressPeriod);
+  Readln(FImporter.FFile, itmp);
+  FAdd := False;
+  if itmp < 0 then
+  begin
+    for WellIndex := 0 to FWellPriorStressPeriod.Count - 1 do
+    begin
+      AWell := FWellPriorStressPeriod[WellIndex];
+      AWell.Last.EndingStressPeriod := FCurrentStressPeriod;
+    end;
+  end
+  else if itmp = 0 then
+  begin
+    FWellPriorStressPeriod.Clear;
+  end;
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TMnw1Importer.AssignAllTimeFlag;
+begin
+  FMnw1OutputFiles.Last.AllTime := True;
+end;
+
+procedure TMnw1Importer.ReadDataSet3;
+var
+  FileName: string;
+  UnitNumber: Integer;
+  OutputFile: TMnw1OutputFile;
+  Flag: string;
+begin
+  Readln(FImporter.FFile, FileName);
+  FileName := Trim(FileName);
+  Readln(FImporter.FFile, Flag);
+  Flag := Trim(Flag);
+  Readln(FImporter.FFile, UnitNumber);
+  OutputFile := TMnw1OutputFile.Create;
+  OutputFile.FileName := FileName;
+  OutputFile.Flag := Flag;
+  OutputFile.UnitNumber := UnitNumber;
+  FMnw1OutputFiles.Add(OutputFile);
+end;
+
+procedure TMnw1Importer.ReadMnwFilePrefix;
+var
+  MNWNAME: string;
+begin
+  Readln(FImporter.FFile, MNWNAME);
+  MNWNAME := Trim(MNWNAME);
+end;
+
+procedure TMnw1Importer.ReadDataSet2Version2;
+var
+  LOSSTYPE: string;
+begin
+  Readln(FImporter.FFile, LOSSTYPE);
+  LOSSTYPE := UpperCase(Trim(LOSSTYPE));
+  if LOSSTYPE = 'SKIN' then
+  begin
+    FLossType := mlt1Skin;
+  end
+  else
+  begin
+    Assert(False);
+  end;
+end;
+
+procedure TMnw1Importer.ReadDataSet2Version1;
+var
+  LOSSTYPE: string;
+begin
+  Readln(FImporter.FFile, LOSSTYPE);
+  LOSSTYPE := UpperCase(Trim(LOSSTYPE));
+  if LOSSTYPE = 'NONLINEAR' then
+  begin
+    FLossType := mlt1NonLinear;
+  end
+  else if LOSSTYPE = 'LINEAR' then
+  begin
+    FLossType := mlt1Linear;
+  end
+  else
+  begin
+    Assert(False);
+  end;
+  Readln(FImporter.FFile, PLossMNW);
+end;
+
+procedure TMnw1Importer.ReadDataSet1;
+var
+  IWL2CB: Integer;
+  MXMNW: Integer;
+  IWELPT: integer;
+begin
+  Read(FImporter.FFile, MXMNW);
+  Read(FImporter.FFile, IWL2CB);
+  Read(FImporter.FFile, IWELPT);
+  Read(FImporter.FFile, NOMOITER);
+  Read(FImporter.FFile, KSPREF);
+  Readln(FImporter.FFile);
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
+procedure TMnw1Importer.HandlePackage;
+var
+  OutputIndex: integer;
+  OutputFile: TMnw1OutputFile;
+  WellIndex: integer;
+  AWell: TMnw1Well;
+  AScreenObject: TScreenObject;
+  AList: TList;
+  CellIndex: Integer;
+  ImportedElevations: TValueArrayStorage;
+  ALocation: TLocation;
+  Grid: TModflowGrid;
+  Layer: Integer;
+  TimeIndex: Integer;
+  CellList: TMnw1Cells;
+  Mnw1Boundary: TMnw1Boundary;
+  Mnw1Item: TMnw1Item;
+  DesiredPumpingRateItem: TValueArrayItem;
+  Mnw1Cell: TMnw1Cell;
+  StressPeriods: TModflowStressPeriods;
+  ImportName: string;
+  WaterQualityItem: TValueArrayItem;
+  WellRadiusItem: TValueArrayItem;
+  SkinItem: TValueArrayItem;
+  LimitItem: TValueArrayItem;
+  RefElevItem: TValueArrayItem;
+  WaterQualityGroupItem: TValueArrayItem;
+  LossCoefficientItem: TValueArrayItem;
+  ActiveItem: TValueArrayItem;
+  ReActivationItem: TValueArrayItem;
+begin
+  if (FCurrentStressPeriod < 0) or
+    (FCurrentStressPeriod < FModel.ModflowStressPeriods.Count -1) then
+  begin
+    Exit;
+  end;
+  inherited;
+  HandleCellsFromPriorStressPeriod;
+
+  FMnw1Package := FModel.ModflowPackages.Mnw1Package;
+  FMnw1Package.IsSelected := True;
+  FMnw1Package.Comments := FComments;
+  FMnw1Package.MaxMnwIterations := NOMOITER;
+  FMnw1Package.LossType := FLossType;
+
+  if KSPREF > 0 then
+  begin
+    FModel.ModflowStressPeriods[KSPREF-1].DrawDownReference := True;
+  end;
+
+  if FLossType = mlt1NonLinear then
+  begin
+    FMnw1Package.LossExponent := PLossMNW;
+  end;
+
+  for OutputIndex := 0 to FMnw1OutputFiles.Count - 1 do
+  begin
+    OutputFile := FMnw1OutputFiles[OutputIndex];
+    if OutputFile.Flag = 'WEL1' then
+    begin
+      FMnw1Package.WellFileName := OutputFile.FileName;
+    end
+    else if OutputFile.Flag = 'BYNODE' then
+    begin
+      FMnw1Package.ByNodeFileName := OutputFile.FileName;
+      if OutputFile.AllTime then
+      begin
+        FMnw1Package.ByNodePrintFrequency := mpfAll;
+      end
+      else
+      begin
+        FMnw1Package.ByNodePrintFrequency := mpfOutputControl;
+      end;
+    end
+    else if OutputFile.Flag = 'QSUM' then
+    begin
+      FMnw1Package.QSumFileName := OutputFile.FileName;
+      if OutputFile.AllTime then
+      begin
+        FMnw1Package.QSumPrintFrequency := mpfAll;
+      end
+      else
+      begin
+        FMnw1Package.QSumPrintFrequency := mpfOutputControl;
+      end;
+    end
+    else
+    begin
+      Assert(false);
+    end;
+  end;
+
+  AList := TList.Create;
+  try
+    Grid := FModel.ModflowGrid;
+    StressPeriods := FModel.ModflowStressPeriods;
+    for WellIndex := 0 to FWells.Count - 1 do
+    begin
+      AWell := FWells[WellIndex];
+      AScreenObject := CreateScreenObject(Format('MNW1_Well_%d', [WellIndex+1]));
+      AScreenObject.SetValuesOfEnclosedCells := False;
+      AScreenObject.SetValuesOfIntersectedCells := True;
+      AList.Clear;
+      AList.Capacity := AWell[0].Count;
+      ImportedElevations := AScreenObject.ImportedSectionElevations;
+      ImportedElevations.Count := AWell[0].Count;
+      for CellIndex := 0 to AWell[0].Count - 1 do
+      begin
+        ALocation := AWell[0][CellIndex];
+        Layer := FModel.ModflowLayerToDataSetLayer(ALocation.Layer);
+        ImportedElevations.RealValues[CellIndex] :=
+          Grid.ThreeDElementCenter(ALocation.Column-1, ALocation.Row-1, Layer).z;
+        AList.Add(ALocation);
+      end;
+      for CellIndex := 0 to AList.Count - 1 do
+      begin
+        AddBoundaryPoints(AList, CellIndex, otPoint, AScreenObject);
+      end;
+      AScreenObject.ElevationFormula := rsObjectImportedValuesR
+        + '("' + StrImportedElevations + '")';
+      AScreenObject.CreateMnw1Boundary;
+      Mnw1Boundary := AScreenObject.ModflowMnw1Boundary;
+      Mnw1Boundary.Values.Capacity := AWell.Count;
+      for TimeIndex := 0 to AWell.Count - 1 do
+      begin
+        CellList := AWell[TimeIndex];
+        Mnw1Item := Mnw1Boundary.Values.Add as TMnw1Item;
+
+        Mnw1Item.StartTime := StressPeriods[CellList.StartingStressPeriod].StartTime;
+        Mnw1Item.EndTime := StressPeriods[CellList.EndingStressPeriod].EndTime;
+
+        if CellList.Count > 1 then
+        begin
+          DesiredPumpingRateItem := AScreenObject.ImportedValues.Add;
+          ImportName := Format('ImportedPumpumpingRate%d', [TimeIndex+1]);
+          DesiredPumpingRateItem.Name := ImportName;
+          DesiredPumpingRateItem.Values.Count := CellList.Count;
+          Mnw1Item.DesiredPumpingRate := rsObjectImportedValuesR
+            + '("' + ImportName + '")';
+
+          WaterQualityItem := AScreenObject.ImportedValues.Add;
+          ImportName := Format('ImportedWaterQuality%d', [TimeIndex+1]);
+          WaterQualityItem.Name := ImportName;
+          WaterQualityItem.Values.Count := CellList.Count;
+          Mnw1Item.WaterQuality := rsObjectImportedValuesR
+            + '("' + ImportName + '")';
+
+          Mnw1Cell := CellList[0];
+
+          if Mnw1Cell.Rw > 0 then
+          begin
+            Mnw1Item.ConductanceMethod := mcmRadius;
+            WellRadiusItem := AScreenObject.ImportedValues.Add;
+            ImportName := Format('ImportedWellRadius%d', [TimeIndex+1]);
+            WellRadiusItem.Name := ImportName;
+            WellRadiusItem.Values.Count := CellList.Count;
+            Mnw1Item.WellRadius := rsObjectImportedValuesR
+              + '("' + ImportName + '")';
+          end
+          else if Mnw1Cell.Rw < 0 then
+          begin
+            Mnw1Item.ConductanceMethod := mcmConductance;
+            WellRadiusItem := AScreenObject.ImportedValues.Add;
+            ImportName := Format('ImportedConductance%d', [TimeIndex+1]);
+            WellRadiusItem.Name := ImportName;
+            WellRadiusItem.Values.Count := CellList.Count;
+            Mnw1Item.Conductance := rsObjectImportedValuesR
+              + '("' + ImportName + '")';
+          end
+          else
+          begin
+            Mnw1Item.ConductanceMethod := mcmFixed;
+            WellRadiusItem := nil;
+            Mnw1Item.WellRadius := '0';
+            Mnw1Item.Conductance := '0';
+          end;
+
+          SkinItem := AScreenObject.ImportedValues.Add;
+          ImportName := Format('ImportedSkin%d', [TimeIndex+1]);
+          SkinItem.Name := ImportName;
+          SkinItem.Values.Count := CellList.Count;
+          Mnw1Item.SkinFactor := rsObjectImportedValuesR
+            + '("' + ImportName + '")';
+
+          if Mnw1Cell.DD then
+          begin
+            Mnw1Item.WaterLevelLimitType := mwlltRelative;
+          end
+          else
+          begin
+            Mnw1Item.WaterLevelLimitType := mwlltAbsolute;
+          end;
+
+          LimitItem := AScreenObject.ImportedValues.Add;
+          ImportName := Format('ImportedLimitingWaterLevel%d', [TimeIndex+1]);
+          LimitItem.Name := ImportName;
+          LimitItem.Values.Count := CellList.Count;
+          Mnw1Item.LimitingWaterLevel := rsObjectImportedValuesR
+            + '("' + ImportName + '")';
+
+          RefElevItem := AScreenObject.ImportedValues.Add;
+          ImportName := Format('ImportedReferenceElevation%d', [TimeIndex+1]);
+          RefElevItem.Name := ImportName;
+          RefElevItem.Values.Count := CellList.Count;
+          Mnw1Item.ReferenceElevation := rsObjectImportedValuesR
+            + '("' + ImportName + '")';
+
+          WaterQualityGroupItem := AScreenObject.ImportedValues.Add;
+          ImportName := Format('ImportedWaterQualityGroup%d', [TimeIndex+1]);
+          WaterQualityGroupItem.Name := ImportName;
+          WaterQualityGroupItem.Values.DataType := rdtInteger;
+          WaterQualityGroupItem.Values.Count := CellList.Count;
+          Mnw1Item.WaterQualityGroup := rsObjectImportedValuesI
+            + '("' + ImportName + '")';
+
+          LossCoefficientItem := AScreenObject.ImportedValues.Add;
+          ImportName := Format('ImportedNonlinearHeadLossCoefficient%d', [TimeIndex+1]);
+          LossCoefficientItem.Name := ImportName;
+          LossCoefficientItem.Values.Count := CellList.Count;
+          Mnw1Item.NonLinearLossCoefficient := rsObjectImportedValuesR
+            + '("' + ImportName + '")';
+
+          if Mnw1Cell.QCUT then
+          begin
+            Mnw1Item.PumpingLimitType := mpltAbsolute;
+          end
+          else if Mnw1Cell.QPercentCUT then
+          begin
+            Mnw1Item.PumpingLimitType := mpltPercent;
+          end
+          else
+          begin
+            Mnw1Item.PumpingLimitType := mpltNone;
+          end;
+
+          if Mnw1Item.PumpingLimitType in [mpltAbsolute, mpltPercent] then
+          begin
+            ActiveItem := AScreenObject.ImportedValues.Add;
+            ImportName := Format('ImportedActiveWellRate%d', [TimeIndex+1]);
+            ActiveItem.Name := ImportName;
+            ActiveItem.Values.Count := CellList.Count;
+            Mnw1Item.MinimumPumpingRate := rsObjectImportedValuesR
+              + '("' + ImportName + '")';
+
+            ReActivationItem := AScreenObject.ImportedValues.Add;
+            ImportName := Format('ImportedReactivationWellRate%d', [TimeIndex+1]);
+            ReActivationItem.Name := ImportName;
+            ReActivationItem.Values.Count := CellList.Count;
+            Mnw1Item.ReactivationPumpingRate := rsObjectImportedValuesR
+              + '("' + ImportName + '")';
+          end
+          else
+          begin
+            Mnw1Item.MinimumPumpingRate := '0';
+            Mnw1Item.ReactivationPumpingRate := '0';
+            ActiveItem := nil;
+            ReActivationItem := nil;
+          end;
+
+          if Mnw1Cell.Site <> '' then
+          begin
+            Mnw1Boundary.Site := Mnw1Cell.Site;
+          end;
+
+          for CellIndex := 0 to CellList.Count - 1 do
+          begin
+            Mnw1Cell := CellList[CellIndex];
+            DesiredPumpingRateItem.Values.RealValues[CellIndex] := Mnw1Cell.Qdes;
+            WaterQualityItem.Values.RealValues[CellIndex] := Mnw1Cell.QWval;
+            if WellRadiusItem <> nil then
+            begin
+              WellRadiusItem.Values.RealValues[CellIndex] := Mnw1Cell.Rw;
+            end;
+            SkinItem.Values.RealValues[CellIndex] := Mnw1Cell.Skin;
+            LimitItem.Values.RealValues[CellIndex] := Mnw1Cell.Hlim;
+            RefElevItem.Values.RealValues[CellIndex] := Mnw1Cell.Href;
+            WaterQualityGroupItem.Values.IntValues[CellIndex] := Mnw1Cell.Iwgrp;
+            LossCoefficientItem.Values.RealValues[CellIndex] := Mnw1Cell.Cp_C;
+            if Mnw1Item.PumpingLimitType in [mpltAbsolute, mpltPercent] then
+            begin
+              ActiveItem.Values.RealValues[CellIndex] := Mnw1Cell.Qfrcmn;
+              ReActivationItem.Values.RealValues[CellIndex] := Mnw1Cell.Qfrcmx;
+            end;
+          end;
+
+          if DesiredPumpingRateItem.Values.UniformValues then
+          begin
+            Mnw1Item.DesiredPumpingRate :=
+              FortranFloatToStr(DesiredPumpingRateItem.Values.RealValues[0]);
+            DesiredPumpingRateItem.Free;
+          end;
+
+          if WaterQualityItem.Values.UniformValues then
+          begin
+            Mnw1Item.WaterQuality :=
+              FortranFloatToStr(WaterQualityItem.Values.RealValues[0]);
+            WaterQualityItem.Free;
+          end;
+
+          if (WellRadiusItem <> nil) and WellRadiusItem.Values.UniformValues then
+          begin
+            if WellRadiusItem.Values.RealValues[0] > 0 then
+            begin
+              Mnw1Item.WellRadius :=
+                FortranFloatToStr(WellRadiusItem.Values.RealValues[0]);
+            end
+            else
+            begin
+              Mnw1Item.Conductance :=
+                FortranFloatToStr(WellRadiusItem.Values.RealValues[0]);
+            end;
+            WellRadiusItem.Free;
+          end;
+
+          if SkinItem.Values.UniformValues then
+          begin
+            Mnw1Item.SkinFactor :=
+              FortranFloatToStr(SkinItem.Values.RealValues[0]);
+            SkinItem.Free;
+          end;
+
+          if LimitItem.Values.UniformValues then
+          begin
+            Mnw1Item.LimitingWaterLevel :=
+              FortranFloatToStr(LimitItem.Values.RealValues[0]);
+            LimitItem.Free;
+          end;
+
+          if RefElevItem.Values.UniformValues then
+          begin
+            Mnw1Item.ReferenceElevation :=
+              FortranFloatToStr(RefElevItem.Values.RealValues[0]);
+            RefElevItem.Free;
+          end;
+
+          if WaterQualityGroupItem.Values.UniformValues then
+          begin
+            Mnw1Item.WaterQualityGroup :=
+              IntToStr(WaterQualityGroupItem.Values.IntValues[0]);
+            WaterQualityGroupItem.Free;
+          end;
+
+          if LossCoefficientItem.Values.UniformValues then
+          begin
+            Mnw1Item.NonLinearLossCoefficient :=
+              FortranFloatToStr(LossCoefficientItem.Values.RealValues[0]);
+            LossCoefficientItem.Free;
+          end;
+
+          if (ActiveItem <> nil) and ActiveItem.Values.UniformValues then
+          begin
+            Mnw1Item.MinimumPumpingRate :=
+              FortranFloatToStr(ActiveItem.Values.RealValues[0]);
+            ActiveItem.Free;
+          end;
+
+          if (ReActivationItem <> nil) and ReActivationItem.Values.UniformValues then
+          begin
+            Mnw1Item.ReactivationPumpingRate :=
+              FortranFloatToStr(ReActivationItem.Values.RealValues[0]);
+            ReActivationItem.Free;
+          end;
+        end
+        else
+        begin
+          Mnw1Cell := CellList[0];
+          Mnw1Item.DesiredPumpingRate := FortranFloatToStr(Mnw1Cell.Qdes);
+          Mnw1Item.WaterQuality := FortranFloatToStr(Mnw1Cell.QWval);
+          if Mnw1Cell.Rw > 0 then
+          begin
+            Mnw1Item.WellRadius := FortranFloatToStr(Mnw1Cell.Rw);
+            Mnw1Item.Conductance := '0';
+          end
+          else if Mnw1Cell.Rw < 0 then
+          begin
+            Mnw1Item.WellRadius := '0';
+            Mnw1Item.Conductance := FortranFloatToStr(Mnw1Cell.Rw);
+          end
+          else
+          begin
+            Mnw1Item.WellRadius := '0';
+            Mnw1Item.Conductance := '0';
+          end;
+          Mnw1Item.SkinFactor := FortranFloatToStr(Mnw1Cell.Skin);
+          if Mnw1Cell.DD then
+          begin
+            Mnw1Item.WaterLevelLimitType := mwlltRelative;
+          end
+          else
+          begin
+            Mnw1Item.WaterLevelLimitType := mwlltAbsolute;
+          end;
+          Mnw1Item.LimitingWaterLevel := FortranFloatToStr(Mnw1Cell.Hlim);
+          Mnw1Item.ReferenceElevation := FortranFloatToStr(Mnw1Cell.Href);
+          Mnw1Item.WaterQualityGroup := IntToStr(Mnw1Cell.Iwgrp);
+          Mnw1Item.NonLinearLossCoefficient := FortranFloatToStr(Mnw1Cell.Cp_C);
+          if Mnw1Cell.QCUT then
+          begin
+            Mnw1Item.PumpingLimitType := mpltAbsolute;
+          end
+          else if Mnw1Cell.QPercentCUT then
+          begin
+            Mnw1Item.PumpingLimitType := mpltPercent;
+          end
+          else
+          begin
+            Mnw1Item.PumpingLimitType := mpltNone;
+          end;
+
+          if Mnw1Item.PumpingLimitType in [mpltAbsolute, mpltPercent] then
+          begin
+            Mnw1Item.MinimumPumpingRate := FortranFloatToStr(Mnw1Cell.Qfrcmn);
+            Mnw1Item.ReactivationPumpingRate := FortranFloatToStr(Mnw1Cell.Qfrcmx);
+          end
+          else
+          begin
+            Mnw1Item.MinimumPumpingRate := '0.';
+            Mnw1Item.ReactivationPumpingRate := '0.';
+          end;
+
+          if Mnw1Cell.Site <> '' then
+          begin
+            Mnw1Boundary.Site := Mnw1Cell.Site;
+          end;
+        end;
+
+      end;
+    end;
+  finally
+    AList.Free;
+  end;
+
+end;
+
+procedure TMnw1Importer.AssignCellToWells;
+var
+  CellsForOneWell: TMnw1Cells;
+  CellIndex: Integer;
+  ACell: TMnw1Cell;
+  UsedWells: TList<TMnw1Well>;
+  AWell: TMnw1Well;
+  SelectedWell: TMnw1Well;
+  procedure AssignCellsToAParticularWell;
+  var
+    WellIndex: Integer;
+  begin
+    SelectedWell := nil;
+    // Find well for these cells or create a new well.
+    for WellIndex := 0 to FWellPriorStressPeriod.Count - 1 do
+    begin
+      AWell := FWellPriorStressPeriod[WellIndex];
+      if AWell.Last.SameLocations(CellsForOneWell) then
+      begin
+        SelectedWell := AWell;
+        FWellPriorStressPeriod.Delete(WellIndex);
+        break;
+      end;
+    end;
+    if SelectedWell = nil then
+    begin
+      SelectedWell := TMnw1Well.Create;
+      FWells.Add(SelectedWell);
+    end;
+    SelectedWell.Add(CellsForOneWell);
+    FWellCurrentStressPeriod.Add(SelectedWell);
+    CellsForOneWell := nil;
+  end;
+begin
+  if FCellsCurrentStressPeriod.Count > 0 then
+  begin
+    UsedWells := TList<TMnw1Well>.Create;
+    try
+      CellsForOneWell := nil;
+      for CellIndex := 0 to FCellsCurrentStressPeriod.Count - 1 do
+      begin
+        ACell := FCellsCurrentStressPeriod[CellIndex];
+        if (not (ACell.Mn or ACell.Multi)) then
+        begin
+          if CellsForOneWell <> nil then
+          begin
+            AssignCellsToAParticularWell;
+          end;
+        end;
+        if CellsForOneWell = nil then
+        begin
+          CellsForOneWell := TMnw1Cells.Create;
+          CellsForOneWell.StartingStressPeriod := FCurrentStressPeriod;
+          CellsForOneWell.EndingStressPeriod := FCurrentStressPeriod;
+        end;
+        CellsForOneWell.Add(ACell);
+      end;
+      // Find the well for ththe last group of cells or create a new well.
+      AssignCellsToAParticularWell;
+      FWellPriorStressPeriod.Clear;
+      FWellPriorStressPeriod.AddRange(FWellCurrentStressPeriod.ToArray);
+      FWellCurrentStressPeriod.Clear;
+    finally
+      UsedWells.Free;
+    end;
+    FCellsCurrentStressPeriod.Clear;
+  end;
+end;
+
+procedure TMnw1Importer.ReadData(const ALabel: string);
+begin
+  inherited;
+  if ALabel = 'MXMNW IWL2CB IWELPT NOMOITER KSPREF:' then
+  begin
+    ReadDataSet1;
+  end
+  else if ALabel = 'LOSSTYPE PLossMNW:' then
+  begin
+    ReadDataSet2Version1;
+  end
+  else if ALabel = 'LOSSTYPE:' then
+  begin
+    ReadDataSet2Version2;
+  end
+  else if ALabel = 'MNWNAME:' then
+  begin
+    ReadMnwFilePrefix;
+  end
+  else if ALabel = 'MNW DATA SET 3:' then
+  begin
+    ReadDataSet3;
+  end
+  else if ALabel = 'ALLTIME:' then
+  begin
+    AssignAllTimeFlag;
+  end
+  else if ALabel = 'itmp:' then
+  begin
+    HandleCellsFromPriorStressPeriod;
+    ReadDataSet4;
+  end
+  else if ALabel = 'ADD:' then
+  begin
+    ReadAddNewWells;
+  end
+  else if ALabel = 'Layer Row Column Qdes:' then
+  begin
+    ReadDataSet5_1;
+  end
+  else if ALabel = 'QCUT:' then
+  begin
+    ReadQCUT;
+  end
+  else if ALabel = '%CUT:' then
+  begin
+    ReadQPercentCUT;
+  end
+  else if ALabel = 'Qfrcmn, Qfrcmx:' then
+  begin
+    ReadActivationPumpingRate;
+  end
+  else if ALabel = 'Cp:C:' then
+  begin
+    ReadCp_C;
+  end
+  else if ALabel = 'MNWsite:' then
+  begin
+    ReadSiteLabel;
+  end
+  else if ALabel = 'DD:' then
+  begin
+    FCellsCurrentStressPeriod.Last.DD := True;
+  end
+  else if ALabel = 'QWval, Rw, Skin, Hlim, Href, Iwgrp:' then
+  begin
+    ReadDataSet5_2;
+  end
+  else if ALabel = 'MULTI:' then
+  begin
+    FCellsCurrentStressPeriod.Last.Multi :=  True;
+  end
+  else if ALabel = 'MN:' then
+  begin
+    FCellsCurrentStressPeriod.Last.Mn := True;
+  end
+
+end;
+
+{ TMnw1Cells }
+
+function TMnw1Cells.SameLocations(OtherCells: TMnw1Cells): boolean;
+var
+  Index: Integer;
+begin
+  result := Count = OtherCells.Count;
+  if result then
+  begin
+    for Index := 0 to Count - 1 do
+    begin
+      result := Items[Index].SameLocation(OtherCells.Items[Index]);
+      if not result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+{ TMnw1Cell }
+
+procedure TMnw1Cell.Assign(Source: TMnw1Cell);
+begin
+  Layer := Source.Layer;
+  Row := Source.Row;
+  Column := Source.Column;
+  Qdes := Source.Qdes;
+  QWval := Source.QWval;
+  Rw := Source.Rw;
+  Skin := Source.Skin;
+  Hlim := Source.Hlim;
+  Href := Source.Href;
+  DD := Source.DD;
+  Iwgrp := Source.Iwgrp;
+  Cp_C := Source.Cp_C;
+  QCUT := Source.QCUT;
+  QPercentCUT := Source.QPercentCUT;
+  Qfrcmn := Source.Qfrcmn;
+  Qfrcmx := Source.Qfrcmx;
+  Site := Source.Site;
+  Multi := Source.Multi;
+  Mn := Source.Mn;
+end;
+
+function TMnw1Cell.SameLocation(OtherCell: TMnw1Cell): boolean;
+begin
+  result := (Layer = OtherCell.Layer)
+    and (Row = OtherCell.Row)
+    and (Column = OtherCell.Column);
 end;
 
 end.

@@ -1147,7 +1147,15 @@
 				<Form>frmConsoleLines</Form>
 			</DCCReference>
 			<DCCReference Include="..\ModflowMnw1Unit.pas"/>
-			<DCCReference Include="..\ModflowMnwWriter.pas"/>
+			<DCCReference Include="..\ModflowMnw1Writer.pas"/>
+			<DCCReference Include="..\framePackageMnw1Unit.pas">
+				<Form>framePackageMnw1</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\frameScreenObjectMnw1Unit.pas">
+				<Form>frameScreenObjectMnw1</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
@@ -1174,7 +1182,7 @@
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">3</VersionInfo>
-						<VersionInfo Name="MinorVer">3</VersionInfo>
+						<VersionInfo Name="MinorVer">4</VersionInfo>
 						<VersionInfo Name="Release">0</VersionInfo>
 						<VersionInfo Name="Build">0</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
@@ -1188,13 +1196,13 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">3.3.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">3.4.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename"/>
 						<VersionInfoKeys Name="ProductName"/>
-						<VersionInfoKeys Name="ProductVersion">3.3.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">3.4.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Excluded_Packages>

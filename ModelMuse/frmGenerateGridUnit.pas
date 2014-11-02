@@ -152,8 +152,11 @@ begin
   end
   else
   begin
-    Beep;
-    MessageDlg(ErrorMessage, mtWarning, [mbOK], 0);
+    if ErrorMessage <> '' then
+    begin
+      Beep;
+      MessageDlg(ErrorMessage, mtWarning, [mbOK], 0);
+    end;
   end;
 end;
 

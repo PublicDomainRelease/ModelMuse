@@ -47,24 +47,24 @@ implementation
 uses
   ModflowUnitNumbers, frmProgressUnit, LayerStructureUnit,
   ModflowSubsidenceDefUnit, DataSetUnit, frmErrorsAndWarningsUnit, SysUtils,
-  Forms;
+  Forms, GoPhastTypes;
 
 resourcestring
   StrNoSWTLayersDefine = 'No SWT layers defined';
   StrInTheSWTPackage = 'In the SWT package, no systems of interbeds have bee' +
   'n defined in the MODFLOW Layer Groups dialog box.';
   StrWritingSWTPackage = 'Writing SWT Package input.';
-  StrWritingDataSet1 = '  Writing Data Set 1.';
-  StrWritingDataSet2 = '  Writing Data Set 2.';
-  StrWritingDataSet3 = '  Writing Data Set 3.';
-  StrWritingDataSet4 = '  Writing Data Set 4.';
-  StrWritingDataSet5 = '  Writing Data Set 5.';
-  StrWritingDataSet6 = '  Writing Data Set 6.';
+//  StrWritingDataSet1 = '  Writing Data Set 1.';
+//  StrWritingDataSet2 = '  Writing Data Set 2.';
+//  StrWritingDataSet3 = '  Writing Data Set 3.';
+//  StrWritingDataSet4 = '  Writing Data Set 4.';
+//  StrWritingDataSet5 = '  Writing Data Set 5.';
+//  StrWritingDataSet6 = '  Writing Data Set 6.';
   StrWritingDataSets7to13 = '  Writing Data Sets 7 to 13.';
-  StrWritingDataSet14 = '  Writing Data Set 14.';
-  StrWritingDataSet15 = '  Writing Data Set 15.';
-  StrWritingDataSet16 = '  Writing Data Set 16.';
-  StrWritingDataSet17 = '  Writing Data Set 17.';
+//  StrWritingDataSet14 = '  Writing Data Set 14.';
+//  StrWritingDataSet15 = '  Writing Data Set 15.';
+//  StrWritingDataSet16 = '  Writing Data Set 16.';
+//  StrWritingDataSet17 = '  Writing Data Set 17.';
 
 { TModflowSWT_Writer }
 
@@ -278,7 +278,7 @@ begin
         ModflowLayerToDataSetLayer(MFLayerIndex);
 
       WriteArray(DataArray, ArrayIndex,
-        'Data Set 14: PCSOFF, Layer ' + IntToStr(MFLayerIndex));
+        'Data Set 14: PCSOFF, Layer ' + IntToStr(MFLayerIndex), StrNoValueAssigned);
     end;
   end;
 
@@ -340,7 +340,7 @@ begin
         ModflowLayerToDataSetLayer(MFLayerIndex);
 
       WriteArray(DataArray, ArrayIndex,
-        'Data Set 15: PCS, Layer ' + IntToStr(MFLayerIndex));
+        'Data Set 15: PCS, Layer ' + IntToStr(MFLayerIndex), StrNoValueAssigned);
     end;
   end;
 
@@ -717,7 +717,7 @@ var
   DataArray: TDataArray;
 begin
   DataArray := Model.DataArrayManager.GetDataSetByName(StrGeostaticStress);
-  WriteArray(DataArray, 0, 'Data Set 4: GL0');
+  WriteArray(DataArray, 0, 'Data Set 4: GL0', StrNoValueAssigned);
   Model.DataArrayManager.AddDataSetToCache(DataArray);
   Model.DataArrayManager.CacheDataArrays;
 end;
@@ -727,7 +727,7 @@ var
   DataArray: TDataArray;
 begin
   DataArray := Model.DataArrayManager.GetDataSetByName(StrSpecificGravityUns);
-  WriteArray(DataArray, 0, 'Data Set 5: SGM');
+  WriteArray(DataArray, 0, 'Data Set 5: SGM', StrNoValueAssigned);
   Model.DataArrayManager.AddDataSetToCache(DataArray);
   Model.DataArrayManager.CacheDataArrays;
 end;
@@ -737,7 +737,7 @@ var
   DataArray: TDataArray;
 begin
   DataArray := Model.DataArrayManager.GetDataSetByName(StrSpecificGravitySat);
-  WriteArray(DataArray, 0, 'Data Set 6: SGS');
+  WriteArray(DataArray, 0, 'Data Set 6: SGS', StrNoValueAssigned);
   Model.DataArrayManager.AddDataSetToCache(DataArray);
   Model.DataArrayManager.CacheDataArrays;
 end;
@@ -750,37 +750,37 @@ begin
   for Index := 0 to FTHICK_List.Count - 1 do
   begin
     DataArray := FTHICK_List[Index];
-    WriteArray(DataArray, 0, 'Data set 7: THICK');
+    WriteArray(DataArray, 0, 'Data set 7: THICK', StrNoValueAssigned);
     Model.DataArrayManager.AddDataSetToCache(DataArray);
 
     if FSwtPackage.CompressionSource = csSpecificStorage then
     begin
       DataArray := FSse_List[Index];
-      WriteArray(DataArray, 0, 'Data set 8: Sse');
+      WriteArray(DataArray, 0, 'Data set 8: Sse', StrNoValueAssigned);
       Model.DataArrayManager.AddDataSetToCache(DataArray);
 
       DataArray := FSsv_List[Index];
-      WriteArray(DataArray, 0, 'Data set 9: Ssv');
+      WriteArray(DataArray, 0, 'Data set 9: Ssv', StrNoValueAssigned);
       Model.DataArrayManager.AddDataSetToCache(DataArray);
     end;
 
     if FSwtPackage.CompressionSource = csCompressionReComp then
     begin
       DataArray := FCr_List[Index];
-      WriteArray(DataArray, 0, 'Data set 10: Cr');
+      WriteArray(DataArray, 0, 'Data set 10: Cr', StrNoValueAssigned);
       Model.DataArrayManager.AddDataSetToCache(DataArray);
 
       DataArray := FCc_List[Index];
-      WriteArray(DataArray, 0, 'Data set 11: Cc');
+      WriteArray(DataArray, 0, 'Data set 11: Cc', StrNoValueAssigned);
       Model.DataArrayManager.AddDataSetToCache(DataArray);
     end;
 
     DataArray := FVOID_List[Index];
-    WriteArray(DataArray, 0, 'Data set 12: VOID');
+    WriteArray(DataArray, 0, 'Data set 12: VOID', StrNoValueAssigned);
     Model.DataArrayManager.AddDataSetToCache(DataArray);
 
     DataArray := FSUB_List[Index];
-    WriteArray(DataArray, 0, 'Data set 13: SUB');
+    WriteArray(DataArray, 0, 'Data set 13: SUB', StrNoValueAssigned);
     Model.DataArrayManager.AddDataSetToCache(DataArray);
   end;
   Model.DataArrayManager.CacheDataArrays;
