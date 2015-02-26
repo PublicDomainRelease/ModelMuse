@@ -1,11 +1,11 @@
 inherited framePkgFarm: TframePkgFarm
   Width = 504
-  Height = 407
+  Height = 462
   ExplicitWidth = 504
-  ExplicitHeight = 407
+  ExplicitHeight = 462
   DesignSize = (
     504
-    407)
+    462)
   inherited lblPackage: TLabel [0]
   end
   inherited lblComments: TLabel [1]
@@ -13,7 +13,7 @@ inherited framePkgFarm: TframePkgFarm
   object splttrFarm: TJvNetscapeSplitter [2]
     Left = 94
     Top = 0
-    Height = 407
+    Height = 462
     Align = alLeft
     Maximized = False
     Minimized = False
@@ -24,32 +24,34 @@ inherited framePkgFarm: TframePkgFarm
   end
   inherited memoComments: TMemo
     Width = 72
-    Height = 94
+    Height = 149
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 2
     ExplicitWidth = 72
-    ExplicitHeight = 94
+    ExplicitHeight = 149
   end
   object jvplFarm: TJvPageList [4]
     Left = 104
     Top = 0
     Width = 400
-    Height = 407
-    ActivePage = jvspWhenToRead
+    Height = 462
+    ActivePage = jvspOptions
     PropagateEnable = False
     Align = alClient
     object jvspOptions: TJvStandardPage
       Left = 0
       Top = 0
       Width = 400
-      Height = 407
+      Height = 462
+      HelpType = htKeyword
+      HelpKeyword = 'Farm_Process_Options'
       Caption = 'jvspOptions'
       DesignSize = (
         400
-        407)
+        462)
       object lblCropIrrigationRequirement: TLabel
         Left = 6
-        Top = 287
+        Top = 318
         Width = 219
         Height = 13
         Anchors = [akLeft, akBottom]
@@ -57,7 +59,7 @@ inherited framePkgFarm: TframePkgFarm
       end
       object lblRecomputeFlows: TLabel
         Left = 6
-        Top = 348
+        Top = 379
         Width = 283
         Height = 13
         Anchors = [akLeft, akBottom]
@@ -65,7 +67,7 @@ inherited framePkgFarm: TframePkgFarm
       end
       object rgAssignmentMethod: TRadioGroup
         Left = 6
-        Top = 222
+        Top = 253
         Width = 379
         Height = 59
         Anchors = [akLeft, akRight, akBottom]
@@ -79,7 +81,7 @@ inherited framePkgFarm: TframePkgFarm
       end
       object comboCropIrrigationRequirement: TComboBox
         Left = 6
-        Top = 309
+        Top = 340
         Width = 369
         Height = 21
         Style = csDropDownList
@@ -92,7 +94,7 @@ inherited framePkgFarm: TframePkgFarm
       end
       object comboRecomputeFlows: TComboBox
         Left = 6
-        Top = 370
+        Top = 401
         Width = 369
         Height = 21
         Style = csDropDownList
@@ -103,19 +105,33 @@ inherited framePkgFarm: TframePkgFarm
           'Don'#39't recompute'
           'Recompute')
       end
+      object cbResetQMax: TCheckBox
+        Left = 6
+        Top = 428
+        Width = 363
+        Height = 35
+        Caption = 'Reset QMAX in MNW packages in each stress period (AUX QMAXRESET)'
+        Enabled = False
+        TabOrder = 3
+        WordWrap = True
+      end
     end
     object jvspParameters: TJvStandardPage
       Left = 0
       Top = 0
       Width = 400
-      Height = 407
+      Height = 462
+      HelpType = htKeyword
+      HelpKeyword = 'FarmParameters'
       Caption = 'jvspParameters'
     end
     object jvspWhenToRead: TJvStandardPage
       Left = 0
       Top = 0
       Width = 400
-      Height = 407
+      Height = 462
+      HelpType = htKeyword
+      HelpKeyword = 'When_to_Read_Flags'
       Caption = 'jvspWhenToRead'
       object lblRootingDepth: TLabel
         Left = 16
@@ -200,7 +216,9 @@ inherited framePkgFarm: TframePkgFarm
       Left = 0
       Top = 0
       Width = 400
-      Height = 407
+      Height = 462
+      HelpType = htKeyword
+      HelpKeyword = 'Water_Policy_Flags'
       Caption = 'jvspWaterPolicy'
       object lblDeficiency: TLabel
         Left = 6
@@ -258,8 +276,8 @@ inherited framePkgFarm: TframePkgFarm
             ButtonHeight = 13
             ExplicitLeft = 3
             ExplicitTop = 62
-            ExplicitWidth = 16
-            ExplicitHeight = 86
+            ExplicitWidth = 13
+            ExplicitHeight = 74
           end
           inherited rdgGrid: TRbwDataGrid4
             Left = 32
@@ -344,9 +362,9 @@ inherited framePkgFarm: TframePkgFarm
               end>
             WordWrapRowCaptions = True
             ExplicitLeft = 32
-            ExplicitTop = 58
+            ExplicitTop = 55
             ExplicitWidth = 360
-            ExplicitHeight = 215
+            ExplicitHeight = 218
             ColWidths = (
               178
               108
@@ -358,29 +376,41 @@ inherited framePkgFarm: TframePkgFarm
           end
         end
       end
+      object cbGroundwaterAllotments: TCheckBox
+        Left = 6
+        Top = 336
+        Width = 371
+        Height = 41
+        Caption = 'Farm well pumping limited by groundwater allotments (IALLOTGW)'
+        Enabled = False
+        TabOrder = 2
+        WordWrap = True
+      end
     end
     object jvspCropConsumptiveUse: TJvStandardPage
       Left = 0
       Top = 0
       Width = 400
-      Height = 407
+      Height = 462
+      HelpType = htKeyword
+      HelpKeyword = 'Crop_Consumptive_Use_Flags'
       Caption = 'jvspCropConsumptiveUse'
       inline frameCropConsumptiveUse: TframeRadioGrid
         Left = 0
         Top = 0
         Width = 400
-        Height = 407
+        Height = 462
         Align = alClient
         Enabled = False
         TabOrder = 0
         ExplicitWidth = 400
-        ExplicitHeight = 407
+        ExplicitHeight = 462
         inherited grpDescription: TGroupBox
           Width = 397
-          Height = 404
+          Height = 459
           Caption = 'Crop Consumptive-Use Flag (ICCFL)'
           ExplicitWidth = 397
-          ExplicitHeight = 404
+          ExplicitHeight = 459
           inherited lblTop: TLabel
             Width = 127
             Caption = 'Crop consumptive concept'
@@ -396,13 +426,13 @@ inherited framePkgFarm: TframePkgFarm
             ButtonHeight = 13
             ExplicitLeft = 3
             ExplicitTop = 96
-            ExplicitWidth = 16
-            ExplicitHeight = 154
+            ExplicitWidth = 13
+            ExplicitHeight = 128
           end
           inherited rdgGrid: TRbwDataGrid4
             Left = 32
             Width = 360
-            Height = 364
+            Height = 419
             Margins.Left = 30
             ColCount = 3
             RowCount = 3
@@ -477,9 +507,8 @@ inherited framePkgFarm: TframePkgFarm
                 AutoAdjustColWidths = True
               end>
             ExplicitLeft = 32
-            ExplicitTop = 38
             ExplicitWidth = 360
-            ExplicitHeight = 361
+            ExplicitHeight = 419
           end
         end
       end
@@ -488,7 +517,9 @@ inherited framePkgFarm: TframePkgFarm
       Left = 0
       Top = 0
       Width = 400
-      Height = 407
+      Height = 462
+      HelpType = htKeyword
+      HelpKeyword = 'Surface_Water_Flags'
       Caption = 'jvspSurfaceWater'
       object lblRoutedDelivery: TLabel
         Left = 16
@@ -507,9 +538,9 @@ inherited framePkgFarm: TframePkgFarm
       object lblAllotment: TLabel
         Left = 16
         Top = 134
-        Width = 161
+        Width = 177
         Height = 13
-        Caption = 'Surface water allotment (IALLOT)'
+        Caption = 'Surface water allotment (IALLOTSW)'
       end
       object lblDiversionCriterion: TLabel
         Left = 16
@@ -571,12 +602,14 @@ inherited framePkgFarm: TframePkgFarm
         ChangeDisabledColor = True
       end
     end
-    object jvspMandatoryPrintFlags: TJvStandardPage
+    object jvspMandatoryPrintFlags1: TJvStandardPage
       Left = 0
       Top = 0
       Width = 400
-      Height = 407
-      Caption = 'jvspMandatoryPrintFlags'
+      Height = 462
+      HelpType = htKeyword
+      HelpKeyword = 'Mandatory_Print_Flags'
+      Caption = 'jvspMandatoryPrintFlags1'
       object lblSaveWellFlowRates: TLabel
         Left = 16
         Top = 14
@@ -597,147 +630,6 @@ inherited framePkgFarm: TframePkgFarm
         Width = 139
         Height = 13
         Caption = 'Supply and demand (ISDPFL)'
-      end
-      inline frameFarmBudgetPrintFlag: TframeRadioGrid
-        Left = 0
-        Top = 241
-        Width = 400
-        Height = 166
-        Align = alBottom
-        Enabled = False
-        TabOrder = 3
-        ExplicitTop = 241
-        ExplicitWidth = 400
-        ExplicitHeight = 166
-        inherited grpDescription: TGroupBox
-          Width = 397
-          Height = 163
-          Caption = 'Farm budget print flags (IFBPFL)'
-          ExplicitWidth = 397
-          ExplicitHeight = 163
-          inherited lblTop: TLabel
-            Width = 47
-            Caption = 'Print type'
-            ExplicitWidth = 47
-          end
-          inherited lblLeft: TMMJLabel
-            Left = 3
-            Top = 38
-            Width = 52
-            AutoSize = False
-            Caption = 'Compact or detailed '
-            ButtonWidth = 52
-            ButtonHeight = 13
-            ExplicitLeft = 3
-            ExplicitTop = 38
-            ExplicitWidth = 13
-            ExplicitHeight = 99
-          end
-          inherited rdgGrid: TRbwDataGrid4
-            Width = 344
-            Height = 123
-            ColCount = 4
-            DefaultColWidth = 60
-            RowCount = 3
-            Columns = <
-              item
-                AutoAdjustRowHeights = True
-                ButtonCaption = '...'
-                ButtonFont.Charset = DEFAULT_CHARSET
-                ButtonFont.Color = clWindowText
-                ButtonFont.Height = -11
-                ButtonFont.Name = 'Tahoma'
-                ButtonFont.Style = []
-                ButtonUsed = False
-                ButtonWidth = 20
-                CheckMax = False
-                CheckMin = False
-                ComboUsed = False
-                Format = rcf4Boolean
-                LimitToList = False
-                MaxLength = 0
-                ParentButtonFont = False
-                WordWrapCaptions = True
-                WordWrapCells = False
-                CaseSensitivePicklist = False
-                CheckStyle = csRadio
-                AutoAdjustColWidths = True
-              end
-              item
-                AutoAdjustRowHeights = True
-                ButtonCaption = '...'
-                ButtonFont.Charset = DEFAULT_CHARSET
-                ButtonFont.Color = clWindowText
-                ButtonFont.Height = -11
-                ButtonFont.Name = 'Tahoma'
-                ButtonFont.Style = []
-                ButtonUsed = False
-                ButtonWidth = 20
-                CheckMax = False
-                CheckMin = False
-                ComboUsed = False
-                Format = rcf4Boolean
-                LimitToList = False
-                MaxLength = 0
-                ParentButtonFont = False
-                WordWrapCaptions = True
-                WordWrapCells = False
-                CaseSensitivePicklist = False
-                CheckStyle = csRadio
-                AutoAdjustColWidths = True
-              end
-              item
-                AutoAdjustRowHeights = True
-                ButtonCaption = '...'
-                ButtonFont.Charset = DEFAULT_CHARSET
-                ButtonFont.Color = clWindowText
-                ButtonFont.Height = -11
-                ButtonFont.Name = 'Tahoma'
-                ButtonFont.Style = []
-                ButtonUsed = False
-                ButtonWidth = 20
-                CheckMax = False
-                CheckMin = False
-                ComboUsed = False
-                Format = rcf4Boolean
-                LimitToList = False
-                MaxLength = 0
-                ParentButtonFont = False
-                WordWrapCaptions = True
-                WordWrapCells = False
-                CaseSensitivePicklist = False
-                CheckStyle = csRadio
-                AutoAdjustColWidths = True
-              end
-              item
-                AutoAdjustRowHeights = True
-                ButtonCaption = '...'
-                ButtonFont.Charset = DEFAULT_CHARSET
-                ButtonFont.Color = clWindowText
-                ButtonFont.Height = -11
-                ButtonFont.Name = 'Tahoma'
-                ButtonFont.Style = []
-                ButtonUsed = False
-                ButtonWidth = 20
-                CheckMax = False
-                CheckMin = False
-                ComboUsed = False
-                Format = rcf4Boolean
-                LimitToList = False
-                MaxLength = 0
-                ParentButtonFont = False
-                WordWrapCaptions = True
-                WordWrapCells = False
-                CaseSensitivePicklist = False
-                CheckStyle = csRadio
-                AutoAdjustColWidths = True
-              end>
-            WordWrapRowCaptions = True
-            ExplicitTop = 38
-            ExplicitWidth = 344
-            ExplicitHeight = 120
-          end
-        end
       end
       object comboSaveWellFlowRates: TComboBox
         Left = 16
@@ -784,7 +676,9 @@ inherited framePkgFarm: TframePkgFarm
       Left = 0
       Top = 0
       Width = 400
-      Height = 407
+      Height = 462
+      HelpType = htKeyword
+      HelpKeyword = 'Optional_Print_Flags'
       Caption = 'jvspOptionalPrintFlags'
       object lblDiversionBudgetLocation: TLabel
         Left = 16
@@ -795,12 +689,12 @@ inherited framePkgFarm: TframePkgFarm
       end
       inline frameAcreageOptimizationPrintSettings: TframeRadioGrid
         Left = 0
-        Top = 201
+        Top = 256
         Width = 400
         Height = 206
         Align = alBottom
         TabOrder = 2
-        ExplicitTop = 201
+        ExplicitTop = 256
         ExplicitWidth = 400
         ExplicitHeight = 206
         inherited grpDescription: TGroupBox
@@ -815,17 +709,18 @@ inherited framePkgFarm: TframePkgFarm
             ExplicitWidth = 62
           end
           inherited lblLeft: TMMJLabel
-            Left = 3
+            Left = 13
             Top = 80
-            Width = 52
+            Width = 13
+            Height = 58
             AutoSize = False
             Caption = 'Print choice '
             ButtonWidth = 52
             ButtonHeight = 13
-            ExplicitLeft = 3
+            ExplicitLeft = 13
             ExplicitTop = 80
-            ExplicitWidth = 16
-            ExplicitHeight = 70
+            ExplicitWidth = 13
+            ExplicitHeight = 58
           end
           inherited rdgGrid: TRbwDataGrid4
             Width = 344
@@ -903,9 +798,8 @@ inherited framePkgFarm: TframePkgFarm
                 AutoAdjustColWidths = True
               end>
             WordWrapRowCaptions = True
-            ExplicitTop = 38
             ExplicitWidth = 344
-            ExplicitHeight = 160
+            ExplicitHeight = 163
             ColWidths = (
               191
               64
@@ -949,11 +843,13 @@ inherited framePkgFarm: TframePkgFarm
           inherited lblLeft: TMMJLabel
             Left = 13
             Top = 36
-            Width = 54
+            Width = 13
+            Height = 54
             Caption = 'Frequency '
             ExplicitLeft = 13
             ExplicitTop = 36
-            ExplicitWidth = 54
+            ExplicitWidth = 13
+            ExplicitHeight = 54
           end
           inherited rdgGrid: TRbwDataGrid4
             Width = 344
@@ -1053,10 +949,533 @@ inherited framePkgFarm: TframePkgFarm
                 CheckStyle = csRadio
                 AutoAdjustColWidths = True
               end>
-            ExplicitTop = 38
             ExplicitWidth = 344
+            ExplicitHeight = 102
+          end
+        end
+      end
+    end
+    object jvspMandatoryPrintFlags2: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 400
+      Height = 462
+      HelpType = htKeyword
+      HelpKeyword = 'Mandatory_Print_Flags_2'
+      Caption = 'jvspMandatoryPrintFlags2'
+      inline frameET_PrintFlag: TframeRadioGrid
+        Left = 0
+        Top = 0
+        Width = 400
+        Height = 211
+        Align = alTop
+        TabOrder = 0
+        ExplicitWidth = 400
+        ExplicitHeight = 211
+        inherited grpDescription: TGroupBox
+          Width = 397
+          Height = 208
+          Caption = 'Farm total evapotranspiration print flag (IETPFL)'
+          ExplicitWidth = 397
+          ExplicitHeight = 208
+          inherited lblTop: TLabel
+            Width = 64
+            Caption = 'What to print'
+            ExplicitWidth = 64
+          end
+          inherited lblLeft: TMMJLabel
+            Left = 13
+            Top = 62
+            Width = 65
+            Caption = 'Print location '
+            ExplicitLeft = 13
+            ExplicitTop = 62
+            ExplicitWidth = 65
+          end
+          inherited rdgGrid: TRbwDataGrid4
+            Width = 344
+            Height = 168
+            ColCount = 6
+            RowCount = 3
+            OnSelectCell = frameET_PrintFlagrdgGridSelectCell
+            Columns = <
+              item
+                AutoAdjustRowHeights = True
+                ButtonCaption = '...'
+                ButtonFont.Charset = DEFAULT_CHARSET
+                ButtonFont.Color = clWindowText
+                ButtonFont.Height = -11
+                ButtonFont.Name = 'Tahoma'
+                ButtonFont.Style = []
+                ButtonUsed = False
+                ButtonWidth = 20
+                CheckMax = False
+                CheckMin = False
+                ComboUsed = False
+                Format = rcf4Boolean
+                LimitToList = False
+                MaxLength = 0
+                ParentButtonFont = False
+                WordWrapCaptions = True
+                WordWrapCells = False
+                CaseSensitivePicklist = False
+                CheckStyle = csRadio
+                AutoAdjustColWidths = True
+              end
+              item
+                AutoAdjustRowHeights = True
+                ButtonCaption = '...'
+                ButtonFont.Charset = DEFAULT_CHARSET
+                ButtonFont.Color = clWindowText
+                ButtonFont.Height = -11
+                ButtonFont.Name = 'Tahoma'
+                ButtonFont.Style = []
+                ButtonUsed = False
+                ButtonWidth = 20
+                CheckMax = False
+                CheckMin = False
+                ComboUsed = False
+                Format = rcf4Boolean
+                LimitToList = False
+                MaxLength = 0
+                ParentButtonFont = False
+                WordWrapCaptions = True
+                WordWrapCells = False
+                CaseSensitivePicklist = False
+                CheckStyle = csRadio
+                AutoAdjustColWidths = True
+              end
+              item
+                AutoAdjustRowHeights = True
+                ButtonCaption = '...'
+                ButtonFont.Charset = DEFAULT_CHARSET
+                ButtonFont.Color = clWindowText
+                ButtonFont.Height = -11
+                ButtonFont.Name = 'Tahoma'
+                ButtonFont.Style = []
+                ButtonUsed = False
+                ButtonWidth = 20
+                CheckMax = False
+                CheckMin = False
+                ComboUsed = False
+                Format = rcf4Boolean
+                LimitToList = False
+                MaxLength = 0
+                ParentButtonFont = False
+                WordWrapCaptions = True
+                WordWrapCells = False
+                CaseSensitivePicklist = False
+                CheckStyle = csRadio
+                AutoAdjustColWidths = True
+              end
+              item
+                AutoAdjustRowHeights = True
+                ButtonCaption = '...'
+                ButtonFont.Charset = DEFAULT_CHARSET
+                ButtonFont.Color = clWindowText
+                ButtonFont.Height = -11
+                ButtonFont.Name = 'Tahoma'
+                ButtonFont.Style = []
+                ButtonUsed = False
+                ButtonWidth = 20
+                CheckMax = False
+                CheckMin = False
+                ComboUsed = False
+                Format = rcf4Boolean
+                LimitToList = False
+                MaxLength = 0
+                ParentButtonFont = False
+                WordWrapCaptions = True
+                WordWrapCells = False
+                CaseSensitivePicklist = False
+                CheckStyle = csRadio
+                AutoAdjustColWidths = True
+              end
+              item
+                AutoAdjustRowHeights = True
+                ButtonCaption = '...'
+                ButtonFont.Charset = DEFAULT_CHARSET
+                ButtonFont.Color = clWindowText
+                ButtonFont.Height = -11
+                ButtonFont.Name = 'Tahoma'
+                ButtonFont.Style = []
+                ButtonUsed = False
+                ButtonWidth = 20
+                CheckMax = False
+                CheckMin = False
+                ComboUsed = False
+                Format = rcf4Boolean
+                LimitToList = False
+                MaxLength = 0
+                ParentButtonFont = False
+                WordWrapCaptions = True
+                WordWrapCells = False
+                CaseSensitivePicklist = False
+                CheckStyle = csRadio
+                AutoAdjustColWidths = True
+              end
+              item
+                AutoAdjustRowHeights = True
+                ButtonCaption = '...'
+                ButtonFont.Charset = DEFAULT_CHARSET
+                ButtonFont.Color = clWindowText
+                ButtonFont.Height = -11
+                ButtonFont.Name = 'Tahoma'
+                ButtonFont.Style = []
+                ButtonUsed = False
+                ButtonWidth = 20
+                CheckMax = False
+                CheckMin = False
+                ComboUsed = False
+                Format = rcf4Boolean
+                LimitToList = False
+                MaxLength = 0
+                ParentButtonFont = False
+                WordWrapCaptions = True
+                WordWrapCells = False
+                CaseSensitivePicklist = False
+                CheckStyle = csRadio
+                AutoAdjustColWidths = True
+              end>
+            ExplicitWidth = 344
+            ExplicitHeight = 168
+          end
+        end
+      end
+      inline frameFarmBudgetPrintFlag: TframeRadioGrid
+        Left = 0
+        Top = 256
+        Width = 400
+        Height = 206
+        Align = alBottom
+        Enabled = False
+        TabOrder = 1
+        ExplicitTop = 256
+        ExplicitWidth = 400
+        ExplicitHeight = 206
+        inherited grpDescription: TGroupBox
+          Width = 397
+          Height = 203
+          Caption = 'Farm budget print flags (IFBPFL)'
+          ExplicitWidth = 397
+          ExplicitHeight = 203
+          inherited lblTop: TLabel
+            Width = 47
+            Caption = 'Print type'
+            ExplicitWidth = 47
+          end
+          inherited lblLeft: TMMJLabel
+            Left = 3
+            Top = 38
+            Width = 52
+            AutoSize = False
+            Caption = 'Compact or detailed '
+            ButtonWidth = 52
+            ButtonHeight = 13
+            ExplicitLeft = 3
+            ExplicitTop = 38
+            ExplicitWidth = 13
             ExplicitHeight = 99
           end
+          inherited rdgGrid: TRbwDataGrid4
+            Width = 344
+            Height = 163
+            DefaultColWidth = 60
+            RowCount = 3
+            Columns = <
+              item
+                AutoAdjustRowHeights = True
+                ButtonCaption = '...'
+                ButtonFont.Charset = DEFAULT_CHARSET
+                ButtonFont.Color = clWindowText
+                ButtonFont.Height = -11
+                ButtonFont.Name = 'Tahoma'
+                ButtonFont.Style = []
+                ButtonUsed = False
+                ButtonWidth = 20
+                CheckMax = False
+                CheckMin = False
+                ComboUsed = False
+                Format = rcf4Boolean
+                LimitToList = False
+                MaxLength = 0
+                ParentButtonFont = False
+                WordWrapCaptions = True
+                WordWrapCells = False
+                CaseSensitivePicklist = False
+                CheckStyle = csRadio
+                AutoAdjustColWidths = True
+              end
+              item
+                AutoAdjustRowHeights = True
+                ButtonCaption = '...'
+                ButtonFont.Charset = DEFAULT_CHARSET
+                ButtonFont.Color = clWindowText
+                ButtonFont.Height = -11
+                ButtonFont.Name = 'Tahoma'
+                ButtonFont.Style = []
+                ButtonUsed = False
+                ButtonWidth = 20
+                CheckMax = False
+                CheckMin = False
+                ComboUsed = False
+                Format = rcf4Boolean
+                LimitToList = False
+                MaxLength = 0
+                ParentButtonFont = False
+                WordWrapCaptions = True
+                WordWrapCells = False
+                CaseSensitivePicklist = False
+                CheckStyle = csRadio
+                AutoAdjustColWidths = True
+              end
+              item
+                AutoAdjustRowHeights = True
+                ButtonCaption = '...'
+                ButtonFont.Charset = DEFAULT_CHARSET
+                ButtonFont.Color = clWindowText
+                ButtonFont.Height = -11
+                ButtonFont.Name = 'Tahoma'
+                ButtonFont.Style = []
+                ButtonUsed = False
+                ButtonWidth = 20
+                CheckMax = False
+                CheckMin = False
+                ComboUsed = False
+                Format = rcf4Boolean
+                LimitToList = False
+                MaxLength = 0
+                ParentButtonFont = False
+                WordWrapCaptions = True
+                WordWrapCells = False
+                CaseSensitivePicklist = False
+                CheckStyle = csRadio
+                AutoAdjustColWidths = True
+              end
+              item
+                AutoAdjustRowHeights = True
+                ButtonCaption = '...'
+                ButtonFont.Charset = DEFAULT_CHARSET
+                ButtonFont.Color = clWindowText
+                ButtonFont.Height = -11
+                ButtonFont.Name = 'Tahoma'
+                ButtonFont.Style = []
+                ButtonUsed = False
+                ButtonWidth = 20
+                CheckMax = False
+                CheckMin = False
+                ComboUsed = False
+                Format = rcf4Boolean
+                LimitToList = False
+                MaxLength = 0
+                ParentButtonFont = False
+                WordWrapCaptions = True
+                WordWrapCells = False
+                CaseSensitivePicklist = False
+                CheckStyle = csRadio
+                AutoAdjustColWidths = True
+              end
+              item
+                AutoAdjustRowHeights = False
+                ButtonCaption = '...'
+                ButtonFont.Charset = DEFAULT_CHARSET
+                ButtonFont.Color = clWindowText
+                ButtonFont.Height = -11
+                ButtonFont.Name = 'Tahoma'
+                ButtonFont.Style = []
+                ButtonUsed = False
+                ButtonWidth = 20
+                CheckMax = False
+                CheckMin = False
+                ComboUsed = False
+                Format = rcf4Boolean
+                LimitToList = False
+                MaxLength = 0
+                ParentButtonFont = False
+                WordWrapCaptions = False
+                WordWrapCells = False
+                CaseSensitivePicklist = False
+                CheckStyle = csRadio
+                AutoAdjustColWidths = False
+              end>
+            WordWrapRowCaptions = True
+            ExplicitWidth = 344
+            ExplicitHeight = 163
+          end
+        end
+      end
+    end
+    object jvspMnwNwtOptions: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 400
+      Height = 462
+      HelpType = htKeyword
+      HelpKeyword = 'MNW_and_NWT_Options'
+      Caption = 'jvspMnwNwtOptions'
+      object lblMnwExplanation: TLabel
+        Left = 16
+        Top = 12
+        Width = 311
+        Height = 26
+        Caption = 
+          'These options apply to the interation with the MNW1 and MNW2 pac' +
+          'kages'
+        WordWrap = True
+      end
+      object grpMNWOptions: TGroupBox
+        Left = 0
+        Top = 0
+        Width = 400
+        Height = 305
+        Align = alTop
+        Caption = 'MNW1 and MNW2 Options'
+        TabOrder = 0
+        object lblRPCT: TLabel
+          Left = 74
+          Top = 237
+          Width = 274
+          Height = 26
+          Caption = 
+            'Fraction of reduction of residual-change closure criterion if QC' +
+            'LOSE was not met (RPCT)'
+          WordWrap = True
+        end
+        object lblHPCT: TLabel
+          Left = 74
+          Top = 175
+          Width = 313
+          Height = 26
+          Caption = 
+            'Fraction of reduction of head-change closure criterion if QCLOSE' +
+            ' was not met (HPCT)'
+          WordWrap = True
+        end
+        object lblQClose: TLabel
+          Left = 74
+          Top = 114
+          Width = 284
+          Height = 26
+          Caption = 
+            'Criterion for actual MNW pumping rate to converge to FMP pumping' +
+            ' requirement (QCLOSE) '
+          WordWrap = True
+        end
+        object cbMnwClose: TCheckBox
+          Left = 3
+          Top = 21
+          Width = 394
+          Height = 75
+          Caption = 
+            'Adjust solver closure criteria to allow convergence of the FMP p' +
+            'umping requirement to pumping simulated by the linked MNW1 or MN' +
+            'W2 packages (MNWCLOSE option)'
+          Enabled = False
+          TabOrder = 0
+          WordWrap = True
+          OnClick = cbMnwCloseClick
+        end
+        object rdeRPCT: TRbwDataEntry
+          Left = 3
+          Top = 237
+          Width = 65
+          Height = 22
+          Color = clBtnFace
+          Enabled = False
+          TabOrder = 3
+          Text = '0'
+          DataType = dtReal
+          Max = 1.000000000000000000
+          CheckMax = True
+          CheckMin = True
+          ChangeDisabledColor = True
+        end
+        object rdeHPCT: TRbwDataEntry
+          Left = 3
+          Top = 175
+          Width = 65
+          Height = 22
+          Color = clBtnFace
+          Enabled = False
+          TabOrder = 2
+          Text = '0'
+          DataType = dtReal
+          Max = 1.000000000000000000
+          CheckMax = True
+          CheckMin = True
+          ChangeDisabledColor = True
+        end
+        object rdeQClose: TRbwDataEntry
+          Left = 3
+          Top = 111
+          Width = 65
+          Height = 22
+          Color = clBtnFace
+          Enabled = False
+          TabOrder = 1
+          Text = '0'
+          DataType = dtReal
+          Max = 1.000000000000000000
+          CheckMin = True
+          ChangeDisabledColor = True
+        end
+      end
+      object grpNwtOptions: TGroupBox
+        Left = 0
+        Top = 305
+        Width = 400
+        Height = 144
+        Align = alTop
+        Caption = 'NWT Options'
+        Enabled = False
+        TabOrder = 1
+        object lblPSIRAMPF: TLabel
+          Left = 74
+          Top = 26
+          Width = 270
+          Height = 26
+          Caption = 
+            'Minimum fraction of model cell thickness before pumping reductio' +
+            'n is initiated (PSIRAMPF)'
+          WordWrap = True
+        end
+        object lblSATTHK: TLabel
+          Left = 74
+          Top = 82
+          Width = 280
+          Height = 26
+          Caption = 
+            'Minimum saturated thickness of model cell before pumping reducti' +
+            'on is initiated. (SATTHK)'
+          WordWrap = True
+        end
+        object rdePSIRAMPF: TRbwDataEntry
+          Left = 3
+          Top = 26
+          Width = 65
+          Height = 22
+          Color = clBtnFace
+          Enabled = False
+          TabOrder = 0
+          Text = '0'
+          DataType = dtReal
+          Max = 1.000000000000000000
+          CheckMin = True
+          ChangeDisabledColor = True
+        end
+        object rdeSATTHK: TRbwDataEntry
+          Left = 3
+          Top = 82
+          Width = 65
+          Height = 22
+          Color = clBtnFace
+          Enabled = False
+          TabOrder = 1
+          Text = '0'
+          DataType = dtReal
+          Max = 1.000000000000000000
+          CheckMin = True
+          ChangeDisabledColor = True
         end
       end
     end
@@ -1065,7 +1484,7 @@ inherited framePkgFarm: TframePkgFarm
     Left = 0
     Top = 0
     Width = 94
-    Height = 407
+    Height = 462
     PageDefault = 0
     PageList = jvplFarm
     Align = alLeft
@@ -1138,6 +1557,21 @@ inherited framePkgFarm: TframePkgFarm
         Control = comboInefficiencyLosses
       end
       item
+      end
+      item
+        Control = cbGroundwaterAllotments
+      end
+      item
+        Control = cbResetQMax
+      end
+      item
+        Control = grpNwtOptions
+      end
+      item
+        Control = rdePSIRAMPF
+      end
+      item
+        Control = rdeSATTHK
       end>
     OnEnabledChange = rcSelectionControllerEnabledChange
     Left = 64

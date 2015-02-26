@@ -440,9 +440,8 @@ begin
               ColumnsForward := True;
               RowsForward := False;
             end;
-          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-            {$IFDEF FMP}, msModflowFmp {$ENDIF}
-            , msModflowCfp:
+          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+            msModflowFmp, msModflowCfp:
             begin
               ColumnsForward := True;
               RowsForward := True;
@@ -490,9 +489,8 @@ begin
               ColumnsForward := True;
               RowsForward := False;
             end;
-          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-            {$IFDEF FMP}, msModflowFmp {$ENDIF}
-            , msModflowCfp:
+          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+            msModflowFmp, msModflowCfp:
             begin
               ColumnsForward := True;
               RowsForward := True;
@@ -540,9 +538,8 @@ begin
               ColumnsForward := True;
               RowsForward := False;
             end;
-          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-            {$IFDEF FMP}, msModflowFmp {$ENDIF}
-            , msModflowCfp:
+          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+            msModflowFmp, msModflowCfp:
             begin
               ColumnsForward := False;
               RowsForward := True;
@@ -628,9 +625,8 @@ begin
                 ColumnsForward := True;
                 RowsForward := False;
               end;
-            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-              {$IFDEF FMP}, msModflowFmp {$ENDIF}
-              , msModflowCfp:
+            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+              msModflowFmp, msModflowCfp:
               begin
                 ColumnsForward := True;
                 RowsForward := True;
@@ -1178,9 +1174,8 @@ begin
                 Row := Grid.ColCount - RowIndex;
                 Layer := 1;
               end;
-            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-              {$IFDEF FMP}, msModflowFmp {$ENDIF}
-              , msModflowCfp:
+            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+              msModflowFmp, msModflowCfp:
               begin
                 Column := ColIndex;
                 Row := RowIndex;
@@ -1203,9 +1198,8 @@ begin
                 Row := 1;
                 Layer := Grid.RowCount - RowIndex;
               end;
-            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-              {$IFDEF FMP}, msModflowFmp {$ENDIF}
-              , msModflowCfp:
+            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+              msModflowFmp, msModflowCfp:
               begin
                 Column := ColIndex;
                 Row := 1;
@@ -1228,9 +1222,8 @@ begin
                 Row := ColIndex;
                 Layer := Grid.RowCount - RowIndex;
               end;
-            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-              {$IFDEF FMP}, msModflowFmp {$ENDIF}
-              , msModflowCfp:
+            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+              msModflowFmp, msModflowCfp:
               begin
                 Column := 1;
                 Row := Grid.ColCount - ColIndex;
@@ -1253,9 +1246,8 @@ begin
                 Row := Grid.ColCount - RowIndex;
                 Layer := GridIndex + 1;
               end;
-            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-              {$IFDEF FMP}, msModflowFmp {$ENDIF}
-              , msModflowCfp:
+            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+              msModflowFmp, msModflowCfp:
               begin
                 Column := ColIndex;
                 Row := RowIndex;

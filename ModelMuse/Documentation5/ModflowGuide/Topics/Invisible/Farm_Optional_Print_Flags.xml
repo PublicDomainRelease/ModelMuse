@@ -11,7 +11,7 @@
     <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Normal"><anchor id="IRTPFL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Optional routing information print flag if the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" styleclass="Normal" translate="true">SFR Package</link><text styleclass="Normal" translate="true"> is specified in Name file. </text></para>
+          <para styleclass="Normal"><anchor id="IRTPFL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Optional routing information print flag if the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" styleclass="Normal" translate="true">SFR Package</link><text styleclass="Normal" translate="true"> is specified in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">Name</link><text styleclass="Normal" translate="true"> file. </text><text styleclass="New Materials" translate="true">If the model is as child model, IRTPFL is required if the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" styleclass="New Materials" translate="true">SFR Package</link><text styleclass="New Materials" translate="true"> is specified in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="New Materials" translate="true">Name</link><text styleclass="New Materials" translate="true"> file of either the parent or child model. </text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Information regarding the routing of farm deliveries and farm runoff return flows will be written either to the listing file or to a separate ASCII file, called ROUT.OUT.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">The information regarding deliveries tells whether the farm can potentially receive either:</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">(a) fully-routed deliveries from the first, most upstream located reach of a sequence of automatically detected delivery-segment reaches within a farm, or whether</text></para>
@@ -20,7 +20,7 @@
           <para styleclass="Normal"><text styleclass="Normal" translate="true">(a) full-routed to automatically detected return flow-segment reaches within a farm, over which the runoff return flow is prorated, weighted by the length of each reach, or</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">(b) semi-routed to specified stream reaches, or in lack of this first two options,</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">(c) semi-routed to automatically detected return flow-segment reach nearest to the lowest elevation of a farm.</text></para>
-          <list id="3" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="6" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">= –2 Routing information written to the listing file for the first stress period only.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">= –1 Routing information written to the listing file for every stress period.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">= 0 Routing information not written.</text></li>
@@ -37,7 +37,7 @@
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><anchor id="IOPFL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Optional print settings if Acreage-Optimization is chosen (if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="IDEFFL" styleclass="Normal" translate="true">IDEFFL</link><text styleclass="Normal" translate="true"> &gt; 0) </text></para>
-          <list id="4" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">= –4 A tableaux matrix will be printed to the list file for iterations, during which optimization occurs.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">= –3 Original and optimized flow rates of resource constraints and a list of fractions of optimized cell areas will be printed to the list file for any farm and iteration that are subject to optimization:</text></li>
           </list>
@@ -69,7 +69,7 @@
               </td>
             </tr>
           </table></para>
-          <list id="4" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">–2 Original and optimized flow rates of resource constraints will be printed to the list file for any farm and iteration that are subject to optimization </text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">= –1 A cell-by-cell 2D-array of fractions of active cell acreage will be printed to the list file for all time steps. </text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">= 0 No original &amp; optimized flow rates, and no optimized cell areas are written. </text></li>
@@ -105,7 +105,7 @@
               </td>
             </tr>
           </table></para>
-          <list id="4" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">= –4 A tableaux matrix is saved on ASCII file “ACR_OPT.OUT” for iterations, during which optimization occurs.</text></li>
           </list>
         </td>
@@ -115,8 +115,8 @@
     <para styleclass="Normal"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Normal"><anchor id="IPAPFL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Optional print settings if Prior Appropriation is chosen (if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="iALLOT" styleclass="Normal" translate="true">IALLOT</link><text styleclass="Normal" translate="true"> &gt; 1) </text></para>
-          <list id="5" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <para styleclass="Normal"><anchor id="IPAPFL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Optional print settings if Prior Appropriation is chosen (if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="iALLOTSW" styleclass="Normal" translate="true">IALLOTSW</link><text styleclass="Normal" translate="true"> &gt; 1) </text></para>
+          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">= –1 A budget at the point of diversions from the river into diversion segments and a budget at the point of a farm-diversion from the diversion segment will be printed to the list file for all iterations. </text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">= 1 A budget at the point of diversions from the river into diversion segments and a budget at the point of a farm-diversion from the diversion segment will be saved on ASCII file “PRIOR.OUT” for all iterations.</text></li>
           </list>

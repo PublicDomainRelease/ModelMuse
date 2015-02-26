@@ -161,6 +161,8 @@ type
 
 function frmErrorsAndWarnings: TfrmErrorsAndWarnings;
 
+procedure FreefrmErrorsAndWarnings;
+
 implementation
 
 uses Math, frmProgressUnit, Clipbrd, contnrs;
@@ -178,6 +180,11 @@ type
   TErrorWarningRec = record
     List: TStringList;
   end;
+
+procedure FreefrmErrorsAndWarnings;
+begin
+  FreeAndNil(FfrmErrorsAndWarnings);
+end;
 
 function frmErrorsAndWarnings: TfrmErrorsAndWarnings;
 begin

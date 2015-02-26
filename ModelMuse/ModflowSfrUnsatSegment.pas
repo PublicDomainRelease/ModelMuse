@@ -372,7 +372,8 @@ begin
     UpdateFormula(Value, BrooksCoreyExponentPosition, FBrooksCoreyExponent);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -403,8 +404,9 @@ begin
   begin
     UpdateFormula(Value, SaturatedWaterContentPosition, FSaturatedWaterContent);
     PhastModel := Model as TPhastModel;
-    if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+    if (PhastModel <> nil) and not PhastModel.Clearing
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -436,7 +438,8 @@ begin
     UpdateFormula(Value, InitialWaterContentPosition, FInitialWaterContent);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -468,7 +471,8 @@ begin
     UpdateFormula(Value, VerticalSaturatedKPosition, FVerticalSaturatedK);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)

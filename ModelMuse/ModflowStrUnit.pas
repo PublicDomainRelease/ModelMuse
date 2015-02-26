@@ -670,7 +670,8 @@ begin
   inherited;
   PhastModel := Model as TPhastModel;
   if (PhastModel <> nil)
-    and not (csDestroying in PhastModel.ComponentState) then
+    and not (csDestroying in PhastModel.ComponentState)
+    and not PhastModel.Clearing then
   begin
     PhastModel.InvalidateMfStrConductance(self);
     PhastModel.InvalidateMfStrStage(self);
@@ -1831,15 +1832,66 @@ begin
 end;
 
 procedure TStrBoundary.SetSegmentNumber(const Value: Integer);
+var
+  LocalModel: TCustomModel;
+  ScreenObjectIndex: Integer;
+  FOldValue: Integer;
+  AScreenObject: TScreenObject;
+  AnotherStr: TStrBoundary;
+  AnItem: TStrItem;
+  AParam: TModflowParamItem;
+  ItemIndex: Integer;
+  ParamIndex: Integer;
 begin
   if FSegmentNumber <> Value then
   begin
     InvalidateModel;
+    FOldValue := FSegmentNumber;
     FSegmentNumber := Value;
     if ParentModel <> nil then
     begin
-      (ParentModel as TCustomModel).ModflowPackages.StrPackage.
+      LocalModel :=  ParentModel as TCustomModel;
+      LocalModel.ModflowPackages.StrPackage.
         MfStrSegmentNumber.Invalidate;
+      if FOldValue <> 0 then
+      begin
+        for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
+        begin
+          AScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
+          AnotherStr := AScreenObject.ModflowStrBoundary;
+          if AnotherStr <> nil then
+          begin
+            for ItemIndex := 0 to AnotherStr.Values.Count - 1 do
+            begin
+              AnItem := AnotherStr.Values[ItemIndex] as TStrItem;
+              if AnItem.OutflowSegment = FOldValue then
+              begin
+                AnItem.OutflowSegment := FSegmentNumber;
+              end;
+              if AnItem.DiversionSegment = FOldValue then
+              begin
+                AnItem.DiversionSegment := FSegmentNumber;
+              end;
+            end;
+            for ParamIndex := 0 to AnotherStr.Parameters.Count -1 do
+            begin
+              AParam := AnotherStr.Parameters[ParamIndex];
+              for ItemIndex := 0 to AParam.Param.Count - 1 do
+              begin
+                AnItem := AParam.Param[ItemIndex] as TStrItem;
+                if AnItem.OutflowSegment = FOldValue then
+                begin
+                  AnItem.OutflowSegment := FSegmentNumber;
+                end;
+                if AnItem.DiversionSegment = FOldValue then
+                begin
+                  AnItem.DiversionSegment := FSegmentNumber;
+                end;
+              end;
+            end;
+          end;
+        end;
+      end;
     end;
   end;
 end;

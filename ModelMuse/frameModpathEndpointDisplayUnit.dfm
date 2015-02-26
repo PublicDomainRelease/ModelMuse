@@ -9,26 +9,26 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
     Top = 0
     Width = 476
     Height = 359
-    ActivePage = tabOptions
+    ActivePage = tabBasic
     Align = alClient
     TabOrder = 0
     object tabBasic: TTabSheet
       Caption = 'Basic'
       DesignSize = (
         468
-        328)
+        331)
       object lblModpathFile: TLabel
         Left = 8
         Top = 8
-        Width = 132
-        Height = 16
+        Width = 111
+        Height = 13
         Caption = 'MODPATH endpoint file'
       end
       object lblColorScheme: TLabel
         Left = 8
         Top = 108
-        Width = 78
-        Height = 16
+        Width = 64
+        Height = 13
         Caption = 'Color scheme'
       end
       object pbColorScheme: TPaintBox
@@ -43,30 +43,30 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
       object lblColorAdjustment: TLabel
         Left = 8
         Top = 211
-        Width = 98
-        Height = 16
+        Width = 82
+        Height = 13
         Caption = 'Color adjustment'
       end
       object lblCycles: TLabel
         Left = 364
         Top = 211
-        Width = 36
-        Height = 16
+        Width = 31
+        Height = 13
         Anchors = [akTop, akRight]
         Caption = 'Cycles'
       end
       object lblModelSelection: TLabel
         Left = 8
         Top = 273
-        Width = 88
-        Height = 16
+        Width = 73
+        Height = 13
         Caption = 'Model selection'
       end
       object fedModpathFile: TJvFilenameEdit
         Left = 8
         Top = 29
         Width = 457
-        Height = 24
+        Height = 21
         OnBeforeDialog = fedModpathFileBeforeDialog
         DefaultExt = '.end'
         Filter = 
@@ -96,7 +96,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         Left = 8
         Top = 128
         Width = 457
-        Height = 24
+        Height = 21
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
         DropDownCount = 12
@@ -133,7 +133,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         Left = 164
         Top = 232
         Width = 65
-        Height = 24
+        Height = 21
         ButtonKind = bkClassic
         Increment = 0.010000000000000000
         MaxValue = 2.000000000000000000
@@ -146,7 +146,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         Left = 365
         Top = 232
         Width = 101
-        Height = 24
+        Height = 21
         ButtonKind = bkClassic
         MaxValue = 2147483647.000000000000000000
         MinValue = 1.000000000000000000
@@ -159,7 +159,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         Left = 8
         Top = 292
         Width = 241
-        Height = 24
+        Height = 21
         Style = csDropDownList
         TabOrder = 7
         Visible = False
@@ -171,7 +171,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
       ImageIndex = 1
       DesignSize = (
         468
-        328)
+        331)
       object rgShow2D: TRadioGroup
         Left = 9
         Top = 0
@@ -242,7 +242,6 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         UnselectableColor = clBtnFace
         OnStateChange = rdgLimitsStateChange
         ColorRangeSelection = False
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = True
@@ -264,6 +263,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -288,6 +288,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -312,8 +313,10 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
+        WordWrapRowCaptions = False
       end
     end
   end

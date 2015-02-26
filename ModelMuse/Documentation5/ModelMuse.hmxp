@@ -101,7 +101,7 @@
       <config-value name="deffont">font-family:'MS Sans Serif'; font-size:8pt; color:#000000;</config-value>
       <config-value name="contents"></config-value>
       <config-value name="topicprefix"></config-value>
-      <config-value name="autohelpstart">3922</config-value>
+      <config-value name="autohelpstart">3940</config-value>
       <config-value name="autohelpincrement">1</config-value>
       <config-value name="autohelpanchor">1</config-value>
       <config-value name="searchpath">.\;.\Used Images\;.\ScreenShots\;.\ModflowGuide\;.\Topics\Invisible\</config-value>
@@ -114,7 +114,7 @@
       </config-group>
       <config-value name="imageshortcuts_includebaggage">1</config-value>
       <config-value name="make0include">CHM,ALLMODELS,OPT_ATOC,OPT_BREADTRAIL,OPT_COMMENTS,OPT_FB,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_TOGGLE,OPT_TOGTOC</config-value>
-      <config-value name="make0status">(Complete)</config-value>
+      <config-value name="make0status">*</config-value>
       <config-value name="make3include">HTML,ALLMODELS,OPT_ATOC,OPT_BREADTRAIL,OPT_COMMENTS,OPT_FB,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
       <config-value name="make3status">(Complete)</config-value>
     </config-group>
@@ -137,7 +137,7 @@
       <config-value name="usesecondarywindows">1</config-value>
       <config-value name="outputfile">ModelMuse.chm</config-value>
       <config-value name="deletetemp">1</config-value>
-      <config-value name="skin">c:\Program Files (x86)\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.53 Skins\Skins Horizontal Tabs\forest_green_horiz.hmskin</config-value>
+      <config-value name="skin">..\..\..\..\Program Files (x86)\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.53 Skins\Skins Horizontal Tabs\forest_green_horiz.hmskin</config-value>
     </config-group>
     <config-group name="hxs">
       <config-value name="namespace"></config-value>
@@ -405,14 +405,42 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <config-value name="topicsimpleheadercolor">#55DB5F</config-value>
       <config-value name="topicsimpletextcolor">#FFFFFF</config-value>
       <config-value name="navigationstyle">2</config-value>
-      <config-value name="frameeditor">0</config-value>
+      <config-value name="frameeditor">1</config-value>
       <config-value name="contentborder">1</config-value>
       <config-value name="contentwidth">30</config-value>
       <config-value name="headframeheight">30</config-value>
       <config-value name="headframescroll">0</config-value>
-      <config-value name="frametemplate" translate="true"></config-value>
-      <config-value name="headframesrc"></config-value>
-      <config-value name="headframehtml" translate="true"></config-value>
+      <config-value name="frametemplate" translate="true"><![CDATA[<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN"
+  "http://www.w3.org/TR/html4/frameset.dtd">
+<html>
+<head>
+<title><%TITLE%></title>
+<meta http-equiv="Content-Type" content="text/html; charset=<%DOCCHARSET%>">
+<script type="text/javascript" src="<%NAVIGATION_SCRIPT%>"></script>
+<script type="text/javascript">
+<!--
+var defaulttopic="<%HREF_DEFAULT_PAGE%>";
+if (location.href.lastIndexOf("?") > 0) defaulttopic=location.href.substring(location.href.lastIndexOf("?")+1,location.href.length).replace(/:/g,"");
+document.write('<frameset cols="30%,*" frameborder="1" framespacing="1">');
+if (document.getElementById) {
+  document.write('<frame name="hmnavigation" src="<%HREF_CONTENT_PAGE_DYN%>" title="Navigation frame">'); }
+else {
+  document.write('<frame name="hmnavigation" src="<%HREF_CONTENT_PAGE_STATIC%>" title="Navigation frame">'); }
+document.write('<frame name="hmcontent" src="' + defaulttopic + '" title="Content frame">');
+document.write('</frameset>');
+//-->
+</script>
+</head>
+<noscript>
+  <frameset cols="30%,*" frameborder="1" framespacing="1">
+    <frame name="hmnavigation" src="<%HREF_CONTENT_PAGE_STATIC%>" title="Navigation frame">
+    <frame name="hmcontent" src="<%HREF_DEFAULT_PAGE%>" title="Content frame">
+    <noframes>
+      This page requires frames<br><a href="<%HREF_CONTENT_PAGE_STATIC%>">Click here to view the table of contents without frames</a>
+    </noframes>
+  </frameset>
+</noscript>
+</html>]]></config-value>
       <config-value name="hasindex">1</config-value>
       <config-value name="hassearch">1</config-value>
       <config-value name="contentnumbers">0</config-value>
@@ -465,7 +493,8 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <config-value name="jpgquality">90</config-value>
       <config-value name="imagehint">1</config-value>
       <config-value name="outputfile">.\HTML\index.html</config-value>
-      <config-value name="skin">C:\Program Files (x86)\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.53 Skins\Skins Horizontal Tabs\forest_green_horiz.hmskin</config-value>
+      <config-value name="skin">forest_green_horiz.hmskin</config-value>
+      <config-value name="layoutthreeframe">0</config-value>
     </config-group>
     <config-group name="pdf">
       <config-value name="template">ModelMuseManual.mnl</config-value>
@@ -559,7 +588,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
     <config-group name="user">
       <config-group name="rbwinst-pr">
         <config-group name="project">
-          <config-value name="lastexport">0</config-value>
+          <config-value name="lastexport">3</config-value>
         </config-group>
       </config-group>
     </config-group>
@@ -567,8 +596,10 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <variable id="HEADDEPENDANTFLUXDESC" type="text" translate="true">In head dependant flux boundaries, the rate of flow from the boundary into or out of the groundwater varies in response to changes in head in the boundary cell.</variable>
       <variable id="SPECFLUXDESC" type="text" translate="true">In specified flux boundaries, the rate of fluid moving into or out of the groundwater is specified.  The head at the specified flux cell changes in response to the flux.</variable>
       <variable id="SPECHEADDESC" type="text" translate="true">In specified head boundaries, the head remains constant. Fluid is simulated as moving in or out of the groundwater at a rate sufficient to maintain the specified head.</variable>
+      <variable id="SUBTITLE" type="text" translate="true"></variable>
     </variables>
     <helpcontext-numbers>
+      <helpcontext-number href="_GMRES_Variables_Tab_Newton_So" value="3630"/>
       <helpcontext-number href="_GMRES_Variables_Tab_Newton_So" value="3630"/>
       <helpcontext-number href="_GMRES_Variables_Tab_Newton_So" value="3630"/>
       <helpcontext-number href="_GMRES_Variables_Tab_Newton_So" value="3630"/>
@@ -817,10 +848,11 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Farm_Allotment_Dialog_Box" value="3788"/>
       <helpcontext-number href="Farm_Climate_Dialog_Box" value="3787"/>
       <helpcontext-number href="Farm_Crop_Properties_Dialog_Bo" value="3785"/>
+      <helpcontext-number href="Farm_ID_in_FMP_Farm_Process_Pa" value="3940"/>
       <helpcontext-number href="Farm_Process_Options" value="3794"/>
       <helpcontext-number href="Farm_Soil_Properties_Dialog_Bo" value="3786"/>
       <helpcontext-number href="FarmParameters" value="3796"/>
-      <helpcontext-number href="Farms_in_FMP_Farm_Process" value="3789"/>
+      <helpcontext-number href="Farms_Dialog_Box" value="3932"/>
       <helpcontext-number href="Farms_Wells_in_FMP_Farm_Proces" value="3790"/>
       <helpcontext-number href="Features_CheckBoxes" value="3748"/>
       <helpcontext-number href="FHB_Flow_and_Head_Boundary_Pac" value="3782"/>
@@ -884,6 +916,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Grid2" value="1650"/>
       <helpcontext-number href="GridName" value="3606"/>
       <helpcontext-number href="GridNumber" value="3607"/>
+      <helpcontext-number href="GW_Allocation_Tab" value="3939"/>
       <helpcontext-number href="Handling_Discretization_in_SUB" value="3562"/>
       <helpcontext-number href="Head_and_Drawdown_Panes" value="2520"/>
       <helpcontext-number href="Head_Dependant_Flux" value="2660"/>
@@ -976,6 +1009,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Manage_Image_Settings" value="3576"/>
       <helpcontext-number href="Manage_Parameters_Dialog_Box" value="3584"/>
       <helpcontext-number href="Mandatory_Print_Flags" value="3800"/>
+      <helpcontext-number href="Mandatory_Print_Flags_2" value="3930"/>
       <helpcontext-number href="Math" value="660"/>
       <helpcontext-number href="Max" value="790"/>
       <helpcontext-number href="MaxI" value="800"/>
@@ -991,6 +1025,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Min" value="820"/>
       <helpcontext-number href="MinI" value="830"/>
       <helpcontext-number href="MinR" value="840"/>
+      <helpcontext-number href="MNW_and_NWT_Options" value="3929"/>
       <helpcontext-number href="MNW_Loss_Terms" value="3546"/>
       <helpcontext-number href="MNW1_Multi_Node_Well_Package_2" value="3921"/>
       <helpcontext-number href="MNW1_Multi_Node_Well_Package_2#Conductance" value="3924"/>
@@ -1284,7 +1319,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Subsidence_MM" value="3557"/>
       <helpcontext-number href="Summary" value="3250"/>
       <helpcontext-number href="Surface_Water_Flags" value="3799"/>
-      <helpcontext-number href="Surface_Water_Flags#IALLOT" value="3819"/>
+      <helpcontext-number href="Surface_Water_Flags#IALLOTSW" value="3819"/>
       <helpcontext-number href="SUTRA_Boundary_Condition_Panes" value="3749"/>
       <helpcontext-number href="SUTRA_Cross_Section_Dialog_Box" value="3695"/>
       <helpcontext-number href="SUTRA_Examples" value="3770"/>
@@ -1446,6 +1481,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Water_Supply_Study-Area_Descri" value="3412"/>
       <helpcontext-number href="WEL_Object_Pane" value="2190"/>
       <helpcontext-number href="WEL_Well_Package_Pane" value="2650"/>
+      <helpcontext-number href="WEL_Well_Package_Pane#PHIRAMP" value="3931"/>
       <helpcontext-number href="Well_Screens" value="3545"/>
       <helpcontext-number href="WellSections" value="3524"/>
       <helpcontext-number href="Wet_Dry_Flag_Meaning" value="3512"/>

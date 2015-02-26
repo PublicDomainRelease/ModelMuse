@@ -41,7 +41,8 @@ uses
   ModflowFmpPrecipitationUnit, ModflowFmpEvapUnit, ModflowFmpCropSpatialUnit,
   ModflowCfpPipeUnit, ModflowCfpFixedUnit, ModflowCfpRechargeUnit,
   ModflowSwrUnit, ModflowSwrDirectRunoffUnit, ModflowSwrReachUnit,
-  ObjectLabelUnit, ModflowMnw1Unit;
+  ObjectLabelUnit, ModflowMnw1Unit, CacheableSparseDataSets,
+  ModflowFmpFarmIdUnit;
 
 type
   //
@@ -293,11 +294,11 @@ type
   TCellElementSegmentList = class(TObjectList)
   private
     FGettingSegments: Boolean;
-    FHigher3DElevations: T3DSparseRealArray;
+    FHigher3DElevations: T3DSparseCacheableRealArray;
     // @name indicates whether or not @link(FHigher3DElevations) are
     // up-to-date.  If they aren't, they will be recalculated when needed.
     FHigher3DElevationsNeedsUpdating: boolean;
-    FLower3DElevations: T3DSparseRealArray;
+    FLower3DElevations: T3DSparseCacheableRealArray;
     // @name indicates whether or not @link(FLower3DElevations) are
     // up-to-date.  If they aren't, they will be recalculated when needed.
     FLower3DElevationsNeedsUpdating: boolean;
@@ -1389,13 +1390,11 @@ view. }
     FMt3dmsTransObservations: TMt3dmsTransObservations;
     FModflowFhbHeadBoundary: TFhbHeadBoundary;
     FModflowFhbFlowBoundary: TFhbFlowBoundary;
-  {$IFDEF FMP}
-    FModflowFarm: TFarm;
     FFmpWellBoundary: TFmpWellBoundary;
     FFmpPrecipBoundary: TFmpPrecipBoundary;
     FFmpRefEvapBoundary: TFmpRefEvapBoundary;
     FFmpCropIDBoundary: TFmpCropIDBoundary;
-  {$ENDIF}
+    FFmpFarmIDBoundary: TFmpFarmIDBoundary;
     FCfpPipes: TCfpPipeBoundary;
     FCfpFixedHeads: TCfpFixedBoundary;
     FCfpRchFraction: TCfpRchFractionBoundary;
@@ -1461,8 +1460,6 @@ view. }
       write FModflowFhbHeadBoundary;
     property ModflowFhbFlowBoundary: TFhbFlowBoundary read FModflowFhbFlowBoundary
       write FModflowFhbFlowBoundary;
-  {$IFDEF FMP}
-    property ModflowFarm: TFarm read FModflowFarm write FModflowFarm;
     property FmpWellBoundary: TFmpWellBoundary read FFmpWellBoundary
       write FFmpWellBoundary;
     property FmpPrecipBoundary: TFmpPrecipBoundary read FFmpPrecipBoundary
@@ -1471,7 +1468,8 @@ view. }
       write FFmpRefEvapBoundary;
     property FmpCropIDBoundary: TFmpCropIDBoundary read FFmpCropIDBoundary
       write FFmpCropIDBoundary;
-  {$ENDIF}
+    property FmpFarmIDBoundary: TFmpFarmIDBoundary read FFmpFarmIDBoundary
+      write FFmpFarmIDBoundary;
     property CfpPipes: TCfpPipeBoundary read FCfpPipes write FCfpPipes;
     property CfpFixedHeads: TCfpFixedBoundary read FCfpFixedHeads
       write FCfpFixedHeads;
@@ -1492,6 +1490,10 @@ view. }
 
     procedure Assign(Source: TModflowBoundaries);
     procedure StopTalkingToAnyone;
+    // @name returns @true if one of the MODFLOW boundary conditions uses
+    // ATime.
+    function UsesATime(ATime: Double): Boolean;
+    procedure ReplaceATime(OldTime, NewTime: Double);
   end;
 
   TUsedWithModelItem = class(TPhastCollectionItem)
@@ -2551,10 +2553,6 @@ view. }
     procedure SetModflowFhbFlowBoundary(const Value: TFhbFlowBoundary);
     function StoreModflowFhbFlowBoundary: Boolean;
     function Get_SetValuesByInterpolation: boolean;
-  {$IFDEF FMP}
-    function GetModflowFmpFarm: TFarm;
-    procedure SetModflowFmpFarm(const Value: TFarm);
-    function StoreModflowFmpFarm: Boolean;
     procedure SetModflowFmpWellBoundary(const Value: TFmpWellBoundary);
     function GetModflowFmpWellBoundary: TFmpWellBoundary;
     function StoreModflowFmpWellBoundary: Boolean;
@@ -2567,7 +2565,9 @@ view. }
     function GetModflowFmpCropID: TFmpCropIDBoundary;
     procedure SetModflowFmpCropID(const Value: TFmpCropIDBoundary);
     function StoreModflowFmpCropID: Boolean;
-  {$ENDIF}
+    function GetModflowFmpFarmID: TFmpFarmIDBoundary;
+    procedure SetModflowFmpFarmID(const Value: TFmpFarmIDBoundary);
+    function StoreModflowFmpFarmID: Boolean;
     function GetModflowCfpPipes: TCfpPipeBoundary;
     procedure SetModflowCfpPipes(const Value: TCfpPipeBoundary);
     function StoreModflowCfpPipes: Boolean;
@@ -3105,6 +3105,8 @@ view. }
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); overload;
+    procedure GetModelDimensions(AModel: TBaseModel; var NumberOfLayers, NumberOfRows,
+      NumberOfColumns: Integer);
   public
     property FullObjectIntersectLength: Boolean read FFullObjectIntersectLength
       write FFullObjectIntersectLength;
@@ -3149,13 +3151,11 @@ view. }
     procedure CreateMt3dmsTransObservations;
     procedure CreateFhbHeadBoundary;
     procedure CreateFhbFlowBoundary;
-  {$IFDEF FMP}
-    procedure CreateFarm;
     procedure CreateFarmWell;
     procedure CreateFarmPrecip;
     procedure CreateFarmRefEvap;
     procedure CreateFarmCropID;
-  {$ENDIF}
+    procedure CreateFarmID;
     procedure CreateCfpBoundary;
     procedure CreateCfpFixedHeads;
     procedure CreateCfpRchFraction;
@@ -3590,6 +3590,10 @@ having them take care of the subscriptions. }
     property SfrSegmentNumber: integer read FSfrSegmentNumber
       write FSfrSegmentNumber;
     procedure StopTalkingToAnyone; override;
+    // @name returns @true if one of the MODFLOW boundary conditions uses
+    // ATime.
+    function UsesATime(ATime: Double): Boolean;
+    procedure ReplaceATime(OldTime, NewTime: Double);
   published
     // @name is deprecated.
     property ChildModelDiscretization: integer read FChildModelDiscretization
@@ -3780,9 +3784,6 @@ having them take care of the subscriptions. }
       write SetModflowFhbHeadBoundary stored StoreModflowFhbHeadBoundary;
     property ModflowFhbFlowBoundary: TFhbFlowBoundary read GetModflowFhbFlowBoundary
       write SetModflowFhbFlowBoundary stored StoreModflowFhbFlowBoundary;
-  {$IFDEF FMP}
-    property ModflowFmpFarm: TFarm read GetModflowFmpFarm
-      write SetModflowFmpFarm stored StoreModflowFmpFarm;
     property ModflowFmpWellBoundary: TFmpWellBoundary read GetModflowFmpWellBoundary
       write SetModflowFmpWellBoundary stored StoreModflowFmpWellBoundary;
     property ModflowFmpPrecip: TFmpPrecipBoundary read GetModflowFmpPrecip
@@ -3791,7 +3792,8 @@ having them take care of the subscriptions. }
       write SetModflowFmpRefEvap Stored StoreModflowFmpRefEvap;
     property ModflowFmpCropID: TFmpCropIDBoundary read GetModflowFmpCropID
       write SetModflowFmpCropID Stored StoreModflowFmpCropID;
-  {$ENDIF}
+    property ModflowFmpFarmID: TFmpFarmIDBoundary read GetModflowFmpFarmID
+      write SetModflowFmpFarmID Stored StoreModflowFmpFarmID;
     property ModflowCfpPipes: TCfpPipeBoundary read GetModflowCfpPipes
       write SetModflowCfpPipes stored StoreModflowCfpPipes;
     property ModflowCfpFixedHeads: TCfpFixedBoundary read GetModflowCfpFixedHeads
@@ -4523,11 +4525,9 @@ SectionStarts.}
     constructor Create(ScreenObject: TScreenObject); override;
   end;
 
-{$IFDEF FMP}
   TModflowFmpDelegate = class(TModflowDelegate)
     constructor Create(ScreenObject: TScreenObject); override;
   end;
-{$ENDIF}
 
   TModflowCfpDelegate = class(TModflowDelegate)
     constructor Create(ScreenObject: TScreenObject); override;
@@ -6197,13 +6197,11 @@ begin
   ModflowHydmodData := AScreenObject.ModflowHydmodData;
   ModflowFhbHeadBoundary := AScreenObject.ModflowFhbHeadBoundary;
   ModflowFhbFlowBoundary := AScreenObject.ModflowFhbFlowBoundary;
-{$IFDEF FMP}
-  ModflowFmpFarm := AScreenObject.ModflowFmpFarm;
   ModflowFmpWellBoundary := AScreenObject.ModflowFmpWellBoundary;
   ModflowFmpPrecip := AScreenObject.ModflowFmpPrecip;
   ModflowFmpRefEvap := AScreenObject.ModflowFmpRefEvap;
   ModflowFmpCropID := AScreenObject.ModflowFmpCropID;
-{$ENDIF}
+  ModflowFmpFarmID := AScreenObject.ModflowFmpFarmID;
   ModflowCfpPipes := AScreenObject.ModflowCfpPipes;
   ModflowCfpFixedHeads := AScreenObject.ModflowCfpFixedHeads;
   ModflowCfpRchFraction := AScreenObject.ModflowCfpRchFraction;
@@ -7407,9 +7405,8 @@ begin
         begin
           Draw1ElevPhast(Direction, Bitmap32, DrawAsSelected);
         end;
-      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-        {$IFDEF FMP}, msModflowFmp {$ENDIF}
-        , msModflowCfp:
+      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+        msModflowFmp, msModflowCfp:
         begin
           Draw1ElevModflow(Direction, Bitmap32, DrawAsSelected,
             (Model as TPhastModel).SelectedModel);
@@ -7427,6 +7424,9 @@ end;
 procedure TScreenObject.Draw0Elev(
   Const Bitmap32: TBitmap32; const Direction:
   TViewDirection; const DrawAsSelected: Boolean = False);
+const
+  SelectedOpacity = 192;
+  UnselectedOpacity = 125;
 var
   IntPoint: TPoint;
   Index: integer;
@@ -7462,11 +7462,11 @@ begin
     begin
       if DrawAsSelected then
       begin
-        FillColor32 := SetAlpha(FillColor32, 192);
+        FillColor32 := SetAlpha(FillColor32, SelectedOpacity);
       end
       else
       begin
-        FillColor32 := SetAlpha(FillColor32, 128);
+        FillColor32 := SetAlpha(FillColor32, UnselectedOpacity);
       end;
     end
     else
@@ -7474,7 +7474,7 @@ begin
       if DrawAsSelected then
       begin
         FillColor32 := Color32(clSilver);
-        FillColor32 := SetAlpha(FillColor32, 128);
+        FillColor32 := SetAlpha(FillColor32, UnselectedOpacity);
       end
       else
       begin
@@ -8067,7 +8067,11 @@ var
   DataArrayManager: TDataArrayManager;
   LocalModel: TPhastModel;
 begin
-  if csDestroying in ComponentState then
+  if (csDestroying in ComponentState) then
+  begin
+    Exit;
+  end;
+  if (FModel <> nil) and (FModel as TPhastModel).Clearing then
   begin
     Exit;
   end;
@@ -8354,11 +8358,6 @@ begin
     begin
       ModflowFhbFlowBoundary.InvalidateDisplay;
     end;
-  {$IFDEF FMP}
-//    if ModflowFmpFarm <> nil then
-//    begin
-//      ModflowFmpFarm.InvalidateDisplay;
-//    end;
     if ModflowFmpWellBoundary <> nil then
     begin
       ModflowFmpWellBoundary.InvalidateDisplay;
@@ -8375,7 +8374,10 @@ begin
     begin
       ModflowFmpCropID.InvalidateDisplay;
     end;
-  {$ENDIF}
+    if ModflowFmpFarmID <> nil then
+    begin
+      ModflowFmpFarmID.InvalidateDisplay;
+    end;
 //    if ModflowCfpPipes <> nil then
 //    begin
 //      ModflowCfpPipes.InvalidateDisplay;
@@ -8618,7 +8620,8 @@ begin
           NewUseList.Free;
         end;
 
-        if not (csDestroying in Model.ComponentState) then
+        if not (csDestroying in Model.ComponentState)
+          and not (FModel as TPhastModel).Clearing then
         begin
           Observer.UpToDate := True;
           Observer.UpToDate := False;
@@ -8626,7 +8629,8 @@ begin
           Observer.UpToDate := True;
         end;
       finally
-        if not (csDestroying in Model.ComponentState) then
+        if not (csDestroying in Model.ComponentState)
+          and not (FModel as TPhastModel).Clearing then
         begin
           if Observer.IsRecursive then
           begin
@@ -10903,9 +10907,8 @@ var
               else Assert(False);
             end;
           end;
-        msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-          {$IFDEF FMP}, msModflowFmp {$ENDIF}
-          , msModflowCfp:
+        msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+          msModflowFmp, msModflowCfp:
           begin
             Assert(EvaluatedAt = eaBlocks);
             BlockTop := LocalModel.ModflowGrid.
@@ -12298,24 +12301,6 @@ begin
   end;
 end;
 
-{$IFDEF FMP}
-procedure TScreenObject.SetModflowFmpFarm(const Value: TFarm);
-begin
-  if (Value = nil) or not Value.Used then
-  begin
-    if ModflowBoundaries.FModflowFarm <> nil then
-    begin
-      InvalidateModel;
-    end;
-    FreeAndNil(ModflowBoundaries.FModflowFarm);
-  end
-  else
-  begin
-    CreateFarm;
-    ModflowBoundaries.FModflowFarm.Assign(Value);
-  end;
-end;
-
 procedure TScreenObject.SetModflowFmpPrecip(const Value: TFmpPrecipBoundary);
 begin
   if (Value = nil) or not Value.Used then
@@ -12367,6 +12352,23 @@ begin
   end;
 end;
 
+procedure TScreenObject.SetModflowFmpFarmID(const Value: TFmpFarmIDBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FFmpFarmIDBoundary <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FFmpFarmIDBoundary);
+  end
+  else
+  begin
+    CreateFarmID;
+    ModflowBoundaries.FFmpFarmIDBoundary.Assign(Value);
+  end;
+end;
+
 procedure TScreenObject.SetModflowFmpWellBoundary(const Value: TFmpWellBoundary);
 begin
   if (Value = nil) or not Value.Used then
@@ -12383,9 +12385,6 @@ begin
     ModflowBoundaries.FFmpWellBoundary.Assign(Value);
   end;
 end;
-
-
-{$ENDIF}
 
 procedure TScreenObject.SetModflowGhbBoundary(const Value: TGhbBoundary);
 begin
@@ -12871,9 +12870,8 @@ begin
         begin
           Draw2ElevPhast(Direction, Bitmap32);
         end;
-      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-        {$IFDEF FMP}, msModflowFmp {$ENDIF}
-        , msModflowCfp:
+      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+        msModflowFmp, msModflowCfp:
         begin
           Draw2ElevModflow(Direction, Bitmap32, (Model as TPhastModel).SelectedModel);
         end;
@@ -13321,7 +13319,8 @@ begin
           NewUseList.Free;
         end;
 
-        if not (csDestroying in Model.ComponentState) then
+        if not (csDestroying in Model.ComponentState)
+          and not (FModel as TPhastModel).Clearing then
         begin
           Observer.UpToDate := True;
           Observer.UpToDate := False;
@@ -13329,7 +13328,8 @@ begin
           Observer.UpToDate := True;
         end;
       finally
-        if not (csDestroying in Model.ComponentState) then
+        if not (csDestroying in Model.ComponentState)
+          and not (FModel as TPhastModel).Clearing then
         begin
           if Observer.IsRecursive then
           begin
@@ -13787,17 +13787,92 @@ begin
   end;
 end;
 
+procedure TScreenObject.GetModelDimensions(AModel: TBaseModel;
+  var NumberOfLayers, NumberOfRows, NumberOfColumns: Integer);
+var
+  LocalModel: TCustomModel;
+  Mesh: TSutraMesh3D;
+  Grid: TCustomModelGrid;
+begin
+  if AModel = nil then
+  begin
+    NumberOfLayers := 0;
+    NumberOfRows := 0;
+    NumberOfColumns := 0;
+  end
+  else
+  begin
+    LocalModel := AModel as TCustomModel;
+    if LocalModel.ModelSelection = msSutra22 then
+    begin
+      Mesh := LocalModel.SutraMesh;
+      if Mesh <> nil then
+      begin
+
+        if (LocalModel.Mesh.MeshType = mt3D)
+          and (EvaluatedAt = eaNodes)
+          {and (Orientation = dso3D)} then
+        begin
+          NumberOfLayers := frmGoPhast.PhastModel.
+            SutraLayerStructure.LayerCount+1;
+        end
+        else
+        begin
+          NumberOfLayers := frmGoPhast.PhastModel.
+            SutraLayerStructure.LayerCount;
+        end;
+        NumberOfRows := 1;
+        case EvaluatedAt of
+          eaBlocks: NumberOfColumns := Mesh.Mesh2D.Elements.Count;
+          eaNodes: NumberOfColumns := Mesh.Mesh2D.Nodes.Count;
+          else Assert(False);
+        end;
+      end
+      else
+      begin
+        NumberOfLayers := 0;
+        NumberOfRows := 0;
+        NumberOfColumns := 0;
+      end;
+    end
+    else
+    begin
+      Grid := LocalModel.Grid;
+      if Grid <> nil then
+      begin
+        case EvaluatedAt of
+          eaBlocks:
+            begin
+              NumberOfLayers := Grid.LayerCount;
+              NumberOfRows := Grid.RowCount;
+              NumberOfColumns := Grid.ColumnCount;
+            end;
+          eaNodes:
+            begin
+              NumberOfLayers := Grid.LayerCount+1;
+              NumberOfRows := Grid.RowCount+1;
+              NumberOfColumns := Grid.ColumnCount+1;
+            end;
+        end;
+      end
+    end;
+  end;
+end;
+
 procedure TScreenObject.AssignHigher3DElevations(AModel: TBaseModel);
 var
   Formula: string;
   TempValues: TValueArrayStorage;
+  NumberOfLayers: Integer;
+  NumberOfRows: Integer;
+  NumberOfColumns: Integer;
 begin
   Assert(ElevationCount <> ecZero);
   FSegments := FSegModelAssoc.AssociatedSegmentList[AModel];
-  if FSegments.FHigher3DElevations = nil then
-  begin
-    FSegments.FHigher3DElevations := T3DSparseRealArray.Create(SPASmall);
-  end;
+  FSegments.FHigher3DElevations.Free;
+  GetModelDimensions(AModel, NumberOfLayers, NumberOfRows, NumberOfColumns);
+  FSegments.FHigher3DElevations := T3DSparseCacheableRealArray.Create(
+    GetQuantum(NumberOfLayers), GetQuantum(NumberOfRows), GetQuantum(NumberOfColumns));
 
   FSegments.FHigher3DElevations.Clear;
   TempValues := FCurrentValues;
@@ -13847,13 +13922,17 @@ procedure TScreenObject.AssignLower3DElevations(AModel: TBaseModel);
 var
   Formula: string;
   TempValues: TValueArrayStorage;
+  NumberOfLayers: Integer;
+  NumberOfRows: Integer;
+  NumberOfColumns: Integer;
 begin
   Assert(ElevationCount = ecTwo);
   FSegments := FSegModelAssoc.AssociatedSegmentList[AModel];
-  if FSegments.FLower3DElevations = nil then
-  begin
-    FSegments.FLower3DElevations := T3DSparseRealArray.Create(SPASmall);
-  end;
+  FSegments.FLower3DElevations.Free;
+  GetModelDimensions(AModel, NumberOfLayers, NumberOfRows, NumberOfColumns);
+  FSegments.FLower3DElevations := T3DSparseCacheableRealArray.Create(
+    GetQuantum(NumberOfLayers), GetQuantum(NumberOfRows), GetQuantum(NumberOfColumns));
+
   FSegments.FLower3DElevations.Clear;
   Formula := LowerElevationFormula;
   TempValues := FCurrentValues;
@@ -15379,6 +15458,15 @@ begin
   end;
 end;
 
+function TScreenObject.UsesATime(ATime: Double): Boolean;
+begin
+  result := False;
+  if FModflowBoundaries <> nil then
+  begin
+    Result := FModflowBoundaries.UsesATime(ATime);
+  end;
+end;
+
 procedure TScreenObject.InitializeVariables(const UsedVariables: TStringList;
   const DataSet: TDataArray; const Expression: TExpression;
   const Compiler: TRbwParser);
@@ -16190,6 +16278,14 @@ begin
   end;
 end;
 
+procedure TScreenObject.ReplaceATime(OldTime, NewTime: Double);
+begin
+  if FModflowBoundaries <> nil then
+  begin
+    FModflowBoundaries.ReplaceATime(OldTime, NewTime);
+  end;
+end;
+
 procedure TScreenObject.CreateOrRetrieveBoundaryFormulaObject(const Index: Integer;
   ADataSet: TDataArray; var FormulaObject: TFormulaObject);
 begin
@@ -16708,11 +16804,6 @@ procedure TScreenObject.Loaded;
 var
   Index: Integer;
   Observer: TObserver;
-  {$IFDEF FMP}
-  DataArrayIndex: Integer;
-  LocalModel: TPhastModel;
-  DataArray: TDataArray;
-  {$ENDIF}
 begin
   inherited;
   if FLeakyBoundary <> nil then
@@ -16845,12 +16936,6 @@ begin
   begin
     FreeAndNil(ModflowBoundaries.FModflowFhbFlowBoundary);
   end;
-  {$IFDEF FMP}
-  if (ModflowBoundaries.FModflowFarm <> nil)
-    and not ModflowBoundaries.FModflowFarm.Used then
-  begin
-    FreeAndNil(ModflowBoundaries.FModflowFarm);
-  end;
   if (ModflowBoundaries.FFmpWellBoundary <> nil)
     and not ModflowBoundaries.FFmpWellBoundary.Used then
   begin
@@ -16871,23 +16956,11 @@ begin
   begin
     FreeAndNil(ModflowBoundaries.FFmpCropIDBoundary);
   end;
-
-  if (ModflowBoundaries.FModflowFarm <> nil) then
+  if (ModflowBoundaries.FFmpFarmIDBoundary <> nil)
+    and not ModflowBoundaries.FFmpFarmIDBoundary.Used then
   begin
-    ModflowBoundaries.FModflowFarm.Loaded;
-
-    LocalModel := (Model as TPhastModel);
-    DataArray := LocalModel.DataArrayManager.GetDataSetByName(KFarmID);
-    DataArrayIndex := IndexOfDataSet(DataArray);
-    if DataArrayIndex < 0 then
-    begin
-      DataArrayIndex := AddDataSet(DataArray);
-      DataSetFormulas[DataArrayIndex] :=
-        IntToStr(ModflowBoundaries.FModflowFarm.FarmId);
-    end;
+    FreeAndNil(ModflowBoundaries.FFmpFarmIDBoundary);
   end;
-  {$ENDIF}
-
 
   if ModflowBoundaries.FModflowHydmodData <> nil then
   begin
@@ -17062,9 +17135,7 @@ begin
     ptEVT: result := ModflowEvtBoundary;
     ptETS: result := ModflowEtsBoundary;
     ptStr: result := ModflowStrBoundary;
-  {$IFDEF FMP}
     ptQMax: result := ModflowFmpWellBoundary;
-  {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -17483,7 +17554,9 @@ end;
 procedure TScreenObject.NotifyGuiOfChange(Sender: TObject);
 begin
   if not (csDestroying in ComponentState)
-    and (FModel <> nil) and FCanInvalidateModel then
+    and (FModel <> nil) and FCanInvalidateModel
+    and not (csDestroying in FModel.ComponentState)
+    and not (FModel as TPhastModel).Clearing then
   begin
     (FModel as TPhastModel).ScreenObjectsChanged(Sender);
   end;
@@ -17530,6 +17603,8 @@ end;
 
 procedure TScreenObject.DrawSegmentList(const Direction: TViewDirection;
   const Bitmap32: TBitmap32; SegmentList: TList);
+const
+  UnselectedOpacity = 125;
 var
   FillColor32: TColor32;
   LineColor32: TColor32;
@@ -17603,7 +17678,7 @@ begin
         if FillScreenObject then
         begin
           FillColor32 := Color32(FillColor);
-          FillColor32 := SetAlpha(FillColor32, 128);
+          FillColor32 := SetAlpha(FillColor32, UnselectedOpacity);
         end
         else
         begin
@@ -19798,7 +19873,11 @@ var
   LocalChild: TChildModel;
 begin
   if (frmGoPhast.PhastModel <> nil)
-    and (csDestroying in frmGoPhast.PhastModel.ComponentState) then Exit;
+    and ((csDestroying in frmGoPhast.PhastModel.ComponentState)
+    or frmGoPhast.PhastModel.Clearing) then
+  begin
+    Exit;
+  end;
   inherited;
   if Value then
   begin
@@ -21405,12 +21484,10 @@ begin
           begin
             Item.DelegateClass := TModflowNWTDelegate.ClassName;
           end;
-      {$IFDEF FMP}
         msModflowFmp:
           begin
             Item.DelegateClass := TModflowFmpDelegate.ClassName;
           end;
-      {$ENDIF}
         msModflowCfp:
           begin
             Item.DelegateClass := TModflowCfpDelegate.ClassName;
@@ -28878,17 +28955,16 @@ begin
     and (ModflowFhbHeadBoundary <> nil) and ModflowFhbHeadBoundary.Used;
 end;
 
-{$IFDEF FMP}
 function TScreenObject.StoreModflowFmpCropID: Boolean;
 begin
   result := (FModflowBoundaries <> nil)
     and (ModflowFmpCropID <> nil) and ModflowFmpCropID.Used;
 end;
 
-function TScreenObject.StoreModflowFmpFarm: Boolean;
+function TScreenObject.StoreModflowFmpFarmID: Boolean;
 begin
   result := (FModflowBoundaries <> nil)
-    and (ModflowFmpFarm <> nil) and ModflowFmpFarm.Used;
+    and (ModflowFmpFarmID <> nil) and ModflowFmpFarmID.Used;
 end;
 
 function TScreenObject.StoreModflowFmpPrecip: Boolean;
@@ -28908,8 +28984,6 @@ begin
   result := (FModflowBoundaries <> nil)
     and (ModflowFmpWellBoundary <> nil) and ModflowFmpWellBoundary.Used;
 end;
-
-{$ENDIF}
 
 function TScreenObject.StoreModflowGhbBoundary: Boolean;
 begin
@@ -29587,24 +29661,6 @@ begin
   end;
 end;
 
-{$IFDEF FMP}
-function TScreenObject.GetModflowFmpFarm: TFarm;
-begin
-  if (FModel = nil)
-    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
-  begin
-    CreateFarm;
-  end;
-  if FModflowBoundaries = nil then
-  begin
-    result := nil;
-  end
-  else
-  begin
-    result := ModflowBoundaries.FModflowFarm;
-  end;
-end;
-
 function TScreenObject.GetModflowFmpPrecip: TFmpPrecipBoundary;
 begin
   if (FModel = nil)
@@ -29656,6 +29712,23 @@ begin
   end;
 end;
 
+function TScreenObject.GetModflowFmpFarmID: TFmpFarmIDBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateFarmID;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FFmpFarmIDBoundary;
+  end;
+end;
+
 function TScreenObject.GetModflowFmpWellBoundary: TFmpWellBoundary;
 begin
   if (FModel = nil)
@@ -29672,8 +29745,6 @@ begin
     result := ModflowBoundaries.FFmpWellBoundary;
   end;
 end;
-
-{$ENDIF}
 
 function TScreenObject.GetModflowGhbBoundary: TGhbBoundary;
 begin
@@ -30165,7 +30236,8 @@ begin
           NewUseList.Free;
         end;
 
-        if not (csDestroying in Model.ComponentState) then
+        if not (csDestroying in Model.ComponentState)
+         and not Model.Clearing then
         begin
           Observer.UpToDate := True;
           Observer.UpToDate := False;
@@ -30173,7 +30245,8 @@ begin
           Observer.UpToDate := True;
         end;
       finally
-        if not (csDestroying in Model.ComponentState) then
+        if not (csDestroying in Model.ComponentState)
+          and not Model.Clearing then
         begin
           if Observer.IsRecursive then
           begin
@@ -30352,14 +30425,8 @@ begin
     ModflowStrBoundary.UpdateTimes(ModflowTimes,
       StartTestTime, EndTestTime, StartRangeExtended,EndRangeExtended);
   end;
-  {$IFDEF FMP}
   if PhastModel.FarmProcessIsSelected then
   begin
-    if (ModflowFmpFarm <> nil) and ModflowFmpFarm.Used then
-    begin
-      ModflowFmpFarm.UpdateTimes(ModflowTimes,
-        StartTestTime, EndTestTime, StartRangeExtended,EndRangeExtended);
-    end;
     if (ModflowFmpWellBoundary <> nil) and ModflowFmpWellBoundary.Used then
     begin
       ModflowFmpWellBoundary.UpdateTimes(ModflowTimes,
@@ -30380,8 +30447,13 @@ begin
       ModflowFmpCropID.UpdateTimes(ModflowTimes,
         StartTestTime, EndTestTime, StartRangeExtended,EndRangeExtended);
     end;
+    if (ModflowFmpFarmID <> nil) and ModflowFmpFarmID.Used then
+    begin
+      ModflowFmpFarmID.UpdateTimes(ModflowTimes,
+        StartTestTime, EndTestTime, StartRangeExtended,EndRangeExtended);
+    end;
   end;
-  {$ENDIF}
+
   if PhastModel.CfpRechargeIsSelected(nil) then
   begin
     if (ModflowCfpRchFraction <> nil) and ModflowCfpRchFraction.Used then
@@ -32160,10 +32232,13 @@ procedure TScreenObject.Draw1ElevSutra(const Direction: TViewDirection;
   const Bitmap32: TBitmap32; const DrawAsSelected: Boolean);
 begin
   // incomplete
+  { TODO -cSUTRA : This needs to be finished. }
 end;
 
 procedure TScreenObject.Draw2ElevPhast(const Direction: TViewDirection;
   const Bitmap32: TBitmap32);
+const
+  UnselectedOpacity = 125;
 var
   Segment: TLineSegment;
   SegmentFound: Boolean;
@@ -32872,7 +32947,7 @@ begin
             if FillScreenObject then
             begin
               FillColor32 := Color32(FillColor);
-              FillColor32 := SetAlpha(FillColor32, 128);
+              FillColor32 := SetAlpha(FillColor32, UnselectedOpacity);
             end
             else
             begin
@@ -33760,15 +33835,6 @@ begin
   end;
 end;
 
-{$IFDEF FMP}
-procedure TScreenObject.CreateFarm;
-begin
-  if (ModflowBoundaries.FModflowFarm = nil) then
-  begin
-    ModflowBoundaries.FModflowFarm := TFarm.Create(FModel, self);
-  end;
-end;
-
 procedure TScreenObject.CreateFarmWell;
 begin
   if (ModflowBoundaries.FFmpWellBoundary = nil) then
@@ -33801,7 +33867,13 @@ begin
   end;
 end;
 
-{$ENDIF}
+procedure TScreenObject.CreateFarmID;
+begin
+  if (ModflowBoundaries.FFmpFarmIDBoundary = nil) then
+  begin
+    ModflowBoundaries.FFmpFarmIDBoundary := TFmpFarmIDBoundary.Create(FModel, self);
+  end;
+end;
 
 procedure TScreenObject.CreateFhbFlowBoundary;
 begin
@@ -36546,20 +36618,6 @@ begin
     FModflowFhbFlowBoundary.Assign(Source.FModflowFhbFlowBoundary);
   end;
 
-{$IFDEF FMP}
-  if Source.FModflowFarm = nil then
-  begin
-    FreeAndNil(FModflowFarm);
-  end
-  else
-  begin
-    if FModflowFarm = nil then
-    begin
-      FModflowFarm := TFarm.Create(nil, nil);
-    end;
-    FModflowFarm.Assign(Source.FModflowFarm);
-  end;
-
   if Source.FFmpWellBoundary = nil then
   begin
     FreeAndNil(FFmpWellBoundary);
@@ -36611,7 +36669,19 @@ begin
     end;
     FFmpCropIDBoundary.Assign(Source.FFmpCropIDBoundary);
   end;
-{$ENDIF}
+
+  if Source.FFmpFarmIDBoundary = nil then
+  begin
+    FreeAndNil(FFmpFarmIDBoundary);
+  end
+  else
+  begin
+    if FFmpFarmIDBoundary = nil then
+    begin
+      FFmpFarmIDBoundary := TFmpFarmIDBoundary.Create(nil, nil);
+    end;
+    FFmpFarmIDBoundary.Assign(Source.FFmpFarmIDBoundary);
+  end;
 
   if Source.FCfpPipes = nil then
   begin
@@ -36745,13 +36815,11 @@ begin
   FCfpRchFraction.Free;
   CfpFixedHeads.Free;
   CfpPipes.Free;
-{$IFDEF FMP}
+  FmpFarmIDBoundary.Free;
   FmpCropIDBoundary.Free;
   FFmpRefEvapBoundary.Free;
   FFmpPrecipBoundary.Free;
   FFmpWellBoundary.Free;
-  FModflowFarm.Free;
-{$ENDIF}
   FModflowFhbFlowBoundary.Free;
   FModflowFhbHeadBoundary.Free;
   FMt3dmsTransObservations.Free;
@@ -36872,11 +36940,6 @@ begin
   begin
     FreeAndNil(FModflowFhbFlowBoundary);
   end;
-{$IFDEF FMP}
-  if (FModflowFarm <> nil) and not FModflowFarm.Used then
-  begin
-    FreeAndNil(FModflowFarm);
-  end;
   if (FFmpWellBoundary <> nil) and not FFmpWellBoundary.Used then
   begin
     FreeAndNil(FFmpWellBoundary);
@@ -36889,7 +36952,10 @@ begin
   begin
     FreeAndNil(FFmpRefEvapBoundary);
   end;
-{$ENDIF}
+  if (FFmpFarmIDBoundary <> nil) and not FFmpFarmIDBoundary.Used then
+  begin
+    FreeAndNil(FFmpFarmIDBoundary);
+  end;
   if (FCfpPipes <> nil) and not FCfpPipes.Used then
   begin
     FreeAndNil(FCfpPipes);
@@ -37055,12 +37121,6 @@ begin
     FModflowFhbFlowBoundary.Invalidate;
   end;
 
-  {$IFDEF FMP}
-  if FModflowFarm <> nil then
-  begin
-    FModflowFarm.Invalidate;
-  end;
-
   if FFmpWellBoundary <> nil then
   begin
     FFmpWellBoundary.Invalidate;
@@ -37085,7 +37145,11 @@ begin
   begin
     FFmpCropIDBoundary.Invalidate;
   end;
-  {$ENDIF}
+
+  if FFmpFarmIDBoundary <> nil then
+  begin
+    FFmpFarmIDBoundary.Invalidate;
+  end;
 
   if FCfpPipes <> nil then
   begin
@@ -37227,11 +37291,6 @@ begin
   begin
     FModflowFhbFlowBoundary.RemoveModelLink(AModel);
   end;
-{$IFDEF FMP}
-//  if FModflowFarm <> nil then
-//  begin
-//    FModflowFarm.RemoveModelLink(AModel);
-//  end;
   if FFmpWellBoundary <> nil then
   begin
     FFmpWellBoundary.RemoveModelLink(AModel);
@@ -37248,7 +37307,10 @@ begin
   begin
     FFmpCropIDBoundary.RemoveModelLink(AModel);
   end;
-{$ENDIF}
+  if FFmpFarmIDBoundary <> nil then
+  begin
+    FFmpFarmIDBoundary.RemoveModelLink(AModel);
+  end;
   if FCfpRchFraction <> nil then
   begin
     FCfpRchFraction.RemoveModelLink(AModel);
@@ -37287,6 +37349,172 @@ begin
   begin
     FSwrReaches.RemoveModelLink(AModel);
   end;
+end;
+
+procedure TModflowBoundaries.ReplaceATime(OldTime, NewTime: Double);
+begin
+  if FModflowChdBoundary <> nil then
+  begin
+    FModflowChdBoundary.Values.ReplaceATime(OldTime, NewTime);
+    FModflowChdBoundary.Parameters.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FModflowEtsBoundary <> nil then
+  begin
+    FModflowEtsBoundary.Values.ReplaceATime(OldTime, NewTime);
+    FModflowEtsBoundary.Parameters.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FModflowEvtBoundary <> nil then
+  begin
+    FModflowEvtBoundary.Values.ReplaceATime(OldTime, NewTime);
+    FModflowEvtBoundary.Parameters.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FModflowDrnBoundary <> nil then
+  begin
+    FModflowDrnBoundary.Values.ReplaceATime(OldTime, NewTime);
+    FModflowDrnBoundary.Parameters.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FModflowDrtBoundary <> nil then
+  begin
+    FModflowDrtBoundary.Values.ReplaceATime(OldTime, NewTime);
+    FModflowDrtBoundary.Parameters.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FModflowGhbBoundary <> nil then
+  begin
+    FModflowGhbBoundary.Values.ReplaceATime(OldTime, NewTime);
+    FModflowGhbBoundary.Parameters.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FModflowLakBoundary <> nil then
+  begin
+    FModflowLakBoundary.Values.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FModflowRchBoundary <> nil then
+  begin
+    FModflowRchBoundary.Values.ReplaceATime(OldTime, NewTime);
+    FModflowRchBoundary.Parameters.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FModflowResBoundary <> nil then
+  begin
+    FModflowResBoundary.Values.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FModflowRivBoundary <> nil then
+  begin
+    FModflowRivBoundary.Values.ReplaceATime(OldTime, NewTime);
+    FModflowRivBoundary.Parameters.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FModflowSfrBoundary <> nil then
+  begin
+    FModflowSfrBoundary.Values.ReplaceATime(OldTime, NewTime);
+    FModflowSfrBoundary.ChannelValues.ReplaceATime(OldTime, NewTime);
+    FModflowSfrBoundary.UpstreamSegmentValues.ReplaceATime(OldTime, NewTime);
+    FModflowSfrBoundary.DownstreamSegmentValues.ReplaceATime(OldTime, NewTime);
+    FModflowSfrBoundary.UpstreamUnsatSegmentValues.ReplaceATime(OldTime, NewTime);
+    FModflowSfrBoundary.DownstreamUnsatSegmentValues.ReplaceATime(OldTime, NewTime);
+    FModflowSfrBoundary.TableCollection.ReplaceATime(OldTime, NewTime);
+    FModflowSfrBoundary.SegmentFlows.ReplaceATime(OldTime, NewTime);
+    FModflowSfrBoundary.EquationValues.ReplaceATime(OldTime, NewTime);
+    FModflowSfrBoundary.ParamIcalc.ReplaceATime(OldTime, NewTime);
+    FModflowSfrBoundary.EquationValues.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FModflowStrBoundary <> nil then
+  begin
+    FModflowStrBoundary.Values.ReplaceATime(OldTime, NewTime);
+    FModflowStrBoundary.Parameters.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FModflowWellBoundary <> nil then
+  begin
+    FModflowWellBoundary.Values.ReplaceATime(OldTime, NewTime);
+    FModflowWellBoundary.Parameters.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FModflowUzfBoundary <> nil then
+  begin
+    FModflowUzfBoundary.Values.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FModflowMnw2Boundary <> nil then
+  begin
+    FModflowMnw2Boundary.Values.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FFmpWellBoundary <> nil then
+  begin
+    FFmpWellBoundary.Values.ReplaceATime(OldTime, NewTime);
+    FFmpWellBoundary.Parameters.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FFmpPrecipBoundary <> nil then
+  begin
+    FFmpPrecipBoundary.Values.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FFmpRefEvapBoundary <> nil then
+  begin
+    FFmpRefEvapBoundary.Values.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FFmpCropIDBoundary <> nil then
+  begin
+    FFmpCropIDBoundary.Values.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FFmpFarmIDBoundary <> nil then
+  begin
+    FFmpFarmIDBoundary.Values.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FCfpRchFraction <> nil then
+  begin
+    FCfpRchFraction.Values.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FSwrRain <> nil then
+  begin
+    FSwrRain.Values.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FSwrEvap <> nil then
+  begin
+    FSwrEvap.Values.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FSwrLatInflow <> nil then
+  begin
+    FSwrLatInflow.Values.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FSwrStage <> nil then
+  begin
+    FSwrStage.Values.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FSwrDirectRunoff <> nil then
+  begin
+    FSwrDirectRunoff.Values.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FSwrReaches <> nil then
+  begin
+    FSwrReaches.Values.ReplaceATime(OldTime, NewTime);
+  end;
+
+  if FModflowMnw1Boundary <> nil then
+  begin
+    FModflowMnw1Boundary.Values.ReplaceATime(OldTime, NewTime);
+  end;
+
+  Invalidate;
 end;
 
 procedure TModflowBoundaries.StopTalkingToAnyone;
@@ -37418,12 +37646,6 @@ begin
     FModflowFhbFlowBoundary.StopTalkingToAnyone;
   end;
 
-  {$IFDEF FMP}
-  if FModflowFarm <> nil then
-  begin
-    FModflowFarm.StopTalkingToAnyone;
-  end;
-
   if FFmpWellBoundary <> nil then
   begin
     FFmpWellBoundary.StopTalkingToAnyone;
@@ -37448,7 +37670,11 @@ begin
   begin
     FFmpCropIDBoundary.StopTalkingToAnyone;
   end;
-  {$ENDIF}
+
+  if FFmpFarmIDBoundary <> nil then
+  begin
+    FFmpFarmIDBoundary.StopTalkingToAnyone;
+  end;
 
   if FCfpPipes <> nil then
   begin
@@ -37493,6 +37719,273 @@ begin
   if FSwrReaches <> nil then
   begin
     FSwrReaches.StopTalkingToAnyone;
+  end;
+end;
+
+function TModflowBoundaries.UsesATime(ATime: Double): Boolean;
+begin
+  Result := False;
+  if FModflowChdBoundary <> nil then
+  begin
+    Result := FModflowChdBoundary.Values.UsesATime(ATime)
+      or FModflowChdBoundary.Parameters.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FModflowEtsBoundary <> nil then
+  begin
+    Result := FModflowEtsBoundary.Values.UsesATime(ATime)
+      or FModflowEtsBoundary.Parameters.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FModflowEvtBoundary <> nil then
+  begin
+    Result := FModflowEvtBoundary.Values.UsesATime(ATime)
+      or FModflowEvtBoundary.Parameters.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FModflowDrnBoundary <> nil then
+  begin
+    Result := FModflowDrnBoundary.Values.UsesATime(ATime)
+      or FModflowDrnBoundary.Parameters.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FModflowDrtBoundary <> nil then
+  begin
+    Result := FModflowDrtBoundary.Values.UsesATime(ATime)
+      or FModflowDrtBoundary.Parameters.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FModflowGhbBoundary <> nil then
+  begin
+    Result := FModflowGhbBoundary.Values.UsesATime(ATime)
+      or FModflowGhbBoundary.Parameters.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FModflowLakBoundary <> nil then
+  begin
+    Result := FModflowLakBoundary.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FModflowRchBoundary <> nil then
+  begin
+    Result := FModflowRchBoundary.Values.UsesATime(ATime)
+      or FModflowRchBoundary.Parameters.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FModflowResBoundary <> nil then
+  begin
+    Result := FModflowResBoundary.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FModflowRivBoundary <> nil then
+  begin
+    Result := FModflowRivBoundary.Values.UsesATime(ATime)
+      or FModflowRivBoundary.Parameters.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FModflowSfrBoundary <> nil then
+  begin
+    Result := FModflowSfrBoundary.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FModflowStrBoundary <> nil then
+  begin
+    Result := FModflowStrBoundary.Values.UsesATime(ATime)
+      or FModflowStrBoundary.Parameters.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FModflowWellBoundary <> nil then
+  begin
+    Result := FModflowWellBoundary.Values.UsesATime(ATime)
+      or FModflowWellBoundary.Parameters.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FModflowUzfBoundary <> nil then
+  begin
+    Result := FModflowUzfBoundary.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FModflowMnw2Boundary <> nil then
+  begin
+    Result := FModflowMnw2Boundary.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FFmpWellBoundary <> nil then
+  begin
+    Result := FFmpWellBoundary.Values.UsesATime(ATime)
+      or FFmpWellBoundary.Parameters.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FFmpPrecipBoundary <> nil then
+  begin
+    Result := FFmpPrecipBoundary.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FFmpRefEvapBoundary <> nil then
+  begin
+    Result := FFmpRefEvapBoundary.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FFmpCropIDBoundary <> nil then
+  begin
+    Result := FFmpCropIDBoundary.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FFmpFarmIDBoundary <> nil then
+  begin
+    Result := FFmpFarmIDBoundary.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FCfpRchFraction <> nil then
+  begin
+    Result := FCfpRchFraction.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FSwrRain <> nil then
+  begin
+    Result := FSwrRain.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FSwrEvap <> nil then
+  begin
+    Result := FSwrEvap.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FSwrLatInflow <> nil then
+  begin
+    Result := FSwrLatInflow.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FSwrStage <> nil then
+  begin
+    Result := FSwrStage.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FSwrDirectRunoff <> nil then
+  begin
+    Result := FSwrDirectRunoff.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FSwrReaches <> nil then
+  begin
+    Result := FSwrReaches.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
+  end;
+
+  if FModflowMnw1Boundary <> nil then
+  begin
+    Result := FModflowMnw1Boundary.Values.UsesATime(ATime);
+    if Result then
+    begin
+      Exit;
+    end;
   end;
 end;
 
@@ -40735,14 +41228,11 @@ end;
 
 { TModflowFmpDelegate }
 
-
-{$IFDEF FMP}
 constructor TModflowFmpDelegate.Create(ScreenObject: TScreenObject);
 begin
   inherited;
   FModelSelection := msModflowFmp;
 end;
-{$ENDIF}
 
 { TModflowCfpDelegate }
 
@@ -40759,9 +41249,7 @@ initialization
   RegisterClass(TModflowLGRDelegate);
   RegisterClass(TModflowLGR2Delegate);
   RegisterClass(TModflowNWTDelegate);
-{$IFDEF FMP}
   RegisterClass(TModflowFmpDelegate);
-{$ENDIF}
   RegisterClass(TModflowCfpDelegate);
   RegisterClass(TSutraDelegate);
   RegisterClass(TMultiValueScreenObject);

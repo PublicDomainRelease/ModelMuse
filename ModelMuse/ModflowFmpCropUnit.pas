@@ -583,7 +583,8 @@ begin
     UpdateFormula(Value, RootingDepthPosition, FFormulaObjects[RootingDepthPosition]);
 //    PhastModel := Model as TPhastModel;
 //    if (PhastModel <> nil)
-//      and not (csDestroying in PhastModel.ComponentState) then
+//      and not (csDestroying in PhastModel.ComponentState)
+//      and not PhastModel.Clearing then
 //    begin
 //      ScreenObj := ScreenObject;
 //      if (ScreenObj <> nil)
@@ -2738,31 +2739,20 @@ begin
 end;
 
 function TCropCollection.GetFarmList: TFarmList;
-{$IFDEF FMP}
 var
   LocalModel: TPhastModel;
-  ScreenObjectIndex: Integer;
-  AScreenObject: TScreenObject;
-  AFarm: TFarm;
-{$ENDIF}
+  FarmIndex: integer;
 begin
-{$IFDEF FMP}
   if FFarmList = nil then
   begin
     FFarmList := TFarmList.Create;
     Assert(Model <> nil);
     LocalModel := Model as TPhastModel;
-    for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
+    for FarmIndex := 0 to LocalModel.Farms.Count - 1 do
     begin
-      AScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
-      AFarm := AScreenObject.ModflowFmpFarm;
-      if (AFarm <> nil) and AFarm.Used then
-      begin
-        FFarmList.Add(AFarm);
-      end;
+      FFarmList.Add(LocalModel.Farms[FarmIndex]);
     end;
   end;
-{$ENDIF}
   result := FFarmList
 end;
 

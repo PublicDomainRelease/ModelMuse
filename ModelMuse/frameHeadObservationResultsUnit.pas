@@ -1233,7 +1233,28 @@ var
   LocalModel: TPhastModel;
   Index: Integer;
   AModel: TBaseModel;
+  ModelList: TList;
+  APointer: TObject;
 begin
+  ModelList := TList.Create;
+  try
+    ModelList.Add(frmGoPhast.PhastModel);
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ModelList.Add(frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel);
+    end;
+    for Index := comboModels.Items.Count - 1 downto 0 do
+    begin
+      APointer := comboModels.Items.Objects[Index];
+      if ModelList.IndexOf(APointer) < 0 then
+      begin
+        comboModels.Items.Delete(Index);
+      end;
+    end;
+
+  finally
+    ModelList.Free;
+  end;
   if ObsLinkList = nil then
   begin
     ObsLinkList := TObsHeadLinkList.Create;

@@ -22,6 +22,7 @@ const lighton = true; lightoff = false;
 type Tfacetype = record point1, point2, point3 : Tpoint3D;
                   mode : integer;  color : Tcolor; end;
      Tcontpoint = record x,y,z,l : single; end;
+     Tsimplefunction2type = function(x,y:single):single;
 
 var  xy3dviewx,xy3dviewy,xy3dviewz,xy3dviewr,xy3dviewa,xy3dviewh : single;
      xy3dcrosssection : array of Tcontpoint;
@@ -34,14 +35,19 @@ procedure xy3dshowpolyhedron(xoff,yoff,zoff,fac:single;frcol:Tcolor;
   light,trans:boolean);
 
 procedure xy3dloadsurface(var dat:Tdatatype;var ok : boolean;mode,opt:integer);
-
+procedure xy3dcreatesurface(func:Tsimplefunction2type; xmin,xmax : single; nx:integer;
+  ymin,ymax:single; ny:integer; var data:Tdatatype);
 procedure xy3dshowsurface(mode:integer;dikte:single;col1,col2,col3:Tcolor;
-   solid,nosplit:boolean;just,opt:integer);
+   solid,nosplit:boolean;fcol,just,opt:integer); overload;
 
+procedure xy3dplotcluster(var dat:Tdatatype;mode,st,sz:integer;col1,col2:Tcolor;opt:integer);
+
+procedure xy3daxisscale(min,max:single;nc:integer;fm:single;fix:boolean;ax:integer);
 procedure xy3dsetframe(x1,x2,y1,y2,z1,z2,yfac,zfac,scale:single;opt:integer);
 procedure xy3dcylframe(r1,r2,z1,z2,zfac,scale:single;rev:boolean;opt:integer);
 procedure xy3dspherframe(r1,r2,scale:single;rev:boolean;opt:integer);
-procedure xy3dsetview(pos,height:integer;dis:single;opt:integer);
+procedure xy3dsetview(pos,height:integer;dis:single;xoff,yoff:integer; {XXXXXXX}
+   xc,yc,zc:single;opt:integer); overload;
 procedure xy3dsetstereo(ang,phase:single;grcol,opt:integer); overload;
 procedure xy3dsetlabels(xl,yl,zl,xrl,yrl,zrl:string;lbl3d:boolean;
    xm,ym,zm:integer;scl3d:single;opt:integer); overload;
@@ -91,7 +97,7 @@ procedure copyzoom3d(n:integer;x0,x1,y0,y1:single);
 procedure init3d; procedure start3d;
 function rul3dhoogte(xw,yw:single):single;
 function checkrul3d:boolean;
-procedure xyclearbuffer3d;
+procedure xyclearbuffer3d(n:integer);
 procedure xyputbuffer3d(n:integer);
 procedure xygetbuffer3d(n:integer);
 procedure initxygraph3d;
@@ -108,14 +114,17 @@ procedure xy3dsetstereo(ang,phase:single;grcol:integer); overload;
 procedure xy3dsetdataarray(var data:Tdatatype;nx,ny:integer);
 procedure xy3dsetlabels(xl,yl,zl,xrl,yrl,zrl:string;lbl3d:boolean;
    xm,ym,zm:integer;opt:integer); overload;
+procedure xy3dshowsurface(mode:integer;dikte:single;col1,col2,col3:Tcolor;
+   solid,nosplit:boolean;just,opt:integer); overload;
+procedure xy3dsetview(pos,height:integer;dis:single;opt:integer); overload;
 
 implementation
 
 uses math;
 
-var xmi,xma : single;             {waarden X-as}
-    ymi,yma : single;             {waarden Y-as}
-    zmi,zma : single;             {waarden Z-as}
+var xmi,xma,xfr : single;         {waarden X-as}
+    ymi,yma,yfr : single;         {waarden Y-as}
+    zmi,zma,zfr : single;         {waarden Z-as}
     rmi,rma,rmix,rmax : single;   {waarden R-as}
     cmi,cma,lcmi,lcma: single;    {waarden kleurenschaal}
     polrev : boolean;             {cylinder hoek omgekeerd}
@@ -123,7 +132,6 @@ var xmi,xma : single;             {waarden X-as}
     xp1,xp2,yp1,yp2:integer;      {scherm einden}
     nx1,nx2,ny1,ny2 : integer;    {bereik cellen bij contour}
     diam : single;                {halve diagonaal lengte}
-    scale3d : single;             {overall schaal factor}
     imsize : integer;             {grootte beeld in pixels}
     oct : integer;                {octant van kijkrichting}
     ok3d, okfr, frame, scale, surf, polyh: boolean;
@@ -200,8 +208,10 @@ var p : Tpoint3D;
 begin p.x := x; p.y := y; p.z := z; result := p; end;
 
 procedure start3d; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+var i : integer;
 begin
   xy3dsetlabels('X','Y','Z','-X','-Y','-Z',false,0,0,0,0,0);
+  for i := 1 to 4 do fs3d[i].go := false;
 end;
 
 procedure init3d; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
@@ -245,7 +255,7 @@ begin
 end;
 
 procedure position(x,y,z:single;var xp,yp:integer); {XXXXXXXXXXXXXXXXXXXXXXXXXX}
-var x1,x2,x3,y1,y2,y3,ff : single; {NB: kopie in 4D, aangepast}
+var x1,x2,x3,y1,y2,y3,f,ff : single; {NB: kopie in 4D, aangepast}
 const mi : integer = -32760; ma : integer = 32760;
 begin
   if (polartype=3) then poltocart(x,y) else
@@ -256,7 +266,9 @@ begin
   x3 := x2*cosr - y2*sinr; y3 := x2*sinr + y2*cosr; {draaiing om z-as}
   if (r3d=0) then ff := fac3d else
     ff := fac3d*r3d/(r3d+y1*cosa-z*sina);       {factor voor perspectief}
-  xp := round(xpc+ff*x3); yp := round(ypc-ff*y3);
+  if zoomc then f := scale3d else f := 1;
+  xp := round(xc0+(xpc-xc0)*f+ff*x3);
+  yp := round(yc0+(ypc-yc0)*f-ff*y3);
   if (xp<mi) then xp := mi else if (xp>ma) then xp := ma;
   if (yp<mi) then yp := mi else if (yp>ma) then yp := ma;
 end;
@@ -756,6 +768,20 @@ end;
 procedure xy3dsetdataarray(var data:Tdatatype;nx,ny:integer); {XXXXXXXXXXXXXXXX}
 begin xysetdataarray(data,nx,ny); end;
 
+procedure xy3dcreatesurface(func:Tsimplefunction2type; xmin,xmax:single; nx:integer;
+  ymin,ymax:single; ny:integer; var data:Tdatatype); 
+  {maaakt en vult een data array dmv function}
+var i,j : integer;
+    dx,dy : single;
+begin
+  if (nx<2) then nx := 2; dx := (xmax-xmin)/(nx-1);
+  if (ny<2) then ny := 2; dy := (ymax-ymin)/(ny-1);
+  xysetdataarray(data,nx,ny);
+  for i := 1 to nx do data[i,0] := xmin + (i-1) * dx;
+  for j := 1 to ny do data[0,j] := ymin + (j-1) * dy;
+  for i := 1 to nx do for j := 1 to ny do data[i,j] := func(data[i,0],data[0,j]);
+end;
+
 {==============================================================================}
 {======== Procedures voor contour weergave ====================================}
 {==============================================================================}
@@ -848,6 +874,7 @@ begin
     begin
      if not contzlog then y := ys1 + round((c2-h)/(c2-c1)*(ys2-ys1))
            else y := ys1 + round(ln(c2/h)/ln(c2/c1)*(ys2-ys1));
+     if (y<ys1) then y := ys1 else if (y>ys2) then y := ys2;
      xypen.color := clwhite; xypen.mode := pmxor;
      moveto(xs1,y); lineto(xs2+1,y);
      xypen.mode := pmcopy;
@@ -944,8 +971,8 @@ begin
   result := hoek((h1+h4-h2-h3)/2,(h1+h2-h3-h4)/2,dx,dy);
 end;
 
-function color(h:single):Tcolor; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
-{bepaalt kleur bij bepaalde hoogte}
+function color0(h:single):integer; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+{bepaalt kleur nummer bij bepaalde hoogte}
 var n : integer;
 begin
   if (h<cmi) then n := 0 else
@@ -953,7 +980,14 @@ begin
   if contzlog then n := round((ln(h)-lcmi)*colfac)
        else n := round((h-cmi)*colfac);
   if crev then n := 255 - n;
-  {if (n<0) then n := 0 else if (n>255) then n := 255;}
+  result := n;
+end;
+
+function color(h:single):Tcolor; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+{bepaalt kleur bij bepaalde hoogte}
+var n : integer;
+begin
+  n := color0(h);
   case cmode of
     1 : if odd(n div cres) then result := 0 else result := $ffffff;
    2,3 : begin result := colors[resscale[n]]; end;
@@ -965,11 +999,7 @@ function revcolor(h:single):Tcolor; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
 {idem in reverse}
 var n : integer;
 begin
-  if (h<cmi) then n := 0 else
-  if (h>cma) then n := 255 else
-  if contzlog then n := round((ln(h)-lcmi)*colfac)
-       else n := round((h-cmi)*colfac);
-  if crev then n := 255 - n;
+  n := color0(h);
   case cmode of
     1 : if odd(n div cres) then result := 0 else result := $ffffff;
    2,3 : begin result := revcolors[resscale[n]]; end;
@@ -1167,18 +1197,20 @@ procedure xy3dshowcontour(mode:integer;col1,col2:Tcolor; xtxt,ytxt : string;
   cr : resolutie kleur
   rev : kleurenschaal omgekeerd (alleen mode 1,2 en 3);
   nospl : vierk worden niet gepslitst (alleen mode 1,2,3 en 4)
+  fast : fast mode on
   fresh : refresh procedure
   opt :  bit 0 en 1 = refresh mode
          bit 2 : text Y-as sideways
-         bit 3 : z schaal log}
+         bit 3 : z schaal log
+         bit 4 : nearest neighbour bij fast en mode 2}
 type regel = array[0..8000] of cardinal;
      pregel = ^regel;
-var x,y,lx,ly,refr,pw,n,n1,n2,p,revback : integer;
+var x,y,lx,ly,refr,pw,n,n1,n2,p,revback,p1,p2 : integer;
     t,f1,f2,ff,fxy : single;
     pr : pregel;
     bm : Tbitmap;
     pxy : array of integer;
-    dozoom : boolean;
+    dozoom, nearest : boolean;
 
 procedure fotopart(x,y:integer;s4:boolean); {----------------------------------}
 var h,h1,h2,h3,h4 : single; {1=lo, 2=ro, 3=rb, 4=lb}
@@ -1329,6 +1361,7 @@ begin
 
   xp := xps[x];      yp := yps[y];
   dx := xps[x+1]-xp; dy := yps[y+1]-yp;
+  if (dx=0) or (dy=0) then exit;
   if (x=nx-1) then tx := dx  else tx := dx-1;
   if (y=ny-1) then ty := -dy else ty := -dy-1;
   if (tx<0) or (ty<0) then exit;
@@ -1420,6 +1453,7 @@ begin {------------------------------------------------------------------------}
   if not cvmode then refr := 0;
   if (drmode<1) then nosplit := true;
   contzlog := (opt and 8) > 0; revback := reversecolor(backcolor);
+  nearest := fast and (cmode=2) and ( (opt and 16)>0 );
 
   if dozoom then {wis oud beeld} with xygraphdata[igraph] do
     begin
@@ -1470,9 +1504,20 @@ begin {------------------------------------------------------------------------}
     begin
       {xps bevat per pixel welke cel daar staat}
       setlength(xps,xp2-xp1+1);
-      for x := nx1 to nx2 do begin n1 := pxy[x]; n2 := pxy[x+1];
-        for n := n1 to n2-1 do xps[n] := x; end;
-      if (cmode=2) then xps[xp2-xp1] := nx2+1 else xps[xp2-xp1] := nx2
+      if nearest then
+        begin
+          for x := nx1 to nx2 do begin n1 := pxy[x]; n2 := pxy[x+1];
+          if (x=nx1) then p1 := 0 else p1 := (n1+pxy[x-1]) div 2;
+          p2 := (n1+n2) div 2;
+          for n := p1 to p2-1 do xps[n] := x; end;
+          for n := p2 to xp2-xp1 do xps[n] := nx2+1;
+        end
+      else
+        begin
+          for x := nx1 to nx2 do begin n1 := pxy[x]; n2 := pxy[x+1];
+            for n := n1 to n2-1 do xps[n] := x; end;
+          if (cmode=2) then xps[xp2-xp1] := nx2+1 else xps[xp2-xp1] := nx2; 
+        end
     end
   else {xps bevat de pixelpos van elke cel}
     begin setlength(xps,nx+1); for x := 1 to nx do xps[x] := xp1 + pxy[x]; end;
@@ -1482,9 +1527,20 @@ begin {------------------------------------------------------------------------}
   if fast then
     begin
       setlength(yps,yp2-yp1+1);
-      for y := ny1 to ny2 do begin n1 := pxy[y]; n2 := pxy[y+1];
-        for n := n1 to n2-1 do yps[n] := y; end;
-      if (cmode=2) then yps[yp2-yp1] := ny2+1 else yps[yp2-yp1] := ny2;
+      if nearest then
+        begin
+          for y := ny1 to ny2 do begin n1 := pxy[y]; n2 := pxy[y+1];
+          if (y=ny1) then p1 := 0 else p1 := (n1+pxy[y-1]) div 2;
+          p2 := (n1+n2) div 2;
+          for n := p1 to p2-1 do yps[n] := y; end;
+          for n := p2 to yp2-yp1 do yps[n] := ny2+1;
+        end
+      else
+        begin
+          for y := ny1 to ny2 do begin n1 := pxy[y]; n2 := pxy[y+1];
+            for n := n1 to n2-1 do yps[n] := y; end;
+          if (cmode=2) then yps[yp2-yp1] := ny2+1 else yps[yp2-yp1] := ny2;
+        end;
     end
   else
     begin setlength(yps,ny+1); for y := 1 to ny do yps[y] := yp2 - pxy[y]; end;
@@ -1603,23 +1659,35 @@ end;
 
 procedure xy3dshowsurface(mode:integer;dikte:single;col1,col2,col3:Tcolor;
     solid,nosplit:boolean;just,opt:integer); {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+ {oud: bit 4 (8)  = kleur vlakken volgens hoogte
+       bit 5 (16) = kleur vlakken volgens hoek ipv gem
+  -->  00 = fcol=0; 01 = fcol=1; 11 = fcol = 2}
+var t : integer;
+begin
+  if (opt and 8)=0 then t := 0 else
+  if (opt and 16)=0 then t := 1 else t := 2;
+  opt := opt and 7;
+  xy3dshowsurface(mode,dikte,col1,col2,col3,solid,nosplit,t,just,opt);
+end;
+
+procedure xy3dshowsurface(mode:integer;dikte:single;col1,col2,col3:Tcolor;
+    solid,nosplit:boolean;fcol,just,opt:integer); {XXXXXXXXXXXXXXXXXXXXXXXXXXXX}
 var xps, yps : array of array of smallint;
     x,y,xp,yp,xx,yy,d,o,stm:integer;
-    dik,foto,nogrid,trans,back,lyncol,vlakcol,corner : boolean;
+    dik,foto,nogrid,trans,back,lyncol : boolean;
     dh1,dh2,dh,t : single;
     col : Tcolor;
-{ mode: 0=outline 1=punten 2=X-lijnen 3=Y-lijnen 4=draadmodel 5=dvlakken 6=foto
+{ mode: 0=outline 1=punten 2=X-lijnen 3=Y-lijnen 4=draadmodel 5=vlakken 6=foto
   dik : dikte in usercoord
   col1 : rasterkleur (mode 0-4)
   col2 : vlak kleur  (mode 4)
   col3 : vlak kleur  (mode 5)
   nosplit : geen splitsing van vierkanten (mode 4,5)
+  fcol : face color (0=niet 1=gem 2=hoek 3=2x2 4=ruit2x2 5=3x3 6=ruit3x3 etc)
   just : justification voor dikte
   opt : options  bit 1 (1)  = show grid in mode 5
                  bit 2 (2)  = teken transparant in mode 4 en 5
                  bit 3 (4)  = kleur lijnen/punten volgens hoogte
-                 bit 4 (8)  = kleur vlakken volgens hoogte
-                 bit 5 (16) = kleur vlakken volgens hoek ipv gem
 }
 
 function heightcol(h:single):Tcolor; {---------------------------------------}
@@ -1721,9 +1789,10 @@ begin
 end;
 
 procedure tekenvak(x,y,m:integer); {-------------------------------------------}
-var h,dx,dy,h1,h2,h3,h4,h12,h23,h34,h14,h13,h24,hm,xm,ym,c1,c2,c3,c4 : single;
+var h,dx,dy,h1,h2,h3,h4,h12,h23,h34,h14,h13,h24,hm,xm,ym,c0,c1,c2,c3,c4,c : single;
     b : boolean;
-    pw : integer;
+    pw,pc,t : integer;
+    p1,p2,p3,p4,p12,p23,p34,p41,p0 : Tpoint;
 
 procedure driehoek(dhx,dhy:single;n1,n2,n3:integer); { - - - - - - - - - - - - }
 begin
@@ -1759,6 +1828,7 @@ begin { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
   dx := datap^[x+1,0]-datap^[x,0]; dy := datap^[0,y+1]-datap^[0,y];
   c1 := colsp^[x,y];   c2 := colsp^[x+1,y];
   c4 := colsp^[x,y+1]; c3 := colsp^[x+1,y+1];
+  c0 := (c1+c2+c3+c4)/4;
 
   if dik then
     begin
@@ -1786,16 +1856,27 @@ begin { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
           point4[3] := point(xps[x,y+1],  yps[x,y+1]);
         end;
       pw := xypen.width;
-      if foto then
-        begin h := hoek4x(h1,h2,h3,h4,dx,dy); xybrush.color := hcolor(h,col3); end
-      else if vlakcol then
-          if corner then xybrush.color := color(c1)
-          else xybrush.color := color((c1+c2+c3+c4)/4);
-      if nogrid then begin xypen.width := 1; xypen.color := xybrush.color; end;
-      if (mode>4) then
-        if trans then transpolygon(-1,-1,point4) else xypolygon(-1,-1,point4);
+      if (fcol>2) and not foto then
+        begin
+          p1 := point4[0]; p2 := point4[1]; p3 := point4[2]; p4 := point4[3];
+          xypen.width := 1; pc := xypen.color;
+          t := (fcol+1) div 2; if not odd(fcol) then t := -t;
+          plotrect(p1,p2,p3,p4,color0(c1),color0(c2),color0(c3),color0(c4),t);
+          drawpoly(pc,-1,[p1,p2,p3,p4],false);
+          xypen.color := pc;
+        end
+      else
+        begin
+          if foto then
+            begin h := hoek4x(h1,h2,h3,h4,dx,dy); xybrush.color := hcolor(h,col3); end
+          else if (fcol=2) then xybrush.color := color(c1)
+          else if (fcol=1) then xybrush.color := color(c0);
+          if nogrid then begin xypen.width := 1; xypen.color := xybrush.color; end;
+          if (mode>4) then
+            if trans then transpolygon(-1,-1,point4) else xypolygon(-1,-1,point4);
+        end;
 
-      if lyncol and not trans and not vlakcol then {teken lijntjes alsnog in kleur}
+      if lyncol and not trans then {teken lijntjes alsnog in kleur}
       if dowmf then
         begin
           movewmf(xps[x,y],yps[x,y]);
@@ -1986,11 +2067,10 @@ begin {------------------------------------------------------------------------}
   foto := (mode=6); nogrid := foto and (opt and 1 = 0);
   trans := (opt and 2 > 0) and (not transoff);
   lyncol := (opt and 4 > 0){ and (mode>1)};
-  vlakcol := (opt and 8 > 0) and (mode=5);
-  corner := (opt and 16 > 0);
-  if lyncol and vlakcol then nogrid := true;
+  if (mode<>5) then fcol := 0;
+  if lyncol and (fcol>0) then nogrid := true;
   back := trans; if nogrid and (transopt and 2=0) then back := false;
-  if stereo then begin lyncol := false; vlakcol := false; end;
+  if stereo then begin lyncol := false; fcol := 0; end;
   cmode := 2;
 
   if (col1<0) then col1 := frontcolor;
@@ -2019,7 +2099,7 @@ begin {------------------------------------------------------------------------}
     begin dh1 := dikte/2; dh2 := -dh1; end
   else begin dh1 := 0; dh2 := 0; dh := 0; end;
   if (mode>4) then
-    if (dik or solid) or (drmode>0) then begin lyncol := false; vlakcol := false; end;
+    if (dik or solid) or (drmode>0) then begin lyncol := false; fcol := 0; end;
   if stereo and (mode>4) then
     if not (dik or solid) then mode := 4 else mode := 7;
 
@@ -2107,6 +2187,54 @@ begin {------------------------------------------------------------------------}
 end;
 
 {==============================================================================}
+{======== Procedures voor cluster weergave ====================================}
+{==============================================================================}
+
+procedure xy3dplotcluster(var dat:Tdatatype;mode,st,sz:integer;col1,col2:Tcolor;opt:integer);
+var i,t,j,n : integer;
+    d : double;
+    dist : array of double;
+    order : array of integer;
+    clr : boolean;
+    cl1,cl2,col3 : Tcolor;
+begin
+  n := length(dat); if (n<2) then exit; clr := (n>3);
+  n := length(dat[0]);
+
+  if (col1<0) and (col2<0) then
+     begin col1 := frontcolor; col2 := backcolor; end;
+
+  setlength(dist,n); setlength(order,n);
+  for i := 0 to n-1 do order[i] := i;
+
+  for i := 0 to n-1 do with polyhface[i] do {bepaal afstanden}
+    dist[i] := sqr(viewx-dat[0,i]) + sqr(viewy-dat[1,i]) + sqr(viewz-dat[2,i]);
+
+  for i := 1 to n-1 do  {sorteer op afstand}
+    begin t := order[i]; d := dist[t]; j := i;
+      while (j>0) and (dist[order[j-1]]<d) do
+             begin order[j] := order[j-1]; dec(j); end;
+       order[j] := t;
+    end;
+
+  for i := 0 to n-1 do
+    begin
+      t := order[i]; if clr then
+        begin
+          col3 := color(dat[3,t]);
+          if (mode=0) then begin cl1 := col3; cl2 := -1;   end else
+          if (mode=1) then begin cl1 := col1; cl2 := col3; end else
+                           begin cl1 := col3; cl2 := col3; end;
+        end
+      else
+        if (mode=0) then begin cl1 := col1; cl2 := -1;   end else
+        if (mode=1) then begin cl1 := col1; cl2 := col2; end else
+                         begin cl1 := col2; cl2 := col2; end;
+      xy3dsymbol(dat[0,t],dat[1,t],dat[2,t],st,sz,cl1,cl2,false,false,0);
+    end;
+end;
+
+{==============================================================================}
 {======== Procedures voor algemene weergave ===================================}
 {==============================================================================}
 
@@ -2131,6 +2259,9 @@ procedure xy3dsetframe(x1,x2,y1,y2,z1,z2,yfac,zfac,scale:single;opt:integer); {}
 var t : single;
 begin
   okfr := false; ok3d := false; frame := false; polartype := 0;
+  with fs3d[1] do if go then begin x1 := min; x2 := max; end;
+  with fs3d[2] do if go then begin y1 := min; y2 := max; end;
+  with fs3d[3] do if go then begin z1 := min; z2 := max; end;
   with plotfield do
     begin xp1 := x1; xp2 := x2; yp1 := y1; yp2 := y2; end;
   if (xp2<=xp1) or (yp2<=yp1) then exit;
@@ -2160,6 +2291,8 @@ var t : single;
 begin
   okfr := false; ok3d := false; frame := false;
   polartype := 3; polrev := rev;
+  with fs3d[3] do if go then begin z1 := min; z2 := max; end;
+  with fs3d[4] do if go then begin r1 := min; r2 := max; end;
   with plotfield do
     begin xp1 := x1; xp2 := x2; yp1 := y1; yp2 := y2; end;
   if (xp2<=xp1) or (yp2<=yp1) then exit;
@@ -2186,6 +2319,7 @@ begin
   sphcor := (opt and 1) > 0; if sphcor then
     begin rev := false; r1 := 0; r2 := abs(r2); end;
   polartype := 4; polrev := rev;
+  with fs3d[4] do if go then begin r1 := min; r2 := max; end;
   with plotfield do
     begin xp1 := x1; xp2 := x2; yp1 := y1; yp2 := y2; end;
   if (xp2<=xp1) or (yp2<=yp1) then exit;
@@ -2199,10 +2333,14 @@ begin
   mode3d := true; graphs3d[igraph].m3d := mode3d;
 end;
 
-procedure xy3dsetview(pos,height:integer;dis:single;opt:integer); {XXXXXXXXXXXX}
+procedure xy3dsetview(pos,height:integer;dis:single;xoff,yoff:integer; {XXXXXXX}
+   xc,yc,zc:single;opt:integer);
   {pos,height = kijk positie en - hoek
    dis = relatieve kijk afstand (>1, 0=geen perspectief)
-   opt : opties }
+   xoff,yoff : verschuiving beeld
+   xc,yc,zc : punt voor kijkrichring, 0 = default
+   opt : opties
+     bit 1 = centre zoom}
 
 {const plane: array[1..12] of string =
    ('X-Y','-Y-X','-XY','YX',
@@ -2220,6 +2358,7 @@ begin
   if (dis<=1e-6) then dis := 0 else
     if (dis<1) then dis := 1;
   kijkhoek := pos; kijkhoogte := height;
+  zoomc := (opt and 1 >0);
 
   cosp := cos(pos*grtorad);     if (abs(cosp)<0.01) then cosp := 0;
   sinp := sin(pos*grtorad);     if (abs(sinp)<0.01) then sinp := 0;
@@ -2231,7 +2370,8 @@ begin
   fac3d := min(xp2-xp1,yp2-yp1) / diam * scale3d;
   imsize := round(fac3d*diam);
   if (dis<=0) then r3d := 0 else r3d := diam/2*dis;
-  xpc := (xp1+xp2) div 2; xpc0 := xpc; ypc := (yp1+yp2) div 2;
+  xc0 := (xp1+xp2) div 2; xpc := xc0 + round(xoff/100*(xp2-xp1)); xpc0 := xpc;
+  yc0 := (yp1+yp2) div 2; ypc := yc0 + round(yoff/100*(yp2-yp1));
   dead := 0; if (r3d=0) then
     if ((height+90) mod 90 = 0) then
      if (polartype=3) then
@@ -2247,6 +2387,9 @@ begin
   cszk := sina; csxk := -cosa*sinp; csyk := -cosa*cosp;
 
   if (r3d=0) then f := 1000 else f := r3d;
+  if (xc<>0) then xmid := xc;
+  if (yc<>0) then ymid := yc;
+  if (zc<>0) then zmid := zc;
   viewz := zmid + (f * sina)/facz;
   viewx := xmid - (f * cosa * sinp)/facx;
   viewy := ymid - (f * cosa * cosp)/facy;
@@ -2277,7 +2420,13 @@ begin
   ok3d := true;
   xy3dsetsun(70,20,1,1);
   pixx3d := facx*fac3d; pixy3d := facy*fac3d; pixz3d := facz*fac3d;
+  if (height>=0) then zfr := zmi else zfr := zma;
+  if oct in [1,2,3,4] then xfr := xma else xfr := xmi;
+  if oct in [1,2,7,8] then yfr := yma else yfr := ymi;
 end;
+
+procedure xy3dsetview(pos,height:integer;dis:single;opt:integer); {============}
+begin xy3dsetview(pos,height,dis,0,0,0,0,0,opt); end;
 
 procedure xy3dsetstereo(ang,phase:single;grcol,opt:integer); {=================}
 var a,ca,sa,cb,sb,cc,sc,cn,sn,cd,sd,hk,hg,h,aa : single;
@@ -2353,13 +2502,51 @@ var grofs : array[1..3] of single;
     xx,yy : array[0..3] of single;
     zz : array[0..1] of single;
 
+function formtext(w:single;ax:integer):string; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+var s : string;
+begin
+  with fs3d[ax] do begin
+    if fix then str(w:1:ndec,s) else
+    begin w := w * fac; str(w:1:ndec,s); s := s + exp; end;
+  end;
+  result := s;
+end;
+
+procedure xy3daxisscale(min,max:single;nc:integer;fm:single;fix:boolean;ax:integer);
+ {set as met vaste indeling}
+var n : integer;
+    w : single;
+begin
+  if (ax<1) or (ax>4) then exit;
+  if abs(max-min)<=(abs(max)+abs(min))*1e-6 then
+    begin min := min-1; max := min+2; end;
+  if (ax<>4) then if (max<min) then begin w := min; min := max; max := w; end;
+  if (nc<1) then nc := 1;
+
+  fs3d[ax].min := min; fs3d[ax].max := max; fs3d[ax].fix := fix;
+  fs3d[ax].nc := nc; fs3d[ax].nf := 0; fs3d[ax].fm := fm;
+  fs3d[ax].go := true;
+
+  n := trunc(abs(fm)); w := 1;
+  w := power(10,n); if (fm>0) then w := 1/w;
+  if (fm<0) then n := -n;
+  fs3d[ax].ndec := round(frac(abs(fm))*10);
+  fs3d[ax].fac := w;
+  if (prmi(4)>0) then fs3d[ax].exp := 'e'+inttostr(n)
+    else fs3d[ax].exp := 'E'+inttostr(n);
+end;
+
 procedure verdeling3d(span:single;len,dis:integer; var grof: single; {XXXXXXXXX}
-  var nach:integer; stm : integer);
+  var nach:integer; stm,ax : integer);
 var fac,scale : single;
     n : integer;
+    fs : boolean;
 begin
-   inc(sttel);
+   inc(sttel); fs := false;
    if (stm=2) then begin grof := grofs[sttel]; nach := nachs[sttel]; exit; end;
+   if (ax in [1..4]) then with fs3d[ax] do if go then
+     begin grof := abs(max-min)/nc; nach := ndec; fs := true; end;
+   if not fs then begin
    if (dis=0) then dis := 1; n := round(len/dis);
    if (n<1) then n := 1;
    scale := span/(n+1e-6); fac := 1; nach:=0;
@@ -2369,7 +2556,7 @@ begin
    if (scale<1) then grof := fac else
    if (scale<2) then grof := 2*fac else
      grof := 5*fac;
-   if (nach<0) then nach := 0;
+   if (nach<0) then nach := 0;  end;
    grofs[sttel] := grof; nachs[sttel] := nach;
 end;
 
@@ -2450,24 +2637,25 @@ begin
   if labels3d then
     begin
       if odd(zlmode) then d := round(prm(121)*ch) else d := round(prm(120)*cw);
-      verdeling3d(zma-zmi,round((zma-zmi)*pixz3d),d,gr,nd,stm);
+      verdeling3d(zma-zmi,round((zma-zmi)*pixz3d),d,gr,nd,stm,3);
     end
   else
     begin
      if zlvert and (zlmode=2) then d := round(prm(121)*ch)
          else d := round(prm(120)*cw);
      l := round(sqrt(sqr(x2-x1)+sqr(y2-y1)));
-     verdeling3d(zma-zmi,l,d,gr,nd,stm);
+     verdeling3d(zma-zmi,l,d,gr,nd,stm,3);
      tl := round(prm(122)*ch);
     end;
-  p := gr*trunc(zmi/gr-1); ml := 0;
-  xmx := max(x1,x2); xmn := min(x1,x2); ymx := max(y1,y2); ymn := min(y1,y2);
+  if fs3d[3].go then p := fs3d[3].min else p := gr*trunc(zmi/gr-1);
+  ml := 0; xmx := max(x1,x2); xmn := min(x1,x2); ymx := max(y1,y2); ymn := min(y1,y2);
   repeat
     position(xx[t1],yy[t1],p,xt,yt);
     if  ( (xt<=xmx) and (xt>=xmn) and (yt<=ymx) and (yt>=ymn) ) then
       begin
         position(xx[t2],yy[t2],p,x0,y0);
-        if dotext then str(p:1:nd,s) else s := '';
+        if not dotext then s := '' else
+          if fs3d[3].go then s := formtext(p,3) else str(p:1:nd,s);
         if (length(s)>ml) then ml := length(s);
         if labels3d then text3d(s,xx[tz],yy[tz],p,zlmode+9,false,oct,ml,zlvert,prm(122))
         else
@@ -2512,23 +2700,24 @@ begin
   if labels3d then
     begin
       if odd(xlmode) then d := round(prm(131)*ch) else d := round(prm(130)*cw);
-      verdeling3d(r2-r1,round((r2-r1)*pixx3d),d,gr,nd,stm)
+      verdeling3d(r2-r1,round((r2-r1)*pixx3d),d,gr,nd,stm,4)
     end
    else
     begin
       l := round(sqrt(sqr(x2-x1)+sqr(y2-y1))/2);
-      verdeling3d(r2-r1,l,round(prm(130)*cw),gr,nd,stm);
+      verdeling3d(r2-r1,l,round(prm(130)*cw),gr,nd,stm,4);
       tl := round(prm(132)*ch);
     end;
 
-  p := gr*trunc(r1/gr-1); ml := 0;
+  if fs3d[4].go then p := fs3d[4].min*f else p := gr*trunc(r1/gr-1); ml := 0;
   repeat
     pp := (p-r1)/(r2-r1);
     if (pp>-0.001) and (pp<1.001) then
     for i := 0 to 1 do
     begin
       if (i=1) then pp := -pp;
-      if dotext then str(p*f:1:nd,s) else s := '';
+      if not dotext then s := '' else
+        if fs3d[4].go then s := formtext(p*f,4) else str(p*f:1:nd,s);
       if (length(s)>ml) then ml := length(s);
       if oct in [1,4,5,8] then begin
         if labels3d then text3d(s,pp,-yy[t],zz[h],xlmode+1,false,oct,ml,zlvert,prm(132))
@@ -2712,6 +2901,7 @@ begin
   polartype := 4;
   if labels3d then exittext3d;
   autoreset(3);
+  for i := 1 to 4 do fs3d[i].go := false;
 end;
 
 procedure showcylframe(mode:integer;frcol,xycol,xzcol,yzcol:Tcolor;opt:integer);
@@ -2874,6 +3064,7 @@ begin
   polartype := 3;
   if labels3d then exittext3d;
   autoreset(3);
+  for i := 1 to 4 do fs3d[i].go := false;
 end;
 
 procedure xy3dshowframe(mode:integer;frcol,xycol,xzcol,yzcol:Tcolor;opt:integer);
@@ -3024,22 +3215,23 @@ begin
   if labels3d then
     begin
       if odd(xlmode) then d := round(prm(101)*ch) else d := round(prm(100)*cw);
-      verdeling3d(xma-xmi,round((xma-xmi)*pixx3d),d,gr,nd,stm);
+      verdeling3d(xma-xmi,round((xma-xmi)*pixx3d),d,gr,nd,stm,1);
     end
   else
     begin
       l := round(sqrt(sqr(x2-x1)+sqr(y2-y1)));
-      verdeling3d(xma-xmi,l,round(prm(100)*cw),gr,nd,stm);
+      verdeling3d(xma-xmi,l,round(prm(100)*cw),gr,nd,stm,1);
       tl := round(prm(102)*ch);
     end;
   xmx := max(x1,x2); xmn := min(x1,x2); ymx := max(y1,y2); ymn := min(y1,y2);
-  p := gr*trunc(xmi/gr-1); ml := 0;
+  if fs3d[1].go then p := fs3d[1].min else p := gr*trunc(xmi/gr-1); ml := 0;
   repeat
     position(p,yy[t1],zz[h],xt,yt);
     if  ( (xt<=xmx) and (xt>=xmn) and (yt<=ymx) and (yt>=ymn) ) then
       begin
         position(p,yy[t3],zz[h],x0,y0);
-        if dotext then str(p:1:nd,s) else s := '';
+        if not dotext then s := '' else
+          if fs3d[1].go then s := formtext(p,1) else str(p:1:nd,s);
         if (length(s)>ml) then ml := length(s);
         if labels3d then text3d(s,p,yy[t1],zz[h],xlmode+1,false,oct,ml,zlvert,prm(102))
         else text2(s,xt,yt,x0,y0,tl,xh,xlmode+dmode,false);
@@ -3074,22 +3266,23 @@ begin
   if labels3d then
     begin
       if odd(ylmode) then d := round(prm(111)*ch) else d := round(prm(110)*cw);
-      verdeling3d(yma-ymi,round((yma-ymi)*pixy3d),d,gr,nd,stm);
+      verdeling3d(yma-ymi,round((yma-ymi)*pixy3d),d,gr,nd,stm,2);
     end
   else
     begin
       l := round(sqrt(sqr(x2-x1)+sqr(y2-y1)));
-      verdeling3d(yma-ymi,l,round(prm(110)*cw),gr,nd,stm);
+      verdeling3d(yma-ymi,l,round(prm(110)*cw),gr,nd,stm,2);
       tl := round(prm(112)*ch);
     end;
   xmx := max(x1,x2); xmn := min(x1,x2); ymx := max(y1,y2); ymn := min(y1,y2);
-  p := gr*trunc(ymi/gr-1); ml := 0;
+  if fs3d[2].go then p := fs3d[2].min else p := gr*trunc(ymi/gr-1); ml := 0;
   repeat
     position(xx[t1],p,zz[h],xt,yt); 
     if  ( (xt<=xmx) and (xt>=xmn) and (yt<=ymx) and (yt>=ymn) ) then
       begin
         position(xx[t3],p,zz[h],x0,y0);
-        if dotext then str(p:1:nd,s) else s := '';
+        if not dotext then s := '' else
+          if fs3d[2].go then s := formtext(p,2) else str(p:1:nd,s);
         if (length(s)>ml) then ml := length(s);
         if labels3d then text3d(s,xx[t1],p,zz[h],ylmode+5,false,oct,ml,zlvert,prm(112)) else
         text2(s,xt,yt,x0,y0,tl,yh,ylmode+dmode,false);
@@ -3118,6 +3311,7 @@ begin
   end;
   if labels3d then exittext3d;
   autoreset(3);
+  for i := 1 to 4 do fs3d[i].go := false;
 end;
 
 procedure xy3dcloseframe; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
@@ -3358,7 +3552,7 @@ begin
   else
     begin
       for stm := 1 to 2 do if (stm=1) or stereo then  begin
-      if stereo then setstereo(stm);
+      if stereo then setstereo(stm) else xypen.color := col1;
       case st of
         3 : begin
               line3d(x-dx,y,z, x+dx,y,z); line3d(x,y-dy,z, x,y+dy,z);
@@ -3370,7 +3564,8 @@ begin
             end;
     end; end; end;
 
-  if not stereo then setcursor(xp,yp);
+  if not stereo then
+    begin position(x,y,z,xp,yp); setcursor(xp,yp); end;
   polartype := pt;
 end;
 
@@ -3426,16 +3621,20 @@ var dx,dy,dz,r1,r2,sih,coh,sip,cop,t : single;
     x1,x2,x3,y1,y2,y3,z1,z2,z3,d,h1,h2 : single;
     i,pt,stm : integer;
     poly : array of Tpoint3d;
-    b,spokes : boolean;
+    b,spokes,rel : boolean;
+const zerop : Tpoint3d = (x:0;y:0;z:0);
+function equal(p1,p2:Tpoint3D):boolean; {--------------------------------------}
+begin result := (p1.x=p2.x) and (p1.y=p2.y) and (p1.z=p2.z); end;
 begin
   if (mode3d and not ok3d) then exit;
   if (np=0) then np := 24;
   b := (np<0); np := abs(np); if (np<3) then np := 3;
   if (col1<0) and (col2<0) then col1 := frontcolor;
+  rel := (opt and 2 > 0);
 
   if (polartype=3) then
     begin
-      r := (r-rmi)/(rma-rmi);
+      r := (r-rmi)/(rma-rmi); rel := false;
       if (r<0) then r := 0 else if (r>1) then r := 1;
       p1.x := 0; p1.y := 0;
       p2.x := 0; p2.y := 0; p2.z := p1.z+1;
@@ -3447,7 +3646,7 @@ begin
           with p1 do begin t := y; y := z; z := 90-t; end;
           with p2 do begin t := y; y := z; z := 90-t; end;
         end;
-      r := (r-rmi)/(rma-rmi);
+      r := (r-rmi)/(rma-rmi); rel := false;
       if (r<0) then r := 0 else if (r>1) then r := 1;
       if abs(p1.z)<1 then
         begin
@@ -3483,8 +3682,18 @@ begin
      exit;
     end;
 
-  if (p2.x=0) and (p2.y=0) and (p2.z=0) then p2 := p1;
-  dx := p2.x; dy := p2.y; dz := p2.z;
+  if rel then
+    begin
+      if equal(p1,p2) then
+        if equal(p1,zerop) then p2 := point3d(0,0,1) else p2 := zerop;
+      dx := p2.x-p1.x; dy := p2.y-p1.y; dz := p2.z-p1.z;
+    end
+  else
+    begin
+      if equal(p2,zerop) then
+        if equal(p1,zerop) then p2 := point3d(0,0,1) else p2 := p1;
+      dx := p2.x; dy := p2.y; dz := p2.z;
+    end;  
   r1 := sqrt(sqr(dx)+sqr(dy)+sqr(dz)); if (r1=0) then exit;
   r2 := sqrt(sqr(dx)+sqr(dy)); sih := -r2/r1; coh := dz/r1;
   if (r2=0) then begin sip := 0; cop := 1; end
@@ -3675,7 +3884,14 @@ begin
   xyinitruler(cl,xp,yp,j,0);
 end;
 
-procedure xyclearbuffer3d; begin setlength(buffer3d,1); end; {XXXXXXXXXXXXXXXXX}
+procedure xyclearbuffer3d(n:integer); {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+var i,l : integer;
+begin
+  if (n<0) then begin setlength(buffer3d,0); exit; end;
+  l := length(buffer3d);
+  for i := n to l-2 do buffer3d[i] := buffer3d[i+1];
+  setlength(buffer3d,l-1);
+end;
 
 procedure xyputbuffer3d(n:integer); {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
 begin

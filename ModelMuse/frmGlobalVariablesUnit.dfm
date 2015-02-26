@@ -5,9 +5,9 @@ inherited frmGlobalVariables: TfrmGlobalVariables
   ClientHeight = 284
   ClientWidth = 494
   OnClose = FormClose
-  ExplicitWidth = 510
-  ExplicitHeight = 322
-  PixelsPerInch = 96
+  ExplicitWidth = 512
+  ExplicitHeight = 329
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0

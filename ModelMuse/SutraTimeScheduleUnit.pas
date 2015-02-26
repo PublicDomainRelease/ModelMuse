@@ -809,6 +809,8 @@ var
   Boundaries: TSutraBoundaries;
   AValue1: single;
   AValue2: single;
+  LastTime: Double;
+  AValue: Double;
 begin
   { TODO -cSUTRA : Only do this when the FAllTimes is out of date. }
   FAllTimes.Clear;
@@ -819,6 +821,7 @@ begin
   begin
     FAllTimes.AddUnique(Times[TimeIndex]);
   end;
+  LastTime := FAllTimes.Last;
 
   // The first schedule has all the time steps.
   // Subsequent ones have subsets of those time steps.
@@ -846,36 +849,56 @@ begin
     begin
       for TimeIndex := 0 to Boundaries.Observations.Times.Count - 1 do
       begin
-        FAllTimes.AddUnique(Boundaries.Observations.Times[TimeIndex].Value);
+        AValue := Boundaries.Observations.Times[TimeIndex].Value;
+        if AValue < LastTime then
+        begin
+          FAllTimes.AddUnique(AValue);
+        end;
       end;
     end;
     if Boundaries.FluidSource.Used then
     begin
       for TimeIndex := 0 to Boundaries.FluidSource.Values.Count - 1 do
       begin
-        FAllTimes.AddUnique(Boundaries.FluidSource.Values[TimeIndex].StartTime);
-      end; 
+        AValue := Boundaries.FluidSource.Values[TimeIndex].StartTime;
+        if AValue < LastTime then
+        begin
+          FAllTimes.AddUnique(AValue);
+        end;
+      end;
     end;
     if Boundaries.MassEnergySource.Used then
     begin
       for TimeIndex := 0 to Boundaries.MassEnergySource.Values.Count - 1 do
       begin
-        FAllTimes.AddUnique(Boundaries.MassEnergySource.Values[TimeIndex].StartTime);
-      end; 
+        AValue := Boundaries.MassEnergySource.Values[TimeIndex].StartTime;
+        if AValue < LastTime then
+        begin
+          FAllTimes.AddUnique(AValue);
+        end;
+      end;
     end;
     if Boundaries.SpecifiedPressure.Used then
     begin
       for TimeIndex := 0 to Boundaries.SpecifiedPressure.Values.Count - 1 do
       begin
-        FAllTimes.AddUnique(Boundaries.SpecifiedPressure.Values[TimeIndex].StartTime);
-      end; 
+        AValue := Boundaries.SpecifiedPressure.Values[TimeIndex].StartTime;
+        if AValue < LastTime then
+        begin
+          FAllTimes.AddUnique(AValue);
+        end;
+      end;
     end;
     if Boundaries.SpecifiedConcTemp.Used then
     begin
       for TimeIndex := 0 to Boundaries.SpecifiedConcTemp.Values.Count - 1 do
       begin
-        FAllTimes.AddUnique(Boundaries.SpecifiedConcTemp.Values[TimeIndex].StartTime);
-      end; 
+        AValue := Boundaries.SpecifiedConcTemp.Values[TimeIndex].StartTime;
+        if AValue < LastTime then
+        begin
+          FAllTimes.AddUnique(AValue);
+        end;
+      end;
     end;
   end;
   for TimeIndex := FAllTimes.Count - 1 downto 1 do

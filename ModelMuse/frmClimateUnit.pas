@@ -283,9 +283,7 @@ var
   AnItem: TClimateItem;
 begin
   FClimate := TClimateCollection.Create(nil);
-{$IFDEF FMP}
   FClimate.Assign(frmGoPhast.PhastModel.FmpClimate);
-{$ENDIF}
 
   frameClimate.seNumber.AsInteger := FClimate.Count;
   frameClimate.seNumber.OnChange(frameClimate.seNumber);
@@ -361,12 +359,10 @@ end;
 
 constructor TUndoClimate.Create(var NewClimate: TClimateCollection);
 begin
-{$IFDEF FMP}
   FOldClimate := TClimateCollection.Create(nil);
   FOldClimate.Assign(frmGoPhast.PhastModel.FmpClimate);
   FNewClimate := NewClimate;
   NewClimate := nil;
-{$ENDIF}
 end;
 
 function TUndoClimate.Description: string;
@@ -383,16 +379,12 @@ end;
 
 procedure TUndoClimate.DoCommand;
 begin
-{$IFDEF FMP}
   frmGoPhast.PhastModel.FmpClimate := FNewClimate;
-{$ENDIF}
 end;
 
 procedure TUndoClimate.Undo;
 begin
-{$IFDEF FMP}
   frmGoPhast.PhastModel.FmpClimate := FOldClimate;
-{$ENDIF}
 end;
 
 end.

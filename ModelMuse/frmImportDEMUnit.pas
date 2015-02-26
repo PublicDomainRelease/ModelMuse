@@ -204,9 +204,8 @@ begin
           MessageDlg(StrYouMustCreateTheMesh, mtInformation, [mbOK], 0);
         end;
       end;
-    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         Grid := frmGoPhast.PhastModel.Grid;
         result := (Grid <> nil) and (Grid.ColumnCount > 0)
@@ -280,9 +279,8 @@ begin
             end;
         end;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         NodeElemString := StrCell;
         CenterString := StrCellCenter

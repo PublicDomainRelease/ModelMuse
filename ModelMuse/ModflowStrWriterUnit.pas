@@ -103,6 +103,10 @@ type
     function GetSegFromObject(AScreenObject: TScreenObject): TStrSegment;
     function FindSegmentWithNewSegmentNumber(
       NewSegmentNumber: integer): TStrSegment;
+    procedure CheckReachSeparations;
+    procedure CheckStreamTributaries;
+    procedure CheckActiveReaches;
+    procedure CheckReachProperties;
   protected
     procedure Evaluate; override;
     function ObservationPackage: TModflowPackageSelection; override;
@@ -197,6 +201,43 @@ resourcestring
   StrMultipliedByTheP = ' multiplied by the parameter value %0:g for paramet' +
   'er %1:s';
   StrFlowSetTo1Becau = 'Flow set to -1 because %s has tributaries.';
+  StrInTheStreamSTR = 'In the Stream (STR) package, some reaches are separat' +
+  'ed from previous reaches by more than one cell.';
+  StrSegment0dReach = 'Segment: %0:d; Reach: %1:d; Stress Period: %2:d; Separation: %3:d';
+  StrTributaryWarning = 'In the Stream (STR) package, there is a separation ' +
+  'between a tributary segment and outflow segment of more than one cell.';
+  StrTributarySegment0 = 'Tributary Segment %0:d, Outflow Segment %1:d; Stre' +
+  'ss Period: %2:d, Separation %3:d cells';
+  StrOneOrMoreReaches = 'One or more reaches in the stream package are in in' +
+  'active cells.';
+  StrInactiveReachCells = 'Stress period: %0:d; Segment: %1:d; Reach: %2:d; ' +
+  'Layer: %3:d, Row: %4:d; Column: %5:d';
+  StrOneOrMoreStreams = 'In one or more streams in STR package the FLOW is ' +
+  'set to a negative number indicating that the stream has tributaries even ' +
+  'though it doesn''t have tributaries. MODFLOW will treat such segments as ' +
+  'having an inflow of zero.';
+  StrInObject0sWith = 'Object %0:s with segment number %1:d.';
+  StrObject0sLayer = 'Object: %0:s; Layer: %1:d; Row: %2:d, Column: %3:d; St' +
+  'ress Period: %4:d';
+  StrStageTopWarning = 'In the STR package, the stage is less than the st' +
+  'ream bed top in one or more reaches.';
+  StrStreamTopBottomWarning = 'In the STR package, the stream bed top is les' +
+  's than the stream bed bottom in one or more reaches.';
+  StrWidthWarning = 'In the STR package, the width is less or equal to than ' +
+  'zero in one or more reaches.';
+  StrSlopeWarning = 'In the STR package, the slope is less or equal to than ' +
+  'zero in one or more reaches.';
+  StrRoughnessWarning = 'In the STR package, the roughness is less or equal ' +
+  'to than zero in one or more reaches.';
+  StrDownhillFlowWarning = 'In the STR package, one or more reaches have a h' +
+  'igher stage than in the reach upstream of them.';
+  StrTribStageWarning = 'In the STR package, the last reach in some tributar' +
+  'ies, have lower stages than the first reach of the segment into which the' +
+  'y flow.';
+  StrTributaryObject0 = 'Tributary Object: %0:s; Outflow Segment Object: %1:' +
+  's';
+  StrDownhillObjectWarning = 'Object: %0:s; Reach: %1:d Layer: %2:d; Row: %3' +
+  ':d, Column: %4:d; Stress Period: %5:d';
 
 const
   StrSegmentNumber = 'Segment Number in ';
@@ -274,7 +315,18 @@ begin
     frmErrorsAndWarnings.RemoveErrorGroup(Model, CircularCategory);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrSTRParameterHasNo);
     frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidOutflowSegm);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInTheStreamSTR);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrTributaryWarning);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrOneOrMoreReaches);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrOneOrMoreStreams);
 
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrStageTopWarning);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrStreamTopBottomWarning);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrWidthWarning);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrSlopeWarning);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrRoughnessWarning);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrDownhillFlowWarning);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrTribStageWarning);
 
     if not Package.IsSelected then
     begin
@@ -373,15 +425,31 @@ begin
         begin
           Reaches := ASegment.FReaches[StressPeriodIndex];
         end;
-        if (Reaches.Count > 0) and ASegment.FHasTributariesForThisStressPeriod then
+        if (Reaches.Count > 0) then
         begin
           StrCell := Reaches[0] as TStr_Cell;
-          StrCell.Flow := -1;
-          StrCell.FlowAnnotation := Format(StrFlowSetTo1Becau,
-            [ASegment.FScreenObject.Name]);
+          if ASegment.FHasTributariesForThisStressPeriod then
+          begin
+            StrCell.Flow := -1;
+            StrCell.FlowAnnotation := Format(StrFlowSetTo1Becau,
+              [ASegment.FScreenObject.Name]);
+          end
+          else if StrCell.Flow < 0 then
+          begin
+            frmErrorsAndWarnings.AddWarning(Model, StrOneOrMoreStreams,
+              Format(StrInObject0sWith,
+              [ASegment.FScreenObject.Name, ASegment.OriginalSegmentNumber]));
+          end;
         end;
       end;
     end;
+
+    CheckReachProperties;
+    CheckReachSeparations;
+    CheckStreamTributaries;
+    CheckActiveReaches;
+
+
   finally
     frmErrorsAndWarnings.EndUpdate;
   end;
@@ -1996,6 +2064,275 @@ begin
     end;
   finally
     frmErrorsAndWarnings.EndUpdate;
+  end;
+end;
+
+procedure TStrWriter.CheckStreamTributaries;
+var
+  Tributaries: TGenericIntegerList;
+  TribReachCell: TStr_Cell;
+  TribIndex: Integer;
+  ATributary: TStrSegment;
+  OutflowReachCell: TStr_Cell;
+  DeltaCell: Integer;
+  TribReaches: TValueCellList;
+//  OutflowReach: TValueCell;
+//  TribReach: TValueCell;
+  StressPeriods: TModflowStressPeriods;
+  ASegment: TStrSegment;
+  Reaches: TValueCellList;
+  AList: TList;
+  StressPeriodIndex: Integer;
+  SegmentIndex: Integer;
+begin
+  StressPeriods := Model.ModflowFullStressPeriods;
+  for StressPeriodIndex := 0 to StressPeriods.Count - 1 do
+  begin
+    for SegmentIndex := 0 to FSegments.Count - 1 do
+    begin
+      ASegment := FSegments[SegmentIndex];
+      if ASegment.FParamValues.Count > 0 then
+      begin
+        AList := ASegment.FParamValues.Objects[0] as TList;
+        Reaches := AList[StressPeriodIndex];
+      end
+      else
+      begin
+        Reaches := ASegment.FReaches[StressPeriodIndex];
+      end;
+      OutflowReachCell := Reaches.First as TStr_Cell;;
+      Tributaries := ASegment.FTributaries[StressPeriodIndex];
+      for TribIndex := 0 to Tributaries.Count - 1 do
+      begin
+        ATributary := FSegments[Tributaries[TribIndex] - 1];
+        if ATributary.FParamValues.Count > 0 then
+        begin
+          AList := ATributary.FParamValues.Objects[0] as TList;
+          TribReaches := AList[StressPeriodIndex];
+        end
+        else
+        begin
+          TribReaches := ATributary.FReaches[StressPeriodIndex];
+        end;
+        TribReachCell := TribReaches.Last as TStr_Cell;
+        DeltaCell := Max(Abs(OutflowReachCell.Row - TribReachCell.Row),
+          Abs(OutflowReachCell.Column - TribReachCell.Column));
+        if DeltaCell > 1 then
+        begin
+          frmErrorsAndWarnings.AddWarning(Model, StrTributaryWarning,
+            Format(StrTributarySegment0, [TribReachCell.SegmentNumber,
+            OutflowReachCell.SegmentNumber, StressPeriodIndex + 1, DeltaCell]));
+        end;
+        if OutflowReachCell.Stage > TribReachCell.Stage then
+        begin
+          frmErrorsAndWarnings.AddWarning(Model, StrTribStageWarning,
+            Format(StrTributaryObject0,
+            [ATributary.FScreenObject.Name, ASegment.FScreenObject.Name]));
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TStrWriter.CheckActiveReaches;
+var
+  StressPeriods: TModflowStressPeriods;
+  StressPeriodIndex: Integer;
+  SegmentIndex: Integer;
+  ReachIndex: Integer;
+  AReach: TValueCell;
+  ActiveDataSet: TDataArray;
+  StrReach: TStr_Cell;
+  ASegment: TStrSegment;
+  AList: TList;
+  Reaches: TValueCellList;
+begin
+  ActiveDataSet := Model.DataArrayManager.GetDataSetByName(rsActive);
+  Assert(ActiveDataSet <> nil);
+  StressPeriods := Model.ModflowFullStressPeriods;
+  for StressPeriodIndex := 0 to StressPeriods.Count - 1 do
+  begin
+    for SegmentIndex := 0 to FSegments.Count - 1 do
+    begin
+      ASegment := FSegments[SegmentIndex];
+      if ASegment.FParamValues.Count > 0 then
+      begin
+        AList := ASegment.FParamValues.Objects[0] as TList;
+        Reaches := AList[StressPeriodIndex];
+      end
+      else
+      begin
+        Reaches := ASegment.FReaches[StressPeriodIndex];
+      end;
+      for ReachIndex := 0 to Reaches.Count - 1 do
+      begin
+        AReach := Reaches[ReachIndex];
+        if not ActiveDataSet.BooleanData[
+          AReach.Layer, AReach.Row, AReach.Column] then
+        begin
+          StrReach := AReach as TStr_Cell;
+
+          frmErrorsAndWarnings.AddWarning(Model, StrOneOrMoreReaches,
+            Format(StrInactiveReachCells,
+            [StressPeriodIndex+1, StrReach.SegmentNumber, StrReach.ReachNumber,
+            StrReach.Layer+1, StrReach.Row+1, StrReach.Column+1]));
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TStrWriter.CheckReachProperties;
+var
+  ReachIndex: Integer;
+//  DeltaCell: Integer;
+  AReach: TStr_Cell;
+  PriorReach: TStr_Cell;
+//  StrReach: TStr_Cell;
+  Reaches: TValueCellList;
+  ASegment: TStrSegment;
+  StressPeriodIndex: Integer;
+  SegmentIndex: Integer;
+  AList: TList;
+  StressPeriods: TModflowStressPeriods;
+  CalculateStage: Boolean;
+//  Layer: Integer;
+  ScreenObjectName: TComponentName;
+  procedure CheckReach(AReach: TStr_Cell);
+  var
+    ScreenObjectName: TComponentName;
+//    Layer: integer;
+  begin
+    if AReach.Stage < AReach.BedTop then
+    begin
+      ScreenObjectName := ASegment.FScreenObject.Name;
+      frmErrorsAndWarnings.AddWarning(Model, StrStageTopWarning,
+        Format(StrDownhillObjectWarning,
+        [ScreenObjectName, AReach.ReachNumber,
+        AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1]));
+    end;
+    if AReach.BedTop < AReach.BedBottom then
+    begin
+      ScreenObjectName := ASegment.FScreenObject.Name;
+      frmErrorsAndWarnings.AddWarning(Model, StrStreamTopBottomWarning,
+        Format(StrDownhillObjectWarning,
+        [ScreenObjectName, AReach.ReachNumber,
+        AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1]));
+    end;
+    if CalculateStage then
+    begin
+      if AReach.Width <= 0 then
+      begin
+        ScreenObjectName := ASegment.FScreenObject.Name;
+        frmErrorsAndWarnings.AddWarning(Model, StrWidthWarning,
+          Format(StrDownhillObjectWarning,
+          [ScreenObjectName, AReach.ReachNumber,
+          AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1]));
+      end;
+      if AReach.Slope <= 0 then
+      begin
+        ScreenObjectName := ASegment.FScreenObject.Name;
+        frmErrorsAndWarnings.AddWarning(Model, StrSlopeWarning,
+          Format(StrDownhillObjectWarning,
+          [ScreenObjectName, AReach.ReachNumber,
+          AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1]));
+      end;
+      if AReach.Roughness <= 0 then
+      begin
+        ScreenObjectName := ASegment.FScreenObject.Name;
+        frmErrorsAndWarnings.AddWarning(Model, StrRoughnessWarning,
+          Format(StrDownhillObjectWarning,
+          [ScreenObjectName, AReach.ReachNumber,
+          AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1]));
+      end;
+    end;
+  end;
+begin
+  CalculateStage := Model.ModflowPackages.StrPackage.CalculateStage;
+  StressPeriods := Model.ModflowFullStressPeriods;
+  for StressPeriodIndex := 0 to StressPeriods.Count - 1 do
+  begin
+    for SegmentIndex := 0 to FSegments.Count - 1 do
+    begin
+      ASegment := FSegments[SegmentIndex];
+      if ASegment.FParamValues.Count > 0 then
+      begin
+        AList := ASegment.FParamValues.Objects[0] as TList;
+        Reaches := AList[StressPeriodIndex];
+      end
+      else
+      begin
+        Reaches := ASegment.FReaches[StressPeriodIndex];
+      end;
+      if Reaches.Count > 0 then
+      begin
+        PriorReach := Reaches[0] as TStr_Cell;
+        for ReachIndex := 1 to Reaches.Count - 1 do
+        begin
+          AReach := Reaches[ReachIndex] as TStr_Cell;
+          if PriorReach.Stage < AReach.Stage then
+          begin
+            ScreenObjectName := ASegment.FScreenObject.Name;
+            frmErrorsAndWarnings.AddWarning(Model, StrDownhillFlowWarning,
+              Format(StrDownhillObjectWarning,
+              [ScreenObjectName, AReach.ReachNumber,
+              AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1]));
+          end;
+          PriorReach := AReach;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TStrWriter.CheckReachSeparations;
+var
+  ReachIndex: Integer;
+  DeltaCell: Integer;
+  AReach: TValueCell;
+  PriorReach: TValueCell;
+  StrReach: TStr_Cell;
+  Reaches: TValueCellList;
+  ASegment: TStrSegment;
+  StressPeriodIndex: Integer;
+  SegmentIndex: Integer;
+  AList: TList;
+  StressPeriods: TModflowStressPeriods;
+begin
+  StressPeriods := Model.ModflowFullStressPeriods;
+  for StressPeriodIndex := 0 to StressPeriods.Count - 1 do
+  begin
+    for SegmentIndex := 0 to FSegments.Count - 1 do
+    begin
+      ASegment := FSegments[SegmentIndex];
+      if ASegment.FParamValues.Count > 0 then
+      begin
+        AList := ASegment.FParamValues.Objects[0] as TList;
+        Reaches := AList[StressPeriodIndex];
+      end
+      else
+      begin
+        Reaches := ASegment.FReaches[StressPeriodIndex];
+      end;
+      if Reaches.Count > 1 then
+      begin
+        PriorReach := Reaches[0];
+        for ReachIndex := 1 to Reaches.Count - 1 do
+        begin
+          AReach := Reaches[ReachIndex];
+          DeltaCell := Max(Abs(AReach.Row - PriorReach.Row),
+            Abs(AReach.Column - PriorReach.Column));
+          if DeltaCell > 1 then
+          begin
+            StrReach := AReach as TStr_Cell;
+            frmErrorsAndWarnings.AddWarning(Model, StrInTheStreamSTR,
+              Format(StrSegment0dReach, [StrReach.SegmentNumber,
+              StrReach.ReachNumber, StressPeriodIndex + 1, DeltaCell]));
+          end;
+          PriorReach := AReach;
+        end;
+      end;
+    end;
   end;
 end;
 

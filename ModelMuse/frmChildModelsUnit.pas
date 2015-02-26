@@ -313,7 +313,7 @@ begin
         begin
           seCellCount.Increment := 2;
         end;
-      msModflowLGR2:
+      msModflowLGR2, msModflowFmp:
         begin
           seCellCount.Increment := 1;
         end;
@@ -492,7 +492,7 @@ begin
             seCellCount.AsInteger := 3;
           end;
         end;
-      msModflowLGR2:
+      msModflowLGR2, msModflowFmp:
         begin
           if seCellCount.AsInteger <= 1 then
           begin
@@ -502,7 +502,7 @@ begin
       else
         Assert(False);
     end;
-    if (frmGoPhast.ModelSelection = msModflowLGR)
+    if (frmGoPhast.ModelSelection in [msModflowLGR])
       and not Odd(seCellCount.AsInteger) then
     begin
       seCellCount.AsInteger := seCellCount.AsInteger + 1;
@@ -722,7 +722,7 @@ begin
     Item := Edit.Discretization.GetAnItemByGroupAndLayer(LayerGroup, Layer);
     Assert(Item <> nil);
     AValue := StrToInt(rdgDiscretization.Cells[Ord(dsDiscretization),RowIndex]);
-    If (frmGoPhast.ModelSelection = msModflowLGR) and not Odd(AValue) then
+    If (frmGoPhast.ModelSelection in [msModflowLGR]) and not Odd(AValue) then
     begin
       Inc(AValue);
       rdgDiscretization.Cells[Ord(dsDiscretization),RowIndex] := IntToStr(AValue);

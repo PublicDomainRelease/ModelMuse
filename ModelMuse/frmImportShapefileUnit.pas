@@ -2375,7 +2375,7 @@ begin
       if First then
       begin
         First := False;
-        Boundary.SegementNumber :=
+        Boundary.SegmentNumber :=
           GetIntegerValueFromText(comboSfrSegmentNumber.Text);
 
         Item := Boundary.Values.Add as TSfrItem;
@@ -5362,9 +5362,8 @@ begin
         begin
           ShouldEnable := (rgEvaluatedAt.ItemIndex = 1);
         end;
-      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-        {$IFDEF FMP}, msModflowFmp {$ENDIF}
-        , msModflowCfp:
+      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+        msModflowFmp, msModflowCfp:
         begin
           ShouldEnable := (rgEvaluatedAt.ItemIndex = 0);
         end;
@@ -5993,9 +5992,8 @@ begin
             FloatToStr(Item.EndingTime));
         end;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         Packages := Model.ModflowPackages;
         AddModflowPackageToImportChoices(Packages.ChdBoundary);
@@ -8346,9 +8344,8 @@ begin
             end;
         end;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         Packages := Model.ModflowPackages;
         APackage := comboBoundaryChoice.Items.Objects[
@@ -8778,9 +8775,8 @@ begin
             end;
           end;
         end;
-      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-        {$IFDEF FMP}, msModflowFmp {$ENDIF}
-        , msModflowCfp:
+      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+        msModflowFmp, msModflowCfp:
         begin
           Model := frmGoPhast.PhastModel;
           Packages := Model.ModflowPackages;

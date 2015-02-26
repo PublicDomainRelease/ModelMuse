@@ -14,7 +14,7 @@ interface
 uses Windows, Math, ZLib, GR32, TempFiles, IntListUnit, RealListUnit, SysUtils,
   Classes, Forms, RbwParser, FastGEO, GoPhastTypes, SubscriptionUnit,
   SparseDataSets, ObserverIntfU, FormulaManagerUnit, Dialogs,
-  Generics.Collections, Generics.Defaults;
+  Generics.Collections, Generics.Defaults, SparseArrayUnit;
 
 { TODO :
 Consider making dual data sets that can be evaluated at both elements
@@ -775,7 +775,7 @@ type
     // the @classname.  It does not actually change the dimensions
     // of the array used to hold the data.  See @link(SetDimensions).
     procedure UpdateDimensions(NumberOfLayers, NumberOfRows,
-      NumberOfColumns: integer; ForceResize: boolean = False);
+      NumberOfColumns: integer; ForceResize: boolean = False); virtual;
     // @name returns true unless @link(OnDataSetUsed) is assigned.
     // in which case it calls @link(OnDataSetUsed) and returns its result.
     // See TPhastModel.@link(TCustomModel.ChemistryUsed).
@@ -1035,6 +1035,11 @@ type
     // can be used with.
     class function ValidReturnTypes: TRbwDataTypes; virtual; abstract;
     class Function ValidOrientations: TDataSetOrientations; virtual;
+    // @name is used to assign a comment to a particular cell in
+    // a @link(TDataArray). It should be called immediately after a call to
+    // @link(BooleanResult), @link(IntegerResult), @link(RealResult) or
+    // @link(StringResult);
+    function LastAnnotation: string; virtual;
   published
     // @name can be used to respond to a change in the interpolator.
     property OnEdit: TNotifyEvent read FOnEdit write FOnEdit;
@@ -1115,6 +1120,8 @@ type
     // location when determining @link(TDataArray.IsValue).
     property BoundaryTypeDataSet: TDataArray read FBoundaryTypeDataSet
       write FBoundaryTypeDataSet;
+    procedure UpdateDimensions(NumberOfLayers, NumberOfRows,
+      NumberOfColumns: integer; ForceResize: boolean = False); override;
   end;
 
   {@abstract(@name is used to store real numbers in a sparse array.)}
@@ -1160,6 +1167,8 @@ type
     property MaxRow: Integer read GetMaxRow;
     property MinColumn: Integer read GetMinColumn;
     property MaxColumn: Integer read GetMaxColumn;
+    procedure UpdateDimensions(NumberOfLayers, NumberOfRows,
+      NumberOfColumns: integer; ForceResize: boolean = False); override;
   end;
 
   TTransientRealSparseDataSet = class(TRealSparseDataSet)
@@ -1209,6 +1218,8 @@ type
     property IsBoundaryTypeDataSet: boolean read FIsBoundary write FIsBoundary;
     procedure GetMinMaxStoredLimits(out LayerMin, RowMin, ColMin,
       LayerMax, RowMax, ColMax: integer); override;
+    procedure UpdateDimensions(NumberOfLayers, NumberOfRows,
+      NumberOfColumns: integer; ForceResize: boolean = False); override;
   end;
 
   TTransientIntegerSparseDataSet = class(TIntegerSparseDataSet)
@@ -1446,10 +1457,15 @@ resourcestring
   StrInvalidDataType = 'Invalid data type.';
   StrMODFLOWMultinodeWe = 'MODFLOW Multinode Well';
 
+const
+  MaxSmallArraySize = 1000000;
+
+function GetQuantum(NewSize: Integer): TSPAQuantum;
+
 implementation
 
 uses Contnrs, frmGoPhastUnit, frmConvertChoiceUnit, GIS_Functions,
-  ScreenObjectUnit, frmFormulaErrorsUnit, InterpolationUnit, SparseArrayUnit,
+  ScreenObjectUnit, frmFormulaErrorsUnit, InterpolationUnit,
   PhastModelUnit, AbstractGridUnit, frmErrorsAndWarningsUnit, frmProgressUnit,
   GlobalVariablesUnit, frmDisplayDataUnit, SutraMeshUnit;
 
@@ -1507,6 +1523,18 @@ resourcestring
   'use the data set or global variable "%1:s" does not exist.';
   StrMODFLOWSWR = 'MODFLOW SWR';
   StrMODFLOWMNW1 = 'MODFLOW MNW1';
+
+function GetQuantum(NewSize: Integer): TSPAQuantum;
+begin
+  if NewSize > MaxSmallArraySize  then
+  begin
+    result := SPALarge;
+  end
+  else
+  begin
+    result := SPASmall;
+  end;
+end;
 
 { TDataArray }
 
@@ -1967,7 +1995,7 @@ var
   DataArrayManager: TDataArrayManager;
   LocalModel: TCustomModel;
   ResultOK: Boolean;
-//  AValueInt: Integer;
+  PriorInterpAnnString: string;
   procedure GetLimits;
   begin
     if LocalModel.ModelSelection = msSutra22 then
@@ -2097,6 +2125,22 @@ var
       Assert(False);
     end;
   end;
+  procedure UpdateInterpAnnString;
+  begin
+    InterpAnnString := Format(DataSetInterpolatorExplanation,
+            [TwoDInterpolator.LastAnnotation]);
+    if InterpAnnString = PriorInterpAnnString then
+    begin
+      // update reference count of PriorInterpAnnString
+      // and use PriorInterpAnnString
+      InterpAnnString := PriorInterpAnnString;
+    end
+    else
+    begin
+      // replace PriorInterpAnnString
+      PriorInterpAnnString := InterpAnnString;
+    end;
+  end;
 begin
   if FUpdatingProgress then
   begin
@@ -2168,6 +2212,7 @@ begin
         begin
           InterpAnnString := Format(DataSetInterpolatorExplanation,
             [TwoDInterpolator.InterpolatorName]);
+          PriorInterpAnnString := InterpAnnString;
         end;
         case Orientation of
           dsoTop:
@@ -2190,6 +2235,7 @@ begin
                           rdtDouble:
                             begin
                               AValue := TwoDInterpolator.RealResult(CellCenter);
+                              UpdateInterpAnnString;
                               if IsInfinite(AValue) or IsNan(AValue) then
                               begin
                                 if Name = '' then
@@ -2216,16 +2262,19 @@ begin
                             begin
                               IntegerData[0, RowIndex, ColIndex] :=
                                 TwoDInterpolator.IntegerResult(CellCenter);
+                              UpdateInterpAnnString;
                             end;
                           rdtBoolean:
                             begin
                               BooleanData[0, RowIndex, ColIndex] :=
                                 TwoDInterpolator.BooleanResult(CellCenter);
+                              UpdateInterpAnnString;
                             end;
                           rdtString:
                             begin
                               StringData[0, RowIndex, ColIndex] :=
                                 TwoDInterpolator.StringResult(CellCenter);
+                              UpdateInterpAnnString;
                             end;
                         else
                           Assert(False);
@@ -2250,6 +2299,7 @@ begin
                           rdtDouble:
                             begin
                               AValue := TwoDInterpolator.RealResult(CellCorner);
+                              UpdateInterpAnnString;
                               if IsInfinite(AValue) or IsNan(AValue) then
                               begin
                                 if Name = '' then
@@ -2276,16 +2326,19 @@ begin
                             begin
                               IntegerData[0, RowIndex, ColIndex] :=
                                 TwoDInterpolator.IntegerResult(CellCorner);
+                              UpdateInterpAnnString;
                             end;
                           rdtBoolean:
                             begin
                               BooleanData[0, RowIndex, ColIndex] :=
                                 TwoDInterpolator.BooleanResult(CellCorner);
+                              UpdateInterpAnnString;
                             end;
                           rdtString:
                             begin
                               StringData[0, RowIndex, ColIndex] :=
                                 TwoDInterpolator.StringResult(CellCorner);
+                              UpdateInterpAnnString;
                             end;
                         else
                           Assert(False);
@@ -2322,6 +2375,7 @@ begin
                           rdtDouble:
                             begin
                               AValue := TwoDInterpolator.RealResult(CellCenter);
+                              UpdateInterpAnnString;
                               if IsInfinite(AValue) or IsNan(AValue) then
                               begin
                                 if Name = '' then
@@ -2348,16 +2402,19 @@ begin
                             begin
                               IntegerData[LayerIndex, 0, ColIndex] :=
                                 TwoDInterpolator.IntegerResult(CellCenter);
+                              UpdateInterpAnnString;
                             end;
                           rdtBoolean:
                             begin
                               BooleanData[LayerIndex, 0, ColIndex] :=
                                 TwoDInterpolator.BooleanResult(CellCenter);
+                              UpdateInterpAnnString;
                             end;
                           rdtString:
                             begin
                               StringData[LayerIndex, 0, ColIndex] :=
                                 TwoDInterpolator.StringResult(CellCenter);
+                              UpdateInterpAnnString;
                             end;
                         else
                           Assert(False);
@@ -2385,6 +2442,7 @@ begin
                           rdtDouble:
                             begin
                               AValue := TwoDInterpolator.RealResult(CellCorner);
+                              UpdateInterpAnnString;
                               if IsInfinite(AValue) or IsNan(AValue) then
                               begin
                                 if Name = '' then
@@ -2411,16 +2469,19 @@ begin
                             begin
                               IntegerData[LayerIndex, 0, ColIndex] :=
                                 TwoDInterpolator.IntegerResult(CellCorner);
+                              UpdateInterpAnnString;
                             end;
                           rdtBoolean:
                             begin
                               BooleanData[LayerIndex, 0, ColIndex] :=
                                 TwoDInterpolator.BooleanResult(CellCorner);
+                              UpdateInterpAnnString;
                             end;
                           rdtString:
                             begin
                               StringData[LayerIndex, 0, ColIndex] :=
                                 TwoDInterpolator.StringResult(CellCorner);
+                              UpdateInterpAnnString;
                             end;
                         else
                           Assert(False);
@@ -2458,6 +2519,7 @@ begin
                           rdtDouble:
                             begin
                               AValue := TwoDInterpolator.RealResult(CellCenter);
+                              UpdateInterpAnnString;
                               if IsInfinite(AValue) or IsNan(AValue) then
                               begin
                                 if Name = '' then
@@ -2484,16 +2546,19 @@ begin
                             begin
                               IntegerData[LayerIndex, RowIndex, 0] :=
                                 TwoDInterpolator.IntegerResult(CellCenter);
+                              UpdateInterpAnnString;
                             end;
                           rdtBoolean:
                             begin
                               BooleanData[LayerIndex, RowIndex, 0] :=
                                 TwoDInterpolator.BooleanResult(CellCenter);
+                              UpdateInterpAnnString;
                             end;
                           rdtString:
                             begin
                               StringData[LayerIndex, RowIndex, 0] :=
                                 TwoDInterpolator.StringResult(CellCenter);
+                              UpdateInterpAnnString;
                             end;
                         else
                           Assert(False);
@@ -2522,6 +2587,7 @@ begin
                           rdtDouble:
                             begin
                               AValue := TwoDInterpolator.RealResult(CellCorner);
+                              UpdateInterpAnnString;
                               if IsInfinite(AValue) or IsNan(AValue) then
                               begin
                                 if Name = '' then
@@ -2548,16 +2614,19 @@ begin
                             begin
                               IntegerData[LayerIndex, RowIndex, 0] :=
                                 TwoDInterpolator.IntegerResult(CellCorner);
+                              UpdateInterpAnnString;
                             end;
                           rdtBoolean:
                             begin
                               BooleanData[LayerIndex, RowIndex, 0] :=
                                 TwoDInterpolator.BooleanResult(CellCorner);
+                              UpdateInterpAnnString;
                             end;
                           rdtString:
                             begin
                               StringData[LayerIndex, RowIndex, 0] :=
                                 TwoDInterpolator.StringResult(CellCorner);
+                              UpdateInterpAnnString;
                             end;
                         else
                           Assert(False);
@@ -5113,10 +5182,18 @@ begin
   begin
     Exit;
   end;
-  if (FModel <> nil) and (csDestroying in FModel.ComponentState) then
+  if (FModel <> nil) then
   begin
-    Exit;
+    if (csDestroying in FModel.ComponentState) then
+    begin
+      Exit;
+    end;
+    if (FModel as TCustomModel).Clearing then
+    begin
+      Exit;
+    end;
   end;
+
   OldUseList := TStringList.Create;
   NewUseList := TStringList.Create;
   try
@@ -5394,6 +5471,11 @@ begin
   end;
 end;
 
+function TCustom2DInterpolater.LastAnnotation: string;
+begin
+  result := InterpolatorName;
+end;
+
 function TCustom2DInterpolater.RealResult(const Location: TPoint2D): real;
 begin
   result := 0;
@@ -5495,7 +5577,7 @@ begin
   FPriorLayer := -1;
   FPriorRow := -1;
   FPriorCol := -1;
-  FAnnotation := T3DSparseStringArray.Create(SPASmall);
+  FAnnotation := T3DSparseStringArray.Create(SPASmall, SPASmall, SPASmall);
   // Sparase Array data sets are only used for boundary conditions in
   // PHAST and the boundary conditions all apply to nodes.
   EvaluatedAt := eaNodes;
@@ -5712,7 +5794,7 @@ end;
 constructor TRealSparseDataSet.Create(AnOwner: TComponent);
 begin
   inherited;
-  FRealValues := T3DSparseRealArray.Create(SPASmall);
+  FRealValues := T3DSparseRealArray.Create(SPASmall, SPASmall, SPASmall);
   DataType := rdtDouble;
 end;
 
@@ -5829,6 +5911,28 @@ begin
   end;
 end;
 
+procedure TRealSparseDataSet.UpdateDimensions(NumberOfLayers, NumberOfRows,
+  NumberOfColumns: integer; ForceResize: boolean);
+var
+  OldLayerCount: integer;
+  OldRowCount: integer;
+  OldColumnCount: integer;
+begin
+  OldLayerCount := LayerCount;
+  OldRowCount := RowCount;
+  OldColumnCount := ColumnCount;
+  inherited;
+  if ((OldLayerCount > MaxSmallArraySize) <> (NumberOfLayers > MaxSmallArraySize))
+    or ((OldRowCount > MaxSmallArraySize) <> (NumberOfRows > MaxSmallArraySize))
+    or ((OldColumnCount > MaxSmallArraySize) <> (NumberOfColumns > MaxSmallArraySize))
+    then
+  begin
+    FRealValues.Free;
+    FRealValues := T3DSparseRealArray.Create(GetQuantum(NumberOfLayers),
+      GetQuantum(NumberOfRows), GetQuantum(NumberOfColumns));
+  end;
+end;
+
 { TIntegerSparseDataSet }
 
 procedure TIntegerSparseDataSet.Clear;
@@ -5843,7 +5947,7 @@ end;
 constructor TIntegerSparseDataSet.Create(AnOwner: TComponent);
 begin
   inherited;
-  FIntegerValues := T3DSparseIntegerArray.Create(SPASmall);
+  FIntegerValues := T3DSparseIntegerArray.Create(SPASmall, SPASmall, SPASmall);
   DataType := rdtInteger;
 end;
 
@@ -5939,6 +6043,28 @@ begin
   else
   begin
     inherited SetIsValue(Layer, Row, Col, Value)
+  end;
+end;
+
+procedure TIntegerSparseDataSet.UpdateDimensions(NumberOfLayers, NumberOfRows,
+  NumberOfColumns: integer; ForceResize: boolean);
+var
+  OldLayerCount: integer;
+  OldRowCount: integer;
+  OldColumnCount: integer;
+begin
+  OldLayerCount := LayerCount;
+  OldRowCount := RowCount;
+  OldColumnCount := ColumnCount;
+  inherited;
+  if ((OldLayerCount > MaxSmallArraySize) <> (NumberOfLayers > MaxSmallArraySize))
+    or ((OldRowCount > MaxSmallArraySize) <> (NumberOfRows > MaxSmallArraySize))
+    or ((OldColumnCount > MaxSmallArraySize) <> (NumberOfColumns > MaxSmallArraySize))
+    then
+  begin
+    FIntegerValues.Free;
+    FIntegerValues := T3DSparseIntegerArray.Create(GetQuantum(NumberOfLayers),
+      GetQuantum(NumberOfRows), GetQuantum(NumberOfColumns));
   end;
 end;
 
@@ -6723,7 +6849,8 @@ begin
   begin
     Result := btMfFhb;
   end
-  else if (Name = StrFarmEvap)
+  else if (Name = StrFarmID2)
+    or (Name = StrFarmEvap)
     or (Name = StrFarmPrecip)
     or (Name = StrFarmCropID)
     or (Name = StrFarmMaxPumpRate)
@@ -7140,6 +7267,28 @@ begin
   end;
 end;
 
+procedure TCustomSparseDataSet.UpdateDimensions(NumberOfLayers, NumberOfRows,
+  NumberOfColumns: integer; ForceResize: boolean);
+var
+  OldLayerCount: integer;
+  OldRowCount: integer;
+  OldColumnCount: integer;
+begin
+  OldLayerCount := LayerCount;
+  OldRowCount := RowCount;
+  OldColumnCount := ColumnCount;
+  inherited;
+  if ((OldLayerCount > MaxSmallArraySize) <> (NumberOfLayers > MaxSmallArraySize))
+    or ((OldRowCount > MaxSmallArraySize) <> (NumberOfRows > MaxSmallArraySize))
+    or ((OldColumnCount > MaxSmallArraySize) <> (NumberOfColumns > MaxSmallArraySize))
+    then
+  begin
+    FAnnotation.Free;
+    FAnnotation := T3DSparseStringArray.Create(GetQuantum(NumberOfLayers),
+      GetQuantum(NumberOfRows), GetQuantum(NumberOfColumns));
+  end;
+end;
+
 procedure TDataArray.Assign(Source: TPersistent);
 var
   SourceDataArray: TDataArray;
@@ -7408,9 +7557,10 @@ begin
     MemStream.CopyFrom(Stream, Size);
     MemStream.Position := 0;
 
-    DecompressionStream := TDecompressionStream.Create(MemStream);
+    DecompressionStream := nil;
     try
       try
+        DecompressionStream := TDecompressionStream.Create(MemStream);
         ReadData(DecompressionStream);
       Except
           FDataCached := False;

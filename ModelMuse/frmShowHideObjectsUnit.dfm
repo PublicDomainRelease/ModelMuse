@@ -9,9 +9,9 @@ inherited frmShowHideObjects: TfrmShowHideObjects
   Position = poDesigned
   OnClose = FormClose
   OnKeyUp = FormKeyUp
-  ExplicitWidth = 320
-  ExplicitHeight = 240
-  PixelsPerInch = 120
+  ExplicitWidth = 438
+  ExplicitHeight = 452
+  PixelsPerInch = 96
   TextHeight = 18
   inherited pnlBottom: TPanel
     inherited btnHelp: TBitBtn
@@ -40,6 +40,10 @@ inherited frmShowHideObjects: TfrmShowHideObjects
       Caption = 'Edit'
       Enabled = False
       OnClick = miEditClick
+    end
+    object miGoto1: TMenuItem
+      Caption = 'Go to'
+      OnClick = miGoto1Click
     end
   end
   object ilAngles: TImageList

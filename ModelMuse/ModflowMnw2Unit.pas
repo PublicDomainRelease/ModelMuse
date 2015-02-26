@@ -587,7 +587,7 @@ implementation
 uses
   frmGoPhastUnit, ScreenObjectUnit, PhastModelUnit,
   ModflowGridUnit, frmFormulaErrorsUnit, Math, SparseDataSets, SparseArrayUnit,
-  frmErrorsAndWarningsUnit;
+  frmErrorsAndWarningsUnit, AbstractGridUnit;
 
 resourcestring
   StrOneOrMoreMNW2Wel = 'One or more MNW2 wells has a well radius that is '
@@ -984,6 +984,7 @@ var
   IsValue: Boolean;
   UsedCells: T3DSparseIntegerArray;
   VerticalScreenCount: Integer;
+  Grid: TCustomModelGrid;
 begin
   LocalModel := AModel as TCustomModel;
   PriorCol := -1;
@@ -1046,7 +1047,9 @@ begin
   BoundaryIndex := -1;
   BoundaryStorage := Boundaries[ItemIndex, AModel] as TMnw2Storage;
 
-  UsedCells := T3DSparseIntegerArray.Create(SPASmall);
+  Grid := LocalModel.Grid;
+  UsedCells := T3DSparseIntegerArray.Create(GetQuantum(Grid.LayerCount),
+    GetQuantum(Grid.RowCount), GetQuantum(Grid.ColumnCount));
   try
     LocalScreenObject := ScreenObject as TScreenObject;
     VerticalScreenCount := LocalScreenObject.ModflowBoundaries.
@@ -1063,6 +1066,10 @@ begin
       end;
 
       IsValue := False;
+      if LossType = mltNone then
+      begin
+        IsValue := True;
+      end;
       if WellRadiusArray <> nil then
       begin
         IsValue := WellRadiusArray.IsValue[LayerIndex, RowIndex, ColIndex];

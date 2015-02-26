@@ -244,7 +244,7 @@ var
   AScreenObject: TScreenObject;
   Reservoir: TResBoundary;
   ReservoirIndex: integer;
-  TimeIndex: integer;
+//  TimeIndex: integer;
   ResItem: TResItem;
   StartHead: double;
   EndHead: double;
@@ -255,6 +255,60 @@ var
   TempFormula: string;
   Expression: TExpression;
   ScreenObject: TScreenObject;
+//  PriorItem: TResItem;
+  UseStartOnly: Boolean;
+  UseLastOnly: Boolean;
+  procedure EvaluateStartAndEndHead;
+  begin
+    Assert(ResItem <> nil);
+
+    Expression := nil;
+    TempFormula := ResItem.StartHead;
+    try
+      Compiler.Compile(TempFormula);
+      Expression := Compiler.CurrentExpression;
+      Expression.Evaluate;
+    except on E: ERbwParserError do
+      begin
+        ScreenObject := Reservoir.ScreenObject as TScreenObject;
+        frmFormulaErrors.AddFormulaError(ScreenObject.Name,
+          Format(StrEndingHeadForThe,
+          [sLineBreak+Package.PackageIdentifier]),
+          TempFormula, E.Message);
+
+        ResItem.EndHead := '0.';
+        TempFormula := ResItem.EndHead;
+        Compiler.Compile(TempFormula);
+        Expression := Compiler.CurrentExpression;
+        Expression.Evaluate;
+      end;
+    end;
+    StartHead := Expression.DoubleResult;
+
+    Expression := nil;
+    TempFormula := ResItem.EndHead;
+    try
+      Compiler.Compile(TempFormula);
+      Expression := Compiler.CurrentExpression;
+      Expression.Evaluate;
+    except on E: ERbwParserError do
+      begin
+        ScreenObject := Reservoir.ScreenObject as TScreenObject;
+        frmFormulaErrors.AddFormulaError(ScreenObject.Name,
+          Format(StrEndingHeadForThe,
+          [sLineBreak+Package.PackageIdentifier]),
+          TempFormula, E.Message);
+
+        ResItem.EndHead := '0.';
+        TempFormula := ResItem.EndHead;
+        Compiler.Compile(TempFormula);
+        Expression := Compiler.CurrentExpression;
+        Expression.Evaluate;
+      end;
+    end;
+//        ExportedStartHead := Expression.DoubleResult;
+    EndHead := Expression.DoubleResult;
+  end;
 begin
   Compiler := Model.rpThreeDFormulaCompiler;
 
@@ -276,6 +330,7 @@ begin
     end;
     for Index := 0 to Model.ModflowFullStressPeriods.Count - 1 do
     begin
+      frmProgressMM.AddMessage(Format(StrWritingStressP, [Index+1]));
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
       begin
@@ -290,121 +345,173 @@ begin
           Exit;
         end;
         Reservoir := Reservoirs[ReservoirIndex];
-        ResItem := Reservoir.Values[0] as TResItem;
 
-        Expression := nil;
-        TempFormula := ResItem.EndHead;
-        try
-          Compiler.Compile(TempFormula);
-          Expression := Compiler.CurrentExpression;
-          Expression.Evaluate;
-        except on E: ERbwParserError do
+        UseStartOnly := False;
+        UseLastOnly := False;
+        ResItem := Reservoir.Values.GetItemContainingTime(Item.StartTime) as TResItem;
+        if ResItem <> nil then
+        begin
+          if (ResItem.EndTime <= Item.StartTime) then
           begin
-            ScreenObject := Reservoir.ScreenObject as TScreenObject;
-            frmFormulaErrors.AddFormulaError(ScreenObject.Name,
-              Format(StrEndingHeadForThe,
-              [sLineBreak+Package.PackageIdentifier]),
-              TempFormula, E.Message);
-
-            ResItem.EndHead := '0.';
-            TempFormula := ResItem.EndHead;
-            Compiler.Compile(TempFormula);
-            Expression := Compiler.CurrentExpression;
-            Expression.Evaluate;
+            UseLastOnly := True;
+          end;
+        end
+        else
+        if (ResItem = nil) or (ResItem.EndTime <= Item.StartTime)
+          or (ResItem.StartTime > Item.EndTime) then
+        begin
+          ResItem := Reservoir.Values.First as TResItem;
+          if ResItem.StartTime >= Item.EndTime then
+          begin
+            UseStartOnly := True;
+          end
+          else
+          begin
+            ResItem := Reservoir.Values.Last as TResItem;
+            if ResItem.EndTime <= Item.StartTime then
+            begin
+              UseLastOnly := True;
+            end;
           end;
         end;
-        ExportedStartHead := Expression.DoubleResult;
-        ExportedEndHead := ExportedStartHead;
+        Assert(ResItem <> nil);
 
-        for TimeIndex := 0 to Reservoir.Values.Count - 1 do
+
+//        if ResItem.EndTime = Item.StartTime then
+//        begin
+//          PriorItem := ResItem;
+//          ResItem := Reservoir.Values.GetItemContainingTime(Item.EndTime) as TResItem;
+//          if ResItem = nil then
+//          begin
+//            ResItem := PriorItem;
+//          end;
+//        end;
+        EvaluateStartAndEndHead;
+
+        if UseStartOnly then
         begin
-          Application.ProcessMessages;
-          if not frmProgressMM.ShouldContinue then
-          begin
-            Exit;
-          end;
-          frmProgressMM.AddMessage(Format(StrWritingStressP, [TimeIndex+1]));
-          ResItem := Reservoir.Values[TimeIndex] as TResItem;
-
-          TempFormula := ResItem.StartHead;
-          try
-            Compiler.Compile(TempFormula);
-            Expression := Compiler.CurrentExpression;
-            Expression.Evaluate;
-          except on E: ERbwParserError do
-            begin
-              ScreenObject := Reservoir.ScreenObject as TScreenObject;
-              frmFormulaErrors.AddFormulaError(ScreenObject.Name,
-                Format(StrStartingHeadForT,
-                [sLineBreak+ Package.PackageIdentifier]),
-                TempFormula, E.Message);
-
-              ResItem.StartHead := '0.';
-              TempFormula := ResItem.StartHead;
-              Compiler.Compile(TempFormula);
-              Expression := Compiler.CurrentExpression;
-              Expression.Evaluate;
-            end;
-          end;
-          StartHead := Expression.DoubleResult;
-
-          TempFormula := ResItem.EndHead;
-          try
-            Compiler.Compile(TempFormula);
-            Expression := Compiler.CurrentExpression;
-            Expression.Evaluate;
-          except on E: ERbwParserError do
-            begin
-              ScreenObject := Reservoir.ScreenObject as TScreenObject;
-              frmFormulaErrors.AddFormulaError(ScreenObject.Name,
-                Format(StrEndingHeadForThe,
-                [sLineBreak+Package.PackageIdentifier]),
-                TempFormula, E.Message);
-
-              ResItem.EndHead := '0.';
-              TempFormula := ResItem.EndHead;
-              Compiler.Compile(TempFormula);
-              Expression := Compiler.CurrentExpression;
-              Expression.Evaluate;
-            end;
-          end;
-          EndHead := Expression.DoubleResult;
-
+          ExportedStartHead := StartHead;
+          ExportedEndHead := StartHead;
+        end
+        else if UseLastOnly then
+        begin
+          ExportedStartHead := EndHead;
+          ExportedEndHead := EndHead;
+        end
+        else
+        begin
           if ResItem.StartTime = Item.StartTime then
           begin
-            ExportedStartHead := StartHead;
+            ExportedStartHead := StartHead
           end
-          else if ResItem.EndTime <= Item.StartTime then
+          else
           begin
-            ExportedStartHead := EndHead;
-          end
-          else if (ResItem.StartTime < Item.StartTime)
-            and (ResItem.EndTime > Item.StartTime) then
-          begin
-            Assert(ResItem.EndTime <> ResItem.StartTime);
-            ExportedStartHead := (Item.StartTime - ResItem.StartTime)/
-              (ResItem.EndTime - ResItem.StartTime)*
-              (EndHead - StartHead) + StartHead;
+            Assert(ResItem.StartTime < Item.StartTime);
+            ExportedStartHead := StartHead + (Item.StartTime-ResItem.StartTime)
+              / (ResItem.EndTime-ResItem.StartTime)*(EndHead-StartHead);
           end;
 
-          if ResItem.EndTime <= Item.EndTime then
+          if ResItem.EndTime = Item.EndTime then
           begin
             ExportedEndHead := EndHead;
           end
-          else if (ResItem.StartTime < Item.EndTime)
-            and (ResItem.EndTime > Item.EndTime) then
+          else
           begin
-            Assert(ResItem.EndTime <> ResItem.StartTime);
-            ExportedEndHead := (Item.EndTime - ResItem.StartTime)/
-              (ResItem.EndTime - ResItem.StartTime)*
-              (EndHead - StartHead) + StartHead;
-          end;
-
-          if ResItem.EndTime >= Item.EndTime then
-          begin
-            break;
+            Assert (ResItem.EndTime > Item.EndTime);
+            ExportedEndHead := StartHead + (Item.EndTime-ResItem.StartTime)
+              / (ResItem.EndTime-ResItem.StartTime)*(EndHead-StartHead);
           end;
         end;
+
+//        for TimeIndex := 0 to Reservoir.Values.Count - 1 do
+//        begin
+//          Application.ProcessMessages;
+//          if not frmProgressMM.ShouldContinue then
+//          begin
+//            Exit;
+//          end;
+//          frmProgressMM.AddMessage(Format(StrWritingStressP, [TimeIndex+1]));
+//          ResItem := Reservoir.Values[TimeIndex] as TResItem;
+//
+//          TempFormula := ResItem.StartHead;
+//          try
+//            Compiler.Compile(TempFormula);
+//            Expression := Compiler.CurrentExpression;
+//            Expression.Evaluate;
+//          except on E: ERbwParserError do
+//            begin
+//              ScreenObject := Reservoir.ScreenObject as TScreenObject;
+//              frmFormulaErrors.AddFormulaError(ScreenObject.Name,
+//                Format(StrStartingHeadForT,
+//                [sLineBreak+ Package.PackageIdentifier]),
+//                TempFormula, E.Message);
+//
+//              ResItem.StartHead := '0.';
+//              TempFormula := ResItem.StartHead;
+//              Compiler.Compile(TempFormula);
+//              Expression := Compiler.CurrentExpression;
+//              Expression.Evaluate;
+//            end;
+//          end;
+//          StartHead := Expression.DoubleResult;
+//
+//          TempFormula := ResItem.EndHead;
+//          try
+//            Compiler.Compile(TempFormula);
+//            Expression := Compiler.CurrentExpression;
+//            Expression.Evaluate;
+//          except on E: ERbwParserError do
+//            begin
+//              ScreenObject := Reservoir.ScreenObject as TScreenObject;
+//              frmFormulaErrors.AddFormulaError(ScreenObject.Name,
+//                Format(StrEndingHeadForThe,
+//                [sLineBreak+Package.PackageIdentifier]),
+//                TempFormula, E.Message);
+//
+//              ResItem.EndHead := '0.';
+//              TempFormula := ResItem.EndHead;
+//              Compiler.Compile(TempFormula);
+//              Expression := Compiler.CurrentExpression;
+//              Expression.Evaluate;
+//            end;
+//          end;
+//          EndHead := Expression.DoubleResult;
+//
+//          if ResItem.StartTime = Item.StartTime then
+//          begin
+//            ExportedStartHead := StartHead;
+//          end
+//          else if ResItem.EndTime <= Item.StartTime then
+//          begin
+//            ExportedStartHead := EndHead;
+//          end
+//          else if (ResItem.StartTime < Item.StartTime)
+//            and (ResItem.EndTime > Item.StartTime) then
+//          begin
+//            Assert(ResItem.EndTime <> ResItem.StartTime);
+//            ExportedStartHead := (Item.StartTime - ResItem.StartTime)/
+//              (ResItem.EndTime - ResItem.StartTime)*
+//              (EndHead - StartHead) + StartHead;
+//          end;
+//
+//          if ResItem.EndTime <= Item.EndTime then
+//          begin
+//            ExportedEndHead := EndHead;
+//          end
+//          else if (ResItem.StartTime < Item.EndTime)
+//            and (ResItem.EndTime > Item.EndTime) then
+//          begin
+//            Assert(ResItem.EndTime <> ResItem.StartTime);
+//            ExportedEndHead := (Item.EndTime - ResItem.StartTime)/
+//              (ResItem.EndTime - ResItem.StartTime)*
+//              (EndHead - StartHead) + StartHead;
+//          end;
+//
+//          if ResItem.EndTime >= Item.EndTime then
+//          begin
+//            break;
+//          end;
+//        end;
         WriteF10Float(ExportedStartHead);
         WriteF10Float(ExportedEndHead);
         WriteString(' # Data Set 7, Stress period');

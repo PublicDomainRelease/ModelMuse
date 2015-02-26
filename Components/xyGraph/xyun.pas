@@ -79,7 +79,7 @@ function sinx2(x:single):single; begin sinx2 := sin(sqr(x)); end;
 const nspokes=6;
 var axes : array[0..nspokes-1] of Tradar;
     bdata : array of Tbardata;
-    data, data2, data3 : Tdatatype;
+    data, data2, data3, data4 : Tdatatype;
 
 procedure TForm1.PaintBox1Paint(Sender: TObject);
 var i,y,e : integer;
@@ -91,7 +91,7 @@ begin
    { - - - first graph - - - }
 
    xystartgraph(0,50,4,65,40,70,50,40,clipon);
-   xyxaxis(clblack,1,100,0,0,'X-axis',1,gridoff,logscale,sci{fixed},0);
+   xyxaxis(clblack,1,100,0,0,'X-axis',1,gridoff,logscale,fixed,0);
    xyyaxis(clblack,1,100,0,0,'@First',1,gridoff,logscale,fixed);
    xybrush.style := bsdiagcross;
    xy3dquad(point3d(1,1,0),point3d(1,100,0),point3d(100,100,0),-1,clyellow,false,false);
@@ -126,12 +126,13 @@ begin
    xymove(0,0); for i := 1 to 9 do
      begin xydraw(i*10,i*10); xysymbol(4,8,2); end;
    if logscale then xylegendentry(3,'symb 4')
-               else xylegendentry(0,'line 4'); 
+               else xylegendentry(0,'line 4');
    xytitle(clgray,'GRAPH 1');
 
    { - - - second graph - - - }
 
    xystartgraph(50,100,4,65,70,10,30,20,clipon);
+   xysetgridlines(clred);
    with xygraphdata[0] do
      xy3dquad(point3d(x1,y1,0),point3d(x1,y2,0),point3d(x2,y2,0),
      -1,$d0ffd0,false,false);
@@ -157,9 +158,6 @@ begin
        xylegendentry(1,'bar');
      end;
 
-   {xybar2(7,1.8,50,25,clyellow,clblue,-1,22,20,1,1+2);}
-   {xybar2(8,3.5,30,70,clyellow,clblue,-1,6,3,6,1);}
-   {xylegendentry(5,'bar2');}
    xytitle(clgray,'GRAPH 2');
 
    { - - - third graph - - - }
@@ -167,7 +165,7 @@ begin
    xysetfont('Times New Roman',10,2,0,0);
    xystartgraph(0,100,65,100,35,55,20,25,clipon);
    if checkbox1.checked then xysetratio(1);
-   xyxaxis(clblack,-10,10,0,0,'',gridoff,logscale,fixed);
+   xyxaxis(clblack,-10,10,0,0,'',1,gridoff,logscale,fixed,0);
    xyyaxis(clblack,-1.05,1.05,0,0,'sine functions',5,gridoff,logscale,fixed);
    xylinewidth(2);
    xysetlinestyle(15,60,2);
@@ -188,11 +186,11 @@ begin
      0,round(paintbox1.height*0.55),0,frameon);
 
    xysetusercoordinates(0,0);
-   xytextangle(clblack,'XYGRAPH|(C) 2002',paintbox1.width-10,
+   xytextangle(clblack,'XYGRAPH|3.0',paintbox1.width-10,
      round(paintbox1.height*0.82),0,1,1,-90);
    xytitle(clmaroon,'@2D CARTESIAN CO-ORDINATES');
 
-   xyinitruler(clgray,20,round(paintbox1.height*0.65)-xycharheight div 2,1,8);
+   xyinitruler(clgray,20,round(paintbox1.height*0.65)-xycharheight div 2,1,0+8);
 end;
 
 procedure TForm1.PaintBox2Paint(Sender: TObject);
@@ -202,15 +200,15 @@ begin
   {--------- POLAR DEMO ----------------------------------------}
 
    xystartgraph(0,50,5,100,40,40,40,40,clipon);
+   xysetgridlines(clgreen);
    with xygraphdata[0] do
     xy3dcircle(point3d((x1+x2) div 2,(y1+y2) div 2,0),point3d(0,0,0),
       min((x2-x1) div 2,(y2-y1) div 2),0,-1,$fff0f0,false,false,0);
 
    if checkbox1.checked then
         xypolargraph(clmaroon,1,2,90,0,reverse,angle,gridon,true)
-   else xypolargraph(clmaroon,1,2, 0,0,normal,straight,gridon,true);
-   xypen.color := clblue; xylinewidth(2);
-   xymove(0,1); for i := 1 to 100 do xydraw(1+i/100,i*10);
+   else xypolargraph(clmaroon,1,2,90,0,normal,straight,gridon,true);
+   xyplotarray(data4,0,2);
    xytitle(clgray,'POLAR GRAPH');
 
    xystartgraph(50,100,5,100,40,40,40,40,clipon);
@@ -342,6 +340,11 @@ begin
   for i := 1 to 7 do
     begin data3[i,1] := styl1[i]; data3[i,2] := styl2[i]; data3[i,3] := styl3[i];end;
   data3[0,0] := 1; data3[0,1] := 1; data3[0,2] := 1; data3[0,3] := 1;
+
+  xysetdataarray(data4,5,2);
+  for i := 1 to 5 do data4[i,0] := 1 + i/10;
+  for i := 1 to 5 do data4[i,1] := i*60;
+  for i := 1 to 5 do data4[i,2] := i*50;
 end;
 
 procedure TForm1.PaintBox1MouseDown(Sender: TObject; Button: TMouseButton;

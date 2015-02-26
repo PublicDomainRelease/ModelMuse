@@ -30,7 +30,7 @@ uses
   ModflowFmpCropSpatialUnit;
 
 resourcestring
-  StrCropIDCID = 'Crop ID (CID)';
+  StrCropID_ICID = 'Crop ID (ICID)';
 
 {$R *.dfm}
 
@@ -44,25 +44,19 @@ end;
 procedure TframeScreenObjectCropID.CreateScreenObjectBoundary(
   AScreenObject: TScreenObject);
 begin
-{$IFDEF FMP}
   AScreenObject.CreateFarmCropID;
-{$ENDIF}
 end;
 
 function TframeScreenObjectCropID.GetBoundary(
   AScreenObject: TScreenObject): TModflowBoundary;
 begin
-{$IFDEF FMP}
   result := AScreenObject.ModflowFmpCropID;
-{$ELSE}
-  result := nil;
-{$ENDIF}
 end;
 
 procedure TframeScreenObjectCropID.InitializeControls;
 begin
   inherited;
-  dgModflowBoundary.Cells[Ord(pcValue), 0] := StrCropIDCID;
+  dgModflowBoundary.Cells[Ord(pcValue), 0] := StrCropID_ICID;
 end;
 
 end.

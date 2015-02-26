@@ -1,0 +1,417 @@
+inherited frmFarm: TfrmFarm
+  HelpType = htKeyword
+  HelpKeyword = 'Farms_Dialog_Box'
+  Caption = 'Farms'
+  ClientHeight = 462
+  ClientWidth = 759
+  ExplicitTop = -74
+  ExplicitWidth = 775
+  ExplicitHeight = 500
+  PixelsPerInch = 120
+  TextHeight = 18
+  inline frameFarm: TframeFarm
+    Left = 185
+    Top = 0
+    Width = 574
+    Height = 421
+    Align = alClient
+    TabOrder = 1
+    ExplicitLeft = 185
+    ExplicitWidth = 574
+    ExplicitHeight = 421
+    inherited pcMain: TJvgPageControl
+      Width = 574
+      Height = 421
+      ActivePage = frameFarm.tabCosts
+      Font.Pitch = fpVariable
+      OnChange = frameFarmpcMainChange
+      ExplicitWidth = 574
+      ExplicitHeight = 421
+      inherited tabCrops: TTabSheet
+        ExplicitWidth = 566
+        ExplicitHeight = 371
+        inherited frameFormulaGridCrops: TframeFormulaGrid
+          ExplicitWidth = 566
+          ExplicitHeight = 306
+          inherited Panel: TPanel
+            ExplicitTop = 265
+            ExplicitWidth = 566
+            inherited sbAdd: TSpeedButton
+              Left = 295
+              ExplicitLeft = 260
+            end
+            inherited sbInsert: TSpeedButton
+              Left = 350
+              ExplicitLeft = 308
+            end
+            inherited sbDelete: TSpeedButton
+              Left = 405
+              ExplicitLeft = 357
+            end
+          end
+          inherited Grid: TRbwDataGrid4
+            ExplicitWidth = 566
+            ExplicitHeight = 208
+          end
+          inherited pnlTop: TPanel
+            ExplicitWidth = 566
+            inherited edFormula: TLabeledEdit
+              EditLabel.ExplicitHeight = 18
+            end
+          end
+        end
+        inherited pnlTop: TPanel
+          ExplicitWidth = 566
+          inherited pnlCaption: TPanel
+            ExplicitWidth = 566
+          end
+        end
+      end
+      inherited tabCosts: TTabSheet
+        inherited frameFormulaGridCosts: TframeFormulaGrid
+          Width = 566
+          Height = 371
+          ExplicitWidth = 566
+          ExplicitHeight = 371
+          inherited Panel: TPanel
+            Top = 330
+            Width = 566
+            ExplicitTop = 330
+            ExplicitWidth = 566
+            inherited sbAdd: TSpeedButton
+              Left = 256
+              ExplicitLeft = 260
+            end
+            inherited sbInsert: TSpeedButton
+              Left = 303
+              ExplicitLeft = 308
+            end
+            inherited sbDelete: TSpeedButton
+              Left = 351
+              ExplicitLeft = 357
+            end
+          end
+          inherited Grid: TRbwDataGrid4
+            Width = 566
+            Height = 273
+            ExplicitWidth = 566
+            ExplicitHeight = 273
+          end
+          inherited pnlTop: TPanel
+            Width = 566
+            ExplicitWidth = 566
+            inherited edFormula: TLabeledEdit
+              EditLabel.ExplicitHeight = 18
+            end
+          end
+        end
+      end
+      inherited tabDiversionLocation: TTabSheet
+        inherited frameFormulaGridDiversion: TframeFarmDiversion
+          Width = 566
+          Height = 371
+          inherited Panel: TPanel
+            Top = 330
+            Width = 566
+            inherited sbAdd: TSpeedButton
+              Left = 440
+              ExplicitLeft = 440
+            end
+            inherited sbInsert: TSpeedButton
+              Left = 469
+              ExplicitLeft = 469
+            end
+            inherited sbDelete: TSpeedButton
+              Left = 498
+              ExplicitLeft = 498
+            end
+            inherited comboMethod: TComboBox
+              Left = 343
+              ExplicitLeft = 343
+            end
+          end
+          inherited Grid: TRbwDataGrid4
+            Width = 566
+            Height = 273
+          end
+          inherited pnlTop: TPanel
+            Width = 566
+            inherited edFormula: TLabeledEdit
+              EditLabel.ExplicitHeight = 18
+            end
+          end
+        end
+      end
+      inherited tabReturnFlowLocation: TTabSheet
+        inherited frameFormulaGridReturnFlow: TframeFarmDiversion
+          inherited Panel: TPanel
+            inherited sbAdd: TSpeedButton
+              Left = 394
+              ExplicitLeft = 394
+            end
+            inherited sbInsert: TSpeedButton
+              Left = 429
+              ExplicitLeft = 430
+            end
+            inherited sbDelete: TSpeedButton
+              Left = 466
+              ExplicitLeft = 465
+            end
+          end
+          inherited pnlTop: TPanel
+            inherited edFormula: TLabeledEdit
+              EditLabel.ExplicitHeight = 18
+            end
+          end
+        end
+      end
+      inherited tabNonRoutedDelivery: TTabSheet
+        inherited frameDelivery: TframeDeliveryGrid
+          inherited Panel: TPanel
+            inherited sbAdd: TSpeedButton
+              Left = 370
+              Top = 9
+              ExplicitLeft = 362
+              ExplicitTop = 9
+            end
+            inherited sbInsert: TSpeedButton
+              Left = 420
+              Top = 9
+              ExplicitLeft = 411
+              ExplicitTop = 9
+            end
+            inherited sbDelete: TSpeedButton
+              Left = 470
+              Top = 9
+              ExplicitLeft = 460
+              ExplicitTop = 9
+            end
+          end
+          inherited pnlTop: TPanel
+            inherited edFormula: TLabeledEdit
+              EditLabel.ExplicitHeight = 18
+            end
+          end
+        end
+      end
+      inherited tabWaterRights: TTabSheet
+        inherited frameFormulaGridWaterRights: TframeFormulaGrid
+          inherited Panel: TPanel
+            inherited sbAdd: TSpeedButton
+              Left = 261
+              ExplicitLeft = 260
+            end
+            inherited sbInsert: TSpeedButton
+              Left = 309
+              ExplicitLeft = 308
+            end
+            inherited sbDelete: TSpeedButton
+              Left = 358
+              ExplicitLeft = 357
+            end
+          end
+          inherited pnlTop: TPanel
+            inherited edFormula: TLabeledEdit
+              EditLabel.ExplicitHeight = 18
+            end
+          end
+        end
+      end
+      inherited tabGW_Allocation: TTabSheet
+        inherited frameGW_Allocation: TframeFormulaGrid
+          inherited Panel: TPanel
+            inherited sbAdd: TSpeedButton
+              Left = 289
+              ExplicitLeft = 295
+            end
+            inherited sbInsert: TSpeedButton
+              Left = 343
+              ExplicitLeft = 350
+            end
+            inherited sbDelete: TSpeedButton
+              Left = 397
+              ExplicitLeft = 405
+            end
+          end
+          inherited pnlTop: TPanel
+            inherited edFormula: TLabeledEdit
+              EditLabel.ExplicitHeight = 18
+            end
+          end
+        end
+      end
+    end
+  end
+  object pnlFarms: TPanel
+    Left = 0
+    Top = 0
+    Width = 185
+    Height = 421
+    Align = alLeft
+    TabOrder = 0
+    object vstFarms: TVirtualStringTree
+      Left = 1
+      Top = 1
+      Width = 183
+      Height = 335
+      Align = alClient
+      Header.AutoSizeIndex = 0
+      Header.Font.Charset = DEFAULT_CHARSET
+      Header.Font.Color = clWindowText
+      Header.Font.Height = -11
+      Header.Font.Name = 'Tahoma'
+      Header.Font.Style = []
+      Header.MainColumn = -1
+      TabOrder = 0
+      TreeOptions.SelectionOptions = [toMultiSelect]
+      OnAddToSelection = vstFarmsAddToSelection
+      OnGetText = vstFarmsGetText
+      OnGetNodeDataSize = vstFarmsGetNodeDataSize
+      OnInitNode = vstFarmsInitNode
+      OnRemoveFromSelection = vstFarmsRemoveFromSelection
+      Columns = <>
+    end
+    object pnlControls: TPanel
+      Left = 1
+      Top = 336
+      Width = 183
+      Height = 84
+      Align = alBottom
+      TabOrder = 1
+      object sbAddUnit: TSpeedButton
+        Left = 11
+        Top = 6
+        Width = 23
+        Height = 22
+        Hint = 'Add farn|Add a farm below the bottom farm.'
+        Glyph.Data = {
+          F6000000424DF600000000000000760000002800000010000000100000000100
+          0400000000008000000000000000000000001000000000000000000000000000
+          8000008000000080800080000000800080008080000080808000C0C0C0000000
+          FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00FFFFFFFFFFFF
+          FFFFFFFFFFFFFFFFFFFFFFFF00000000000FF0FF0CCCCCCCCC0F000F0CCCCCCC
+          CC0FF0FF0CCCCCCCCC0FFFFF00000000000FFFFF0FFFFFFFFF0FFFFF0FFFFFFF
+          FF0FFFFF0FFFFFFFFF0FFFFF00000000000FFFFF0FFFFFFFFF0FFFFF0FFFFFFF
+          FF0FFFFF0FFFFFFFFF0FFFFF00000000000FFFFFFFFFFFFFFFFF}
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = sbAddUnitClick
+      end
+      object sbInsertUnit: TSpeedButton
+        Left = 40
+        Top = 6
+        Width = 23
+        Height = 22
+        Hint = 'Insert farm|Insert a farm above the selected farm.'
+        Glyph.Data = {
+          F6000000424DF600000000000000760000002800000010000000100000000100
+          0400000000008000000000000000000000001000000000000000000000000000
+          8000008000000080800080000000800080008080000080808000C0C0C0000000
+          FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00FFFFFFFFFFFF
+          FFFFFFFFFFFFFFFFFFFFFFFF00000000000FFFFF0FFFFFFFFF0FFFFF0FFFFFFF
+          FF0FFFFF0FFFFFFFFF0FFFFF00000000000FF0FF0CCCCCCCCC0F000F0CCCCCCC
+          CC0FF0FF0CCCCCCCCC0FFFFF00000000000FFFFF0FFFFFFFFF0FFFFF0FFFFFFF
+          FF0FFFFF0FFFFFFFFF0FFFFF00000000000FFFFFFFFFFFFFFFFF}
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = sbInsertUnitClick
+      end
+      object sbDeleteUnit: TSpeedButton
+        Left = 69
+        Top = 6
+        Width = 23
+        Height = 22
+        Hint = 'Delete farm|Delete the selected farm.'
+        Glyph.Data = {
+          36030000424D3603000000000000360000002800000010000000100000000100
+          18000000000000030000120B0000120B00000000000000000000FFFFFFFFFFFF
+          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+          FFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+          FFFFFFFF000000FFFFFFFFFFFFFFFFFF000000000000000000FFFFFFFFFFFFFF
+          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+          000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+          FF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000FFFFFFFF
+          FFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+          FFFFFFFFFFFF000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF0000000000
+          00FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000
+          0000FFFFFFFFFFFF000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+          FFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000000000000FFFFFFFFFF
+          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00
+          0000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+          FFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000000000000FFFFFFFFFF
+          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000
+          0000FFFFFFFFFFFF000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+          FFFFFF000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF0000000000
+          00FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000000FFFFFFFF
+          FFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000FFFFFFFFFFFFFFFFFFFFFFFF
+          000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+          FFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = sbDeleteUnitClick
+      end
+      object lblFarmCount: TLabel
+        Left = 11
+        Top = 34
+        Width = 115
+        Height = 18
+        Caption = 'Number of farms'
+      end
+      object seFarms: TJvSpinEdit
+        Left = 11
+        Top = 53
+        Width = 115
+        Height = 26
+        CheckMinValue = True
+        TabOrder = 0
+        OnChange = seFarmsChange
+      end
+    end
+  end
+  object pnlBottom: TPanel
+    Left = 0
+    Top = 421
+    Width = 759
+    Height = 41
+    Align = alBottom
+    TabOrder = 2
+    DesignSize = (
+      759
+      41)
+    object btnHelp: TBitBtn
+      Left = 418
+      Top = 4
+      Width = 108
+      Height = 33
+      Anchors = [akTop, akRight]
+      Kind = bkHelp
+      NumGlyphs = 2
+      TabOrder = 0
+      OnClick = btnHelpClick
+    end
+    object btnOK: TBitBtn
+      Left = 532
+      Top = 6
+      Width = 108
+      Height = 33
+      Anchors = [akTop, akRight]
+      Kind = bkOK
+      NumGlyphs = 2
+      TabOrder = 2
+      OnClick = btnOKClick
+    end
+    object btnCancel: TBitBtn
+      Left = 646
+      Top = 4
+      Width = 108
+      Height = 33
+      Anchors = [akTop, akRight]
+      Kind = bkCancel
+      NumGlyphs = 2
+      TabOrder = 1
+    end
+  end
+end

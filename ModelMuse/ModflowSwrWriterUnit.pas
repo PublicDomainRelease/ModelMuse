@@ -2633,7 +2633,6 @@ var
   DataType: TRbwDataType;
   DataTypeIndex: Integer;
   TimeIndex: Integer;
-//  AssignmentMethod: TUpdateMethod;
   Dummy: TDataArray;
 begin
   { TODO -cFMP : This needs to be finished. }
@@ -3462,10 +3461,13 @@ procedure TModflowSwrWriter.WriteDataSet4C;
 var
   NTABS: Integer;
 begin
-  NTABS := Model.SwrTabFiles.Count;
-  WriteInteger(NTABS);
-  WriteString(' # Data Set 4C, NTABS');
-  NewLine;
+  if Model.SwrTabFiles.Count > 0 then
+  begin
+    NTABS := Model.SwrTabFiles.Count;
+    WriteInteger(NTABS);
+    WriteString(' # Data Set 4C, NTABS');
+    NewLine;
+  end;
 end;
 
 procedure TModflowSwrWriter.WriteDataSet4D;
@@ -3483,120 +3485,123 @@ var
   ReachIndex: Integer;
   AReachObject: TReachObject;
 begin
-  ITABRCH := TList<Integer>.Create;
-  try
-    for TabFileIndex := 0 to Model.SwrTabFiles.Count - 1 do
-    begin
-      ITAB := TabFileIndex + 1;
-      TabItem := Model.SwrTabFiles[TabFileIndex];
-    {$REGION ''}
-      case TabItem.TabType of
-        ttRain: CTABTYPE := ' RAIN';
-        ttEvap: CTABTYPE := ' EVAP';
-        ttLatFlow: CTABTYPE := ' LATFLOW';
-        ttStage: CTABTYPE := ' STAGE';
-        ttStructure: CTABTYPE := ' STRUCTURE';
-        ttTime: CTABTYPE := ' TIME';
-        else Assert(False);
-      end;
-    {$ENDREGION}
-      ITABUNIT := Model.ParentModel.UnitNumbers.SequentialUnitNumber;
-      RelativeFileName := ExtractRelativePath(FNameOfFile, TabItem.FullTabFileName);
-      case TabItem.TabFormat of
-        tfText: WriteToNameFile(StrDATA, ITABUNIT, RelativeFileName, foInput, True);
-        tfBinary:
-          begin
-            WriteToNameFile(StrDATABINARY, ITABUNIT, RelativeFileName, foInput, True);
-            ITABUNIT := -ITABUNIT;
-          end;
-        else Assert(False);
-      end;
-    {$REGION ''}
-      case TabItem.InterpolationMethod of
-        imNone: CINTP := ' NONE';
-        imAverage: CINTP := ' AVERAGE';
-        imInterpolate: CINTP := ' INTERPOLATE';
-        else Assert(False);
-      end;
-    {$ENDREGION}
-      ITABRCH.Clear;
-      CTABRCH := '';
-      if not (TabItem.TabType in [ttTime, ttStructure]) then
+  if Model.SwrTabFiles.Count > 0 then
+  begin
+    ITABRCH := TList<Integer>.Create;
+    try
+      for TabFileIndex := 0 to Model.SwrTabFiles.Count - 1 do
       begin
-        {$REGION ''}
-          case TabItem.ReachSelectionMethod of
-            rsmAll: CTABRCH := ' ALL';
-            rsmObjects:
-              begin
-                UsedObjects := TStringList.Create;
-                try
-                  UsedObjects.CommaText := TabItem.ObjectNames;
+        ITAB := TabFileIndex + 1;
+        TabItem := Model.SwrTabFiles[TabFileIndex];
+      {$REGION ''}
+        case TabItem.TabType of
+          ttRain: CTABTYPE := ' RAIN';
+          ttEvap: CTABTYPE := ' EVAP';
+          ttLatFlow: CTABTYPE := ' LATFLOW';
+          ttStage: CTABTYPE := ' STAGE';
+          ttStructure: CTABTYPE := ' STRUCTURE';
+          ttTime: CTABTYPE := ' TIME';
+          else Assert(False);
+        end;
+      {$ENDREGION}
+        ITABUNIT := Model.ParentModel.UnitNumbers.SequentialUnitNumber;
+        RelativeFileName := ExtractRelativePath(FNameOfFile, TabItem.FullTabFileName);
+        case TabItem.TabFormat of
+          tfText: WriteToNameFile(StrDATA, ITABUNIT, RelativeFileName, foInput, True);
+          tfBinary:
+            begin
+              WriteToNameFile(StrDATABINARY, ITABUNIT, RelativeFileName, foInput, True);
+              ITABUNIT := -ITABUNIT;
+            end;
+          else Assert(False);
+        end;
+      {$REGION ''}
+        case TabItem.InterpolationMethod of
+          imNone: CINTP := ' NONE';
+          imAverage: CINTP := ' AVERAGE';
+          imInterpolate: CINTP := ' INTERPOLATE';
+          else Assert(False);
+        end;
+      {$ENDREGION}
+        ITABRCH.Clear;
+        CTABRCH := '';
+        if not (TabItem.TabType in [ttTime, ttStructure]) then
+        begin
+          {$REGION ''}
+            case TabItem.ReachSelectionMethod of
+              rsmAll: CTABRCH := ' ALL';
+              rsmObjects:
+                begin
+                  UsedObjects := TStringList.Create;
+                  try
+                    UsedObjects.CommaText := TabItem.ObjectNames;
+                    for ReachIndex := 0 to FReachList.Count - 1 do
+                    begin
+                      AReachObject := FReachList[ReachIndex];
+                      if UsedObjects.IndexOf(AReachObject.FReachData.ObjectName) >= 0 then
+                      begin
+                        ITABRCH.Add(AReachObject.FReachData.Reach);
+                      end;
+                    end;
+                    CTABRCH := ' ' + IntToStr(ITABRCH.Count);
+                  finally
+                    UsedObjects.Free;
+                  end;
+                end;
+              rsmValue:
+                begin
                   for ReachIndex := 0 to FReachList.Count - 1 do
                   begin
                     AReachObject := FReachList[ReachIndex];
-                    if UsedObjects.IndexOf(AReachObject.FReachData.ObjectName) >= 0 then
+                    if AReachObject.FReachData.TabLocation = TabItem.Value then
                     begin
                       ITABRCH.Add(AReachObject.FReachData.Reach);
                     end;
                   end;
                   CTABRCH := ' ' + IntToStr(ITABRCH.Count);
-                finally
-                  UsedObjects.Free;
                 end;
-              end;
-            rsmValue:
-              begin
-                for ReachIndex := 0 to FReachList.Count - 1 do
+              rsmReaches:
                 begin
-                  AReachObject := FReachList[ReachIndex];
-                  if AReachObject.FReachData.TabLocation = TabItem.Value then
+                  ITABRCH.Capacity := TabItem.Reaches.Count;
+                  for ReachIndex := 0 to TabItem.Reaches.Count - 1 do
                   begin
-                    ITABRCH.Add(AReachObject.FReachData.Reach);
+                    ITABRCH.Add(TabItem.Reaches[ReachIndex].Value);
                   end;
+                  CTABRCH := ' ' + IntToStr(ITABRCH.Count);
                 end;
-                CTABRCH := ' ' + IntToStr(ITABRCH.Count);
-              end;
-            rsmReaches:
-              begin
-                ITABRCH.Capacity := TabItem.Reaches.Count;
-                for ReachIndex := 0 to TabItem.Reaches.Count - 1 do
-                begin
-                  ITABRCH.Add(TabItem.Reaches[ReachIndex].Value);
-                end;
-                CTABRCH := ' ' + IntToStr(ITABRCH.Count);
-              end;
-            else Assert(False);
-          end;
-        {$ENDREGION}
-      end;
-      WriteInteger(ITAB);
-      WriteString(CTABTYPE);
-      WriteInteger(ITABUNIT);
-      WriteString(CINTP);
-      if not (TabItem.TabType in [ttTime, ttStructure]) then
-      begin
-        WriteString(CTABRCH);
-        if TabItem.ReachSelectionMethod <> rsmAll then
+              else Assert(False);
+            end;
+          {$ENDREGION}
+        end;
+        WriteInteger(ITAB);
+        WriteString(CTABTYPE);
+        WriteInteger(ITABUNIT);
+        WriteString(CINTP);
+        if not (TabItem.TabType in [ttTime, ttStructure]) then
         begin
-          for ReachIndex := 0 to ITABRCH.Count - 1 do
+          WriteString(CTABRCH);
+          if TabItem.ReachSelectionMethod <> rsmAll then
           begin
-            WriteInteger(ITABRCH[ReachIndex]);
+            for ReachIndex := 0 to ITABRCH.Count - 1 do
+            begin
+              WriteInteger(ITABRCH[ReachIndex]);
+            end;
           end;
         end;
-      end;
-      WriteString(' # Data Set 4D: CTABTYPE ITABUNIT CINTP');
-      if TabItem.TabType <> ttTime then
-      begin
-        WriteString(' CTABRCH');
-        if TabItem.ReachSelectionMethod <> rsmAll then
+        WriteString(' # Data Set 4D: CTABTYPE ITABUNIT CINTP');
+        if TabItem.TabType <> ttTime then
         begin
-          WriteString(' ITABRCH(1)...ITABRCH(NTABRCH)');
+          WriteString(' CTABRCH');
+          if TabItem.ReachSelectionMethod <> rsmAll then
+          begin
+            WriteString(' ITABRCH(1)...ITABRCH(NTABRCH)');
+          end;
         end;
+        NewLine;
       end;
-      NewLine;
+    finally
+      ITABRCH.Free;
     end;
-  finally
-    ITABRCH.Free;
   end;
 end;
 
@@ -3818,7 +3823,7 @@ begin
       begin
         if Obs.ObsType = sotFlow then
         begin
-          IOBSLOC2 := Obs.ConnectedReach;
+          IOBSLOC2 := Obs.ConnectedReachOrStructure;
         end
         else
         begin

@@ -132,7 +132,7 @@ begin
   ISHFLG := Ord(ChildModel.StartingHeadSource);
   WriteInteger(ISHFLG);
 
-  if Model.ModelSelection = msModflowLGR then
+  if Model.ModelSelection in [msModflowLGR] then
   begin
     IBFLG := -(ChildIndex+2);
   end

@@ -640,7 +640,8 @@ begin
   inherited;
   PhastModel := Model as TPhastModel;
   if (PhastModel <> nil)
-    and not (csDestroying in PhastModel.ComponentState) then
+    and not (csDestroying in PhastModel.ComponentState)
+    and not PhastModel.Clearing then
   begin
     PhastModel.InvalidateMnw1DesiredPumpingRate(Self);
     PhastModel.InvalidateMnw1WaterQuality(Self);
@@ -1348,7 +1349,8 @@ begin
   inherited;
   PhastModel := Model as TPhastModel;
   if (PhastModel <> nil)
-    and not (csDestroying in PhastModel.ComponentState) then
+    and not (csDestroying in PhastModel.ComponentState)
+    and not PhastModel.Clearing then
   begin
     PhastModel.InvalidateMnw1DesiredPumpingRate(Self);
     PhastModel.InvalidateMnw1WaterQuality(Self);

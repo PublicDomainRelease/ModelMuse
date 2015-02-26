@@ -95,7 +95,7 @@ resourcestring
   StrHeadObservationRes = 'Head Observation Results';
   StrStreamLinks = 'SFR Stream Links';
   StrStreamStrLinks = 'STR Stream Links';
-  StrVectors = 'Vectors';
+  StrVectors = 'Vectors (SUTRA models)';
   StrCrossSections = 'Cross Sections';
   StrSWRReachConnection = 'SWR Reach Connections';
   StrSWRObservations = 'SWR Observations';
@@ -105,7 +105,9 @@ resourcestring
 procedure UpdateFrmDisplayData(Force: boolean = false);
 begin
   if (frmDisplayData <> nil) and (Force or frmDisplayData.Visible)
-    and not (csDestroying in frmGoPhast.ComponentState) then
+    and (frmGoPhast.PhastModel <> nil)
+    and not (csDestroying in frmGoPhast.ComponentState)
+    and not frmGoPhast.PhastModel.Clearing then
   begin
     frmDisplayData.GetData;
     frmDisplayData.UpdateLabelsAndLegend;
@@ -128,6 +130,8 @@ begin
   tvpglstMain.Handle;
 
   tvpglstMain.Items.Clear;
+  // All nodes must be created even if they aren't used
+  // for "GetData" to work properly.
   Node := tvpglstMain.Items.Add(nil, StrColorGrid) as TJvPageIndexNode;
   Node.PageIndex := jvspColorGrid.PageIndex;
   Node := tvpglstMain.Items.Add(nil, StrContourData) as TJvPageIndexNode;

@@ -415,6 +415,7 @@ end;
 
 function TValueCellList.First: TValueCell;
 begin
+  CheckRestore;
   result := inherited First as TValueCell
 end;
 
@@ -431,6 +432,7 @@ end;
 
 function TValueCellList.Last: TValueCell;
 begin
+  CheckRestore;
   result := inherited Last as TValueCell
 end;
 

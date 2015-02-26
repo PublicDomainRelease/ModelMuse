@@ -18,6 +18,9 @@ type
     MaxPumpingRateAnnotation: string;
     PumpOnlyIfCropRequiresWaterAnnotation: string;
     FarmIDAnnotation: string;
+    Mnw1Well: boolean;
+    Mnw2Well: Boolean;
+    Mnw2Name: string;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList);
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
     procedure RecordStrings(Strings: TStringList);
@@ -138,6 +141,9 @@ type
     function GetPumpOnlyIfCropRequiresWaterAnnotation: string;
     function GetFarmID: integer;
     function GetFarmIDAnnotation: string;
+    function GetMnw1: Boolean;
+    function GetMnw2: Boolean;
+    function GetMnwName: string;
   protected
     function GetColumn: integer; override;
     function GetLayer: integer; override;
@@ -165,6 +171,9 @@ type
       read GetPumpOnlyIfCropRequiresWaterAnnotation;
     property FarmID: integer read GetFarmID;
     property FarmIDAnnotation: string read GetFarmIDAnnotation;
+    property Mnw1: Boolean read GetMnw1;
+    property Mnw2: Boolean read GetMnw2;
+    property MnwName: string read GetMnwName;
     function IsIdentical(AnotherCell: TValueCell): boolean; override;
   end;
 
@@ -205,14 +214,21 @@ const
   FmpWellFarmIDPosition = 1;
   FmpWellPumpOnlyIfCropRequiresWaterPosition = 2;
 
+resourcestring
+  StrMultinodeWellsCan = 'Multinode wells can not be used as farm wells when' +
+  ' the Surface-water allotment flag (IALLOTSW) is set to Prior appropriatio' +
+  'n system with Water Rights Calls.';
+
 implementation
 
 uses
   ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit, TempFiles,
-  frmGoPhastUnit, GIS_Functions, ModflowPackageSelectionUnit;
+  frmGoPhastUnit, GIS_Functions, ModflowPackageSelectionUnit,
+  frmErrorsAndWarningsUnit;
 
 resourcestring
   StrMaxPumpingRateMu = ' max pumping rate multiplier (QMAXfact)';
+  StrObjectS = 'Object = "%s"';
 
 
 { TFrmWellRecord }
@@ -228,6 +244,9 @@ begin
   WriteCompInt(Comp, Strings.IndexOf(MaxPumpingRateAnnotation));
   WriteCompInt(Comp, Strings.IndexOf(PumpOnlyIfCropRequiresWaterAnnotation));
   WriteCompInt(Comp, Strings.IndexOf(FarmIDAnnotation));
+  WriteCompBoolean(Comp, Mnw1Well);
+  WriteCompBoolean(Comp, Mnw2Well);
+  WriteCompInt(Comp, Strings.IndexOf(Mnw2Name));
 end;
 
 procedure TFmpWellRecord.RecordStrings(Strings: TStringList);
@@ -235,6 +254,7 @@ begin
   Strings.Add(MaxPumpingRateAnnotation);
   Strings.Add(PumpOnlyIfCropRequiresWaterAnnotation);
   Strings.Add(FarmIDAnnotation);
+  Strings.Add(Mnw2Name);
 end;
 
 procedure TFmpWellRecord.Restore(Decomp: TDecompressionStream;
@@ -248,6 +268,10 @@ begin
   EndingTime := ReadCompReal(Decomp);
   MaxPumpingRateAnnotation := Annotations[ReadCompInt(Decomp)];
   PumpOnlyIfCropRequiresWaterAnnotation := Annotations[ReadCompInt(Decomp)];
+  FarmIDAnnotation := Annotations[ReadCompInt(Decomp)];
+  Mnw1Well := ReadCompBoolean(Decomp);
+  Mnw2Well := ReadCompBoolean(Decomp);
+  Mnw2Name := Annotations[ReadCompInt(Decomp)];
 end;
 
 { TFmpWellStorage }
@@ -457,7 +481,8 @@ begin
   inherited;
   PhastModel := Model as TPhastModel;
   if (PhastModel <> nil)
-    and not (csDestroying in PhastModel.ComponentState) then
+    and not (csDestroying in PhastModel.ComponentState)
+    and not PhastModel.Clearing then
   begin
     PhastModel.InvalidateMfFmpMaxPumpingRate(self);
     PhastModel.InvalidateMfFmpPumpOnlyIfCropRequiresWater(self);
@@ -727,7 +752,8 @@ begin
   inherited;
   PhastModel := Model as TPhastModel;
   if (PhastModel <> nil)
-    and not (csDestroying in PhastModel.ComponentState) then
+    and not (csDestroying in PhastModel.ComponentState)
+    and not PhastModel.Clearing then
   begin
     PhastModel.InvalidateMfFmpMaxPumpingRate(self);
     PhastModel.InvalidateMfFmpPumpOnlyIfCropRequiresWater(self);
@@ -940,6 +966,21 @@ begin
   result := FValues.MaxPumpingRateAnnotation;
 end;
 
+function TFmpWell_Cell.GetMnw1: Boolean;
+begin
+  result := FValues.Mnw1Well;
+end;
+
+function TFmpWell_Cell.GetMnw2: Boolean;
+begin
+  result := FValues.Mnw2Well;
+end;
+
+function TFmpWell_Cell.GetMnwName: string;
+begin
+  result := FValues.Mnw2Name;
+end;
+
 function TFmpWell_Cell.GetPumpOnlyIfCropRequiresWater: boolean;
 begin
   result := FValues.PumpOnlyIfCropRequiresWater;
@@ -996,7 +1037,10 @@ begin
       and (MaxPumpingRate = WEFmpL_Cell.MaxPumpingRate)
       and (PumpOnlyIfCropRequiresWater = WEFmpL_Cell.PumpOnlyIfCropRequiresWater)
       and (FarmID = WEFmpL_Cell.FarmID)
-      and (IFace = WEFmpL_Cell.IFace);
+      and (IFace = WEFmpL_Cell.IFace)
+      and (Mnw1 = WEFmpL_Cell.Mnw1)
+      and (Mnw2 = WEFmpL_Cell.Mnw2)
+      and (MnwName = WEFmpL_Cell.MnwName)
   end;
 end;
 
@@ -1043,9 +1087,39 @@ var
   Cells: TValueCellList;
   LocalBoundaryStorage: TFmpWellStorage;
   LocalModel: TCustomModel;
+//  LocalScreenObject: TScreenObject;
+  Mnw1Used: Boolean;
+  Boundaries: TModflowBoundaries;
+  Mnw2Used: Boolean;
+  WellId: string;
+  FmpPackage: TFarmProcess;
 begin
   LocalModel := AModel as TCustomModel;
   LocalBoundaryStorage := BoundaryStorage as TFmpWellStorage;
+  FmpPackage := LocalModel.ModflowPackages.FarmProcess;
+
+  Boundaries := (ScreenObject as TScreenObject).ModflowBoundaries;
+
+  Mnw1Used := (Boundaries.ModflowMnw1Boundary <> nil)
+    and Boundaries.ModflowMnw1Boundary.Used;
+  Mnw2Used := (Boundaries.ModflowMnw2Boundary <> nil)
+    and Boundaries.ModflowMnw2Boundary.Used;
+  if Mnw2Used then
+  begin
+    WellId := Boundaries.ModflowMnw2Boundary.WellID;
+  end
+  else
+  begin
+    WellId := '';
+  end;
+  if (Mnw1Used or Mnw2Used)
+    and (FmpPackage.SurfaceWaterAllotment in [swaPriorWithCalls,
+      swaPriorWithoutCalls]) then
+  begin
+    frmErrorsAndWarnings.AddError(LocalModel, StrMultinodeWellsCan,
+      Format(StrObjectS, [(ScreenObject as TScreenObject).Name]));
+  end;
+
   for TimeIndex := 0 to
     LocalModel.ModflowFullStressPeriods.Count - 1 do
   begin
@@ -1071,7 +1145,14 @@ begin
 //      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.FmpWellArray) - 1 do
       begin
+        if (Mnw1Used or Mnw2Used) and (BoundaryIndex > 0) then
+        begin
+          Continue;
+        end;
         BoundaryValues := LocalBoundaryStorage.FmpWellArray[BoundaryIndex];
+        BoundaryValues.Mnw1Well := Mnw1Used;
+        BoundaryValues.Mnw2Well := Mnw2Used;
+        BoundaryValues.Mnw2Name := WellId;
         Cell := TFmpWell_Cell.Create;
         Assert(ScreenObject <> nil);
         Cell.IFace := (ScreenObject as TScreenObject).IFace;
@@ -1157,9 +1238,7 @@ end;
 
 function TFmpWellBoundary.ParameterType: TParameterType;
 begin
-{$IFDEF FMP}
   result := ptQMAX;
-{$ENDIF}
 end;
 
 end.

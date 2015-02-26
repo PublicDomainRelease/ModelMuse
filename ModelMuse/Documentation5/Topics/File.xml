@@ -8,7 +8,7 @@
     </header>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The menu items under File are listed in table 3. &#160;The commands under this menu have to do with opening, saving, importing or exporting files. &#160;Many of the choices under File|Import refer to features of data sets and objects that are described under &#160;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="Data_Sets_Dialog_Box" styleclass="Normal" translate="true">Data Sets Dialog Box</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Object_Properties_Dialog_Box" styleclass="Normal" translate="true">Object Properties Dialog Box</link><text styleclass="Normal" translate="true">.</text></para>
     <para styleclass="Table Caption"><text styleclass="Table Caption" translate="true">Table 3. File Menu</text></para>
-    <para styleclass="Normal" style="text-align:center;"><table rowcount="48" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Normal" style="text-align:center;"><table rowcount="49" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td colspan="2" style="width:626px;">
           <para styleclass="Normal"><line style="height:1px; color:#000000;" /></para>
@@ -353,6 +353,14 @@
         </td>
         <td style="width:405px;">
           <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Export parameter values and either observation or prediction values depending on the current </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Model" anchor="ObservationType" styleclass="Table Cell" style="font-weight:bold;" translate="true">Observation Type</link><text styleclass="Table Cell" translate="true">. &#160;If the selected ModelMate .mtc file already exists, ModelMate will update the parameter and either observation or prediction values in the file. &#160;If it does not already exist, it will be created. &#160;The user can choose to have ModelMate open the file by checking the </text><text styleclass="Strong" translate="true">Open with ModelMate</text><text styleclass="Table Cell" translate="true"> checkbox at the bottom of the Save dialog box.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:221px;">
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|SUTRA 2D Mesh</text></para>
+        </td>
+        <td style="width:405px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Export a 2D SUTRA mesh in a format compatible with Argus ONE®. The first line contains the number of elements and the number of nodes. This is followed by lines defining the node positions. Each such line starts with &quot;N&quot; followed by the node number and the X and Y coordinates of the node. These are followed by lines defining the elements. Each line starts with &quot;E&quot; followed by the element number and then the numbers of the four nodes in the element. </text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">

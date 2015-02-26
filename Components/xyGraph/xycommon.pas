@@ -33,6 +33,8 @@ procedure setresscale(res:integer);
 procedure copyscreen(mode:integer);
 procedure restorescreen;
 
+procedure plotrect(p1,p2,p3,p4:Tpoint;c1,c2,c3,c4,mode:integer);
+
 procedure position0(x,y,z:single;var xp,yp:integer);
 
 procedure printpart(x1,y1,x2,y2:integer);
@@ -58,7 +60,7 @@ procedure initwmf;
 procedure openwmf(var s:string;var ok:boolean);
 procedure closewmf(var ok:boolean);
 procedure initgrid;
-procedure dogrid(p1,p2:integer;xas:boolean);
+procedure dogrid(p1,p2:integer;xas:boolean;col:Tcolor);
 procedure checkwmfrgpen;
 procedure checkwmfpen;
 procedure wmfredpen;
@@ -109,7 +111,7 @@ var xycanvas : Tcanvas;
     prshow : boolean;                 {toon voortgang}
     crsok : boolean;                  {mag crs maken}
     polartype : integer;              {polaire coordinaten: 0 = cart
-                                        1=pol 2=radar 3-cyl 4-shper}
+                                        1=pol 2=radar 3-cyl 4-spher}
     stereo : boolean;                 {stereo aan rood/groen}
     ffac,prcor : single;              {correctiefactor fonts}
     xoff,yoff : integer;              {offset}
@@ -121,10 +123,22 @@ var xycanvas : Tcanvas;
     sx1,sx2,sy1,sy2 : integer;        {x/y van hoogteschaal}
     clip0 : Thandle;                  {overall clip}
     wmfbk : boolean;                  {achtergrond in wmf}
+    setscale : boolean;               {set schaal vast}
+    scale3d : single;                 {overall schaal factor}
+
+type scaletype = record               {vaste schaal instellingen}
+               min,max,fm,fac : single;
+               nc,nf,ndec : integer;
+               fix,go : boolean;
+               exp : string;
+            end;
+
+var fscale : scaletype;
+    fs3d : array[1..4] of scaletype;
 
 type symboltype = record
                    xp,yp:integer;
-                   style,size,fill,width,cd3d : byte;
+                   style,size,fill,width,cd3d : word;
                    color,cl1,cl2,cl3:Tcolor;
                  end;
 var  lastsymbol : symboltype;         {laatst gemelde xysymbol}
@@ -162,7 +176,8 @@ var graphs3d : grafstype3d;
     sinr,cosr : single;           {sin en cos van draaiing}
     fac3d, r3d : single;          {reken factoren}
     ifac3d, ir3d : single;        {inverse factoren}
-    xpc, xpc0, ypc : integer;     {midden vam beeldscherm}
+    xpc, xpc0, ypc : integer;     {quasi midden vam beeldscherm}
+    xc0, yc0 : integer;           {echte midden van beeldscherm}
     pixx3d, pixy3d, pixz3d : single; {aantal pixels voor lengte 1}
     kijkhoek,kijkhoogte : integer;{-id-}
     viewx,viewy,viewz : single;   {kijkpunt}
@@ -170,9 +185,14 @@ var graphs3d : grafstype3d;
     hasempty : boolean;           {er is een lege waarde}
     antial : boolean;             {anti alias bij 3D text}
     zonmode : integer;            {modus zonlicht}
+    zoomc : boolean;              {zoom op centrum}
     stereomode : integer;
 
     fr : single;
+
+type fonttype = record name: string; size:integer; style:Tfontstyles; end;
+procedure storefont (var f:fonttype);
+procedure recallfont(var f:fonttype);
 
 implementation
 
@@ -211,7 +231,7 @@ type setting = record             {instelling van obscure parameters}
                txt:string;        {beschrijving}
                end;
 
-const settings : array[1..39] of setting = (
+const settings : array[1..41] of setting = (
    {(nr:0 ; def:0;  min:0;  max:3;  isint:true; txt:'auto reset') , quasi entry }
     (nr:1;  def:1;  min:0;  max:1;  isint:true; txt:'antialias font') ,
     (nr:2;  def:20; min:10; max:100;isint:true; txt:'legend breedte') ,
@@ -228,6 +248,7 @@ const settings : array[1..39] of setting = (
     (nr:24; def:0.6;min:0;  max:1;  isint:false;txt:'minor ticsize X') ,
     (nr:25; def:0;  min:-90;max:90; isint:true; txt:'angle text X') ,
     (nr:26; def:0;  min:0;  max:0;  isint:false;txt:'format sci labels X') ,
+    (nr:27; def:0;  min:0;  max:1;  isint:true; txt:'do not plot 0 X') ,
 
     (nr:40; def:2;  min:1;  max:100;isint:false;txt:'label dist Y') ,
     (nr:41; def:0;  min:0;  max:1;  isint:true; txt:'rotate vert caption Y') ,
@@ -236,6 +257,7 @@ const settings : array[1..39] of setting = (
     (nr:44; def:0.6;min:0;  max:1;  isint:false;txt:'minor ticsize Y') ,
     (nr:45; def:0;  min:-90;max:90; isint:true; txt:'angle text Y') ,
     (nr:46; def:0;  min:0;  max:0;  isint:false;txt:'format sci labels Y') ,
+    (nr:47; def:0;  min:0;  max:1;  isint:true; txt:'do not plot 0 Y' ) ,
 
     (nr:60; def:2;  min:1;  max:100;isint:false;txt:'label dist R') ,
     (nr:61; def:20; min:1;  max:1e3;isint:false;txt:'max zoom depth R') ,
@@ -245,7 +267,7 @@ const settings : array[1..39] of setting = (
     (nr:66; def:0;  min:0;  max:0;  isint:false;txt:'format sci labels R') ,
 
     (nr:100;def:5;  min:1;  max:100;isint:false;txt:'label dist X 1') ,
-    (nr:101;def:2;  min:1;  max:100;isint:false;txt:'label dist X 2') ,
+    (nr:101;def:2;  min:1;  max:10; isint:false;txt:'label dist X 2') ,
     (nr:102;def:1;  min:0;  max:3;  isint:false;txt:'ticsize X') ,
     (nr:110;def:5;  min:1;  max:100;isint:false;txt:'label dist Y 1') ,
     (nr:111;def:2;  min:1;  max:100;isint:false;txt:'label dist Y 2') ,
@@ -351,6 +373,72 @@ begin result := round(setval[setnrs[n]]); end;
 
 {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
 
+procedure plotrect(p1,p2,p3,p4:Tpoint;c1,c2,c3,c4,mode:integer); {XXXXXXXXXXXXX}
+const maxsplit = 8;
+var nodes : array[-1..maxsplit+1,-1..maxsplit+1] of Tpoint;
+    colrs : array[-1..maxsplit+1,-1..maxsplit+1] of integer;
+    n,x,y,cl,i : integer;
+begin
+  if (mode<0) then n := 2*(-mode)-2 else n := mode;
+  if (n>maxsplit) then n := maxsplit;
+  if (n<2) then
+    begin
+      cl := (c1+c2+c3+c4) div 4;
+      xycanvas.brush.color := colors[resscale[cl]];
+      xycanvas.pen.color := xycanvas.brush.color;
+      xypolygon(-1,-1,[p1,p2,p3,p4]); exit;
+    end;
+  nodes[0,0] := p1; nodes[0,n] := p2; nodes[n,n] := p3; nodes[n,0] := p4;
+  colrs[0,0] := c1; colrs[0,n] := c2; colrs[n,n] := c3; colrs[n,0] := c4;
+  for x := 1 to n-1 do
+    begin
+      nodes[x,0].x := (x*nodes[n,0].x + (n-x)*nodes[0,0].x) div n;
+      nodes[x,0].y := (x*nodes[n,0].y + (n-x)*nodes[0,0].y) div n;
+      colrs[x,0]   := (x*colrs[n,0]   + (n-x)*colrs[0,0])   div n;
+      nodes[x,n].x := (x*nodes[n,n].x + (n-x)*nodes[0,n].x) div n;
+      nodes[x,n].y := (x*nodes[n,n].y + (n-x)*nodes[0,n].y) div n;
+      colrs[x,n]   := (x*colrs[n,n]   + (n-x)*colrs[0,n])   div n;
+    end;
+  for x := 0 to n do for y := 1 to n-1 do
+    begin
+      nodes[x,y].x := (y*nodes[x,n].x + (n-y)*nodes[x,0].x) div n;
+      nodes[x,y].y := (y*nodes[x,n].y + (n-y)*nodes[x,0].y) div n;
+      colrs[x,y]   := (y*colrs[x,n]   + (n-y)*colrs[x,0]  ) div n;
+    end;
+  if (mode<0) then
+    begin
+      for i := 0 to n do begin
+        nodes[-1,i] := nodes[0,i]; nodes[n+1,i] := nodes[n,i];
+        nodes[i,-1] := nodes[i,0]; nodes[i,n+1] := nodes[i,n]; end;
+      for x := 0 to n do for y := 0 to n do
+      if (odd(x) and odd(y)) or ( (not odd(x)) and (not odd(y)) ) then
+        begin
+         p1 := nodes[x-1,y]; p2 := nodes[x,y-1]; p3 := nodes[x+1,y]; p4 := nodes[x,y+1];
+         cl := colrs[x,y];
+         xycanvas.brush.color := colors[resscale[cl]];
+         xycanvas.pen.color := xycanvas.brush.color;
+         xypolygon(-1,-1,[p1,p2,p3,p4]);
+       end;
+    end
+  else
+    for x := 0 to n-1 do for y := 0 to n-1 do
+      begin
+        p1 := nodes[x,y]; p2 := nodes[x,y+1]; p3 := nodes[x+1,y+1]; p4 := nodes[x+1,y];
+        cl := (colrs[x,y] + colrs[x,y+1] + colrs[x+1,y+1] + colrs[x+1,y]) div 4;
+        xycanvas.brush.color := colors[resscale[cl]];
+        xycanvas.pen.color := xycanvas.brush.color;
+        xypolygon(-1,-1,[p1,p2,p3,p4]);
+      end;
+end;
+
+{XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+
+procedure storefont(var f:fonttype);
+begin with xyfont do begin f.name := name; f.size := size; f.style := style; end; end;
+
+procedure recallfont(var f:fonttype);
+begin with xyfont do begin name := f.name; size := f.size; style := f.style; end; end;
+
 function align(xj,yj:integer):integer; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
   (*   0   6   2 top
       24  30  26 baseline!
@@ -438,7 +526,9 @@ begin
       if not nocomp then
         if (xjust=1)  then xp0 := xp0 + dd*res else
         if (xjust=-1) then xp0 := xp0 - dd*res;
-      simpletext(cl,txt,xp0,yp0,xjust,yjust); exit;
+      xybrush.style := bsclear;
+      simpletext(cl,txt,xp0,yp0,xjust,yjust);
+      exit;
     end;
 
   if (txt='') then exit;
@@ -528,7 +618,7 @@ begin
                       else textout(xp,yp,lines[i]);
        end;
 
-      if (angle<>0) then
+      if (angle<>0) or (ang2<>0) then
         begin
           NewFontHandle := SelectObject(Handle,OldFontHandle);
           DeleteObject(NewFontHandle);
@@ -700,7 +790,7 @@ begin
 end;
 
 procedure position0(x,y,z:single;var xp,yp:integer); {XXXXXXXXXXXXXXXXXXXXXXXXX}
-var x1,x2,y1,y2,ff,t : single;
+var x1,x2,y1,y2,ff,t,f : single;
 begin
   x := (x-xmid)*facx; y := (y-ymid)*facy; z := (z-zmid)*facz;
   x1 := x*cosp - y*sinp; y1 := x*sinp + y*cosp; {z1 := z}    {draaiing om z-as}
@@ -709,7 +799,10 @@ begin
     begin t := x2; x2 := x2*cosr - y2*sinr; y2 := t*sinr + y2*cosr; end;
   if (r3d=0) then ff := fac3d else
     ff := fac3d*r3d/(r3d+y1*cosa-z*sina);       {factor voor perspectief}
-  xp := round(xpc+ff*x2); yp := round(ypc-ff*y2);
+  if zoomc then f := scale3d else f := 1;
+  xp := round(xc0+(xpc-xc0)*f+ff*x2);
+  yp := round(yc0+(ypc-yc0)*f-ff*y2);
+  {xp := round(xpc+ff*x2); yp := round(ypc-ff*y2);}
 end;
 
 procedure positionr(x,y,z:single;var xs,ys:single); {XXXXXXXXXXXXXXXXXXXXXXXXX}
@@ -722,7 +815,7 @@ begin
     begin t := x2; x2 := x2*cosr - y2*sinr; y2 := t*sinr + y2*cosr; end;
   if (r3d=0) then ff := fac3d else
     ff := fac3d*r3d/(r3d+y1*cosa-z*sina);       {factor voor perspectief}
-  xs := xpc+ff*x2+0.5; ys := ypc-ff*y2+0.5;
+  xs := (xpc+ff*x2+0.5); ys := (ypc-ff*y2+0.5);
 end;
 
 {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
@@ -1668,7 +1761,7 @@ var fn : file;
     fnaam : string;
     wmfalign : integer;
 
-    ok : boolean;
+    ok,lastmove : boolean;
 
 procedure dosize(n:integer); {WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW}
 begin
@@ -1677,9 +1770,20 @@ begin
 end;
 
 procedure dorecord; {WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW}
+var domove : boolean;
 begin
-  blockwrite(fn,buf,bufd[1]);
-  dosize(bufd[1]); ppx := -1;
+  domove := (buf[3]=$0214);
+  if (domove and lastmove) then {overschrijf vorige}
+    begin
+      seek(fn,filepos(fn)-bufd[1]);
+      blockwrite(fn,buf,bufd[1]);
+    end
+  else
+    begin
+      blockwrite(fn,buf,bufd[1]);
+      dosize(bufd[1]); {ppx := -1;}
+    end;
+  lastmove := domove;
 end;
 
 procedure fillintext(s:string; pos:integer; nul:boolean); {WWWWWWWWWWWWWWWWWWWW}
@@ -1716,6 +1820,7 @@ begin
      blockwrite(fn,buf,11+9);
      flsize := 20; maxlen := 0; nobj := 5;
     end;
+  lastmove := false;
 end;
 
 procedure bitmap(name:string; xp,yp:integer; fac:single); {WWWWWWWWWWWWWWWWWWWW}
@@ -1911,6 +2016,8 @@ end;
 
 procedure movewmf(x,y:integer); {WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW}
 begin
+  if (x>32760) then x := 32760 else if (x<0) then x := 0;
+  if (y>32760) then y := 32760 else if (y<0) then y := 0;
   if (ppx=x) and (ppy=y) then exit;
   bufd[1] := 5; buf[3] := $0214; buf[4] := y; buf[5] := x;
   dorecord; {moveto};
@@ -1919,6 +2026,8 @@ end;
 
 procedure drawwmf(x,y:integer); {WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW}
 begin
+  if (x>32760) then x := 32760 else if (x<0) then x := 0;
+  if (y>32760) then y := 32760 else if (y<0) then y := 0;
   if (ppx=x) and (ppy=y) then exit;
   bufd[1] := 5; buf[3] := $0213; buf[4] := y; buf[5] := x;
   dorecord; {lineto};
@@ -2093,7 +2202,7 @@ end;
 procedure initwmf; {WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW}
 var x,y : integer;
 begin
-  x := xypaintbox.width*res; y := xypaintbox.height*res;
+  x := cwidth; y := cheight;
   redcolor := $0000ff; grncolor := $00ff00;
   comment('File created by XYGRAPH');
   comment('(C) Wilko C Emmens 2002');
@@ -2134,16 +2243,16 @@ begin polygon(points); end;
 procedure closewmf(var ok:boolean); {WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW}
 var x,y : integer;
 begin
-  x := xypaintbox.width*res; y := xypaintbox.height*res;
+  x := cwidth; y := cheight;
   finishwmf(x,y,screen.pixelsperinch,ok);
   dowmf := false;
 end;
 
-procedure dogrid(p1,p2:integer;xas:boolean); {WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW}
+procedure dogrid(p1,p2:integer;xas:boolean;col:Tcolor); {WWWWWWWWWWWWWWWWWWWWWW}
 var i : integer;
-    col : Tcolor;
+    oldcol : Tcolor;
 begin
-  xycanvas.pen.style := psdot; col := xycanvas.pen.color;
+  xycanvas.pen.style := psdot; oldcol := xycanvas.pen.color;
   if (nfgrid>0) then
     begin
       xycanvas.pen.color := mixcolor(col,backcolor,1,3);
@@ -2161,7 +2270,7 @@ begin
                else linewmf(p1,cgrid[i],p2,cgrid[i]);
     end;
   xycanvas.pen.style := pssolid;
-  xycanvas.pen.color := col;
+  xycanvas.pen.color := oldcol;
 end;
 
 procedure bitmapwmf(x1,y1,x2,y2:integer); {WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW}
@@ -2199,11 +2308,5 @@ begin
   xyfontangle := 0;
   initsettings;
 end;
-
-initialization
-
-finalization
-  oldpen.Free;
-  oldbrush.Free;
 
 end.

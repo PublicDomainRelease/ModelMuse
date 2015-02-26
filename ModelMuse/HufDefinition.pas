@@ -1369,7 +1369,8 @@ var
   LocalModel: TPhastModel;
 begin
   LocalModel := Model as TPhastModel;
-  if (LocalModel <> nil) and not (csDestroying in LocalModel.ComponentState) then
+  if (LocalModel <> nil) and not (csDestroying in LocalModel.ComponentState)
+    and not LocalModel.Clearing then
   begin
     LocalModel.HydrogeologicUnits.RemoveUsedParameter(ParameterName);
   end;

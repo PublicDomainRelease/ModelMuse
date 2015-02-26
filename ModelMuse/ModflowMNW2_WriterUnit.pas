@@ -68,6 +68,7 @@ type
     class function Extension: string; override;
     procedure Evaluate;
   public
+    class procedure AdjustWellID(var WELLID: string);
     Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     destructor Destroy; override;
     procedure WriteFile(const AFileName: string);
@@ -368,6 +369,15 @@ begin
   end;
 end;
 
+class procedure TModflowMNW2_Writer.AdjustWellID(var WELLID: string);
+begin
+  if Pos(' ', WELLID) > 0 then
+  begin
+    WELLID := '"' + WELLID + '"';
+  end;
+  WELLID := WELLID + ' ';
+end;
+
 procedure TModflowMNW2_Writer.CheckWells;
 var
   TimeItem: TMnw2TimeItem;
@@ -511,9 +521,8 @@ var
   UseNODTOT: boolean;
 begin
   MNWMAX := FWells.Count;
-  UseNODTOT := Model.ModelSelection in [msModflow, msModflowLGR2, msModflowNWT
-    {$IFDEF FMP}, msModflowFmp {$ENDIF}
-    , msModflowCfp];
+  UseNODTOT := Model.ModelSelection in
+    [msModflow, msModflowLGR2, msModflowNWT, msModflowFmp, msModflowCfp];
   if UseNODTOT then
   begin
     NODTOT := CountNodes;
@@ -1549,11 +1558,7 @@ begin
 //      + '; ' + 'WELLID = ' + WELLID);
   end;
   FWellNames.Add(WELLID);
-  if Pos(' ', WELLID) > 0 then
-  begin
-    WELLID := '"' + WELLID + '"';
-  end;
-  WELLID := WELLID + ' ';
+  AdjustWellID(WELLID);
   NNODES := Well.FCells.Count;
   if Well.VerticalWell then
   begin

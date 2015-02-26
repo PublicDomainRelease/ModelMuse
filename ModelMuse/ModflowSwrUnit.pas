@@ -367,7 +367,8 @@ begin
   inherited;
   PhastModel := Model as TPhastModel;
   if (PhastModel <> nil)
-    and not (csDestroying in PhastModel.ComponentState) then
+    and not (csDestroying in PhastModel.ComponentState)
+    and not PhastModel.Clearing then
   begin
     PhastModel.InvalidateMfSwrRainfall(self);
   end;
@@ -718,7 +719,8 @@ begin
   inherited;
   PhastModel := Model as TPhastModel;
   if (PhastModel <> nil)
-    and not (csDestroying in PhastModel.ComponentState) then
+    and not (csDestroying in PhastModel.ComponentState)
+    and not PhastModel.Clearing then
   begin
     PhastModel.InvalidateMfSwrRainfall(self);
   end;
@@ -1149,7 +1151,8 @@ begin
   inherited;
   PhastModel := Model as TPhastModel;
   if (PhastModel <> nil)
-    and not (csDestroying in PhastModel.ComponentState) then
+    and not (csDestroying in PhastModel.ComponentState)
+    and not PhastModel.Clearing then
   begin
     PhastModel.InvalidateMfSwrEvaporation(self);
   end;
@@ -1239,7 +1242,8 @@ begin
   inherited;
   PhastModel := Model as TPhastModel;
   if (PhastModel <> nil)
-    and not (csDestroying in PhastModel.ComponentState) then
+    and not (csDestroying in PhastModel.ComponentState)
+    and not PhastModel.Clearing then
   begin
     PhastModel.InvalidateMfSwrLateralInflow(self);
   end;
@@ -1329,7 +1333,8 @@ begin
   inherited;
   PhastModel := Model as TPhastModel;
   if (PhastModel <> nil)
-    and not (csDestroying in PhastModel.ComponentState) then
+    and not (csDestroying in PhastModel.ComponentState)
+    and not PhastModel.Clearing then
   begin
     PhastModel.InvalidateMfSwrStage(self);
   end;
@@ -1379,7 +1384,8 @@ begin
   inherited;
   PhastModel := Model as TPhastModel;
   if (PhastModel <> nil)
-    and not (csDestroying in PhastModel.ComponentState) then
+    and not (csDestroying in PhastModel.ComponentState)
+    and not PhastModel.Clearing then
   begin
     PhastModel.InvalidateMfSwrEvaporation(self);
   end;
@@ -1394,7 +1400,8 @@ begin
   inherited;
   PhastModel := Model as TPhastModel;
   if (PhastModel <> nil)
-    and not (csDestroying in PhastModel.ComponentState) then
+    and not (csDestroying in PhastModel.ComponentState)
+    and not PhastModel.Clearing then
   begin
     PhastModel.InvalidateMfSwrLateralInflow(self);
   end;
@@ -1409,7 +1416,8 @@ begin
   inherited;
   PhastModel := Model as TPhastModel;
   if (PhastModel <> nil)
-    and not (csDestroying in PhastModel.ComponentState) then
+    and not (csDestroying in PhastModel.ComponentState)
+    and not PhastModel.Clearing then
   begin
     PhastModel.InvalidateMfSwrStage(self);
   end;

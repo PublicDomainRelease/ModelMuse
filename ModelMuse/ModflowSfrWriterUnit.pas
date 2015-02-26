@@ -50,6 +50,7 @@ type
 
   TSegment = class(TObject)
   private
+    // @name contains @link(TSfr_Cell)
     FReaches: TValueCellList;
     FScreenObject: TScreenObject;
     // @name is used when sorting segments.
@@ -153,6 +154,11 @@ type
     procedure AdjustLgrValues;
     procedure InternalUpdateDisplay(TimeLists: TModflowBoundListOfTimeLists);
     procedure AdjustReachLengths;
+    procedure CheckOutflowSegments(StartTime: double;
+      Segment: TSegment; ParamScreenObjectItem: TSfrParamIcalcItem;
+      SfrBoundary: TSfrBoundary; SubSegIndex: integer);
+    procedure CheckParameterSegments;
+    procedure CheckNonParamSegments;
   protected
     class function Extension: string; override;
     function Package: TModflowPackageSelection; override;
@@ -186,7 +192,7 @@ uses ModflowUnitNumbers, OrderedCollectionUnit, frmErrorsAndWarningsUnit,
   ModflowTransientListParameterUnit, ModflowSfrTable,
   ModflowSfrFlows, ModflowSfrChannelUnit, ModflowSfrEquationUnit,
   ModflowTimeUnit, frmProgressUnit, IntListUnit, Forms,
-  ModflowBoundaryUnit, Dialogs, Math;
+  ModflowBoundaryUnit, Dialogs, Math, DataSetUnit;
 
 resourcestring
   StrInvalidStartingTimeStep1 = 'Invalid starting time or missing data for the '
@@ -238,8 +244,15 @@ resourcestring
   StrLargeSeparationBet = 'Large separation between connected segments';
   StrTheDownstreamEndO = 'The downstream end of %0:s is separated from the u' +
   'pstream end of %1:s by %2:d cells.';
+  StrLargeDiversionSeparation = 'Large separation between diversion segment and source segment';
+  StrWritingStressP = '    Writing stress period %d';
+  StrCheckingStress = '    Checking stress period %d';
+  StrInactiveReach = 'One or more SFR stream reaches are in inactive cell.';
+  StrReachSeparationWarning = 'In the Streamflow Routing (SFR) package, some' +
+  ' reaches are separated from previous reaches by more than one cell.';
+  StrSegment0dReach = 'Segment: %0:d; Reach: %1:d; Stress Period: %2:d; Separation: %3:d';
 
-const
+
   StrSegmentNumber = 'Segment Number in ';
   StrReachNumber = 'Reach Number in ';
   SfrICalcNumber = 'ICALC in ';
@@ -592,6 +605,12 @@ begin
     Writer := SfrWriterList[WriterIndex];
     Writer.AdjustLgrValues;
   end;
+  for WriterIndex := 0 to SfrWriterList.Count - 1 do
+  begin
+    Writer := SfrWriterList[WriterIndex];
+    Writer.CheckParameterSegments;
+    Writer.CheckNonParamSegments;
+  end;
 end;
 
 procedure TModflowSFR_Writer.AdjustLgrParamValues;
@@ -931,7 +950,7 @@ var
   function ReachInOverlap(AReach: TSfr_Cell): Boolean;
   begin
 
-    if Model.ModelSelection = msModflowLGR then
+    if Model.ModelSelection in [msModflowLGR] then
     begin
       result := (AReach.Column < OverlapWidth)
         or (AReach.Row < OverlapWidth)
@@ -941,7 +960,7 @@ var
     end
     else
     begin
-      Assert(Model.ModelSelection = msModflowLGR2);
+      Assert(Model.ModelSelection in [msModflowLGR2, msModflowFmp]);
       result := False;
     end;
   end;
@@ -979,12 +998,13 @@ begin
   else
   begin
     LocalChildModel := Model as TChildModel;
-    if Model.ModelSelection = msModflowLGR then
+    if Model.ModelSelection in [msModflowLGR] then
     begin
       OverlapWidth := LocalChildModel.ChildCellsPerParentCell div 2 + 1;
     end
     else
     begin
+      Assert(Model.ModelSelection in [msModflowLGR2, msModflowFmp]);
       OverlapWidth := 0;
     end;
     MaxOverlappedColumn := LocalChildModel.Grid.ColumnCount - OverlapWidth;
@@ -1069,6 +1089,10 @@ begin
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrNoStreamsDefined);
     frmErrorsAndWarnings.RemoveErrorGroup(Model, StrDupParamInstances);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrLargeSeparationBet);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrLargeDiversionSeparation);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInactiveReach);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrReachSeparationWarning);
+
 
 
     StartTime := Model.ModflowStressPeriods[0].StartTime;
@@ -1180,6 +1204,12 @@ begin
     // LGR
     CreateLgrSubSegments;
     RenumberLgrSubSegments;
+
+    if not FIsChildModel then
+    begin
+      CheckParameterSegments;
+      CheckNonParamSegments;
+    end;
 
     if FSegments.Count = 0 then
     begin
@@ -3301,6 +3331,175 @@ begin
   result := (Value2-Value1)*Fraction + Value1;
 end;
 
+procedure TModflowSFR_Writer.CheckParameterSegments;
+var
+  ParamIndex: integer;
+  SfrPackage: TSfrPackageSelection;
+//  LocalModel: TCustomModel;
+  ParamItem: TModflowTransientListParameter;
+  Instances: TList;
+  InstanceItem: TSfrParamInstance;
+  ScreenObject: TScreenObject;
+  Segments: TList;
+  ScreenObjectParamIndex: Integer;
+  ParamScreenObjectItem: TSfrParamIcalcItem;
+  Index: Integer;
+  InstanceIndex: Integer;
+  SfrBoundary: TSfrBoundary;
+  Segment: TSegment;
+  SubSegIndex: Integer;
+  ActiveDataSet: TDataArray;
+  ReachIndex: Integer;
+  AReach: TValueCell;
+  PriorReach: TValueCell;
+  DeltaCell: Integer;
+  SfrReach: TSfr_Cell;
+begin
+  SfrPackage := Package as TSfrPackageSelection;
+  ActiveDataSet := Model.DataArrayManager.GetDataSetByName(rsActive);
+  for ParamIndex := 0 to Model.ModflowTransientParameters.Count - 1 do
+  begin
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+    ParamItem := Model.ModflowTransientParameters.Items[ParamIndex];
+    if ParamItem.ParameterType = ptSFR then
+    begin
+      Instances := TList.Create;
+      Segments := TList.Create;
+      try
+        // Get the segments and instances for the current parameter.
+        for Index := 0 to SfrPackage.ParameterInstances.Count - 1 do
+        begin
+          Application.ProcessMessages;
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+          InstanceItem := SfrPackage.ParameterInstances.Items[Index];
+          if InstanceItem.ParameterName = ParamItem.ParameterName then
+          begin
+            Instances.Add(InstanceItem);
+          end;
+        end;
+        for Index := 0 to FSegments.Count - 1 do
+        begin
+          Application.ProcessMessages;
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+          Segment := FSegments[Index];
+          ScreenObject := Segment.FScreenObject;
+          Assert(ScreenObject.ModflowSfrBoundary <> nil);
+          for ScreenObjectParamIndex := 0 to ScreenObject.ModflowSfrBoundary.ParamIcalc.Count - 1 do
+          begin
+            Application.ProcessMessages;
+            if not frmProgressMM.ShouldContinue then
+            begin
+              Exit;
+            end;
+            ParamScreenObjectItem := ScreenObject.ModflowSfrBoundary.ParamIcalc.Items[ScreenObjectParamIndex];
+            if ParamScreenObjectItem.Param = ParamItem.ParameterName then
+            begin
+              Segments.Add(Segment);
+              break;
+            end;
+          end;
+          PriorReach := nil;
+          for ReachIndex := 0 to Segment.ReachCount - 1 do
+          begin
+            AReach := Segment.Reaches[ReachIndex];
+            if not ActiveDataSet.BooleanData[
+              AReach.Layer, AReach.Row, AReach.Column] then
+            begin
+//              ScreenObject := Segment.FScreenObject;
+              frmErrorsAndWarnings.AddWarning(Model, StrInactiveReach,
+                Format(StrObject0sLayer,
+                [ScreenObject.Name, AReach.Layer+1, AReach.Row+1, AReach.Column+1]));
+            end;
+
+            if ReachIndex > 0 then
+            begin
+              DeltaCell := Max(Abs(AReach.Row - PriorReach.Row),
+                Abs(AReach.Column - PriorReach.Column));
+              if DeltaCell > 1 then
+              begin
+                SfrReach := AReach as TSfr_Cell;
+                frmErrorsAndWarnings.AddWarning(Model, StrReachSeparationWarning,
+                  Format(StrSegment0dReach,
+                  [Segment.OriginalSegmentNumber, ReachIndex+1,
+                  ScreenObjectParamIndex+ 1, DeltaCell]));
+              end;
+            end;
+            PriorReach := AReach;
+          end;
+        end;
+
+
+        // Data set 4a
+        for InstanceIndex := 0 to Instances.Count - 1 do
+        begin
+          Application.ProcessMessages;
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+          InstanceItem := Instances[InstanceIndex];
+
+          for Index := 0 to Segments.Count - 1 do
+          begin
+            Application.ProcessMessages;
+            if not frmProgressMM.ShouldContinue then
+            begin
+              Exit;
+            end;
+            Segment := Segments[Index];
+            ScreenObject := Segment.FScreenObject;
+            Assert(ScreenObject.ModflowSfrBoundary <> nil);
+            SfrBoundary := ScreenObject.ModflowSfrBoundary;
+            for ScreenObjectParamIndex := 0 to SfrBoundary.ParamIcalc.Count - 1 do
+            begin
+              Application.ProcessMessages;
+              if not frmProgressMM.ShouldContinue then
+              begin
+                Exit;
+              end;
+              ParamScreenObjectItem := SfrBoundary.
+                ParamIcalc.Items[ScreenObjectParamIndex];
+              if (ParamScreenObjectItem.Param = ParamItem.ParameterName)
+                and (ParamScreenObjectItem.ParamInstance
+                = InstanceItem.ParameterInstance) then
+              begin
+                if Segment.FSubSegmentList.Count = 0 then
+                begin
+                  SubSegIndex := -1;
+                  CheckOutflowSegments(InstanceItem.StartTime, Segment,
+                    ParamScreenObjectItem, SfrBoundary, SubSegIndex);
+                end
+                else
+                begin
+                  for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
+                  begin
+                    CheckOutflowSegments(InstanceItem.StartTime, Segment,
+                      ParamScreenObjectItem, SfrBoundary, SubSegIndex)
+                  end;
+                end;
+
+              end;
+            end;
+          end;
+        end;
+
+      finally
+        Instances.Free;
+        Segments.Free;
+      end;
+    end;
+  end;
+end;
 
 procedure TModflowSFR_Writer.WriteDataSets3and4;
 var
@@ -3689,9 +3888,8 @@ var
   SfrPackage: TSfrPackageSelection;
 begin
   SfrPackage := Package as TSfrPackageSelection;
-  Result := (Model.ModelSelection in [msModflow, msModflowNWT, msModflowLGR2
-    {$IFDEF FMP}, msModflowFmp {$ENDIF}
-    {, msModflowCfp}])
+  Result := (Model.ModelSelection in [msModflow, msModflowNWT, msModflowLGR2,
+    msModflowFmp {, msModflowCfp}])
     or SfrPackage.UseGsflowFormat;
 end;
 
@@ -3725,6 +3923,160 @@ begin
 //  WriteDataSet4g6f(Segment, SubSegIndex, TimeIndex, StartUnitNumber);
 
   // data set 6g
+end;
+
+procedure TModflowSFR_Writer.CheckNonParamSegments;
+var
+  TimeIndex: Integer;
+  StressPeriod: TModflowStressPeriod;
+  Segment: TSegment;
+  SegementIndex: Integer;
+  Item: TSfrParamIcalcItem;
+  UsedSegments: TList;
+  ParametersUsed: TStringList;
+  Boundary: TSfrBoundary;
+  PIndex: Integer;
+  Instance: TSfrParamInstance;
+  Parameters: TStringList;
+  Location: integer;
+  InstanceList: TList;
+  SubSegIndex: Integer;
+  ReachIndex: Integer;
+  AReach: TValueCell;
+  ActiveDataSet: TDataArray;
+  ScreenObject: TScreenObject;
+  PriorReach: TValueCell;
+  DeltaCell: Integer;
+  SfrReach: TSfr_Cell;
+begin
+  UsedSegments := TList.Create;
+  ParametersUsed := TStringList.Create;
+  Parameters := TStringList.Create;
+  ActiveDataSet := Model.DataArrayManager.GetDataSetByName(rsActive);
+  try
+    for PIndex := 0 to Model.ModflowPackages.
+      SfrPackage.ParameterInstances.Count - 1 do
+    begin
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      Instance := Model.ModflowPackages.
+        SfrPackage.ParameterInstances.Items[PIndex];
+      Location := Parameters.IndexOf(Instance.ParameterName);
+      if Location < 0 then
+      begin
+        InstanceList := TList.Create;
+        Parameters.AddObject(Instance.ParameterName, InstanceList)
+      end
+      else
+      begin
+        InstanceList := Parameters.Objects[Location] as TList;
+      end;
+      InstanceList.Add(Instance);
+    end;
+
+
+    for TimeIndex := 0 to Model.ModflowFullStressPeriods.Count - 1 do
+    begin
+      frmProgressMM.AddMessage(Format(StrCheckingStress,
+        [TimeIndex + 1]));
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      // data set 5;
+      UsedSegments.Clear;
+      ParametersUsed.Clear;
+      StressPeriod := Model.ModflowFullStressPeriods[TimeIndex];
+      for SegementIndex := 0 to FSegments.Count - 1 do
+      begin
+        Segment := FSegments[SegementIndex];
+        Assert(Segment.FScreenObject.ModflowSfrBoundary <> nil);
+        Item := Segment.FScreenObject.ModflowSfrBoundary.ParamIcalc.
+          GetItemByStartTime(StressPeriod.StartTime);
+        if (Item = nil) or (Item.Param = '') then
+        begin
+          UsedSegments.Add(Segment);
+        end
+        else
+        begin
+          if ParametersUsed.IndexOf(Item.Param) < 0 then
+          begin
+            ParametersUsed.Add(Item.Param);
+          end;
+        end;
+      end;
+
+
+      // Data Set 6
+      for SegementIndex := 0 to UsedSegments.Count - 1 do
+      begin
+        // Data set 6a
+        Segment := UsedSegments[SegementIndex];
+        Assert(Segment.FScreenObject.ModflowSfrBoundary <> nil);
+        Item := Segment.FScreenObject.ModflowSfrBoundary.ParamIcalc.
+          GetItemByStartTime(StressPeriod.StartTime);
+        if Item <> nil then
+        begin
+
+          Boundary := Segment.FScreenObject.ModflowSfrBoundary;
+          if Segment.FSubSegmentList.Count = 0 then
+          begin
+            SubSegIndex := -1;
+            CheckOutflowSegments(StressPeriod.StartTime, Segment,
+              Item, Boundary, SubSegIndex);
+          end
+          else
+          begin
+            for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
+            begin
+              CheckOutflowSegments(StressPeriod.StartTime, Segment,
+                Item, Boundary, SubSegIndex);
+            end;
+          end;
+        end;
+        PriorReach := nil;
+        for ReachIndex := 0 to Segment.ReachCount - 1 do
+        begin
+          AReach := Segment.Reaches[ReachIndex];
+          if not ActiveDataSet.BooleanData[
+            AReach.Layer, AReach.Row, AReach.Column] then
+          begin
+            ScreenObject := Segment.FScreenObject;
+            frmErrorsAndWarnings.AddWarning(Model, StrInactiveReach,
+              Format(StrObject0sLayer,
+              [ScreenObject.Name, AReach.Layer+1, AReach.Row+1, AReach.Column+1]));
+          end;
+
+          if ReachIndex > 0 then
+          begin
+            DeltaCell := Max(Abs(AReach.Row - PriorReach.Row),
+              Abs(AReach.Column - PriorReach.Column));
+            if DeltaCell > 1 then
+            begin
+              SfrReach := AReach as TSfr_Cell;
+              frmErrorsAndWarnings.AddWarning(Model, StrReachSeparationWarning,
+                Format(StrSegment0dReach,
+                [Segment.OriginalSegmentNumber, ReachIndex+1, TimeIndex+1, DeltaCell]));
+            end;
+          end;
+          PriorReach := AReach;
+        end;
+      end;
+
+    end;
+  finally
+    UsedSegments.Free;
+    ParametersUsed.Free;
+    for PIndex := 0 to Parameters.Count - 1 do
+    begin
+      Parameters.Objects[PIndex].Free;
+    end;
+    Parameters.Free;
+  end;
 end;
 
 procedure TModflowSFR_Writer.WriteDataSets5to7;
@@ -3785,7 +4137,7 @@ begin
 
     for TimeIndex := 0 to Model.ModflowFullStressPeriods.Count - 1 do
     begin
-      frmProgressMM.AddMessage(Format('    Writing stress period %d',
+      frmProgressMM.AddMessage(Format(StrWritingStressP,
         [TimeIndex + 1]));
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
@@ -4673,6 +5025,156 @@ begin
   result := FSegments.Count;
 end;
 
+procedure TModflowSFR_Writer.CheckOutflowSegments(StartTime: double;
+  Segment: TSegment; ParamScreenObjectItem: TSfrParamIcalcItem;
+  SfrBoundary: TSfrBoundary; SubSegIndex: integer);
+var
+  IUPSEG: Integer;
+  SubSeg: TSubSegment;
+  ParentSeg: TSegment;
+  FirstSegmentInParent: Boolean;
+  NextSubSeg: TSubSegment;
+  OUTSEG: Integer;
+  OutflowSegement: TSegment;
+  TerminalCell: TValueCell;
+  ConnectedCell: TValueCell;
+  MaxDistance: integer;
+  SourceSegment: TSegment;
+  UpstreamScreenObject: TScreenObject;
+  DownstreamScreenObject: TScreenObject;
+begin
+  SubSeg := nil;
+  if SubSegIndex >= 0 then
+  begin
+    SubSeg := Segment.FSubSegmentList[SubSegIndex];
+    if not SubSeg.Used then
+    begin
+      Exit;
+    end;
+  end;
+  if FIsChildModel then
+  begin
+    Assert(SubSeg <> nil);
+    Assert(SubSeg.FAssociatedLgrSubSeg <> nil);
+    ParentSeg := SubSeg.FAssociatedLgrSubSeg.FSegment;
+    Assert(ParentSeg <> nil);
+    FirstSegmentInParent :=
+      ParentSeg.FSubSegmentList[0] = SubSeg.FAssociatedLgrSubSeg;
+  end
+  else
+  begin
+//    ParentSeg := Segment;
+    FirstSegmentInParent := False;
+  end;
+
+
+  // OUTSEG
+  if (SubSegIndex = Segment.FSubSegmentList.Count -1) then
+  begin
+    // Parent models and last subsegment in child models.
+    OUTSEG := FindConvertedSegment(ParamScreenObjectItem.OutflowSegment,
+      sdDownstream, OutflowSegement);
+    if (OUTSEG > 0) and not FIsChildModel then
+    begin
+      Assert(OutflowSegement <> nil);
+      TerminalCell := Segment.FReaches.Last;
+      ConnectedCell := OutflowSegement.FReaches.First;
+      MaxDistance := Max(Abs(TerminalCell.Column - ConnectedCell.Column),
+        Abs(TerminalCell.Row - ConnectedCell.Row));
+      if MaxDistance > 1 then
+      begin
+        UpstreamScreenObject := Segment.FScreenObject as TScreenObject;
+        DownstreamScreenObject := OutflowSegement.FScreenObject as TScreenObject;
+        frmErrorsAndWarnings.AddWarning(Model, StrLargeSeparationBet,
+           Format(StrTheDownstreamEndO,
+           [UpstreamScreenObject.Name, DownstreamScreenObject.Name, MaxDistance]));
+      end;
+    end;
+  end
+  else
+  begin
+    // Subsegments in child model except last sub segment
+    Assert(SubSeg <> nil);
+    if not FIsChildModel then
+    begin
+      NextSubSeg := Segment.FSubSegmentList[SubSegIndex+1];
+      if not NextSubSeg.Used then
+      begin
+        OUTSEG := FindConvertedSegment(ParamScreenObjectItem.OutflowSegment,
+          sdDownstream, OutflowSegement);
+        if (OUTSEG > 0) and not FIsChildModel then
+        begin
+          Assert(OutflowSegement <> nil);
+          TerminalCell := Segment.FReaches.Last;
+          ConnectedCell := OutflowSegement.FReaches.First;
+          MaxDistance := Max(Abs(TerminalCell.Column - ConnectedCell.Column),
+            Abs(TerminalCell.Row - ConnectedCell.Row));
+          if MaxDistance > 1 then
+          begin
+            UpstreamScreenObject := Segment.FScreenObject as TScreenObject;
+            DownstreamScreenObject := OutflowSegement.FScreenObject as TScreenObject;
+            frmErrorsAndWarnings.AddWarning(Model, StrLargeSeparationBet,
+               Format(StrTheDownstreamEndO,
+               [UpstreamScreenObject.Name, DownstreamScreenObject.Name, MaxDistance]));
+          end;
+        end;
+      end;
+    end;
+  end;
+
+  // IUPSEG
+  if SubSegIndex < 0 then
+  begin
+    IUPSEG := FindConvertedSegment(ParamScreenObjectItem.DiversionSegment,
+      sdUpstream, SourceSegment);
+  end
+  else
+  begin
+    Assert(SubSeg <> nil);
+    if FIsChildModel then
+    begin
+      if FirstSegmentInParent then
+      begin
+        IUPSEG := FindConvertedSegment(ParamScreenObjectItem.DiversionSegment,
+          sdUpstream, SourceSegment);
+      end
+      else
+      begin
+        IUPSEG := 0;
+      end;
+    end
+    else
+    begin
+      if SubSegIndex = 0 then
+      begin
+        IUPSEG := FindConvertedSegment(ParamScreenObjectItem.DiversionSegment,
+          sdUpstream, SourceSegment);
+      end
+      else
+      begin
+        IUPSEG := 0
+      end;
+    end;
+  end;
+
+  if (IUPSEG > 0) and not FIsChildModel then
+  begin
+    Assert(SourceSegment <> nil);
+    TerminalCell := Segment.FReaches.First;
+    ConnectedCell := SourceSegment.FReaches.Last;
+    MaxDistance := Max(Abs(TerminalCell.Column - ConnectedCell.Column),
+      Abs(TerminalCell.Row - ConnectedCell.Row));
+    if MaxDistance > 1 then
+    begin
+      DownstreamScreenObject := Segment.FScreenObject as TScreenObject;
+      UpstreamScreenObject := SourceSegment.FScreenObject as TScreenObject;
+      frmErrorsAndWarnings.AddWarning(Model, StrLargeDiversionSeparation,
+         Format(StrTheDownstreamEndO,
+         [UpstreamScreenObject.Name, DownstreamScreenObject.Name, MaxDistance]));
+    end;
+  end;
+end;
+
 procedure TModflowSFR_Writer.WriteDataSet4b6a(StartTime: double;
   Segment: TSegment; ParamScreenObjectItem: TSfrParamIcalcItem;
   SfrBoundary: TSfrBoundary; DataSet4B: boolean; SubSegIndex: integer);
@@ -4793,8 +5295,25 @@ begin
       end
       else
       begin
-        WriteInteger(FindConvertedSegment(ParamScreenObjectItem.OutflowSegment,
-          sdDownstream, OutflowSegement));
+        OUTSEG := FindConvertedSegment(ParamScreenObjectItem.OutflowSegment,
+          sdDownstream, OutflowSegement);
+        WriteInteger(OUTSEG);
+        if (OUTSEG > 0) and not FIsChildModel then
+        begin
+          Assert(OutflowSegement <> nil);
+          TerminalCell := Segment.FReaches.Last;
+          ConnectedCell := OutflowSegement.FReaches.First;
+          MaxDistance := Max(Abs(TerminalCell.Column - ConnectedCell.Column),
+            Abs(TerminalCell.Row - ConnectedCell.Row));
+          if MaxDistance > 1 then
+          begin
+            UpstreamScreenObject := Segment.FScreenObject as TScreenObject;
+            DownstreamScreenObject := OutflowSegement.FScreenObject as TScreenObject;
+            frmErrorsAndWarnings.AddWarning(Model, StrLargeSeparationBet,
+               Format(StrTheDownstreamEndO,
+               [UpstreamScreenObject.Name, DownstreamScreenObject.Name, MaxDistance]));
+          end;
+        end;
       end;
     end;
   end;
@@ -5302,7 +5821,7 @@ end;
 function TSegment.OriginalSegmentNumber: integer;
 begin
   Assert(FScreenObject.ModflowSfrBoundary <> nil);
-  result := FScreenObject.ModflowSfrBoundary.SegementNumber;
+  result := FScreenObject.ModflowSfrBoundary.SegmentNumber;
 end;
 
 procedure TSegment.SetNewSegmentNumber(const Value: integer);

@@ -341,7 +341,7 @@ resourcestring
   StrFluidFlux = 'Fluid Flux';
   StrMassFlux = 'Mass Flux';
   StrEnergyFlux = 'Energy Flux';
-  StrFarmsIn = 'Farms in %s';
+  StrFarmsIn = 'Farm IDs in %s';
   StrFarmWellsIn = 'Farm Wells in %s';
   StrPrecipInS = 'Precip. in %s';
   StrRefEvapInS = 'Ref. Evap. in %s';
@@ -434,9 +434,8 @@ begin
           begin
             Data.Caption := StrSetGridElementSize;
           end;
-        msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-          {$IFDEF FMP}, msModflowFmp {$ENDIF}
-          , msModflowCfp:
+        msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+          msModflowFmp, msModflowCfp:
           begin
             Data.Caption := StrSetGridCellSize;
           end;
@@ -1120,9 +1119,8 @@ begin
     end;
 
 
-  {$IFDEF FMP}
-    if (AScreenObject.ModflowFmpFarm <> nil)
-      and AScreenObject.ModflowFmpFarm.Used then
+    if (AScreenObject.ModflowFmpFarmID <> nil)
+      and AScreenObject.ModflowFmpFarmID.Used then
     begin
       InitializeData(FvstModflowFarmNode);
     end;
@@ -1150,8 +1148,6 @@ begin
     begin
       InitializeData(FvstModflowFarmCropIDNode);
     end;
-
-  {$ENDIF}
 
     if (AScreenObject.ModflowCfpRchFraction <> nil)
       and AScreenObject.ModflowCfpRchFraction.Used then

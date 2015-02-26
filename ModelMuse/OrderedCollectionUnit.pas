@@ -94,13 +94,17 @@ type
     in the STR package. (ptSTR defines values of stream conductance.))
   @value(ptQMAX ptQMAX represents the QMAX parameter type
     in the Farm Process. (ptQMAX defines the maximum pumping rate.))
+
+  TPhastModel.UpdateModelMateParameter should be updated
+  if new parameters are added.
   }
   TParameterType = (ptUndefined, ptLPF_HK, ptLPF_HANI, ptLPF_VK,
     ptLPF_VANI, ptLPF_SS, ptLPF_SY, ptLPF_VKCB, ptRCH, ptEVT, ptETS,
     ptCHD, ptGHB, ptQ,
     ptRIV, ptDRN, ptDRT, ptSFR, ptHFB,
     ptHUF_HK, ptHUF_HANI, ptHUF_VK, ptHUF_VANI, ptHUF_SS, ptHUF_SY,
-    ptHUF_SYTP, ptHUF_KDEP, ptHUF_LVDA, ptSTR {$IFDEF FMP}, ptQMAX {$ENDIF});
+    ptHUF_SYTP, ptHUF_KDEP, ptHUF_LVDA, ptSTR, ptQMAX);
+  //
 
   // @name is used to indicate groups of related MODFLOW parameters.
   TParameterTypes = set of TParameterType;
@@ -297,7 +301,7 @@ implementation
 uses ModflowParameterUnit, LayerStructureUnit, PhastModelUnit, ScreenObjectUnit,
   ModflowBoundaryUnit, ModflowTransientListParameterUnit,
   ModflowSfrParamIcalcUnit, Generics.Collections,
-  Generics.Defaults;
+  Generics.Defaults, Math;
 
 function ParmeterTypeToStr(ParmType: TParameterType): string;
 begin
@@ -322,9 +326,7 @@ begin
     ptHUF_SYTP: result := 'SYTP' ;
     ptHUF_LVDA: result := 'LVDA' ;
     ptSTR: result := 'STR' ;
-  {$IFDEF FMP}
     ptQMAX: result := 'QMAX' ;
-  {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -441,6 +443,7 @@ begin
   AnotherOrderedCollection := Source as TOrderedCollection;
   if not IsSame(AnotherOrderedCollection) then
   begin
+    Capacity := Max(Count, AnotherOrderedCollection.Count);
     if FModel = nil then
     begin
       SetLength(ID_Array, AnotherOrderedCollection.Count);
@@ -562,12 +565,22 @@ end;
 
 procedure TOrderedItem.InvalidateModel;
 begin
-  (Collection as TOrderedCollection).InvalidateModel;
+  if Collection <> nil then
+  begin
+    (Collection as TOrderedCollection).InvalidateModel;
+  end;
 end;
 
 function TOrderedItem.Model: TBaseModel;
 begin
-  result := (Collection as TOrderedCollection).Model;
+  if Collection = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := (Collection as TOrderedCollection).Model;
+  end;
 end;
 
 function TOrderedItem.GetOnInvalidateModelEvent: TNotifyEvent;
@@ -784,9 +797,7 @@ begin
       end;
     ptHUF_LVDA: ;
     ptSTR: ;
-  {$IFDEF FMP}
     ptQMAX: ;
-  {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -1089,7 +1100,6 @@ begin
               end;
             end;
           end;
-      {$IFDEF FMP}
         ptQMAX:
           begin
             for ObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
@@ -1106,7 +1116,6 @@ begin
               end;
             end;
           end;
-      {$ENDIF}
         else Assert(False);
       end;
     end;

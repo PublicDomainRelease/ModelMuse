@@ -299,7 +299,8 @@ var
   ConcBoundary: TMt3dmsConcBoundary;
   TransObservations: TMt3dmsTransObservations;
 begin
-  if (Model <> nil) and not (csDestroying in Model.ComponentState) then
+  if (Model <> nil) and not (csDestroying in Model.ComponentState)
+    and not (Model as TCustomModel).Clearing then
   begin
     LocalModel := Model as TCustomModel;
     SpeciesIndex := LocalModel.MobileComponents.IndexOf(self);

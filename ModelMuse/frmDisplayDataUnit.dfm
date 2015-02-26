@@ -4,9 +4,9 @@ inherited frmDisplayData: TfrmDisplayData
   Caption = 'Data Visualization'
   ClientHeight = 542
   ClientWidth = 784
-  ExplicitWidth = 802
-  ExplicitHeight = 587
-  PixelsPerInch = 120
+  ExplicitWidth = 800
+  ExplicitHeight = 580
+  PixelsPerInch = 96
   TextHeight = 18
   object splSplit: TSplitter
     Left = 201
@@ -761,9 +761,9 @@ inherited frmDisplayData: TfrmDisplayData
           ExplicitWidth = 578
           ExplicitHeight = 501
           inherited tabSelection: TTabSheet
+            ExplicitLeft = 4
             ExplicitTop = 29
-            ExplicitWidth = 570
-            ExplicitHeight = 468
+            ExplicitHeight = 395
             inherited lblDataSet: TLabel
               Width = 212
               Height = 18
@@ -899,6 +899,7 @@ inherited frmDisplayData: TfrmDisplayData
             end
           end
           inherited tabFilters: TTabSheet
+            ExplicitLeft = 4
             ExplicitTop = 29
             ExplicitHeight = 395
             inherited lblLowerLimit: TLabel
@@ -963,8 +964,10 @@ inherited frmDisplayData: TfrmDisplayData
             end
           end
           inherited tabLegend: TTabSheet
+            ExplicitLeft = 4
             ExplicitTop = 29
-            ExplicitHeight = 395
+            ExplicitWidth = 570
+            ExplicitHeight = 468
             inherited imLegend: TImage
               Width = 352
               Height = 468
@@ -973,7 +976,7 @@ inherited frmDisplayData: TfrmDisplayData
             end
             inherited pnlLegend: TPanel
               Height = 468
-              ExplicitHeight = 395
+              ExplicitHeight = 468
               inherited lblMethod: TLabel
                 Width = 52
                 Height = 18
@@ -1040,8 +1043,7 @@ inherited frmDisplayData: TfrmDisplayData
           ExplicitHeight = 501
           inherited tabSelection: TTabSheet
             ExplicitTop = 29
-            ExplicitWidth = 570
-            ExplicitHeight = 468
+            ExplicitHeight = 366
             inherited lblDataSet: TLabel
               Width = 59
               Height = 18
@@ -1112,12 +1114,12 @@ inherited frmDisplayData: TfrmDisplayData
             inherited lblSpacing: TLabel
               Left = 337
               Top = 231
-              Width = 98
+              Width = 152
               Height = 18
               Anchors = [akRight, akBottom]
               ExplicitLeft = 337
               ExplicitTop = 231
-              ExplicitWidth = 98
+              ExplicitWidth = 152
               ExplicitHeight = 18
             end
             inherited comboColorScheme: TComboBox
@@ -1215,6 +1217,10 @@ inherited frmDisplayData: TfrmDisplayData
             inherited cbSpecifyContours: TJvCheckBox
               Left = 346
               Top = 18
+              HotTrackFont.Charset = ANSI_CHARSET
+              HotTrackFont.Height = -16
+              HotTrackFont.Name = 'Arial'
+              HotTrackFont.Pitch = fpVariable
               ExplicitLeft = 346
               ExplicitTop = 18
             end
@@ -1332,7 +1338,8 @@ inherited frmDisplayData: TfrmDisplayData
           end
           inherited tabLegend: TTabSheet
             ExplicitTop = 29
-            ExplicitHeight = 366
+            ExplicitWidth = 570
+            ExplicitHeight = 468
             inherited imLegend: TImage
               Width = 352
               Height = 468
@@ -1341,7 +1348,7 @@ inherited frmDisplayData: TfrmDisplayData
             end
             inherited pnlLegend: TPanel
               Height = 468
-              ExplicitHeight = 366
+              ExplicitHeight = 468
               inherited lblMethod: TLabel
                 Width = 52
                 Height = 18

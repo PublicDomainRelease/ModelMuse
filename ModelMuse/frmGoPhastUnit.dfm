@@ -1251,6 +1251,9 @@ inherited frmGoPhast: TfrmGoPhast
         object ModelMateFile1: TMenuItem
           Action = acExportModelMate
         end
+        object miExportSutra2DMesh: TMenuItem
+          Action = acExportSutra2DMesh
+        end
       end
       object miFilesToArchive: TMenuItem
         Caption = 'Files to Archive...'
@@ -1943,22 +1946,6 @@ inherited frmGoPhast: TfrmGoPhast
         HelpContext = 3598
         OnClick = miChildModelsClick
       end
-      object miFarmCrops: TMenuItem
-        Action = acFarmCrops
-        GroupIndex = 1
-      end
-      object FarmSoils1: TMenuItem
-        Action = acFarmSoils
-        GroupIndex = 1
-      end
-      object miFarmClimate: TMenuItem
-        Action = acFarmClimate
-        GroupIndex = 1
-      end
-      object miFarmAllotment: TMenuItem
-        Action = acFarmAllotment
-        GroupIndex = 1
-      end
       object miSWR: TMenuItem
         Caption = 'SWR Dialog Boxes'
         GroupIndex = 1
@@ -1976,6 +1963,30 @@ inherited frmGoPhast: TfrmGoPhast
         end
         object miSwrObservations: TMenuItem
           Action = acSwrObservations
+          GroupIndex = 1
+        end
+      end
+      object miFarmProcessDialogBoxes: TMenuItem
+        Caption = 'Farm Process'
+        GroupIndex = 1
+        object miFarmCrops: TMenuItem
+          Action = acFarmCrops
+          GroupIndex = 1
+        end
+        object FarmSoils1: TMenuItem
+          Action = acFarmSoils
+          GroupIndex = 1
+        end
+        object miFarmClimate: TMenuItem
+          Action = acFarmClimate
+          GroupIndex = 1
+        end
+        object miFarmAllotment: TMenuItem
+          Action = acFarmAllotment
+          GroupIndex = 1
+        end
+        object miEditFarms: TMenuItem
+          Action = acEditFarms
           GroupIndex = 1
         end
       end
@@ -3056,7 +3067,7 @@ inherited frmGoPhast: TfrmGoPhast
     end
     object acModflowFmpActive: TAction
       Category = 'Model'
-      Caption = 'MODFLOW-FMP2'
+      Caption = 'MODFLOW-OWHM'
       GroupIndex = 1
       HelpContext = 2390
       HelpKeyword = 'Model'
@@ -3065,7 +3076,7 @@ inherited frmGoPhast: TfrmGoPhast
     end
     object acRunModflowFmp: TAction
       Category = 'File'
-      Caption = 'MODFLOW-FMP2 Input Files'
+      Caption = 'MODFLOW-OWHM Input Files'
       ImageIndex = 72
       OnExecute = acRunModflowFmpExecute
     end
@@ -3138,6 +3149,16 @@ inherited frmGoPhast: TfrmGoPhast
       Caption = 'SUTRA Mesh'
       Enabled = False
       OnExecute = acImportSutraMeshExecute
+    end
+    object acExportSutra2DMesh: TAction
+      Category = 'File'
+      Caption = 'SUTRA 2D Mesh'
+      OnExecute = acExportSutra2DMeshExecute
+    end
+    object acEditFarms: TAction
+      Category = 'Model'
+      Caption = 'Farms...'
+      OnExecute = acEditFarmsExecute
     end
   end
   object ilDisabledImageList: TImageList
@@ -9237,5 +9258,17 @@ inherited frmGoPhast: TfrmGoPhast
     OnTimer = tmrImportErrorsTimer
     Left = 616
     Top = 80
+  end
+  object sdSaveSutraMesh: TSaveDialog
+    DefaultExt = 'exp'
+    Left = 240
+    Top = 272
+  end
+  object tmrSaveTimer: TTimer
+    Enabled = False
+    Interval = 60000
+    OnTimer = tmrSaveTimerTimer
+    Left = 104
+    Top = 344
   end
 end

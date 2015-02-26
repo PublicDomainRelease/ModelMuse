@@ -569,7 +569,8 @@ begin
   FStoredRoughness.Free;
   FStoredWidth.Free;
   LocalModel := Model as TCustomModel;
-  if (LocalModel <> nil) and not (csDestroying in LocalModel.ComponentState) then
+  if (LocalModel <> nil) and not (csDestroying in LocalModel.ComponentState)
+    and not LocalModel.Clearing then
   begin
     for Index := 0 to LocalModel.ScreenObjectCount - 1 do
     begin

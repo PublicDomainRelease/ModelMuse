@@ -258,13 +258,11 @@ begin
   FDataSetDummyObjects := TObjectList.Create;
 
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp, msSutra22:
+    msPhast, msModflow, msModflowNWT, msModflowCfp, msSutra22:
       begin
         comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel)
       end;
-    msModflowLGR, msModflowLGR2:
+    msModflowLGR, msModflowLGR2, msModflowFmp:
       begin
         comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel);
         for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
@@ -629,9 +627,8 @@ var
     MaxCount := 0;
     VarLabel := '';
     case frmGoPhast.ModelSelection of
-      msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-        {$IFDEF FMP}, msModflowFmp {$ENDIF}
-        , msModflowCfp:
+      msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+        msModflowFmp, msModflowCfp:
         begin
           Grid := frmGoPhast.Grid;
 
@@ -1092,9 +1089,8 @@ var
 begin
   result := False;
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         Grid := frmGoPhast.Grid;
         result := (Grid <> nil) and (Grid.LayerCount >= 1)

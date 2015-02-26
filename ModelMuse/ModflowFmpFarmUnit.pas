@@ -5,7 +5,8 @@ interface
 uses
   Classes, ModflowBoundaryUnit,
   OrderedCollectionUnit, GoPhastTypes, ModflowDrtUnit, ModflowCellUnit,
-  Generics.Collections, ModflowFmpBaseClasses, RealListUnit;
+  Generics.Collections, ModflowFmpBaseClasses, RealListUnit,
+  ModflowFmpAllotmentUnit;
 
 type
   // FMP data sets 19 or 32.
@@ -363,7 +364,7 @@ type
       write SetItem; default;
   end;
 
-  TFarm = class(TModflowScreenObjectProperty)
+  TFarm = class(TOrderedItem)
   private
     FFarmId: Integer;
     FWaterRights: TWaterRightsCollection;
@@ -372,6 +373,8 @@ type
     FSemiRoutedReturnFlow: TSemiRoutedDeliveriesAndReturnFlowCollection;
     FFarmCostsCollection: TFarmCostsCollection;
     FFarmEfficiencyCollection: TFarmEfficiencyCollection;
+    FGwAllotment: TAllotmentCollection;
+    FFarmName: string;
     procedure SetDeliveryParamCollection(const Value: TDeliveryParamCollection);
     procedure SetFarmCostsCollection(const Value: TFarmCostsCollection);
     procedure SetFarmId(const Value: Integer);
@@ -382,36 +385,57 @@ type
     procedure SetWaterRights(const Value: TWaterRightsCollection);
     procedure SetFarmEfficiencyCollection(
       const Value: TFarmEfficiencyCollection);
+    procedure SetGwAllotment(const Value: TAllotmentCollection);
+    procedure AddBoundaryTimes(BoundCol: TCustomNonSpatialBoundColl;
+      Times: TRealList; StartTestTime, EndTestTime: double;
+      var StartRangeExtended, EndRangeExtended: boolean); virtual;
+    procedure SetFarmName(const Value: string);
   public
-    function Used: boolean; override;
+    function Used: boolean;
     procedure Assign(Source: TPersistent); override;
-    constructor Create(Model: TBaseModel; ScreenObject: TObject);
+    constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
     procedure Loaded;
     procedure UpdateTimes(Times: TRealList; StartTestTime, EndTestTime: double;
       var StartRangeExtended, EndRangeExtended: boolean); virtual;
-//    function IsSame(AnOrderedCollection: TOrderedCollection): boolean; override;
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
   published
     // FID, FMP Data set 6.
     property FarmId: Integer read FFarmId write SetFarmId;
-    // FMP Data sets 7 or 24.
+    // FMP Data sets 7 or 27.
     property FarmEfficiencyCollection: TFarmEfficiencyCollection
       read FFarmEfficiencyCollection write SetFarmEfficiencyCollection;
-    // FMP data sets 19 or 32.
+    // FMP data sets 19 or 35.
     property FarmCostsCollection: TFarmCostsCollection read FFarmCostsCollection
       write SetFarmCostsCollection;
-    //Data Sets 20a and 34a
+    //Data Sets 20a and 37a
     property SemiRoutedDeliveries: TSemiRoutedDeliveriesAndReturnFlowCollection
       read FSemiRoutedDeliveries write SetSemiRoutedDeliveries;
-    //Data Sets 20b and 34b
+    //Data Sets 20b and 37b
     property SemiRoutedReturnFlow: TSemiRoutedDeliveriesAndReturnFlowCollection
       read FSemiRoutedReturnFlow write SetSemiRoutedReturnFlow;
-    //Data Sets 33
+    //Data Sets 36
     property DeliveryParamCollection: TDeliveryParamCollection
       read FDeliveryParamCollection write SetDeliveryParamCollection;
-    //Data Sets 36
+    //Data Sets 39
     property WaterRights: TWaterRightsCollection read FWaterRights
       write SetWaterRights;
+    // Data Set 25
+    property GwAllotment: TAllotmentCollection read FGwAllotment
+      write SetGwAllotment;
+    property FarmName: string read FFarmName write SetFarmName;
+  end;
+
+  TFarmCollection = class(TEnhancedOrderedCollection)
+  private
+    function GetItem(Index: Integer): TFarm;
+    procedure SetItem(Index: Integer; const Value: TFarm);
+  public
+    constructor Create(Model: TBaseModel);
+    property Items[Index: Integer]: TFarm read GetItem write SetItem; default;
+    function Add: TFarm;
+    function Last: TFarm;
+    procedure Loaded;
   end;
 
   TFarmList = TList<TFarm>;
@@ -1054,20 +1078,75 @@ end;
 
 { TFarm }
 
+procedure TFarm.AddBoundaryTimes(BoundCol: TCustomNonSpatialBoundColl;
+  Times: TRealList; StartTestTime, EndTestTime: double; var StartRangeExtended,
+  EndRangeExtended: boolean);
+var
+  BoundaryIndex: Integer;
+  Boundary: TCustomModflowBoundaryItem;
+  SP_Epsilon: Double;
+  CosestIndex: Integer;
+  ExistingTime: Double;
+begin
+  SP_Epsilon := (Model as TCustomModel).SP_Epsilon;
+  for BoundaryIndex := 0 to BoundCol.Count - 1 do
+  begin
+    Boundary := BoundCol[BoundaryIndex] as TCustomModflowBoundaryItem;
+    CosestIndex := Times.IndexOfClosest(Boundary.StartTime);
+    if CosestIndex >= 0 then
+    begin
+      ExistingTime := Times[CosestIndex];
+      if Abs(ExistingTime-Boundary.StartTime) >  SP_Epsilon then
+      begin
+        Times.AddUnique(Boundary.StartTime);
+      end;
+    end;
+    CosestIndex := Times.IndexOfClosest(Boundary.EndTime);
+    if CosestIndex >= 0 then
+    begin
+      ExistingTime := Times[CosestIndex];
+      if Abs(ExistingTime-Boundary.EndTime) >  SP_Epsilon then
+      begin
+        Times.AddUnique(Boundary.EndTime);
+      end;
+    end;
+//    Times.AddUnique(Boundary.StartTime);
+//    Times.AddUnique(Boundary.EndTime);
+    if (Boundary.StartTime < StartTestTime-SP_Epsilon) then
+    begin
+      StartRangeExtended := True;
+    end;
+    if (Boundary.EndTime > EndTestTime+SP_Epsilon) then
+    begin
+      EndRangeExtended := True;
+    end;
+//    if (Boundary.StartTime < StartTestTime) then
+//    begin
+//      StartRangeExtended := True;
+//    end;
+//    if (Boundary.EndTime > EndTestTime) then
+//    begin
+//      EndRangeExtended := True;
+//    end;
+  end;
+end;
+
 procedure TFarm.Assign(Source: TPersistent);
 var
-  SourceCollection: TFarm;
+  SourceFarm: TFarm;
 begin
   if Source is TFarm then
   begin
-    SourceCollection := TFarm(Source);
-    FarmId := SourceCollection.FarmId;
-    FarmEfficiencyCollection := SourceCollection.FarmEfficiencyCollection;
-    FarmCostsCollection := SourceCollection.FarmCostsCollection;
-    SemiRoutedDeliveries := SourceCollection.SemiRoutedDeliveries;
-    SemiRoutedReturnFlow := SourceCollection.SemiRoutedReturnFlow;
-    DeliveryParamCollection := SourceCollection.DeliveryParamCollection;
-    WaterRights := SourceCollection.WaterRights;
+    SourceFarm := TFarm(Source);
+    FarmId := SourceFarm.FarmId;
+    FarmEfficiencyCollection := SourceFarm.FarmEfficiencyCollection;
+    FarmCostsCollection := SourceFarm.FarmCostsCollection;
+    SemiRoutedDeliveries := SourceFarm.SemiRoutedDeliveries;
+    SemiRoutedReturnFlow := SourceFarm.SemiRoutedReturnFlow;
+    DeliveryParamCollection := SourceFarm.DeliveryParamCollection;
+    WaterRights := SourceFarm.WaterRights;
+    GwAllotment := SourceFarm.GwAllotment;
+    FarmName := SourceFarm.FarmName;
   end
   else
   begin
@@ -1090,19 +1169,32 @@ begin
 //  FFarmCostsCollection := TFarmCostsCollection.Create(Model);
 end;
 
-constructor TFarm.Create(Model: TBaseModel; ScreenObject: TObject);
+constructor TFarm.Create(Collection: TCollection);
+var
+  LocalModel: TBaseModel;
 begin
-  inherited;
-  FFarmEfficiencyCollection := TFarmEfficiencyCollection.Create(Model);
-  FWaterRights := TWaterRightsCollection.Create(Model);
-  FSemiRoutedDeliveries := TSemiRoutedDeliveriesAndReturnFlowCollection.Create(Model);
-  FDeliveryParamCollection := TDeliveryParamCollection.Create(Model);
-  FSemiRoutedReturnFlow := TSemiRoutedDeliveriesAndReturnFlowCollection.Create(Model);
-  FFarmCostsCollection := TFarmCostsCollection.Create(Model);
+//  if Model = nil then
+//  begin
+//    InvalidateEvent := nil;
+//  end
+//  else
+//  begin
+//    InvalidateEvent := Model.Invalidate
+//  end;
+  inherited Create(Collection);
+  LocalModel := Model;
+  FFarmEfficiencyCollection := TFarmEfficiencyCollection.Create(LocalModel);
+  FWaterRights := TWaterRightsCollection.Create(LocalModel);
+  FSemiRoutedDeliveries := TSemiRoutedDeliveriesAndReturnFlowCollection.Create(LocalModel);
+  FDeliveryParamCollection := TDeliveryParamCollection.Create(LocalModel);
+  FSemiRoutedReturnFlow := TSemiRoutedDeliveriesAndReturnFlowCollection.Create(LocalModel);
+  FFarmCostsCollection := TFarmCostsCollection.Create(LocalModel);
+  FGwAllotment := TAllotmentCollection.Create(LocalModel);
 end;
 
 destructor TFarm.Destroy;
 begin
+  FGwAllotment.Free;
   FFarmCostsCollection.Free;
   FSemiRoutedReturnFlow.Free;
   FDeliveryParamCollection.Free;
@@ -1118,31 +1210,28 @@ begin
   SemiRoutedReturnFlow.Loaded;
 end;
 
-//function TFarm.IsSame(AnOrderedCollection: TOrderedCollection): boolean;
-//begin
-//
-//end;
+function TFarm.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  SourceFarm: TFarm;
+begin
+  Result := (AnotherItem is TFarm);
+//    and inherited IsSame(AnotherItem);
+  if result then
+  begin
+    SourceFarm := TFarm(AnotherItem);
+    result :=
+      (FarmId = SourceFarm.FarmId)
+      and FarmEfficiencyCollection.IsSame(SourceFarm.FarmEfficiencyCollection)
+      and FarmCostsCollection.IsSame(SourceFarm.FarmCostsCollection)
+      and SemiRoutedDeliveries.IsSame(SourceFarm.SemiRoutedDeliveries)
+      and SemiRoutedReturnFlow.IsSame(SourceFarm.SemiRoutedReturnFlow)
+      and DeliveryParamCollection.IsSame(SourceFarm.DeliveryParamCollection)
+      and WaterRights.IsSame(SourceFarm.WaterRights)
+      and GwAllotment.IsSame(SourceFarm.GwAllotment)
+      and (FarmName = SourceFarm.FarmName)
+  end;
 
-//function TFarm.IsSame(
-//  AnOrderedCollection: TOrderedCollection): boolean;
-//var
-//  SourceCollection: TFarm;
-//begin
-//  Result := (AnOrderedCollection is TFarm)
-//    and inherited IsSame(AnOrderedCollection);
-//  if result then
-//  begin
-//    SourceCollection := TFarm(AnOrderedCollection);
-//    result :=
-//      (FarmId = SourceCollection.FarmId)
-//      and FarmCostsCollection.IsSame(SourceCollection.FarmCostsCollection)
-//      and SemiRoutedDeliveries.IsSame(SourceCollection.SemiRoutedDeliveries)
-//      and SemiRoutedRunoff.IsSame(SourceCollection.SemiRoutedRunoff)
-//      and DeliveryParamCollection.IsSame(SourceCollection.DeliveryParamCollection)
-//      and WaterRights.IsSame(SourceCollection.WaterRights)
-//  end;
-//
-//end;
+end;
 
 procedure TFarm.SetDeliveryParamCollection(
   const Value: TDeliveryParamCollection);
@@ -1164,11 +1253,22 @@ end;
 
 procedure TFarm.SetFarmId(const Value: Integer);
 begin
-  if FFarmId <> Value then
-  begin
-    FFarmId := Value;
-    InvalidateModel;
-  end;
+  SetIntegerProperty(FFarmId, Value);
+//  if FFarmId <> Value then
+//  begin
+//    FFarmId := Value;
+//    InvalidateModel;
+//  end;
+end;
+
+procedure TFarm.SetFarmName(const Value: string);
+begin
+  SetCaseSensitiveStringProperty(FFarmName, Value);
+end;
+
+procedure TFarm.SetGwAllotment(const Value: TAllotmentCollection);
+begin
+  FGwAllotment.Assign(Value);
 end;
 
 procedure TFarm.SetSemiRoutedDeliveries(
@@ -1197,6 +1297,7 @@ var
   EffIndex: Integer;
   EfficiencyCol: TCropEfficiencyCollection;
 begin
+//{$IFDEF FMP2}
   AddBoundaryTimes(FWaterRights, Times, StartTestTime, EndTestTime,
     StartRangeExtended, EndRangeExtended);
   AddBoundaryTimes(FSemiRoutedDeliveries, Times, StartTestTime, EndTestTime,
@@ -1205,19 +1306,26 @@ begin
     StartRangeExtended, EndRangeExtended);
   AddBoundaryTimes(FFarmCostsCollection, Times, StartTestTime, EndTestTime,
     StartRangeExtended, EndRangeExtended);
+  AddBoundaryTimes(FGwAllotment, Times, StartTestTime, EndTestTime,
+    StartRangeExtended, EndRangeExtended);
+//{$ENDIF}
 
   for EffIndex := 0 to FFarmEfficiencyCollection.Count - 1 do
   begin
     EfficiencyCol := FFarmEfficiencyCollection[EffIndex].FCropEfficiency;
+//  {$IFDEF FMP2}
     AddBoundaryTimes(EfficiencyCol, Times, StartTestTime, EndTestTime,
       StartRangeExtended, EndRangeExtended);
+//  {$ENDIF}
   end;
 
   for DelivIndex := 0 to FDeliveryParamCollection.Count - 1 do
   begin
     Deliv := FDeliveryParamCollection[DelivIndex].FDeliveryParam;
+//  {$IFDEF FMP2}
     AddBoundaryTimes(Deliv, Times, StartTestTime, EndTestTime,
       StartRangeExtended, EndRangeExtended);
+//  {$ENDIF}
   end;
 
 
@@ -1328,6 +1436,13 @@ end;
 
 function TSfrDiversionObject.GetScreenObject: TObject;
 begin
+  if (FScreenObject = nil) and (ObjectName  <> '') then
+  begin
+    if Model <> nil then
+    begin
+      FScreenObject := (Model as TCustomModel).GetScreenObjectByName(ObjectName);
+    end;
+  end;
   if ValidScreenObject(FScreenObject) then
   begin
     result := FScreenObject;
@@ -1346,28 +1461,29 @@ begin
 end;
 
 procedure TSfrDiversionObject.Loaded;
-var
-  index: Integer;
-  LocalModel: TCustomModel;
-  AScreenObject: TScreenObject;
+//var
+//  index: Integer;
+//  LocalModel: TCustomModel;
+//  AScreenObject: TScreenObject;
 begin
-  if (Model <> nil) and (FObjectName <> '') and (FScreenObject = nil) then
-  begin
-    LocalModel := Model as TCustomModel;
-    for index := 0 to LocalModel.ScreenObjectCount - 1 do
-    begin
-      AScreenObject := LocalModel.ScreenObjects[index];
-      if AScreenObject.Deleted then
-      begin
-        Continue;
-      end;
-      if FObjectName = AScreenObject.Name then
-      begin
-        FScreenObject := AScreenObject;
-        break;
-      end;
-    end;
-  end;
+  GetScreenObject;
+//  if (Model <> nil) and (FObjectName <> '') and (FScreenObject = nil) then
+//  begin
+//    LocalModel := Model as TCustomModel;
+//    for index := 0 to LocalModel.ScreenObjectCount - 1 do
+//    begin
+//      AScreenObject := LocalModel.ScreenObjects[index];
+//      if AScreenObject.Deleted then
+//      begin
+//        Continue;
+//      end;
+//      if FObjectName = AScreenObject.Name then
+//      begin
+//        FScreenObject := AScreenObject;
+//        break;
+//      end;
+//    end;
+//  end;
 end;
 
 procedure TSfrDiversionObject.SetDiversionPosition(
@@ -1420,10 +1536,15 @@ begin
   if result then
   begin
     ScreenObject := AScreenObject as TScreenObject;
-    result := (ScreenObject.ModflowSfrBoundary <> nil)
-      and (ScreenObject.ModflowSfrBoundary.Used)
-      and not ScreenObject.Deleted;
-  end;
+    result := not ScreenObject.Deleted;
+    if result then
+    begin
+      result := ((ScreenObject.ModflowSfrBoundary <> nil)
+      and (ScreenObject.ModflowSfrBoundary.Used))
+      or ((ScreenObject.ModflowSwrReaches <> nil)
+      and (ScreenObject.ModflowSwrReaches.Used))
+    end;
+  end
 end;
 
 { TSfrDiversion }
@@ -1710,6 +1831,44 @@ procedure TFarmEfficiencyCollection.SetItem(Index: Integer;
   const Value: TFarmEfficienciesItem);
 begin
   inherited Items[Index] := Value;
+end;
+
+{ TFarmCollection }
+
+function TFarmCollection.Add: TFarm;
+begin
+  result := inherited Add as TFarm;
+end;
+
+constructor TFarmCollection.Create(Model: TBaseModel);
+begin
+  inherited Create(TFarm, Model);
+end;
+
+function TFarmCollection.GetItem(Index: Integer): TFarm;
+begin
+  result := inherited Items[index] as TFarm;
+end;
+
+function TFarmCollection.Last: TFarm;
+begin
+  result := inherited Last as TFarm;
+end;
+
+procedure TFarmCollection.Loaded;
+var
+  index: Integer;
+begin
+  for index := 0 to Count - 1 do
+  begin
+    Items[index].Loaded;
+  end;
+
+end;
+
+procedure TFarmCollection.SetItem(Index: Integer; const Value: TFarm);
+begin
+  inherited Items[index] := Value;
 end;
 
 end.

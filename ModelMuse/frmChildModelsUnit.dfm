@@ -493,10 +493,8 @@ inherited frmChildModels: TfrmChildModels
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnHelpClick
     end
@@ -506,10 +504,8 @@ inherited frmChildModels: TfrmChildModels
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnOKClick
     end
@@ -519,10 +515,8 @@ inherited frmChildModels: TfrmChildModels
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 3
     end
     object cbSaveBFH: TCheckBox

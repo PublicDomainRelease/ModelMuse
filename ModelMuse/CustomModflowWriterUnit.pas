@@ -537,6 +537,8 @@ type
     // @name can be overridden to write additional information for
     // a stress period.
     procedure WriteCustomStressPeriod(TimeIndex: Integer); virtual;
+    procedure WriteBeforeCells; virtual;
+    procedure WriteBeforeParamCells; virtual;
   public
     // @name is used to update the display of transient data used to color the
     // grid.
@@ -886,14 +888,8 @@ begin
     begin
       TextEditor := ExpandFileName(TextEditor);
     end;
-    if Pos(' ', TextEditor) > 0 then
-    begin
-      TextEditor := '"' + TextEditor + '"';
-    end;
-    if Pos(' ', ListFile) > 0 then
-    begin
-      ListFile := '"' + ListFile + '"';
-    end;
+    TextEditor := QuoteFileName(TextEditor);
+    ListFile := QuoteFileName(ListFile);
     if IsNotePad then
     begin
       BatchFile.Add('Start ' + TextEditor + ' ' + ListFile);
@@ -979,12 +975,10 @@ begin
         begin
           ModflowLocation := ProgramLocations.ModflowNwtLocation;
         end;
-      {$IFDEF FMP}
       msModflowFmp:
         begin
-          ModflowLocation := ProgramLocations.ModflowFmpLocation;
+          ModflowLocation := ProgramLocations.ModflowOwhmLocation;
         end;
-      {$ENDIF}
       msModflowCFP:
         begin
           ModflowLocation := ProgramLocations.ModflowCfpLocation;
@@ -1005,7 +999,7 @@ begin
       else
       begin
         AFileName :=  QuoteFileName(ExpandFileName(ModflowLocation));
-        BatchFile.Add(AFileName + ' ' + ExtractFileName(FileName) + ' /wait');
+        BatchFile.Add(AFileName + ' ' + QuoteFileName(FileName) + ' /wait');
       end;
 
       BatchFile.AddStrings(After);
@@ -2453,7 +2447,7 @@ begin
           begin
             Assert(False);
           end;
-        ptRch, ptEvt, ptETS, ptCHD..ptDRT, ptSTR{$IFDEF FMP}, ptQMAX {$ENDIF}:
+        ptRch, ptEvt, ptETS, ptCHD..ptDRT, ptSTR, ptQMAX:
           begin
             PARTYP := ' ' + ParmeterTypeToStr(ParameterType);
           end
@@ -2484,6 +2478,10 @@ begin
             Continue;
           end;
           ParameterValues := ParamValues.Objects[Position] as TList;
+          if ParameterValues.Count = 0 then
+          begin
+            Continue;
+          end;
           // ParameterValues contains lists of cells for a parameter for
           // each stress period.
           for TimeListIndex := 0 to TimeLists.Count - 1 do
@@ -2589,7 +2587,7 @@ var
 begin
   case ParameterType of
     ptUndefined..ptLPF_VKCB: Assert(False);
-    ptRch, ptEvt, ptETS, ptCHD..ptDRT{$IFDEF FMP}, ptQMAX {$ENDIF}: PARTYP := ' '
+    ptRch, ptEvt, ptETS, ptCHD..ptDRT, ptQMAX: PARTYP := ' '
       + ParmeterTypeToStr(ParameterType);
     Else Assert(False);
   end;
@@ -2648,6 +2646,9 @@ begin
 
       // Make sure the maximum length of the name of instance is <= 10.
       GetInstanceRoot(PARNAM, ParamValues, InstanceRoot);
+
+      WriteBeforeParamCells;
+
       // Data sets 4a and 4b
       for TimeIndex := 0 to ParamValues.Count - 1 do
       begin
@@ -2677,6 +2678,16 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TCustomListWriter.WriteBeforeCells;
+begin
+  // overriden in Farm proces
+end;
+
+procedure TCustomListWriter.WriteBeforeParamCells;
+begin
+  // overriden in Farm proces
 end;
 
 procedure TCustomListWriter.WriteCustomStressPeriod(TimeIndex: Integer);
@@ -2732,6 +2743,7 @@ begin
         // data set 6
         if ITMP > 0 then
         begin
+          WriteBeforeCells;
           for CellIndex := 0 to List.Count - 1 do
           begin
             Cell := List[CellIndex] as TValueCell;
@@ -3081,7 +3093,7 @@ begin
   try
     case ParameterType of
       ptUndefined..ptLPF_VKCB: Assert(False);
-      ptRCH, ptEVT, ptETS, ptCHD..ptDRT{$IFDEF FMP}, ptQMAX {$ENDIF}: PARTYP := ' '
+      ptRCH, ptEVT, ptETS, ptCHD..ptDRT, ptQMAX: PARTYP := ' '
         + ParmeterTypeToStr(ParameterType);
       Else Assert(False);
     end;
@@ -3238,7 +3250,7 @@ var
 begin
   case ParameterType of
     ptUndefined..ptLPF_VKCB: Assert(False);
-    ptRCH, ptEVT, ptETS, ptCHD..ptDRT{$IFDEF FMP}, ptQMAX {$ENDIF}: PARTYP := ' '
+    ptRCH, ptEVT, ptETS, ptCHD..ptDRT, ptQMAX: PARTYP := ' '
       + ParmeterTypeToStr(ParameterType);
     Else Assert(False);
   end;
@@ -3647,7 +3659,7 @@ var
   ListIndex: integer;
   CellListIndex: Integer;
   DummyAnnotation: string;
-  ValuesAssigned: Boolean;
+//  ValuesAssigned: Boolean;
   procedure AssignCellValues(CellList: TValueCellList);
   var
     CellIndex: Integer;
@@ -3664,12 +3676,17 @@ var
                 begin
                   ExportArray.RealData[0, Cell.Row, Cell.Column] :=
                     Cell.RealValue[DataTypeIndex, Model];
+                  ExportArray.Annotation[0, Cell.Row, Cell.Column] :=
+                    Cell.RealAnnotation[DataTypeIndex, Model];
                 end;
               umAdd:
                 begin
                   ExportArray.RealData[0, Cell.Row, Cell.Column] :=
                     ExportArray.RealData[0, Cell.Row, Cell.Column]
                     + Cell.RealValue[DataTypeIndex, Model];
+                  ExportArray.Annotation[0, Cell.Row, Cell.Column] :=
+                    ExportArray.Annotation[0, Cell.Row, Cell.Column]
+                    + Cell.RealAnnotation[DataTypeIndex, Model];
                 end;
               else Assert(False);
             end;
@@ -3681,12 +3698,17 @@ var
                 begin
                   ExportArray.IntegerData[0, Cell.Row, Cell.Column] :=
                     Cell.IntegerValue[DataTypeIndex, Model];
+                  ExportArray.Annotation[0, Cell.Row, Cell.Column] :=
+                    Cell.IntegerAnnotation[DataTypeIndex, Model];
                 end;
               umAdd:
                 begin
                   ExportArray.IntegerData[0, Cell.Row, Cell.Column] :=
                     ExportArray.IntegerData[0, Cell.Row, Cell.Column]
                     + Cell.IntegerValue[DataTypeIndex, Model];
+                  ExportArray.Annotation[0, Cell.Row, Cell.Column] :=
+                    ExportArray.Annotation[0, Cell.Row, Cell.Column]
+                    + Cell.IntegerAnnotation[DataTypeIndex, Model];
                 end;
               else Assert(False);
             end;
@@ -3697,7 +3719,7 @@ var
     end;
   end;
 begin
-  if Model.ModelSelection = msModflowLGR2 then
+  if Model.ModelSelection in [msModflowLGR2, msModflowFmp] then
   begin
     AdjustForLGR := False;
   end;

@@ -17,7 +17,7 @@ type
     FOldCrops: TCropCollection;
     FNewCrops: TCropCollection;
     FFarmList: TFarmObjectList;
-    FFarmScreenObjects: TScreenObjectList;
+//    FFarmScreenObjects: TScreenObjectList;
   protected
     function Description: string; override;
   public
@@ -72,15 +72,11 @@ type
       State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure jplMainChange(Sender: TObject);
   private
-{$IFDEF FMP}
     FNameStart: integer;
-{$ENDIF}
     FPressureStart: integer;
     FCropPropStart: Integer;
     FFallowStart: integer;
-{$IFDEF FMP}
     FLastCol: integer;
-{$ENDIF}
     FCrops: TCropCollection;
     FCropsNode: TJvPageIndexNode;
     FFarmProcess: TFarmProcess;
@@ -90,47 +86,29 @@ type
     FCropFunctions: TCropFunctionCollection;
     FWaterUseCollection: TCropWaterUseCollection;
     FGettingData: Boolean;
-{$IFDEF FMP}
     procedure SetUpCropNameTable(Model: TCustomModel);
     procedure SetCropNameTableColumns(Model: TCustomModel);
-{$ENDIF}
     procedure GetCrops(CropCollection: TCropCollection);
-{$IFDEF FMP}
     procedure SetUpRootingTable(Model: TCustomModel);
-{$ENDIF}
     procedure GetRootingDepth(RootDepth: TFmpRootDepthCollection);
-{$IFDEF FMP}
     procedure SetUpEvapFractionsTable(Model: TCustomModel);
-{$ENDIF}
     procedure GetEvapFractions(EvapFract: TEvapFractionsCollection);
-{$IFDEF FMP}
     procedure SetUpLossesTable(Model: TCustomModel);
-{$ENDIF}
     procedure GetLosses(Losses: TLossesCollection);
-{$IFDEF FMP}
     procedure SetUpCropFunctionTable(Model: TCustomModel);
-{$ENDIF}
     procedure GetCropFunction(CropFunctions: TCropFunctionCollection);
-{$IFDEF FMP}
     procedure SetUpCropWaterUseTable(Model: TCustomModel);
-{$ENDIF}
     procedure GetCropWaterUseFunction(WaterUseCollection: TCropWaterUseCollection);
     procedure GetData;
-{$IFDEF FMP}
     procedure SetGridColumnProperties(Grid: TRbwDataGrid4);
-{$ENDIF}
     procedure CreateBoundaryFormula(const DataGrid: TRbwDataGrid4;
       const ACol, ARow: integer; Formula: string;
       const Orientation: TDataSetOrientation; const EvaluatedAt: TEvaluatedAt);
-{$IFDEF FMP}
     procedure SetUseButton(Grid: TRbwDataGrid4; StartCol: Integer);
-{$ENDIF}
     procedure CreateChildNodes(ACrop: TCropItem; CropNode: TJvPageIndexNode);
-{$IFDEF FMP}
     procedure SetStartAndEndTimeLists(StartTimes, EndTimes: TStringList;
       Grid: TRbwDataGrid4);
     procedure GetGlobalVariables;
-{$ENDIF}
     procedure SetData;
     { Private declarations }
 
@@ -161,7 +139,8 @@ resourcestring
   StrSlopeWPFSlope = 'Slope (WPF-Slope)';
   StrInterceptWPFInt = 'Intercept (WPF-Int)';
   StrPriceCropPrice = 'Price (Crop-Price)';
-  StrIrrigatedInverseO = 'Irrigated (inverse of NONIRR)';
+  StrIrrigatedInverseO15 = 'Irrigated (inverse of NONIRR) Data Set 15';
+  StrIrrigatedInverseO30 = 'Irrigated (inverse of NONIRR) Data Set 30a';
   StrCropIDCID = 'Crop ID (CID)';
   StrCropName = 'Crop Name';
   StrPSI1 = 'PSI(1) Anoxia';
@@ -185,6 +164,7 @@ resourcestring
   StrInefficiencylosses = 'Inefficiency-Losses to Surface Water';
   StrCropPriceFunction = 'Crop Price Function';
   StrChangeFarmCrops = 'change farm crops';
+  StrCrops = 'Crops';
 
 type
   TNameCol = (ncID, ncName);
@@ -205,7 +185,6 @@ type
 
 { TfrmCropProperties }
 
-{$IFDEF FMP}
 procedure TfrmCropProperties.SetUpCropFunctionTable(Model: TCustomModel);
 begin
   frameCropFunction.Grid.ColCount := 5;
@@ -222,9 +201,7 @@ begin
   frameCropFunction.FirstFormulaColumn := 2;
   frameCropFunction.LayoutMultiRowEditControls;
 end;
-{$ENDIF}
 
-{$IFDEF FMP}
 procedure TfrmCropProperties.SetUpCropNameTable(Model: TCustomModel);
 var
   index: Integer;
@@ -273,7 +250,7 @@ begin
     frameCropName.Grid.Cells[FCropPropStart + Ord(cpRootGrowthCoefficient), 0]
       := StrRootGrowthCoeffici;
     frameCropName.Grid.Cells[FCropPropStart + Ord(cpIrrigated), 0]
-      := StrIrrigatedInverseO;
+      := StrIrrigatedInverseO15;
   end;
 
   SetGridColumnProperties(frameCropName.Grid);
@@ -281,9 +258,7 @@ begin
   frameCropName.FirstFormulaColumn := 2;
   frameCropName.LayoutMultiRowEditControls;
 end;
-{$ENDIF}
 
-{$IFDEF FMP}
 procedure TfrmCropProperties.SetUpCropWaterUseTable(Model: TCustomModel);
 begin
 //  TCropWaterUse = (cwuStart, cwuEnd, cwuCropValue, cwuIrrigated);
@@ -302,15 +277,13 @@ begin
     else
       Assert(False);
   end;
-  frameCropWaterUse.Grid.Cells[Ord(cwuIrrigated), 0] := StrIrrigatedInverseO;
+  frameCropWaterUse.Grid.Cells[Ord(cwuIrrigated), 0] := StrIrrigatedInverseO30;
   SetGridColumnProperties(frameCropWaterUse.Grid);
   SetUseButton(frameCropWaterUse.Grid, Ord(cwuCropValue));
   frameCropWaterUse.FirstFormulaColumn := 2;
   frameCropWaterUse.LayoutMultiRowEditControls;
 end;
-{$ENDIF}
 
-{$IFDEF FMP}
 procedure TfrmCropProperties.SetUpEvapFractionsTable(Model: TCustomModel);
 begin
   frameEvapFractions.Grid.ColCount := 5;
@@ -327,9 +300,7 @@ begin
   frameEvapFractions.FirstFormulaColumn := 2;
   frameEvapFractions.LayoutMultiRowEditControls;
 end;
-{$ENDIF}
 
-{$IFDEF FMP}
 procedure TfrmCropProperties.SetUpLossesTable(Model: TCustomModel);
 begin
   frameLosses.Grid.ColCount := 4;
@@ -345,9 +316,7 @@ begin
   frameLosses.FirstFormulaColumn := 2;
   frameLosses.LayoutMultiRowEditControls;
 end;
-{$ENDIF}
 
-{$IFDEF FMP}
 procedure TfrmCropProperties.SetUpRootingTable(Model: TCustomModel);
 begin
   frameRootDepth.Grid.ColCount := 3;
@@ -362,7 +331,6 @@ begin
   frameRootDepth.FirstFormulaColumn := 2;
   frameRootDepth.LayoutMultiRowEditControls;
 end;
-{$ENDIF}
 
 procedure TfrmCropProperties.btnOKClick(Sender: TObject);
 var
@@ -415,7 +383,11 @@ begin
     if (FFallowStart > 0) and (ACol = FFallowStart + Ord(fcFallow)) then
     begin
       ResultType := rdtBoolean;
-    end
+    end;
+    if (FCropPropStart > 0) and (ACol = FCropPropStart + Ord(cpIrrigated)) then
+    begin
+      ResultType := rdtBoolean;
+    end;
   end;
 
   if (ResultType = CompiledFormula.ResultType) or
@@ -437,7 +409,6 @@ begin
   end;
 end;
 
-{$IFDEF FMP}
 procedure TfrmCropProperties.SetUseButton(Grid: TRbwDataGrid4; StartCol: Integer);
 var
   ColIndex: Integer;
@@ -449,7 +420,6 @@ begin
     Grid.Columns[ColIndex].ButtonWidth := 35;
   end;
 end;
-{$ENDIF}
 
 procedure TfrmCropProperties.CreateChildNodes(ACrop: TCropItem; CropNode: TJvPageIndexNode);
 var
@@ -617,6 +587,10 @@ begin
       begin
         CreateBoundaryFormula(DataGrid, ACol, ARow, Formula, Orientation,
           EvaluatedAt);
+        if Assigned(DataGrid.OnEndUpdate) then
+        begin
+          DataGrid.OnEndUpdate(nil);
+        end;
       end;
     finally
       Free;
@@ -1099,7 +1073,6 @@ begin
 end;
 
 procedure TfrmCropProperties.GetData;
-{$IFDEF FMP}
 var
   CropIndex: Integer;
   ACrop: TCropItem;
@@ -1109,9 +1082,7 @@ var
   TimeIndex: Integer;
   StressPeriods: TModflowStressPeriods;
   AStressPeriod: TModflowStressPeriod;
-{$ENDIF}
 begin
-{$IFDEF FMP}
   GetGlobalVariables;
   SetUpCropNameTable(frmGoPhast.PhastModel);
   SetUpRootingTable(frmGoPhast.PhastModel);
@@ -1144,7 +1115,7 @@ begin
   FCrops := TCropCollection.Create(nil);
   FCrops.Assign(frmGoPhast.PhastModel.FmpCrops);
 
-  FCropsNode := jvpltvMain.Items.Add(nil, 'Crops') as TJvPageIndexNode;
+  FCropsNode := jvpltvMain.Items.Add(nil, StrCrops) as TJvPageIndexNode;
   FCropsNode.PageIndex := jvspCropName.PageIndex;
   FCropsNode.Data := FCrops;
 
@@ -1156,11 +1127,8 @@ begin
     CropNode := jvpltvMain.Items.Add(nil, ACrop.CropName) as TJvPageIndexNode;
     CreateChildNodes(ACrop, CropNode);
   end;
-
-{$ENDIF}
 end;
 
-{$IFDEF FMP}
 procedure TfrmCropProperties.SetGridColumnProperties(Grid: TRbwDataGrid4);
 var
   ColIndex: Integer;
@@ -1180,9 +1148,7 @@ begin
   end;
   Grid.EndUpdate;
 end;
-{$ENDIF}
 
-{$IFDEF FMP}
 procedure TfrmCropProperties.SetStartAndEndTimeLists(StartTimes,
   EndTimes: TStringList; Grid: TRbwDataGrid4);
 begin
@@ -1191,7 +1157,6 @@ begin
   Grid.Columns[1].PickList := EndTimes;
   Grid.Columns[1].ComboUsed := True;
 end;
-{$ENDIF}
 
 procedure TfrmCropProperties.GetEvapFractions(
   EvapFract: TEvapFractionsCollection);
@@ -1340,7 +1305,6 @@ begin
   end;
 end;
 
-{$IFDEF FMP}
 procedure TfrmCropProperties.SetCropNameTableColumns(Model: TCustomModel);
 var
   FarmProcess: TFarmProcess;
@@ -1372,9 +1336,7 @@ begin
     FLastCol := FCropPropStart + Ord(High(TCropProp));
   end;
 end;
-{$ENDIF}
 
-{$IFDEF FMP}
 procedure TfrmCropProperties.GetGlobalVariables;
 var
   CompilerList: TList;
@@ -1387,7 +1349,6 @@ begin
     CompilerList.Free;
   end;
 end;
-{$ENDIF}
 
 procedure TfrmCropProperties.SetData;
 begin
@@ -1397,35 +1358,27 @@ end;
 { TUndoCrops }
 
 constructor TUndoCrops.Create(var NewCrops: TCropCollection);
-{$IFDEF FMP}
 var
-  ScreenObjectIndex: Integer;
-  AScreenObject: TScreenObject;
+  FarmIndex: Integer;
   AFarm: TFarm;
   NewFarm: TFarm;
-{$ENDIF}
 begin
-{$IFDEF FMP}
   FNewCrops := NewCrops;
   NewCrops := nil;
   FOldCrops := TCropCollection.Create(nil);
   FOldCrops.Assign(frmGoPhast.PhastModel.FmpCrops);
   FFarmList := TFarmObjectList.Create;
-  FFarmScreenObjects := TScreenObjectList.Create;
 
-  for ScreenObjectIndex := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
+  for FarmIndex := 0 to frmGoPhast.PhastModel.Farms.Count - 1 do
   begin
-    AScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
-    AFarm := AScreenObject.ModflowFmpFarm;
+    AFarm := frmGoPhast.PhastModel.Farms[FarmIndex];
     if (AFarm <> nil) and AFarm.Used then
     begin
-      NewFarm := TFarm.Create(nil, nil);
+      NewFarm := TFarm.Create(nil);
       NewFarm.Assign(AFarm);
       FFarmList.Add(NewFarm);
-      FFarmScreenObjects.Add(AScreenObject);
     end;
   end;
-{$ENDIF}
 end;
 
 function TUndoCrops.Description: string;
@@ -1435,7 +1388,7 @@ end;
 
 destructor TUndoCrops.Destroy;
 begin
-  FFarmScreenObjects.Free;
+//  FFarmScreenObjects.Free;
   FFarmList.Free;
   FNewCrops.Free;
   FOldCrops.Free;
@@ -1445,29 +1398,21 @@ end;
 
 procedure TUndoCrops.DoCommand;
 begin
-{$IFDEF FMP}
   frmGoPhast.PhastModel.FmpCrops := FNewCrops;
-{$ENDIF}
 end;
 
 procedure TUndoCrops.Undo;
-{$IFDEF FMP}
 var
   index: Integer;
-  AScreenObject: TScreenObject;
   AFarm: TFarm;
-{$ENDIF}
 begin
-{$IFDEF FMP}
   frmGoPhast.PhastModel.FmpCrops := FOldCrops;
-  Assert(FFarmScreenObjects.Count = FFarmList.Count);
-  for index := 0 to FFarmScreenObjects.Count - 1 do
+  Assert(frmGoPhast.PhastModel.Farms.Count = FFarmList.Count);
+  for index := 0 to FFarmList.Count - 1 do
   begin
-    AScreenObject := FFarmScreenObjects[index];
     AFarm := FFarmList[index];
-    AScreenObject.ModflowFmpFarm := AFarm;
+    frmGoPhast.PhastModel.Farms[index].Assign(AFarm);
   end;
-{$ENDIF}
 end;
 
 end.

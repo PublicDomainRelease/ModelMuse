@@ -3,7 +3,7 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
   HelpKeyword = 'Import_ASCII_Raster_File'
   Caption = 'Import ASCII Raster File'
   ExplicitWidth = 660
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   inherited lblDataSet: TLabel
     Top = 13
@@ -15,11 +15,11 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
   end
   inherited comboDataSets: TComboBox
     Top = 37
-    Width = 542
+    Width = 524
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 1
     ExplicitTop = 37
-    ExplicitWidth = 542
+    ExplicitWidth = 524
   end
   inherited comboInterpolators: TComboBox
     Top = 91
@@ -76,7 +76,7 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
   object rgFilterMethod: TRadioGroup [11]
     Left = 360
     Top = 84
-    Width = 190
+    Width = 172
     Height = 140
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Filter method'

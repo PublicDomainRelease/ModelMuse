@@ -524,7 +524,7 @@ begin
                 for PI_index := 0 to ParamIcalc.Count - 1 do
                 begin
                   if ParamIcalc.Items[PI_index].OutflowSegment <>
-                    NearestStream.ModflowSfrBoundary.SegementNumber then
+                    NearestStream.ModflowSfrBoundary.SegmentNumber then
                   begin
                     OutFlowSegmentNeedsToChange := True;
                     break;
@@ -535,7 +535,7 @@ begin
                   Linkage := Linkages.Add;
                   Linkage.ScreenObject := ScreenObject;
                   Linkage.NewOutFlowSegment :=
-                    NearestStream.ModflowSfrBoundary.SegementNumber;
+                    NearestStream.ModflowSfrBoundary.SegmentNumber;
                 end;
               end;
             ltSTR:

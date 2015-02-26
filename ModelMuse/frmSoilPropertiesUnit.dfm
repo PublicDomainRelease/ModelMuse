@@ -7,7 +7,7 @@ inherited frmSoilProperties: TfrmSoilProperties
   OnResize = FormResize
   ExplicitWidth = 697
   ExplicitHeight = 343
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -321,6 +321,7 @@ inherited frmSoilProperties: TfrmSoilProperties
         Height = 26
         EditLabel.Width = 57
         EditLabel.Height = 18
+        EditLabel.ExplicitLeft = 128
         EditLabel.ExplicitTop = 9
         EditLabel.ExplicitWidth = 57
         EditLabel.ExplicitHeight = 18

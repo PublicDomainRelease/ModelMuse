@@ -6,7 +6,7 @@ inherited frmFarmAllotment: TfrmFarmAllotment
   ClientWidth = 398
   ExplicitWidth = 414
   ExplicitHeight = 368
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   inline frameAllotment: TframeFormulaGrid
     Left = 0
@@ -132,6 +132,7 @@ inherited frmFarmAllotment: TfrmFarmAllotment
         Height = 26
         EditLabel.Width = 57
         EditLabel.Height = 18
+        EditLabel.ExplicitLeft = 128
         EditLabel.ExplicitTop = 9
         EditLabel.ExplicitWidth = 57
         EditLabel.ExplicitHeight = 18
@@ -152,10 +153,8 @@ inherited frmFarmAllotment: TfrmFarmAllotment
       Top = 6
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
     object btnOK: TBitBtn
@@ -163,10 +162,8 @@ inherited frmFarmAllotment: TfrmFarmAllotment
       Top = 6
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -175,10 +172,8 @@ inherited frmFarmAllotment: TfrmFarmAllotment
       Top = 6
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end

@@ -2866,7 +2866,7 @@ begin
     if EndPoint.ShouldShow(DisplayLimits, Orientation, ColRowOrLayer) then
     begin
       case DisplayLimits.WhereToPlot of
-        wtpStart: 
+        wtpStart:
           begin
             case Orientation of
               dsoTop:
@@ -3042,11 +3042,33 @@ begin
         begin
           MinValue := MinReleaseTime;
           MaxValue := MaxReleaseTime;
+          if DisplayLimits.ReleaseTimeLimits.UseLimit then
+          begin
+            if DisplayLimits.ReleaseTimeLimits.StartLimit > MinValue then
+            begin
+              MinValue := DisplayLimits.ReleaseTimeLimits.StartLimit;
+            end;
+            if DisplayLimits.ReleaseTimeLimits.EndLimit < MaxValue then
+            begin
+              MaxValue := DisplayLimits.ReleaseTimeLimits.EndLimit;
+            end;
+          end;
         end;
       elcTrackingTime: 
         begin
           MinValue := MinTrackingTime;
           MaxValue := MaxTrackingTime;
+          if DisplayLimits.TrackingTimeLimits.UseLimit then
+          begin
+            if DisplayLimits.TrackingTimeLimits.StartLimit > MinValue then
+            begin
+              MinValue := DisplayLimits.TrackingTimeLimits.StartLimit;
+            end;
+            if DisplayLimits.TrackingTimeLimits.EndLimit < MaxValue then
+            begin
+              MaxValue := DisplayLimits.TrackingTimeLimits.EndLimit;
+            end;
+          end;
         end;
       elcStartXPrime, elcEndXPrime: 
         begin

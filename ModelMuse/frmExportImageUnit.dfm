@@ -346,6 +346,7 @@ inherited frmExportImage: TfrmExportImage
         Collapsed = True
         TabOrder = 0
         OnExpand = cpViewExpand
+        ExplicitWidth = 185
         ExpandedHeight = 386
         object Panel3: TPanel
           Left = 0

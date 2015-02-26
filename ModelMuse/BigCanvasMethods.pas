@@ -376,6 +376,108 @@ var
   I2: integer;
 //  Polygon: TPolygon32;
   TmpPoly, Outline: TPolygon32;
+  ArrayChanged: boolean;
+  procedure DeleteSomePoints(Source: TPointArray; var Destination: TPointArray;
+    var Changed: boolean);
+  var
+    Index: integer;
+  begin
+    Changed := False;
+    setLength(Destination, Length(Source));
+    I1 := Length(Source) - 3;
+    I2 := 0;
+    I3 := 0;
+    SkipFirstPoint := True;
+    for Index := 0 to Length(Source) - 2 do
+    begin
+      P2 := Source[Index];
+
+      Inc(I1);
+      if I1 = Length(Source) - 1 then
+      begin
+        I1 := 0;
+      end;
+
+      Inc(I3);
+      if I3 = Length(Source) - 1 then
+      begin
+        I3 := 0;
+      end;
+      P1 := Source[I1];
+      P3 := Source[I3];
+      SkipPoint := False;
+      if (P1.Y = P2.Y) and (P2.Y = P3.Y) then
+      begin
+        if (P2.X > P1.X) and (P2.X > P3.X) then
+        begin
+          SkipPoint := True;
+
+        end
+        else if (P2.X < P1.X) and (P2.X < P3.X) then
+        begin
+          SkipPoint := True;
+        end;
+      end;
+      if (P1.X = P2.X) and (P2.X = P3.X) then
+      begin
+        if (P2.Y > P1.Y) and (P2.Y > P3.Y) then
+        begin
+          SkipPoint := True;
+        end
+        else if (P2.Y < P1.Y) and (P2.Y < P3.Y) then
+        begin
+          SkipPoint := True;
+        end;
+      end;
+      if (P1.X = P2.X) and (P1.Y = P2.Y) then
+      begin
+        SkipPoint := True;
+      end;
+
+      if not SkipPoint then
+      begin
+        if (I2 < 2) then
+        begin
+          Destination[I2] := P2;
+          Inc(I2);
+        end
+        else
+        begin
+          P1 := Destination[I2 - 2];
+          if (P1.X <> P2.X) or (P1.Y <> P2.Y) then
+          begin
+            Destination[I2] := P2;
+            Inc(I2);
+          end
+          else
+          begin
+            Dec(I2, 2);
+          end;
+        end
+      end;
+      if Index = 0 then
+      begin
+        SkipFirstPoint := SkipPoint;
+      end;
+      if SkipPoint then
+      begin
+        Changed := True;
+      end;
+    end;
+    if SkipFirstPoint then
+    begin
+      if I2 > 0 then
+      begin
+        Destination[I2] := Destination[0];
+        Inc(I2);
+      end;
+    end
+    else
+    begin
+      Destination[I2] := Source[0];
+      Inc(I2);
+    end;
+  end;
 begin
   if BitMap = nil then Exit;
   if LineThickness <> 1 then
@@ -416,7 +518,16 @@ begin
       NewPoints[Index].Y := BottomRange
     end;
   end;
-  setLength(TempPoints, Length(NewPoints));
+  ArrayChanged := False;
+  repeat
+    DeleteSomePoints(NewPoints, TempPoints, ArrayChanged);
+    if ArrayChanged then
+    begin
+      SetLength(TempPoints, I2);
+      NewPoints := TempPoints;
+    end;
+  until not ArrayChanged;
+{  setLength(TempPoints, Length(NewPoints));
   I1 := Length(NewPoints) - 3;
   I2 := 0;
   I3 := 0;
@@ -504,7 +615,7 @@ begin
   begin
     TempPoints[I2] := NewPoints[0];
     Inc(I2);
-  end;
+  end;      }
   if (I2 > 3) or (MultiplePolygons and PolygonComplete) then
   begin
     SetLength(TempPoints, I2);

@@ -203,11 +203,7 @@ type
       write SetStrPackage;
     property FhbPackage: TFhbPackageSelection read FFhbPackage
       write SetFhbPackage;
-    property FarmProcess: TFarmProcess read FFarmProcess write SetFarmProcess
-    {$IFNDEF FMP}
-      stored False
-    {$ENDIF}
-      ;
+    property FarmProcess: TFarmProcess read FFarmProcess write SetFarmProcess;
     property ConduitFlowProcess: TConduitFlowProcess read FConduitFlowProcess
       write SetConduitFlowProcess;
     property SwiPackage: TSwiPackage read FSwiPackage write SetSwiPackage;
@@ -881,12 +877,10 @@ begin
     Inc(Result);
   end;
 
-{$IFDEF FMP}
   if FarmProcess.IsSelected and (Model.ModelSelection = msModflowFmp) then
   begin
     Inc(Result);
   end;
-{$ENDIF}
 
   if ConduitFlowProcess.IsSelected and (Model.ModelSelection = msModflowCfp) then
   begin

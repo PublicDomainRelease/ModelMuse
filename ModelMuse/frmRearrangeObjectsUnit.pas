@@ -54,6 +54,10 @@ type
     procedure sgObjectsSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure rgShowClick(Sender: TObject);
+    procedure sgObjectsMouseWheelDown(Sender: TObject; Shift: TShiftState;
+      MousePos: TPoint; var Handled: Boolean);
+    procedure sgObjectsMouseWheelUp(Sender: TObject; Shift: TShiftState;
+      MousePos: TPoint; var Handled: Boolean);
   private
     // @name is set to true in @link(sgObjectsMouseDown) to indicate that the
     // user is dragging a row to a new position.
@@ -286,6 +290,26 @@ begin
   sgObjects.MouseToCell(X, Y, ACol, ARow);
   FDraggingRows := False;
   SetCursor(ACol, ARow);
+end;
+
+procedure TfrmRearrangeObjects.sgObjectsMouseWheelDown(Sender: TObject;
+  Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+begin
+  inherited;
+  if (sgObjects.Col < 0) or (sgObjects.Row < 0) then
+  begin
+    Handled := True;
+  end;
+end;
+
+procedure TfrmRearrangeObjects.sgObjectsMouseWheelUp(Sender: TObject;
+  Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+begin
+  inherited;
+  if (sgObjects.Col < 0) or (sgObjects.Row < 0) then
+  begin
+    Handled := True;
+  end;
 end;
 
 procedure TfrmRearrangeObjects.sgObjectsDrawCell(Sender: TObject; ACol,

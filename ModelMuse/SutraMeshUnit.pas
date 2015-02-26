@@ -355,6 +355,7 @@ Type
     property Mesh2D: TSutraMesh2D read GetMesh2D;
     property ElementRanges: TRbwRangeTree read GetElementRanges;
     property ElementCenters: TRbwQuadTree read GetElementCenters;
+    procedure SortByElementNumber;
   end;
 
   TCustomSutraMesh = class abstract(TCustomDiscretization)
@@ -3114,6 +3115,34 @@ begin
   FreeAndNil(FElementCenters);
 end;
 
+procedure TSutraElement2D_Collection.SortByElementNumber;
+var
+  AnElementList: TList<TSutraElement2D>;
+  ElementIndex: Integer;
+  AnElement: TSutraElement2D;
+begin
+  AnElementList := TList<TSutraElement2D>.Create;
+  try
+    AnElementList.Capacity := Count;
+    for ElementIndex := 0 to Count - 1 do
+    begin
+      AnElementList.Add(nil);
+    end;
+    for ElementIndex := 0 to Count - 1 do
+    begin
+      AnElement := Items[ElementIndex];
+      AnElementList[AnElement.ElementNumber] := AnElement;
+    end;
+    for ElementIndex := 0 to AnElementList.Count - 1 do
+    begin
+      AnElement := AnElementList[ElementIndex];
+      AnElement.Index := ElementIndex;
+    end;
+  finally
+    AnElementList.Free;
+  end;
+end;
+
 procedure TSutraElement2D_Collection.ElementXLimits(Subject: TObject;
   out LowerBoundary, UpperBoundary: double);
 var
@@ -3677,6 +3706,9 @@ begin
   end;
   for ElementIndex := 0 to Elements.Count - 1 do
   begin
+  {$IFDEF DEBUG}
+    try
+  {$ENDIF}
     Element2D := Elements[ElementIndex];
     DrawElement := True;
     if FMesh3D.MeshType = mt3d then
@@ -3703,6 +3735,11 @@ begin
           nil, ElementLayer, StringValues, Mesh3D, MinMax);
       end;
     end;
+  {$IFDEF DEBUG}
+    except
+      ShowMessage(IntToStr(ElementIndex));
+    end;
+  {$ENDIF}
   end;
 end;
 
@@ -4074,6 +4111,9 @@ var
   NodeList: TSutraNode2D_List;
   index: Integer;
   ElementList: TSutraElement2D_List;
+  AnElement: TSutraElement2D;
+  Node: TSutraNodeNumber2D_Item;
+  NodeIndex: integer;
 begin
   Elements.InvalidateElementIntervals;
   Nodes.InvalidateNodeIntervals;
@@ -4101,6 +4141,7 @@ begin
     for Index := 0 to NodeList.Count - 1 do
     begin
       NodeList.Items[index].Index := index;
+      NodeList.Items[index].Number := Index;
     end;
   finally
     NodeList.Free;
@@ -4121,7 +4162,15 @@ begin
       end));
     for Index := 0 to ElementList.Count - 1 do
     begin
-      ElementList.Items[index].Index := index;
+      AnElement := ElementList.Items[index];
+      AnElement.Index := index;
+      AnElement.ElementNumber := Index;
+      for NodeIndex := 0 to AnElement.FNodes.Count - 1 do
+      begin
+        Node := AnElement.FNodes[NodeIndex];
+        // Update stored node number.
+        Node.Node := Node.Node;
+      end;
     end;
   finally
     ElementList.Free;
@@ -8717,6 +8766,7 @@ begin
           if ANode.Active then
           begin
             ANode.Number := Count;
+            ANode.Index := ANode.Number;
             Inc(Count);
           end;
         end;
@@ -8732,6 +8782,7 @@ begin
           if ANode.Active then
           begin
             ANode.Number := Count;
+            ANode.Index := ANode.Number;
             Inc(Count);
           end;
         end;
@@ -8748,6 +8799,7 @@ begin
           if AnElement.Active then
           begin
             AnElement.ElementNumber := Count;
+            AnElement.Index := AnElement.ElementNumber;
             Inc(Count);
           end;
         end;
@@ -8763,6 +8815,7 @@ begin
           if AnElement.Active then
           begin
             AnElement.ElementNumber := Count;
+            AnElement.Index := AnElement.ElementNumber;
             Inc(Count);
           end;
         end;

@@ -734,7 +734,7 @@ begin
   if Used and (ParentModel <> nil) then
   begin
     Model := ParentModel as TCustomModel;
-    Assert(False);
+//    Assert(False);
     Model.InvalidateMfFmpEvap(self);
   end;
 end;

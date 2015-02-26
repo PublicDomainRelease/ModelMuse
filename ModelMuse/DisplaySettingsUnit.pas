@@ -1506,7 +1506,7 @@ begin
         begin
           StreamPlot := TSfrStreamPlot.Create;
           StreamPlot.StreamObject := ScreenObject;
-          StreamPlot.Segment := SfrBoundary.SegementNumber;
+          StreamPlot.Segment := SfrBoundary.SegmentNumber;
           StreamPlot.OutflowSegment := Item.OutflowSegment;
           StreamPlot.DiversionSegment := Item.DiversionSegment;
           SfrStreamList.Add(StreamPlot);

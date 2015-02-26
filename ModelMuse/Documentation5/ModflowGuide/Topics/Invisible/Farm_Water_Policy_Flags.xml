@@ -81,7 +81,7 @@
     <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">Variable Groundwater Allotment flag (0, 1, 2, P possible).</text></para>
+          <para styleclass="Normal"><anchor id="IALLOTGW" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Variable Groundwater Allotment flag (0, 1, 2, P possible).</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">0 = Groundwater Allotments (ALLOTGW(NF)) are not specified, and the maximum capacity of each farm to deliver potential groundwater supply is limited by the total pumping capacity of all farm wells that are related to each water-balance subregion (farm).</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">1 = Groundwater Allotments (ALLOTGW(NF)) specified for the entire simulation. (See Data Set </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="DataSet20" styleclass="Normal" translate="true">20</link><text styleclass="Normal" translate="true">.)</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">2 = Groundwater Allotments (ALLOTGW(NF)) specified for each stress period. (See Data Set </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="DataSet25" styleclass="Normal" translate="true">25</link><text styleclass="Normal" translate="true">.)</text></para>

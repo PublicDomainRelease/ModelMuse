@@ -440,12 +440,12 @@ uses
   SutraObservationWriterUnit in '..\SutraObservationWriterUnit.pas',
   SutraOutputControlUnit in '..\SutraOutputControlUnit.pas',
   frmSutraOutputControlUnit in '..\frmSutraOutputControlUnit.pas' {frmSutraOutputControl},
-  SutraInputWriterUnit in '..\SutraInputWriterUnit.pas' {$R *.res},
+  SutraInputWriterUnit in '..\SutraInputWriterUnit.pas',
   SutraTimeScheduleWriterUnit in '..\SutraTimeScheduleWriterUnit.pas',
-  frmImportTprogsUnit in '..\frmImportTprogsUnit.pas' {frmImportTprogs},
-  frmSutraProgramLocationsUnit in '..\frmSutraProgramLocationsUnit.pas' {frmSutraProgramLocations},
-  SutraFileWriterUnit in '..\SutraFileWriterUnit.pas',
   SutraInitialConditionsWriterUnit in '..\SutraInitialConditionsWriterUnit.pas',
+  SutraFileWriterUnit in '..\SutraFileWriterUnit.pas',
+  frmSutraProgramLocationsUnit in '..\frmSutraProgramLocationsUnit.pas' {frmSutraProgramLocations},
+  frmImportTprogsUnit in '..\frmImportTprogsUnit.pas' {frmImportTprogs},
   frmCustomizeMeshUnit in '..\frmCustomizeMeshUnit.pas' {frmCustomizeMesh},
   ReadSutraNodEleUnit in '..\ReadSutraNodEleUnit.pas',
   frmImportSutraModelResultsUnit in '..\frmImportSutraModelResultsUnit.pas' {frmImportSutraModelResults},
@@ -492,7 +492,7 @@ uses
   frameFormulaGridUnit in '..\frameFormulaGridUnit.pas' {frameFormulaGrid: TFrame},
   frmSoilPropertiesUnit in '..\frmSoilPropertiesUnit.pas' {frmSoilProperties},
   frmClimateUnit in '..\frmClimateUnit.pas' {frmClimate},
-  frameScreenObjectFarmUnit in '..\frameScreenObjectFarmUnit.pas' {frameScreenObjectFarm: TFrame},
+  frameFarmUnit in '..\frameFarmUnit.pas' {frameFarm: TFrame},
   frameDeliveryGridUnit in '..\frameDeliveryGridUnit.pas' {frameDeliveryGrid: TFrame},
   frameFarmDiversionUnit in '..\frameFarmDiversionUnit.pas' {frameFarmDiversion: TFrame},
   ModflowFmpBaseClasses in '..\ModflowFmpBaseClasses.pas',
@@ -551,9 +551,15 @@ uses
   ModflowMnw1Unit in '..\ModflowMnw1Unit.pas',
   ModflowMnw1Writer in '..\ModflowMnw1Writer.pas',
   framePackageMnw1Unit in '..\framePackageMnw1Unit.pas' {framePackageMnw1: TFrame},
-  frameScreenObjectMnw1Unit in '..\frameScreenObjectMnw1Unit.pas' {frameScreenObjectMnw1: TFrame};
+  frameScreenObjectMnw1Unit in '..\frameScreenObjectMnw1Unit.pas' {frameScreenObjectMnw1: TFrame},
+  CacheableSparseDataSets in '..\CacheableSparseDataSets.pas',
+  Export2DMeshUnit in '..\Export2DMeshUnit.pas',
+  frmFarmUnit in '..\frmFarmUnit.pas' {frmFarm},
+  ModflowFmpFarmIdUnit in '..\ModflowFmpFarmIdUnit.pas',
+  frameScreenObjectFarmIDUnit in '..\frameScreenObjectFarmIDUnit.pas' {frameScreenObjectFarmID: TFrame};
 
 {$R *.res}
+{#BACKUP ModelMuse.cfg}
 
 begin
   // This line is to help ensure consistent results on different machines.

@@ -555,7 +555,8 @@ begin
   FBoundary.InvalidateModel;
   PhastModel := Model as TPhastModel;
   if (PhastModel <> nil)
-    and not (csDestroying in PhastModel.ComponentState) then
+    and not (csDestroying in PhastModel.ComponentState)
+    and not PhastModel.Clearing then
   begin
     { TODO 1 : This needs to change }
     PhastModel.InvalidateMfHobHeads(self);

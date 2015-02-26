@@ -922,9 +922,8 @@ begin
         comboOrientation.Items[1].Brush.Color := clWhite;
         comboOrientation.Items[2].Brush.Color := clWhite;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp, msSutra22:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp, msSutra22:
       begin
         comboOrientation.Items[1].Brush.Color := clBtnFace;
         comboOrientation.Items[2].Brush.Color := clBtnFace;
@@ -1266,9 +1265,8 @@ begin
         SelectedEdit.Orientation :=
           TDataSetOrientation(comboOrientation.ItemIndex);
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp, msSutra22:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp, msSutra22:
       begin
         case comboOrientation.ItemIndex of
           0,3:

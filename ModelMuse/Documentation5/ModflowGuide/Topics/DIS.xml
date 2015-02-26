@@ -39,7 +39,7 @@
         </td>
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">The Discretization File &#160;is used to specify certain data used in all models. These include</text></para>
-          <list id="10" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="21" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">the number of rows, columns and layers</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">the cell sizes</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">the presence of Quasi-3D confining beds</text></li>
@@ -52,12 +52,12 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="22" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/usgspubs/ofr/ofr200092" target="_blank" styleclass="Citation" translate="true">Harbaugh, A.W., Banta, E.R., Hill, M.C., and McDonald, M.G., 2000, MODFLOW-2000, the U.S. Geological Survey modular ground-water model -- User guide to modularization concepts and the Ground-Water Flow Process: U.S. Geological Survey Open-File Report 00-92, 121 p.</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="Mf2k.txt" styleclass="Normal" translate="true">Mf2k.txt</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="RevisedMF2005Input.pdf" styleclass="Normal" translate="true">RevisedMF2005Input.pdf</link></li>
           </list>
-          <list id="25" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="23" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="weblink" href="http://dx.doi.org/10.3133/tm6A51" target="_blank" styleclass="Citation" translate="true">Hanson, R.T., Boyce, S.E., Schmid, Wolfgang, Hughes, J.D., Mehl, S.M., Leake, S.A., Maddock, Thomas, III, and Niswonger, R.G., 2014, One-Water Hydrologic Flow Model (MODFLOW-OWHM): U.S. Geological Survey Techniques and Methods 6–A51, 120 p., http://dx.doi.org/10.3133/tm6A51.</link></li>
           </list>
         </td>
@@ -67,18 +67,18 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="24" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="25" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
-          <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="26" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
           </list>
-          <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="27" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-OWHM</text></li>
           </list>
         </td>
@@ -165,14 +165,15 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="ITMUNI" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">ITMUNI—indicates the time unit of model data, which must be consistent for all data values that involve time</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000"/><text styleclass="Normal" translate="true">&#32;</text><text styleclass="New Materials" translate="true">except for certain variables in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="DAFLOW" styleclass="New Materials" translate="true">DAFLOW</link><text styleclass="New Materials" translate="true"> package</text><conditional-text type="END"/><text styleclass="Normal" translate="true">. For example, if years is the chosen time unit, stress-period length, time-step length, transmissivity, and so on, must all be expressed using years for their time units. Note that the program will still run even if “undefined” time units are specified because the fundamental equations used in MODFLOW do not require that the time unit be identified. But be sure to use consistent units for all input data even when ITMUNI indicates an undefined time unit. When the time unit is defined, MODFLOW uses it to print a table of elapsed simulation time:</text></para>
-                      <list id="17" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="28" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">0 - undefined</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">1 - seconds</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">2 - minutes</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">3 - hours</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">4 - days</text></li>
-                        <li styleclass="Normal"><text styleclass="Normal" translate="true">5 - years</text></li>
+                        <li styleclass="Normal"><text styleclass="Normal" translate="true">5 - years</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/></li>
                       </list>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">If the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" styleclass="Normal" translate="true">Farm process</link><text styleclass="Normal" translate="true"> is used and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="IRTFL" styleclass="Normal" translate="true">IRTFL</link><text styleclass="Normal" translate="true"> is set to 3 or </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="ICUFL" styleclass="Normal" translate="true">ICUFL</link><text styleclass="Normal" translate="true"> is set to 3, ITMUNI must be set to 4.</text><conditional-text type="END"/></para>
                     </td>
                   </tr>
                 </table></para>
@@ -181,7 +182,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="LENUNI" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">LENUNI—indicates the length unit of model data, which must be consistent for all data values that involve length</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000"/><text styleclass="Normal" translate="true">&#32;</text><text styleclass="New Materials" translate="true">except for certain variables in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="DAFLOW" styleclass="New Materials" translate="true">DAFLOW</link><text styleclass="New Materials" translate="true"> package</text><conditional-text type="END"/><text styleclass="Normal" translate="true">. For example, if feet is the chosen length unit, grid spacing, head, hydraulic conductivity, water volumes, and so forth, must all be expressed using feet for their length units. Note that the program will still run even if “undefined” length units are specified because the fundamental equations used in MODFLOW do not require that the length unit be identified. But be sure to use consistent units for all input data even when LENUNI indicates an undefined length unit:</text></para>
-                      <list id="18" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="29" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">0 - undefined</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">1 - feet</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">2 - meters</text></li>
@@ -220,7 +221,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">COORD_OPTIONS is a character variable that is scanned for keywords (separated by one or more spaces) that specify coordinate options. Unrecognized words are ignored, and a word may be specified in either uppercase or lowercase. A blank record is acceptable and indicates no options. The following are recognized keywords.</text></para>
-                      <list id="19" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Keywords" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="30" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Keywords" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Keywords"><text styleclass="Keywords" translate="true">CORNERCOORD </text><text styleclass="Normal" translate="true">is an optional coordinate keyword, without quotes, that when present indicates that XFIRSTCORD, and YFIRSTCORD refer to the model cell’s outer most corner (that is, NOT the cell center).</text></li>
                         <li styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:0px; tabstops:none;"><text styleclass="Keywords" translate="true">LLCOODRINATE</text><text styleclass="Normal" translate="true"> is an optional coordinate keyword, without quotes, that when present indicates that &#160;XFIRSTCORD, and YFIRSTCORD refer to the cell center or outer most cell corner of Row NROW and Column 1 (that is, the model’s lower left corner)</text></li>
                         <li styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:0px; tabstops:none;"><text styleclass="Keywords" translate="true">PRINTCOORD</text><text styleclass="Normal" translate="true"> is an optional coordinate keyword, without quotes, that when present signifies that the coordinate arrays are to be printed to the list file.</text></li>

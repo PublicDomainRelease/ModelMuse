@@ -188,7 +188,7 @@ begin
      xy3dsetframe(-1.3,1.3,-1.3,1.3,0,1,1,1,1,0)
    else
      xy3dsetframe(-2,2,-2,2,0,1,1,1,1,0);
-   xy3dsetview(hoek1,hoek2,4,0);
+   xy3dsetview(hoek1,hoek2,4,0,0,0,0,0,0);
    if checkbox9.checked then xy3dsetstereo(4,0,0);
    xy3dsetsun(lp,lh,1,1);
    if checkbox1.checked then xy3dshowframe(2,clyellow,-1,-1,-1,3);
@@ -245,7 +245,7 @@ begin
   xyset(100,3); xyset(110,3); xyset(120,3);
   xy3dsetframe(0,11,0,6,0,10,1.5,0.6,spinedit5.value / 100,0);
   xy3dsetlabels('X-axis','Y-axis','Z-axis','','','',false,2,2,2,0,0);
-  xy3dsetview(spinedit3.value,spinedit4.value,d,0);
+  xy3dsetview(spinedit3.value,spinedit4.value,d,0,0,0,0,0,0);
   if checkbox9.checked then xy3dsetstereo(3,-0.5,3,0);
   xy3dshowframe(spinedit2.value,clblack,clwhite,clwhite,clwhite,0);
 
@@ -363,7 +363,7 @@ begin
   xystartgraph(0,50,5,100,40,40,40,40,clipon);
   xy3dcylframe(1,2,0,2,-1,form1.spinedit12.value/100,false,0);
   xy3dsetsun(form1.spinedit3.value,form1.spinedit4.value,0.5,2);
-  xy3dsetview(form1.spinedit10.value,form1.spinedit11.value,d,0);
+  xy3dsetview(form1.spinedit10.value,form1.spinedit11.value,d,0,0,0,0,0,0);
   xy3dsetlabels('','','','','','',true,0,0,1,0,1+2);
   if checkbox10.checked then xy3dsetstereo(4,0,0,0);
   xy3dshowframe(spinedit9.value,clblack,clyellow,clyellow,clyellow,0);
@@ -386,7 +386,7 @@ begin
   {this plots the globe-type object in the spherical plot}
   xystartgraph(50,100,5,100,40,40,40,40,clipon);
   xy3dspherframe(0,1,form1.spinedit12.value/100,false,0);
-  xy3dsetview(form1.spinedit10.value,form1.spinedit11.value,d,0);
+  xy3dsetview(form1.spinedit10.value,form1.spinedit11.value,d,0,0,0,0,0,0);
   if checkbox10.checked then xy3dsetstereo(4,0,0,0);
   xy3dshowframe(spinedit9.value,clblack,clwhite,clwhite,clwhite,0);
   for i := 0 to 11 do
@@ -419,7 +419,7 @@ begin
 
   xystartgraph(55,100,0,100,20,20,20,20,clipon);
   xy3dsetframe(-2.5,2.5,-2.5,2.5,-2.5,2.5,1,1,1.2,0);
-  xy3dsetview(form1.spinedit15.value,form1.spinedit16.value,4,0);
+  xy3dsetview(form1.spinedit15.value,form1.spinedit16.value,4,0,0,0,0,0,0);
   xy3dshowframe(4,clmaroon,-1,-1,-1,0);
   case radiogroup2.itemindex of
     0 : xy4dshowvolume(point3d(2,2,2),point3d(-2,-2,-2),point3d(0,0,0),
@@ -483,9 +483,7 @@ begin
   for i := 1 to n2-1 do data1[0,i] := data1[i,0];
   for i := 1 to n2-1 do for j := 1 to n2-1 do
      data1[i,j] := exp(-(sqr(data1[i,0])+sqr(data1[0,j])*2));
-  {data1[0,0] := data1[5,5];}
   for i := 1 to n2-1 do for j := 1 to n2-1 do datac[i,j] := (i+j)/1;
-
 
   xy3dsetdataarray(data2,5,5);
   for i := 0 to 5 do for j := 0 to 5 do data2[i,j] := dataB[i,j];

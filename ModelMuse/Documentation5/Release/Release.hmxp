@@ -113,7 +113,7 @@
     <config-group name="user">
       <config-group name="rbwinst-pr">
         <config-group name="project">
-          <config-value name="lastexport">3</config-value>
+          <config-value name="lastexport">0</config-value>
         </config-group>
       </config-group>
     </config-group>
@@ -208,7 +208,7 @@ document.write('</frameset>');
   </frameset>
 </noscript>
 </html>]]></config-value>
-      <config-value name="skin">C:\Program Files\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.53 Skins\Skins Horizontal Tabs\sky_blue_horiz.hmskin</config-value>
+      <config-value name="skin">..\sky_blue_horiz.hmskin</config-value>
     </config-group>
     <config-group name="chm">
       <config-value name="outputfile">Release.chm</config-value>

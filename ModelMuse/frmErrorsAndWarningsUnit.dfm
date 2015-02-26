@@ -5,7 +5,7 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
   ClientWidth = 472
   OnResize = FormResize
   ExplicitWidth = 490
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0

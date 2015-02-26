@@ -316,6 +316,7 @@ begin
     ErrorValues.Add('MUST HAVE A NEGATIVE FARM-WELL ID');
     ErrorValues.Add('Blank instance name in the');
     ErrorValues.Add('HAS ALREADY BEEN ACTIVATED THIS STRESS PERIOD');
+    ErrorValues.Add('THE LINK OF WELL IN ROW');
 
     // SWR
     ErrorValues.Add('DIRECT RUNOFF UNIT MUST BE >= 0');
@@ -480,6 +481,8 @@ begin
     WarningValues.Add('COMBINED LAKE/AQUIFER CONDUCTANCES BASED SOLELY ON LAKEBED');
     WarningValues.Add('Well is inactive');
     WarningValues.Add('Extremely thin cell');
+    WarningValues.Add('EXTINCTION WATER CONTENT FOR CELL');
+
 
     // MODFLOW-NWT
 //    WarningValues.Add('*** WARNING *** NEGATIVE LAKE OUTFLOW NOT ALLOWED;');

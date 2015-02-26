@@ -216,9 +216,7 @@ var
   AnItem: TAllotmentItem;
 begin
   FAllotment := TAllotmentCollection.Create(nil);
-{$IFDEF FMP}
   FAllotment.Assign(frmGoPhast.PhastModel.FmpAllotment);
-{$ENDIF}
 
   frameAllotment.seNumber.AsInteger := FAllotment.Count;
   frameAllotment.seNumber.OnChange(frameAllotment.seNumber);
@@ -325,12 +323,10 @@ end;
 
 constructor TUndoAllotment.Create(var NewAllotment: TAllotmentCollection);
 begin
-{$IFDEF FMP}
   FOldAllotment := TAllotmentCollection.Create(nil);
   FOldAllotment.Assign(frmGoPhast.PhastModel.FmpAllotment);
   FNewAllotment := NewAllotment;
   NewAllotment := nil;
-{$ENDIF}
 end;
 
 function TUndoAllotment.Description: string;
@@ -347,16 +343,12 @@ end;
 
 procedure TUndoAllotment.DoCommand;
 begin
-{$IFDEF FMP}
   frmGoPhast.PhastModel.FmpAllotment := FNewAllotment;
-{$ENDIF}
 end;
 
 procedure TUndoAllotment.Undo;
 begin
-{$IFDEF FMP}
   frmGoPhast.PhastModel.FmpAllotment := FOldAllotment;
-{$ENDIF}
 end;
 
 end.

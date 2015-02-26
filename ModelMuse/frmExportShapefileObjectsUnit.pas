@@ -1180,9 +1180,9 @@ procedure TfrmExportShapefileObjects.AssignFieldName(FieldNames: TStringList;
   DataArrayIndex: Integer);
 var
   FieldName: AnsiString;
-  Root: AnsiString;
-  SuffixValue: Integer;
-  Suffix: AnsiString;
+//  Root: AnsiString;
+//  SuffixValue: Integer;
+//  Suffix: AnsiString;
 const
   MaximumFieldNameLength = 10;
 begin
@@ -1192,22 +1192,22 @@ begin
   begin
     SetLength(FieldName, MaximumFieldNameLength);
   end;
-  FieldName := FixShapeFileFieldName(FieldName);
-  if FieldNames.IndexOf(string(FieldName)) >= 0 then
-  begin
-    Root := FieldName;
-    SuffixValue := 0;
-    repeat
-      Inc(SuffixValue);
-      Suffix := AnsiString(IntToStr(SuffixValue));
-      if Length(Root) + Length(Suffix) > MaximumFieldNameLength then
-      begin
-        SetLength(Root, MaximumFieldNameLength - Length(Suffix));
-      end;
-      FieldName := Root + Suffix;
-      FieldName := FixShapeFileFieldName(FieldName);
-    until (FieldNames.IndexOf(string(FieldName)) < 0);
-  end;
+  FieldName := FixShapeFileFieldName(FieldName, FieldNames);
+//  if FieldNames.IndexOf(string(FieldName)) >= 0 then
+//  begin
+//    Root := FieldName;
+//    SuffixValue := 0;
+//    repeat
+//      Inc(SuffixValue);
+//      Suffix := AnsiString(IntToStr(SuffixValue));
+//      if Length(Root) + Length(Suffix) > MaximumFieldNameLength then
+//      begin
+//        SetLength(Root, MaximumFieldNameLength - Length(Suffix));
+//      end;
+//      FieldName := Root + Suffix;
+//      FieldName := FixShapeFileFieldName(FieldName);
+//    until (FieldNames.IndexOf(string(FieldName)) < 0);
+//  end;
   FFieldDefinitions[DataArrayIndex].FieldName := FieldName;
   FieldNames.Add(string(FieldName));
 end;

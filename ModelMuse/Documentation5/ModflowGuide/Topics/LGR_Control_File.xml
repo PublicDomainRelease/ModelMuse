@@ -20,7 +20,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.usgs.gov/tm/2006/tm6a12/" target="_blank" styleclass="Citation" translate="true">Mehl, S.W. and Hill, M.C., 2005, MODFLOW-2005, the U.S. Geological Survey modular ground-water model -- documentation of shared node local grid refinement (LGR) and the Boundary Flow and Head (BFH) Package: U.S. Geological Survey Techniques and Methods 6-A12, 68 p.</link></li>
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.usgs.gov/tm/2007/06A21/" target="_blank" styleclass="Citation" translate="true">Mehl, S.W. and Hill, M.C., 2007, MODFLOW-2005, the U.S. Geological Survey modular ground-water model -- documentation of the multiple-refined-areas capability of local grid refinement (LGR) and the Boundary Flow and Head (BFH) Package: U.S. Geological Survey Techniques and Methods 6-A21. 13 p.</link></li>
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.usgs.gov/tm/6a44/" target="_blank" styleclass="Citation" translate="true">Mehl, S.W., and Hill, M.C., 2013, MODFLOW–LGR --Documentation of ghost node local grid refinement (LGR2) for multiple areas and the boundary flow and head (BFH2) package: U.S. Geological Survey Techniques and Methods book 6, chap. A44, 43 p.</link></li>
@@ -32,7 +32,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Related Packages</text></para>
         </td>
         <td>
-          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="BFH_-_Boundary_Flow_and_Head_P" styleclass="Normal" translate="true">BFH</link><text styleclass="Normal" translate="true"> Package</text></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" styleclass="Normal" translate="true">SFR</link><text styleclass="Normal" translate="true"> Package</text></li>
           </list>
@@ -43,7 +43,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-OWHM</text></li>
           </list>
@@ -136,7 +136,7 @@
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">GRIDSTATUS is a character variable and indicates whether the file listed in NAME FILE corresponds to a parent or child grid.</text></para>
-                <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">If GRIDSTATUS = </text><text styleclass="Keywords" translate="true">PARENTONLY</text><text styleclass="Normal" translate="true">, then it is a parent grid </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">Name File</link><text styleclass="Normal" translate="true">.</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">If GRIDSTATUS = </text><text styleclass="Keywords" translate="true">CHILDONLY</text><text styleclass="Normal" translate="true">, then it is a child grid </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">Name File</link><text styleclass="Normal" translate="true">.</text></li>
                 </list>
@@ -206,7 +206,7 @@
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">GRIDSTATUS is a character variable and indicates whether the file listed in NAME FILE corresponds to a parent or child grid.</text></para>
-                <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">If GRIDSTATUS = </text><text styleclass="Keywords" translate="true">PARENTONLY</text><text styleclass="Normal" translate="true">, then it is a parent grid </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">Name File</link><text styleclass="Normal" translate="true">.</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">If GRIDSTATUS = </text><text styleclass="Keywords" translate="true">CHILDONLY</text><text styleclass="Normal" translate="true">, then it is a child grid </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">Name File</link><text styleclass="Normal" translate="true">.</text></li>
                 </list>
@@ -230,7 +230,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">ISHFLG is a flag indicating whether heads from the parent grid simulation should be used as the starting head for the child grid simulation. These heads apply to the interior of the child, not the boundary.</text></para>
-                      <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISHFLG = 1, then use results of the parent grid simulation as the starting head for the child grid. In the cells of the child grid that overlap the parent grid, the heads of the corresponding parent cell are used. No interpolation is applied. For steady-state simulations, this can provide a good initial guess which can reduce computational time. For transient simulations, this overwrites the initial condition of the child model defined in </text><link displaytype="text" defaultstyle="true" type="topiclink" href="BAS6" anchor="STRT" styleclass="Normal" translate="true">STRT</link><text styleclass="Normal" translate="true"> of the Basic Package input file (Harbaugh, 2005) and, therefore, is not recommended.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISHFLG = 0, then use the heads defined in </text><link displaytype="text" defaultstyle="true" type="topiclink" href="BAS6" anchor="STRT" styleclass="Normal" translate="true">STRT</link><text styleclass="Normal" translate="true"> of the Basic Package for the child grid.</text></li>
                       </list>
@@ -243,7 +243,7 @@
                     <td>
                       <para styleclass="Normal"><anchor id="IBFLG" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">IBFLG is a integer used to define the interface of the child grid with the parent. Use this value around the perimeter of the child model </text><link displaytype="text" defaultstyle="true" type="topiclink" href="BAS6" anchor="IBOUND" styleclass="Normal" translate="true">IBOUND</link><text styleclass="Normal" translate="true"> array. Do not use IBFLG or -IBFLG anywhere else in the parent or child </text><link displaytype="text" defaultstyle="true" type="topiclink" href="BAS6" anchor="IBOUND" styleclass="Normal" translate="true">IBOUND</link><text styleclass="Normal" translate="true"> arrays. </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Use a unique value for each child grid.</text></para>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">In MODFLOW-LGR version 1, IBFLG is a negative integer.</text></para>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">In MODFLOW-LGR version 2, IBFLG is a positive integer.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">In MODFLOW-LGR version 2 and MODFLOW-OWHM, IBFLG is a positive integer.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -291,7 +291,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="IOUTLGR" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">IOUTLGR is a flag that controls printing from LGR iterations of the maximum head and flux change. For the maximum head change, the head value and corresponding layer, row, and column of the child grid is listed. For the maximum flux change, the flux value and corresponding layer, row, and column of the parent grid is listed. </text></para>
-                      <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IOUTLGR &lt; 0, output is written to the screen. </text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IOUTLGR &gt; 0, output is written to the child listing file. </text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IOUTLGR = 0, no results are written.</text></li>
@@ -470,7 +470,7 @@
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
-                <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR1: the number of child cells that span the depth of a single parent layer. In MODFLOW-LGR1, This must be an odd integer number ≥ 1. In MODFLOW-LGR2, it can be either even or odd and must be an integer number ≥ 1. &#160;Read one value for each refined parent layer. The number of values needs to equals </text><link displaytype="text" defaultstyle="true" type="topiclink" href="LGR_Control_File" anchor="NPLEND" styleclass="Normal" translate="true">NPLEND</link><text styleclass="Normal" translate="true"> +1 minus </text><link displaytype="text" defaultstyle="true" type="topiclink" href="LGR_Control_File" anchor="NPLBEG" styleclass="Normal" translate="true">NPLBEG</link><text styleclass="Normal" translate="true">. Values can be 1, which results in no vertical refinement for the layer, only in layers above the bottom of the child grid, unless the refinement extends all the way to the bottom of the parent model (see The Top and Bottom of the Child Grid section of Mehl and Hill, 2005). For refinement that does not extend to the bottom of the parent model, the refinement terminates at the shared node; for example, in Figure 5b of LGR documentation (Mehl and Hill, 2005) the values 5 3 would be needed.</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR2: NCPPL—is the number of child cells that span the depth of a single parent layer. This must be an even or odd integer number ≥ 1. Read one value for each refined parent layer. The number of values needs to equals NPLEND +1 minus NPLBEG. Values can be 1, which results in no vertical refinement for the layer; for example, in figure 4c the values 1 3 3 would be needed. If only one layer of a multilayer parent grid is to be refined, the layer must be refined into at least 2 layers in the child grid.</text></li>
                 </list>

@@ -4,9 +4,9 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
   Caption = ' Select Model Results to Import'
   ClientHeight = 462
   ClientWidth = 647
-  ExplicitWidth = 665
-  ExplicitHeight = 507
-  PixelsPerInch = 120
+  ExplicitWidth = 663
+  ExplicitHeight = 500
+  PixelsPerInch = 96
   TextHeight = 18
   object lblColorGrid: TLabel
     Left = 8
@@ -261,8 +261,6 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
         ItemHeight = 18
         TabOrder = 1
         OnStateChange = clTimeStateChange
-        ExplicitLeft = 1
-        ExplicitTop = 101
         InternalVersion = 202
       end
       object clDescription: TJvxCheckListBox
@@ -274,8 +272,6 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
         ItemHeight = 18
         TabOrder = 0
         OnStateChange = clDescriptionStateChange
-        ExplicitLeft = 1
-        ExplicitTop = -1
         InternalVersion = 202
       end
     end

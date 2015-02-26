@@ -5,7 +5,7 @@ interface
 uses
   Windows, Classes, SutraMeshUnit, SysUtils;
 
-procedure ImportSutraMeshFromFile(AFileName: string; GmshExag: double = 1;
+procedure ImportSutraMeshFromFile(const AFileName: string; GmshExag: double = 1;
   ChangeVE: Boolean = True);
 
 implementation
@@ -13,7 +13,12 @@ implementation
 uses
   IOUtils, frmGoPhastUnit, ModelMuseUtilities, UndoItems, Dialogs,
   QuadTreeClass, PhastModelUnit, ScreenObjectUnit, Math, ZoomBox2,
-  GoPhastTypes;
+  GoPhastTypes, frmErrorsAndWarningsUnit;
+
+resourcestring
+  StrTheMeshContained = 'The mesh contained %d triangular elements. The tria' +
+  'ngular elements were skipped.';
+  StrTriangularElements = 'Triangular Elements Locations';
 
 type
   TUndoImportMesh = class(TUndoChangeMesh)
@@ -140,6 +145,7 @@ var
   XEpsilon: Extended;
   YEpsilon: Extended;
   ObjectCount: Integer;
+  ErrorMessage: string;
   procedure CreateNode;
   begin
     ANode := TSutraNode2D.Create(Mesh2D.Nodes);
@@ -152,6 +158,7 @@ var
 //  NodeList: TSutraNode2D_List;
 begin
   Model := frmGoPhast.PhastModel;
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrTriangularElements);
   ZoomBox := frmGoPhast.frameTopView.ZoomBox;
   MinX := ZoomBox.X(0);
   MaxX := ZoomBox.X(ZoomBox.Width);
@@ -248,7 +255,22 @@ begin
       end
       else if ElementType = 2 then
       begin
+        ErrorMessage := '';
+        Assert(Splitter.Count >= 6);
+        for NodeIndex := Splitter.Count-4 to Splitter.Count-1 do
+        begin
+          NodeNumber := StrToInt(Splitter[NodeIndex]);
+          ANode := Nodes[NodeNumber];
+          Assert(ANode <> nil);
+          ErrorMessage := ErrorMessage +  Format('(X: %0:g; Y: %1:g)', [ANode.X, ANode.Y]);
+          if NodeIndex < Splitter.Count-1 then
+          begin
+            ErrorMessage := ErrorMessage + ', ';
+          end;
+        end;
+        frmErrorsAndWarnings.AddWarning(Model, StrTriangularElements, ErrorMessage);
         Inc(TriangularElements);
+
       end;
     end;
     ALine := FileReader.ReadLine;
@@ -256,7 +278,8 @@ begin
     if TriangularElements > 0 then
     begin
       Beep;
-      MessageDlg(Format('The mesh contained %d triangular elements. The triangular elements were skipped.', [TriangularElements]), mtWarning, [mbOK], 0);
+      MessageDlg(Format(StrTheMeshContained, [TriangularElements]), mtWarning, [mbOK], 0);
+      frmErrorsAndWarnings.Show;
     end;
     Mesh2D.DeleteUnconnectedNodes;
     Mesh2D.SetCorrectElementOrientation;
@@ -267,7 +290,8 @@ begin
 end;
 
 
-procedure ImportSutraMeshFromFile(AFileName: string; GmshExag: double = 1; ChangeVE: Boolean = True);
+procedure ImportSutraMeshFromFile(const AFileName: string; GmshExag: double = 1;
+  ChangeVE: Boolean = True);
 var
   FileReader: TStreamReader;
   Splitter: TStringList;

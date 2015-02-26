@@ -1538,6 +1538,10 @@ begin
   end
   else
   begin
+    while Boundary.TableCollection.Count > seParametersCount.AsInteger do
+    begin
+      Boundary.TableCollection.Last.Free;
+    end;
     Assert(seParametersCount.AsInteger >= Boundary.TableCollection.Count);
 
     for TableIndex := 0 to Boundary.TableCollection.Count - 1 do
@@ -3366,7 +3370,7 @@ begin
       end;
       if TryStrToInt(rdeSegmentNumber.Text, IntValue) then
       begin
-        Boundary.SegementNumber := IntValue;
+        Boundary.SegmentNumber := IntValue;
       end;
 
       SetSfrValues(Boundary);
@@ -3840,7 +3844,7 @@ begin
         end
         else
         begin
-          rdeSegmentNumber.Text := IntToStr(Boundary.SegementNumber);
+          rdeSegmentNumber.Text := IntToStr(Boundary.SegmentNumber);
         end;
 
         GetSfrValues(Boundary, FoundFirst);

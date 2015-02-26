@@ -160,9 +160,8 @@ begin
           Exit;
         end;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         rgEvaluatedAt.Enabled := False;
         if frmGoPhast.Grid <> nil then

@@ -29,11 +29,12 @@ uses Windows,
   frameMt3dmsFluxObsUnit, frameCustomSutraFeatureUnit,
   frameSutraObservationsUnit, frameSutraBoundaryUnit, frameScreenObjectStrUnit,
   frameScreenObjectFhbHeadUnit, frameScreenObjectFhbFlowUnit,
-  frameScreenObjectFarmUnit, frameScreenObjectFmpBoundaryUnit,
+  frameScreenObjectFmpBoundaryUnit,
   frameScreenObjectFmpPrecipUnit, frameScreenObjectFmpEvapUnit,
   frameScreenObjectCropIDUnit, frameScreenObjectCfpPipesUnit,
   frameScreenObjectCfpFixedUnit, frameScreenObjectSwrUnit,
-  frameScreenObjectSwrReachUnit, ModflowSwrReachUnit, frameScreenObjectMnw1Unit;
+  frameScreenObjectSwrReachUnit, ModflowSwrReachUnit, frameScreenObjectMnw1Unit,
+  frameScreenObjectFarmIDUnit;
 
   { TODO : Consider making this a property sheet like the Object Inspector that
   could stay open at all times.  Boundary conditions and vertices might be
@@ -263,8 +264,6 @@ type
     frameFhbHead: TframeScreenObjectFhbHead;
     jvspFhbFlows: TJvStandardPage;
     frameFhbFlow: TframeScreenObjectFhbFlow;
-    jvspFmpFarms: TJvStandardPage;
-    frameScreenObjectFarm: TframeScreenObjectFarm;
     jvspFarmWell: TJvStandardPage;
     frameFarmWell: TframeScreenObjectCondParam;
     jvspFarmPrecip: TJvStandardPage;
@@ -304,6 +303,8 @@ type
     grpComment: TGroupBox;
     jvspMNW1: TJvStandardPage;
     frameMNW1: TframeScreenObjectMnw1;
+    jvspFarmID: TJvStandardPage;
+    frameFarmID: TframeScreenObjectFarmID;
     // @name changes which check image is displayed for the selected item
     // in @link(jvtlModflowBoundaryNavigator).
     procedure jvtlModflowBoundaryNavigatorMouseDown(Sender: TObject;
@@ -527,7 +528,7 @@ type
     procedure frameFarmWellcomboFormulaInterpChange(Sender: TObject);
     procedure jvpltvSutraFeaturesCustomDrawItem(Sender: TCustomTreeView;
       Node: TTreeNode; State: TCustomDrawState; var DefaultDraw: Boolean);
-    procedure frameScreenObjectFarmpcMainChange(Sender: TObject);
+//    procedure frameScreenObjectFarmpcMainChange(Sender: TObject);
     procedure frameCfpRechargeFractiondgModflowBoundaryEndUpdate(
       Sender: TObject);
     procedure frameCfpRechargeFractiondgModflowBoundarySetEditText(
@@ -1370,11 +1371,12 @@ type
     FMt3dmsSsm_Node: TJvPageIndexNode;
     FMt3dmsTobConc_Node: TJvPageIndexNode;
     FMt3dmsTobFlux_Node: TJvPageIndexNode;
-    FFmpFarm_Node: TJvPageIndexNode;
+//    FFmpFarm_Node: TJvPageIndexNode;
     FFarmWell_Node: TJvPageIndexNode;
     FFarmPrecip_Node: TJvPageIndexNode;
     FFarmRevEvap_Node: TJvPageIndexNode;
     FFarmCropID_Node: TJvPageIndexNode;
+    FFarmID_Node: TJvPageIndexNode;
     FCfpPipe_Node: TJvPageIndexNode;
     FCfpFixedHead_Node: TJvPageIndexNode;
     FCRCH_Node: TJvPageIndexNode;
@@ -1762,9 +1764,7 @@ type
     procedure StoreWellBoundary;
     procedure StoreFarmWell;
     procedure GetWellBoundary(ScreenObjectList: TList);
-{$IFDEF FMP}
     procedure GetFarmWell(ScreenObjectList: TList);
-{$ENDIF}
     procedure GetRivBoundary(ScreenObjectList: TList);
     procedure StoreRivBoundary;
     procedure GetDrnBoundary(ScreenObjectList: TList);
@@ -1899,17 +1899,14 @@ type
     procedure FhbFlowChanged(Sender: TObject);
     procedure CreateFhbFlowNode;
     procedure GetFhbFlowBoundary(const ScreenObjectList: TList);
-    procedure CreateFarmNode(AScreenObject: TScreenObject);
-    procedure FarmChanged(Sender: TObject);
     procedure FarmPrecipChanged(Sender: TObject);
     procedure FarmRefEvapChanged(Sender: TObject);
     procedure FarmCropIDChanged(Sender: TObject);
-  {$IFDEF FMP}
-    procedure GetFarmBoundary(const ScreenObjectList: TList);
+    procedure FarmIDChanged(Sender: TObject);
     procedure GetFarmPrecip(const ScreenObjectList: TList);
     procedure GetFarmRefEvap(const ScreenObjectList: TList);
     procedure GetFarmCropID(const ScreenObjectList: TList);
-  {$ENDIF}
+    procedure GetFarmID(const ScreenObjectList: TList);
     procedure CreateCfpPipeNode(AScreenObject: TScreenObject);
     procedure CfpPipesChanged(Sender: TObject);
     procedure GetCfpPipes(const ScreenObjectList: TList);
@@ -2002,6 +1999,7 @@ type
     procedure CreateFarmPrecipNode(AScreenObject: TScreenObject);
     procedure CreateFarmRefEvapNode(AScreenObject: TScreenObject);
     procedure CreateFarmCropIDNode(AScreenObject: TScreenObject);
+    procedure CreateFarmIDNode(AScreenObject: TScreenObject);
     procedure SetSelectedMfBoundaryNode;
     procedure InitializeVertexGrid;
     procedure InitializePhastSpecifiedHeadGrid;
@@ -2157,11 +2155,11 @@ uses Math, StrUtils, JvToolEdit, frmGoPhastUnit, AbstractGridUnit,
   ModflowHydmodUnit, ModelMuseUtilities, Mt3dmsChemUnit, Mt3dmsChemSpeciesUnit,
   Mt3dmsTobUnit, Mt3dmsFluxObservationsUnit, frmDataSetsUnits,
   SutraBoundariesUnit, SutraMeshUnit, SutraOptionsUnit, ZoomBox2,
-  ModflowStrUnit, ModflowFhbUnit, ModflowFmpFarmUnit, frameDeliveryGridUnit,
+  ModflowStrUnit, ModflowFhbUnit, ModflowFmpFarmUnit,
   ModflowFmpPrecipitationUnit, ModflowFmpEvapUnit, ModflowFmpCropSpatialUnit,
   ModflowFmpWellUnit, ModflowCfpPipeUnit, ModflowCfpFixedUnit,
   ModflowCfpRechargeUnit, ModflowSwrUnit, ModflowSwrDirectRunoffUnit,
-  ObjectLabelUnit, ModflowMnw1Unit;
+  ObjectLabelUnit, ModflowMnw1Unit, ModflowFmpFarmIdUnit;
 
 resourcestring
   StrConcentrationObserv = 'Concentration Observations: ';
@@ -2264,6 +2262,7 @@ resourcestring
   StrFarmRefEvapIn = 'Ref. Evap. in %s';
   StrFarmsInS = 'Farms in %s';
   StrCropIDInS = 'Crop ID in %s';
+  StrFarmIDInS = 'Farm ID in %s';
   StrCFPFixedHeads = 'CFP: Fixed Heads';
   StrCRCHConduitRechar = 'CRCH: Conduit Recharge';
   StrYouCanOnlyDefine = 'You can only define conduits in CFP with objects th' +
@@ -2902,10 +2901,10 @@ begin
     begin
       // do nothing
     end
-    else if jvtlModflowBoundaryNavigator.Selected = FFmpFarm_Node then
-    begin
-      // do nothing
-    end
+//    else if jvtlModflowBoundaryNavigator.Selected = FFmpFarm_Node then
+//    begin
+//      // do nothing
+//    end
     else if jvtlModflowBoundaryNavigator.Selected = FFarmWell_Node then
     begin
       StoreFarmWell;
@@ -2919,6 +2918,10 @@ begin
       // do nothing
     end
     else if jvtlModflowBoundaryNavigator.Selected = FFarmCropID_Node then
+    begin
+      // do nothing
+    end
+    else if jvtlModflowBoundaryNavigator.Selected = FFarmID_Node then
     begin
       // do nothing
     end
@@ -3086,7 +3089,8 @@ begin
   CreateCfpPipeNode(AScreenObject);
   CreateCfpFixedHeadNode(AScreenObject);
   CreateCfpRechargeNode;
-  CreateFarmNode(AScreenObject);
+//  CreateFarmNode(AScreenObject);
+  CreateFarmIDNode(AScreenObject);
   CreateFarmWelNode;
   CreateFarmCropIDNode(AScreenObject);
   CreateFarmPrecipNode(AScreenObject);
@@ -3631,7 +3635,8 @@ begin
         BoundaryNodeList.Add(FHydmod_Node);
         BoundaryNodeList.Add(FFhbFlow_Node);
         BoundaryNodeList.Add(FFhbHead_Node);
-        BoundaryNodeList.Add(FFmpFarm_Node);
+//        BoundaryNodeList.Add(FFmpFarm_Node);
+        BoundaryNodeList.Add(FFarmID_Node);
         BoundaryNodeList.Add(FFarmWell_Node);
         BoundaryNodeList.Add(FFarmPrecip_Node);
         BoundaryNodeList.Add(FFarmRevEvap_Node);
@@ -3941,13 +3946,11 @@ begin
         begin
           // do nothing
         end;
-    {$IFDEF FMP}
       ptQMAX:
         begin
           frameFarmWell.clbParameters.Items.
             AddObject(Param.ParameterName, Param);
         end;
-    {$ENDIF}
       else Assert(False);
     end;
   end;
@@ -4036,13 +4039,13 @@ begin
   end;
 end;
 
-procedure TfrmScreenObjectProperties.FarmChanged(Sender: TObject);
-begin
-  if (FFmpFarm_Node <> nil) and (FFmpFarm_Node.StateIndex <> 3) then
-  begin
-    FFmpFarm_Node.StateIndex := 2;
-  end;
-end;
+//procedure TfrmScreenObjectProperties.FarmChanged(Sender: TObject);
+//begin
+//  if (FFmpFarm_Node <> nil) and (FFmpFarm_Node.StateIndex <> 3) then
+//  begin
+//    FFmpFarm_Node.StateIndex := 2;
+//  end;
+//end;
 
 procedure TfrmScreenObjectProperties.FarmPrecipChanged(Sender: TObject);
 begin
@@ -4065,6 +4068,14 @@ begin
   if (FFarmCropID_Node <> nil) and (FFarmCropID_Node.StateIndex <> 3) then
   begin
     FFarmCropID_Node.StateIndex := 2;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.FarmIDChanged(Sender: TObject);
+begin
+  if (FFarmID_Node <> nil) and (FFarmID_Node.StateIndex <> 3) then
+  begin
+    FFarmID_Node.StateIndex := 2;
   end;
 end;
 
@@ -4437,10 +4448,11 @@ begin
   frameMnw1.OnChange := Mnw1Changed;
   frameFhbHead.OnChange := FhbHeadChanged;
   frameFhbFlow.OnChange := FhbFlowChanged;
-  frameScreenObjectFarm.OnChange := FarmChanged;
+//  frameScreenObjectFarm.OnChange := FarmChanged;
   frameFarmPrecip.OnChange := FarmPrecipChanged;
   frameFarmRefEvap.OnChange := FarmRefEvapChanged;
   frameFarmCropID.OnChange := FarmCropIDChanged;
+  frameFarmID.OnChange := FarmIDChanged;
   frameCfpPipes.OnChange := CfpPipesChanged;
   frameCfpFixedHeads.OnChange := CfpFixedHeadsChanged;
 
@@ -5623,9 +5635,6 @@ end;
 procedure TfrmScreenObjectProperties.SetFrameData;
 var
   DataSetIndex: Integer;
-{$IFDEF FMP}
-  FarmEdit: TScreenObjectDataEdit;
-{$ENDIF}
   PipeIndex: Integer;
   AnEdit: TScreenObjectEditItem;
   Pipes: TCfpPipeBoundary;
@@ -5759,18 +5768,6 @@ begin
       and (frmGoPhast.PhastModel.ModelSelection = msSutra22));
   end;
 
-{$IFDEF FMP}
-  if (FFmpFarm_Node <> nil) then
-  begin
-    DataSetIndex := self.GetDataSetIndexByName(KFarmID);
-    FarmEdit := FDataEdits[DataSetIndex];
-
-    frameScreenObjectFarm.SetData(FNewProperties,
-      (FFmpFarm_Node.StateIndex = 2),
-      (FFmpFarm_Node.StateIndex = 1) and frmGoPhast.PhastModel.FarmProcessIsSelected,
-      FarmEdit);
-  end;
-
   if (FFarmPrecip_Node <> nil) then
   begin
     frameFarmPrecip.SetData(FNewProperties,
@@ -5791,7 +5788,13 @@ begin
       (FFarmCropID_Node.StateIndex = 2),
       (FFarmCropID_Node.StateIndex = 1) and frmGoPhast.PhastModel.FarmProcessIsSelected);
   end;
-{$ENDIF}
+
+  if (FFarmID_Node <> nil) then
+  begin
+    frameFarmID.SetData(FNewProperties,
+      (FFarmID_Node.StateIndex = 2),
+      (FFarmID_Node.StateIndex = 1) and frmGoPhast.PhastModel.FarmProcessIsSelected);
+  end;
 
   if (FCfpPipe_Node <> nil) then
   begin
@@ -6096,7 +6099,7 @@ begin
       else
       begin
         Assert(NearestStream.ModflowSfrBoundary <> nil);
-        NewText := IntToStr(NearestStream.ModflowSfrBoundary.SegementNumber);
+        NewText := IntToStr(NearestStream.ModflowSfrBoundary.SegmentNumber);
       end;
     end
     else
@@ -6184,7 +6187,7 @@ begin
       if NearestLake = nil then
       begin
         Assert(NearestStream.ModflowSfrBoundary <> nil);
-        NewText := IntToStr(NearestStream.ModflowSfrBoundary.SegementNumber);
+        NewText := IntToStr(NearestStream.ModflowSfrBoundary.SegmentNumber);
       end
       else
       begin
@@ -10901,6 +10904,25 @@ begin
   end;
 end;
 
+procedure TfrmScreenObjectProperties.CreateFarmIDNode(
+  AScreenObject: TScreenObject);
+var
+  Node: TJvPageIndexNode;
+begin
+  FFarmID_Node := nil;
+  if frmGoPhast.PhastModel.FarmProcessIsSelected
+    and (AScreenObject.ViewDirection = vdTop) then
+  begin
+    Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil, Format(StrFarmIDInS,
+      [frmGoPhast.PhastModel.ModflowPackages.FarmProcess.PackageIdentifier]))
+      as TJvPageIndexNode;
+    Node.PageIndex := jvspFarmID.PageIndex;
+    frameFarmID.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FFarmID_Node := Node;
+  end;
+end;
+
 procedure TfrmScreenObjectProperties.CreateGageNode;
 var
   Node: TJvPageIndexNode;
@@ -10918,28 +10940,6 @@ begin
     Node.ImageIndex := 1;
     FGage_Node := Node;
   end;
-end;
-
-procedure TfrmScreenObjectProperties.CreateFarmNode(AScreenObject: TScreenObject);
-{$IFDEF FMP}
-var
-  Node: TJvPageIndexNode;
-{$ENDIF}
-begin
-  FFmpFarm_Node := nil;
-{$IFDEF FMP}
-  if frmGoPhast.PhastModel.FarmProcessIsSelected
-    and (AScreenObject.ViewDirection = vdTop) then
-  begin
-    Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil, Format(StrFarmsInS,
-      [frmGoPhast.PhastModel.ModflowPackages.FarmProcess.PackageIdentifier]))
-      as TJvPageIndexNode;
-    Node.PageIndex := jvspFmpFarms.PageIndex;
-    frameScreenObjectFarm.pnlCaption.Caption := Node.Text;
-    Node.ImageIndex := 1;
-    FFmpFarm_Node := Node;
-  end;
-{$ENDIF}
 end;
 
 procedure TfrmScreenObjectProperties.CreateGhbNode;
@@ -11317,35 +11317,6 @@ begin
   frameFhbHead.GetData(FNewProperties);
 end;
 
-{$IFDEF FMP}
-procedure TfrmScreenObjectProperties.GetFarmBoundary
-  (const ScreenObjectList: TList);
-var
-  State: TCheckBoxState;
-  ScreenObjectIndex: integer;
-  AScreenObject: TScreenObject;
-  Boundary: TFarm;
-//  Boundary: TFhbFlowBoundary;
-begin
-  if not frmGoPhast.PhastModel.FarmProcessIsSelected then
-  begin
-    Exit;
-  end;
-  State := cbUnchecked;
-  for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
-  begin
-    AScreenObject := ScreenObjectList[ScreenObjectIndex];
-    Boundary := AScreenObject.ModflowFmpFarm;
-    UpdateBoundaryState(Boundary, ScreenObjectIndex, State);
-  end;
-
-  if FFmpFarm_Node <> nil then
-  begin
-    FFmpFarm_Node.StateIndex := Ord(State)+1;
-  end;
-  frameScreenObjectFarm.GetData(FNewProperties);
-end;
-
 procedure TfrmScreenObjectProperties.GetFarmPrecip
   (const ScreenObjectList: TList);
 var
@@ -11404,8 +11375,13 @@ begin
     FFarmCropID_Node.StateIndex := Ord(State)+1;
   end;
   frameFarmCropID.GetData(FNewProperties);
+
+  if FFarmID_Node <> nil then
+  begin
+    FFarmID_Node.StateIndex := Ord(State)+1;
+  end;
+  frameFarmID.GetData(FNewProperties);
 end;
-{$ENDIF}
 
 procedure TfrmScreenObjectProperties.GetCfpPipes
   (const ScreenObjectList: TList);
@@ -11461,7 +11437,6 @@ begin
   frameCfpFixedHeads.GetData(FNewProperties);
 end;
 
-{$IFDEF FMP}
 procedure TfrmScreenObjectProperties.GetFarmCropID
   (const ScreenObjectList: TList);
 var
@@ -11489,7 +11464,31 @@ begin
   frameFarmCropID.GetData(FNewProperties);
 end;
 
-{$ENDIF}
+procedure TfrmScreenObjectProperties.GetFarmID(const ScreenObjectList: TList);
+var
+  State: TCheckBoxState;
+  ScreenObjectIndex: integer;
+  AScreenObject: TScreenObject;
+  Boundary: TFmpFarmIDBoundary;
+begin
+  if not frmGoPhast.PhastModel.FarmProcessIsSelected then
+  begin
+    Exit;
+  end;
+  State := cbUnchecked;
+  for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+  begin
+    AScreenObject := ScreenObjectList[ScreenObjectIndex];
+    Boundary := AScreenObject.ModflowFmpFarmID;
+    UpdateBoundaryState(Boundary, ScreenObjectIndex, State);
+  end;
+
+  if FFarmID_Node <> nil then
+  begin
+    FFarmID_Node.StateIndex := Ord(State)+1;
+  end;
+  frameFarmID.GetData(FNewProperties);
+end;
 
 procedure TfrmScreenObjectProperties.GetFhbFlowBoundary
   (const ScreenObjectList: TList);
@@ -12627,13 +12626,11 @@ begin
   GetHfbBoundary(AScreenObjectList);
   GetHydmod(AScreenObjectList);
   GetFluxObservations(AScreenObjectList);
-{$IFDEF FMP}
-  GetFarmBoundary(AScreenObjectList);
   GetFarmWell(AScreenObjectList);
   GetFarmPrecip(AScreenObjectList);
   GetFarmRefEvap(AScreenObjectList);
   GetFarmCropID(AScreenObjectList);
-{$ENDIF}
+  GetFarmID(AScreenObjectList);
   GetCfpPipes(AScreenObjectList);
   GetCfpFixedHeads(AScreenObjectList);
   GetCfpRechargeBoundary(AScreenObjectList);
@@ -12898,7 +12895,6 @@ begin
       AScreenObject.ModflowWellBoundary := nil;
     end;
 
-  {$IFDEF FMP}
     AScreenObject.CreateFarmWell;
     frameFarmWell.InitializeFrame(AScreenObject.ModflowFmpWellBoundary);
     if (AScreenObject.ModflowFmpWellBoundary <> nil)
@@ -12906,7 +12902,6 @@ begin
     begin
       AScreenObject.ModflowFmpWellBoundary := nil;
     end;
-  {$ENDIF}
 
     AScreenObject.CreateRivBoundary;
     frameRivParam.InitializeFrame(AScreenObject.ModflowRivBoundary);
@@ -13766,7 +13761,6 @@ begin
   GetModflowBoundary(Frame, Parameter, ScreenObjectList, FWEL_Node);
 end;
 
-{$IFDEF FMP}
 procedure TfrmScreenObjectProperties.GetFarmWell(ScreenObjectList: TList);
 var
   Frame: TframeScreenObjectCondParam;
@@ -13781,7 +13775,6 @@ begin
   GetFormulaInterpretation(Frame, Parameter, ScreenObjectList);
   GetModflowBoundary(Frame, Parameter, ScreenObjectList, FFarmWell_Node);
 end;
-{$ENDIF}
 
 procedure TfrmScreenObjectProperties.GetRivBoundary(ScreenObjectList: TList);
 var
@@ -14915,7 +14908,7 @@ var
   TempCompiler: TRbwParser;
   CompiledFormula: TExpression;
   ResultType: TRbwDataType;
-  DelCol: TDeliveryColumns;
+//  DelCol: TDeliveryColumns;
   TestCol: Integer;
   CropIrrigationRequirement: TCropIrrigationRequirement;
   Divisor: integer;
@@ -15019,7 +15012,15 @@ begin
           begin
             ResultType := rdtBoolean;
           end;
-      end;
+      end
+    end
+    else if DataGrid = frameFarmID.dgModflowBoundary then
+    begin
+      ResultType := rdtInteger;
+    end
+    else if DataGrid = frameFarmCropID.dgModflowBoundary then
+    begin
+      ResultType := rdtInteger;
     end;
   end
   else if (DataGrid.Owner is TCustomframeFluxObs) then
@@ -15049,10 +15050,12 @@ begin
   begin
     ResultType := rdtDouble;
   end
-  else if (DataGrid = frameScreenObjectFarm.frameFormulaGridCrops.Grid)
-    or (DataGrid = frameScreenObjectFarm.frameFormulaGridWaterRights.Grid)
-    or (DataGrid = frameScreenObjectFarm.frameFormulaGridCosts.Grid)
-    or (DataGrid = frameFarmPrecip.dgModflowBoundary)
+  else if
+//    (DataGrid = frameScreenObjectFarm.frameFormulaGridCrops.Grid)
+//    or (DataGrid = frameScreenObjectFarm.frameFormulaGridWaterRights.Grid)
+//    or (DataGrid = frameScreenObjectFarm.frameFormulaGridCosts.Grid)
+//    or
+    (DataGrid = frameFarmPrecip.dgModflowBoundary)
     or (DataGrid = frameFarmRefEvap.dgModflowBoundary) then
   begin
     ResultType := rdtDouble;
@@ -15061,22 +15064,26 @@ begin
   begin
     ResultType := rdtInteger;
   end
-  else if (DataGrid = frameScreenObjectFarm.frameDelivery.Grid) then
+  else if (DataGrid = frameFarmID.dgModflowBoundary) then
   begin
-    DelCol := TDeliveryColumns((ACol - 2) mod 3);
-    case DelCol of
-      dcVolume:
-        begin
-          ResultType := rdtDouble;
-        end;
-      dcRank:
-        begin
-          ResultType := rdtInteger;
-        end;
-      else
-        Assert(False);
-    end;
+    ResultType := rdtInteger;
   end
+//  else if (DataGrid = frameScreenObjectFarm.frameDelivery.Grid) then
+//  begin
+//    DelCol := TDeliveryColumns((ACol - 2) mod 3);
+//    case DelCol of
+//      dcVolume:
+//        begin
+//          ResultType := rdtDouble;
+//        end;
+//      dcRank:
+//        begin
+//          ResultType := rdtInteger;
+//        end;
+//      else
+//        Assert(False);
+//    end;
+//  end
   else
   begin
     Assert(False);
@@ -16899,9 +16906,8 @@ begin
         cbSetGridCellSize.Caption := StrUseToSetGridElem;
         lblGridCellSize.Caption := StrGridElementSize;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         cbSetGridCellSize.Caption := StrUseToSetGridCell;
         lblGridCellSize.Caption := StrGridCellSize;
@@ -17483,18 +17489,14 @@ end;
 
 procedure TfrmScreenObjectProperties.frameFarmWellcomboFormulaInterpChange(
   Sender: TObject);
-{$IFDEF FMP}
 var
   Item: TScreenObjectEditItem;
-{$ENDIF}
 begin
   inherited;
-{$IFDEF FMP}
   UpdateNodeState(FFarmWell_Node);
   StoreFarmWell;
   Item := FNewProperties[0];
   AssignConductanceCaptions(frameFarmWell, Item.ScreenObject.ModflowFmpWellBoundary);
-{$ENDIF}
 end;
 
 procedure TfrmScreenObjectProperties.frameFarmWelldgModflowBoundaryEndUpdate(
@@ -17506,14 +17508,11 @@ end;
 
 procedure TfrmScreenObjectProperties.frameFarmWelldgModflowBoundarySetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
-{$IFDEF FMP}
 var
   Item: TScreenObjectEditItem;
   StartParamCol: Integer;
-{$ENDIF}
 begin
   inherited;
-{$IFDEF FMP}
   UpdateNodeState(FFarmWell_Node);
   frameFarmWell.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
 
@@ -17529,8 +17528,6 @@ begin
   begin
     StoreFarmWell;
   end;
-{$ENDIF}
-
 end;
 
 procedure TfrmScreenObjectProperties.frameFarmWellseNumberOfTimesChange(
@@ -17585,16 +17582,16 @@ begin
   end;
 end;
 
-procedure TfrmScreenObjectProperties.frameScreenObjectFarmpcMainChange(
-  Sender: TObject);
-begin
-  inherited;
-  if IsLoaded then
-  begin
-    HelpKeyword := frameScreenObjectFarm.pcMain.ActivePage.HelpKeyword;
-    btnHelp.HelpKeyword := HelpKeyword;
-  end;
-end;
+//procedure TfrmScreenObjectProperties.frameScreenObjectFarmpcMainChange(
+//  Sender: TObject);
+//begin
+//  inherited;
+//  if IsLoaded then
+//  begin
+//    HelpKeyword := frameScreenObjectFarm.pcMain.ActivePage.HelpKeyword;
+//    btnHelp.HelpKeyword := HelpKeyword;
+//  end;
+//end;
 
 procedure TfrmScreenObjectProperties.frameScreenObjectSFRjceButtonClick(
   Sender: TObject);
@@ -19294,16 +19291,12 @@ begin
 end;
 
 procedure TfrmScreenObjectProperties.StoreFarmWell;
-{$IFDEF FMP}
 var
   ParamType: TParameterType;
   Frame: TframeScreenObjectCondParam;
   Index: Integer;
   Item: TScreenObjectEditItem;
-//  Boundary: TFmpWellBoundary;
-{$ENDIF}
 begin
-{$IFDEF FMP}
   if IsLoaded then
   begin
     Frame := frameFarmWell;
@@ -19315,21 +19308,7 @@ begin
     end;
     StoreFormulaInterpretation(Frame, ParamType);
     StoreModflowBoundary(Frame, ParamType, FFarmWell_Node);
-//    if frameFarmWell.seFarmID.AsInteger > 0 then
-//    begin
-//      for Index := 0 to FNewProperties.Count - 1 do
-//      begin
-//        Item := FNewProperties[Index];
-//        Boundary := Item.ScreenObject.ModflowFmpWellBoundary;
-//        Assert(Boundary <> nil);
-//        if ShouldStoreBoundary(FFarmWell_Node, Boundary) then
-//        begin
-//          Boundary.FarmId := IntToStr(frameFarmWell.seFarmID.AsInteger);
-//        end;
-//      end;
-//    end;
   end;
-{$ENDIF}
 end;
 
 procedure TfrmScreenObjectProperties.StoreRivBoundary;
@@ -19680,8 +19659,10 @@ begin
       or (DataGrid = frameEvtParam.dgModflowBoundary)
       or (DataGrid = frameEtsParam.dgModflowBoundary)
       or (DataGrid = frameFarmCropID.dgModflowBoundary)
+      or (DataGrid = frameFarmID.dgModflowBoundary)
       or (DataGrid = frameFarmPrecip.dgModflowBoundary)
       or (DataGrid = frameFarmRefEvap.dgModflowBoundary)
+      or (DataGrid = frameFarmID.dgModflowBoundary)
       then
     begin
       Orientation := dsoTop;

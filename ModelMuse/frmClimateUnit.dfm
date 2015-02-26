@@ -6,7 +6,7 @@ inherited frmClimate: TfrmClimate
   ClientWidth = 599
   ExplicitWidth = 615
   ExplicitHeight = 313
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   inline frameClimate: TframeFormulaGrid
     Left = 0
@@ -201,6 +201,7 @@ inherited frmClimate: TfrmClimate
         Height = 26
         EditLabel.Width = 57
         EditLabel.Height = 18
+        EditLabel.ExplicitLeft = 128
         EditLabel.ExplicitTop = 9
         EditLabel.ExplicitWidth = 57
         EditLabel.ExplicitHeight = 18

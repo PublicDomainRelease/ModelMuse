@@ -13,18 +13,17 @@ inherited frmGridSpacing: TfrmGridSpacing
   OnKeyPress = FormKeyPress
   ExplicitWidth = 477
   ExplicitHeight = 491
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pcSubdivide: TPageControl
     Left = 0
     Top = 129
-    Width = 461
-    Height = 283
+    Width = 459
+    Height = 276
     ActivePage = tabLayers
     Align = alClient
     TabOrder = 1
     ExplicitWidth = 437
-    ExplicitHeight = 276
     object tabColumns: TTabSheet
       Caption = 'Columns (X'#39')'
       ExplicitLeft = 0
@@ -33,16 +32,15 @@ inherited frmGridSpacing: TfrmGridSpacing
       ExplicitHeight = 0
       object pnlColumns: TPanel
         Left = 0
-        Top = 169
-        Width = 453
+        Top = 162
+        Width = 451
         Height = 81
         Align = alBottom
         ParentColor = True
         TabOrder = 1
-        ExplicitTop = 162
         ExplicitWidth = 429
         DesignSize = (
-          453
+          451
           81)
         object lblColNumNodes: TLabel
           Left = 8
@@ -87,8 +85,8 @@ inherited frmGridSpacing: TfrmGridSpacing
       object dgColumns: TRbwDataGrid4
         Left = 0
         Top = 0
-        Width = 453
-        Height = 169
+        Width = 451
+        Height = 162
         Align = alClient
         ColCount = 2
         DefaultColWidth = 200
@@ -158,7 +156,6 @@ inherited frmGridSpacing: TfrmGridSpacing
           end>
         WordWrapRowCaptions = False
         ExplicitWidth = 429
-        ExplicitHeight = 162
         RowHeights = (
           24
           24
@@ -176,16 +173,15 @@ inherited frmGridSpacing: TfrmGridSpacing
       ExplicitHeight = 0
       object pnlRows: TPanel
         Left = 0
-        Top = 169
-        Width = 453
+        Top = 162
+        Width = 451
         Height = 81
         Align = alBottom
         ParentColor = True
         TabOrder = 1
-        ExplicitTop = 162
         ExplicitWidth = 429
         DesignSize = (
-          453
+          451
           81)
         object lblRowNumNodes: TLabel
           Left = 8
@@ -230,8 +226,8 @@ inherited frmGridSpacing: TfrmGridSpacing
       object dgRows: TRbwDataGrid4
         Left = 0
         Top = 0
-        Width = 453
-        Height = 169
+        Width = 451
+        Height = 162
         Align = alClient
         ColCount = 2
         DefaultColWidth = 200
@@ -301,7 +297,6 @@ inherited frmGridSpacing: TfrmGridSpacing
           end>
         WordWrapRowCaptions = False
         ExplicitWidth = 429
-        ExplicitHeight = 162
         RowHeights = (
           24
           24
@@ -319,16 +314,15 @@ inherited frmGridSpacing: TfrmGridSpacing
       ExplicitHeight = 0
       object pnlLayers: TPanel
         Left = 0
-        Top = 169
-        Width = 453
+        Top = 162
+        Width = 451
         Height = 81
         Align = alBottom
         ParentColor = True
         TabOrder = 1
-        ExplicitTop = 162
         ExplicitWidth = 429
         DesignSize = (
-          453
+          451
           81)
         object lblLayNumNodes: TLabel
           Left = 8
@@ -373,8 +367,8 @@ inherited frmGridSpacing: TfrmGridSpacing
       object dgLayers: TRbwDataGrid4
         Left = 0
         Top = 0
-        Width = 453
-        Height = 169
+        Width = 451
+        Height = 162
         Align = alClient
         ColCount = 2
         DefaultColWidth = 200
@@ -444,7 +438,6 @@ inherited frmGridSpacing: TfrmGridSpacing
           end>
         WordWrapRowCaptions = False
         ExplicitWidth = 429
-        ExplicitHeight = 162
         RowHeights = (
           24
           24
@@ -456,16 +449,15 @@ inherited frmGridSpacing: TfrmGridSpacing
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 412
-    Width = 461
+    Top = 405
+    Width = 459
     Height = 41
     Align = alBottom
     ParentColor = True
     TabOrder = 2
-    ExplicitTop = 405
     ExplicitWidth = 437
     DesignSize = (
-      461
+      459
       41)
     object btnCancel: TBitBtn
       Left = 361
@@ -506,14 +498,14 @@ inherited frmGridSpacing: TfrmGridSpacing
   object pnlDescribe: TPanel
     Left = 0
     Top = 0
-    Width = 461
+    Width = 459
     Height = 129
     Align = alTop
     ParentColor = True
     TabOrder = 0
     ExplicitWidth = 437
     DesignSize = (
-      461
+      459
       129)
     object lblDescribe: TLabel
       Left = 8

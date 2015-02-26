@@ -45,6 +45,7 @@ type
     FNewGlobals: TGlobalVariables;
     VariableNames: TStringList;
     OkVariables: array of boolean;
+    FFormAdjusted: Boolean;
     function GenerateNewName(Root: string = 'NewGlobalVariable';
       const CurrentRow: integer = -1): string;
     procedure GetData;
@@ -52,6 +53,7 @@ type
     procedure InitializeNewRow(ARow: integer);
     procedure UpdateSpecialFormat(RowIndex: integer);
     function GenerateNewRoot(const Root: string): string;
+    procedure AdjustFormSize;
     { Private declarations }
   public
     { Public declarations }
@@ -688,6 +690,55 @@ begin
   result := PhastModelUnit.GenerateNewRoot(result);
 end;
 
+procedure TfrmGlobalVariables.AdjustFormSize;
+const
+  ScrollBarWidth = 80;
+  ExtraRowWidth = 2;
+var
+  TotalWidth: Integer;
+  ColIndex: Integer;
+  TotalHeight: Integer;
+  RowIndex: Integer;
+begin
+  if FFormAdjusted then
+  begin
+    Exit;
+  end;
+  try
+    TotalWidth := ScrollBarWidth
+      + rdgGlobalVariables.GridLineWidth * rdgGlobalVariables.ColCount;
+    for ColIndex := 0 to rdgGlobalVariables.ColCount - 1 do
+    begin
+      TotalWidth := TotalWidth + rdgGlobalVariables.ColWidths[ColIndex];
+    end;
+    if TotalWidth > Screen.Width then
+    begin
+      TotalWidth := Screen.Width;
+    end;
+    if Width < TotalWidth then
+    begin
+      Width := TotalWidth;
+    end;
+    TotalHeight := Height - rdgGlobalVariables.Height
+      + rdgGlobalVariables.GridLineWidth * rdgGlobalVariables.RowCount;
+    for RowIndex := 0 to rdgGlobalVariables.RowCount - 1 do
+    begin
+      TotalHeight := TotalHeight + rdgGlobalVariables.RowHeights[RowIndex]
+        + ExtraRowWidth;
+    end;
+    if TotalHeight > Screen.Height then
+    begin
+      TotalHeight := Screen.Height
+    end;
+    if TotalHeight > Height then
+    begin
+      Height := TotalHeight;
+    end;
+  finally
+    FFormAdjusted := True;
+  end;
+end;
+
 procedure TfrmGlobalVariables.GetData;
 var
   Index: Integer;
@@ -740,6 +791,7 @@ begin
   finally
     rdgGlobalVariables.EndUpdate;
   end;
+  AdjustFormSize;
 end;
 
 procedure TfrmGlobalVariables.InitializeNewRow(ARow: integer);

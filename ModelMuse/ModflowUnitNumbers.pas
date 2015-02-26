@@ -116,6 +116,7 @@ const
   StrFmpFarmBudgetDetailed = 'FmpFarmBudgetDetailed';
   StrFmpOFE = 'FmpOFE';
   StrFmpCID = 'FmpCID';
+  StrFmpFID = 'FmpFID';
   StrFmpRoot = 'FmpRoot';
   StrFmpCropUse = 'FmpCropUse';
   StrFmpETR = 'FmpETR';
@@ -275,7 +276,7 @@ const
   MODPATH reserves several numbers in the range
   80 to 99 for internal use.
 
-  FMP2 uses unit numbers 1001-1009
+  FMP3 uses unit numbers 1001-1011
 
   CFP uses unit number 999 and consecutive unit numbers beginning at 201
 }
@@ -455,6 +456,7 @@ const
   MNW1_WellOutputUnit = 183;
   MNW1_ByNodeUnit = 184;
   MNW1_QSumUnit = 185;
+  FmpFID_Unit = 186;
 
   GageOutputStartUnit = 20205;
 
@@ -625,6 +627,7 @@ begin
   AddItem(StrFmpFarmBudgetDetailed, FmpFarmBudgetDetailed_Unit);
   AddItem(StrFmpOFE, FmpOFE_Unit);
   AddItem(StrFmpCID, FmpCID_Unit);
+  AddItem(StrFmpFID, FmpFID_Unit);
   AddItem(StrFmpRoot, FmpRoot_Unit);
   AddItem(StrFmpCropUse, FmpCropUse_Unit);
   AddItem(StrFmpETR, FmpETR_Unit);

@@ -256,7 +256,8 @@ begin
     UpdateFormula(Value, DepthExponentPosition, FDepthExponent);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -278,7 +279,8 @@ begin
     UpdateFormula(Value, WidthCoefficientPosition, FWidthCoefficient);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -300,7 +302,8 @@ begin
     UpdateFormula(Value, WidthExponentPosition, FWidthExponent);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -338,7 +341,8 @@ begin
     UpdateFormula(Value, DepthCoefficientPosition, FDepthCoefficient);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)

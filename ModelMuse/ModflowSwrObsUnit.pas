@@ -32,7 +32,7 @@ type
     property ObsName: string read FObsName write SetObsName;
     property ObsType: TSwrObsType read FObsType write SetObsType;
     property ObservationReach: Integer read FObservationReach write SetObservationReach;
-    property ConnectedReach: integer read FConnectedReach write SetConnectedReach;
+    property ConnectedReachOrStructure: integer read FConnectedReach write SetConnectedReach;
     property ObservationLayer: Integer read FObservationLayer write SetObservationLayer;
     property StructureName: string read GetStructureName write SetStructureName;
   end;
@@ -64,7 +64,7 @@ begin
     ObsName := SourceItem.ObsName;
     ObsType := SourceItem.ObsType;
     ObservationReach := SourceItem.ObservationReach;
-    ConnectedReach := SourceItem.ConnectedReach;
+    ConnectedReachOrStructure := SourceItem.ConnectedReachOrStructure;
     ObservationLayer := SourceItem.ObservationLayer;
     StructureName := SourceItem.StructureName;
   end

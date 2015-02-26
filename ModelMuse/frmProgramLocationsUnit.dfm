@@ -4,9 +4,10 @@ inherited frmProgramLocations: TfrmProgramLocations
   Caption = 'MODFLOW Program Locations'
   ClientHeight = 586
   ClientWidth = 623
+  ExplicitTop = -117
   ExplicitWidth = 639
   ExplicitHeight = 624
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -445,7 +446,7 @@ inherited frmProgramLocations: TfrmProgramLocations
       Width = 621
       Height = 82
       Align = alTop
-      Caption = 'MF2005-FMP2'
+      Caption = 'MF2005-OWHM'
       ImageOptions.Images = ilShowHide
       TabOrder = 11
       DesignSize = (
@@ -458,12 +459,11 @@ inherited frmProgramLocations: TfrmProgramLocations
       object htlblModflowFmp: TJvHTLabel
         Left = 15
         Top = 25
-        Width = 466
+        Width = 286
         Height = 19
         Caption = 
-          '<a href="http://water.usgs.gov/nrp/gwsoftware/mf2005_fmp/mf2005_' +
-          'fmp.html">http://water.usgs.gov/nrp/gwsoftware/mf2005_fmp/mf2005' +
-          '_fmp.html</a>'
+          '<a href="http://water.usgs.gov/ogw/modflow-owhm/">http://water.u' +
+          'sgs.gov/ogw/modflow-owhm/</a>'
       end
       object fedModflowFmp: TJvFilenameEdit
         Left = 15
@@ -523,7 +523,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     Left = 448
     Top = 48
     Bitmap = {
-      494C01010200050008000C000C00FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010200050004000C000C00FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000300000000C00000001002000000000000009
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

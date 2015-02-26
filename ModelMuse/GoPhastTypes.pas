@@ -190,17 +190,13 @@ type
   // @name is used to indicate what type of model is active.
   // The type of model should never be set to msUndefined.
   TModelSelection = (msUndefined, msPhast, msModflow, msModflowLGR,
-    msModflowLGR2, msModflowNWT
-    {$IFDEF FMP}, msModflowFmp {$ENDIF}
-    , msModflowCfp, msSutra22);
+    msModflowLGR2, msModflowNWT, msModflowFmp, msModflowCfp, msSutra22);
 
 const
-  ModflowSelection = [msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-    {$IFDEF FMP}, msModflowFmp {$ENDIF}
-    , msModflowCfp];
+  ModflowSelection = [msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+    msModflowFmp, msModflowCfp];
   ModelsWithGrid  = [msPhast, msModflow, msModflowLGR, msModflowLGR2,
-    msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}
-    , msModflowCfp];
+    msModflowNWT, msModflowFmp, msModflowCfp];
 
 type
 
@@ -265,6 +261,7 @@ type
     procedure SetCount(const Value: Integer);
     property OnInvalidateModel: TNotifyEvent read FOnInvalidateModel;
   public
+    procedure Assign(Source: TPersistent); override;
     procedure InvalidateModel;
     // @name invalidates the model.
     procedure Notify(Item: TCollectionItem; Action: Classes.TCollectionNotification);
@@ -511,6 +508,9 @@ resourcestring
   StrWritingDataSet34 = '  Writing Data Set 34.';
   StrWritingDataSet35 = '  Writing Data Set 35.';
   StrWritingDataSet36 = '  Writing Data Set 36.';
+  StrWritingDataSet37 = '  Writing Data Set 37.';
+  StrWritingDataSet38 = '  Writing Data Set 38.';
+  StrWritingDataSet39 = '  Writing Data Set 39.';
   StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
   StrWritingDataSets5to7 = '  Writing Data Sets 5 to 7.';
   StrWritingDataSets5to8 = '  Writing Data Sets 5 to 8.';
@@ -700,6 +700,15 @@ begin
 end;
 
 { TPhastCollection }
+
+procedure TPhastCollection.Assign(Source: TPersistent);
+begin
+  if Source is TPhastCollection then
+  begin
+    Capacity := Max(Count, TPhastCollection(Source).Count);
+  end;
+  inherited;
+end;
 
 constructor TPhastCollection.Create(ItemClass: TCollectionItemClass;
   InvalidateModelEvent: TNotifyEvent);
@@ -957,9 +966,8 @@ begin
             Assert(False);
         end;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         case Eval of
           eaBlocks:

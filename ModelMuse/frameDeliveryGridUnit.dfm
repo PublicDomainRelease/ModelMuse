@@ -36,7 +36,7 @@ inherited frameDeliveryGrid: TframeDeliveryGrid
       Left = 176
       Top = 6
       Width = 65
-      Height = 24
+      Height = 21
       CheckMinValue = True
       TabOrder = 1
       OnChange = seNumberOfDeliveryTypesChange
@@ -108,6 +108,10 @@ inherited frameDeliveryGrid: TframeDeliveryGrid
       Height = 16
       Caption = 'How used'
       Enabled = False
+    end
+    inherited edFormula: TLabeledEdit
+      EditLabel.ExplicitTop = -16
+      EditLabel.ExplicitWidth = 50
     end
     inherited cbMultiCheck: TCheckBox
       TabOrder = 2

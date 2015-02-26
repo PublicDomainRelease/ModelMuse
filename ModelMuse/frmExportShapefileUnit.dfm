@@ -4,9 +4,9 @@ inherited frmExportShapefile: TfrmExportShapefile
   Caption = 'Export Grid Data to Shapefile'
   ClientHeight = 555
   ClientWidth = 449
-  ExplicitWidth = 465
-  ExplicitHeight = 593
-  PixelsPerInch = 96
+  ExplicitWidth = 467
+  ExplicitHeight = 600
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -317,7 +317,7 @@ inherited frmExportShapefile: TfrmExportShapefile
     Left = 136
     Top = 96
     Bitmap = {
-      494C0101040005003C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

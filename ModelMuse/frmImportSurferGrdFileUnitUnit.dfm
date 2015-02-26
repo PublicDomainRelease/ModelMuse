@@ -1,9 +1,9 @@
 inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
-  Width = 586
+  Width = 612
   Height = 406
   HelpKeyword = 'Import_Surfer_Grid_File'
   Caption = 'Import Surfer Grid File'
-  ExplicitWidth = 586
+  ExplicitWidth = 612
   ExplicitHeight = 406
   PixelsPerInch = 120
   TextHeight = 18
@@ -24,10 +24,11 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
   end
   inherited comboDataSets: TComboBox
     Top = 148
-    Width = 547
+    Width = 560
+    Anchors = [akLeft, akTop, akRight]
     TabOrder = 1
     ExplicitTop = 148
-    ExplicitWidth = 547
+    ExplicitWidth = 560
   end
   inherited comboInterpolators: TComboBox
     Top = 213
@@ -66,26 +67,39 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
     ExplicitTop = 313
   end
   inherited btnOK: TBitBtn
+    Left = 398
     Top = 324
+    Width = 73
+    Anchors = [akLeft, akTop, akRight]
     TabOrder = 9
     OnClick = btnOKClick
+    ExplicitLeft = 398
     ExplicitTop = 324
   end
   inherited btnCancel: TBitBtn
+    Left = 495
     Top = 324
+    Width = 73
+    Anchors = [akLeft, akTop, akRight]
     TabOrder = 10
+    ExplicitLeft = 495
     ExplicitTop = 324
   end
   inherited btnHelp: TBitBtn
+    Left = 301
     Top = 324
+    Width = 73
+    Anchors = [akLeft, akTop, akRight]
     TabOrder = 8
+    ExplicitLeft = 301
     ExplicitTop = 324
   end
   object rdgLimits: TRbwDataGrid4 [12]
     Left = 8
     Top = 29
-    Width = 545
+    Width = 560
     Height = 89
+    Anchors = [akLeft, akTop, akRight]
     ColCount = 4
     FixedCols = 1
     RowCount = 3
@@ -193,11 +207,12 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
         AutoAdjustColWidths = True
       end>
     WordWrapRowCaptions = False
+    ExplicitWidth = 578
   end
   object rgFilterMethod: TRadioGroup [13]
     Left = 346
     Top = 178
-    Width = 214
+    Width = 222
     Height = 140
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Filter method'
@@ -209,7 +224,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
       'Point closest to cell center'
       'None')
     TabOrder = 2
-    ExplicitWidth = 206
+    ExplicitWidth = 214
   end
   inherited OpenDialogFile: TOpenDialog
     Filter = 'Surfer grid file (*.grd, *.dat)|*.grd;*.dat|All files (*.*)|*.*'

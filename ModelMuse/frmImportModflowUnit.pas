@@ -45,7 +45,8 @@ implementation
 {$R *.dfm}
 
 uses JclSysUtils, Modflow2005ImporterUnit, frmShowHideObjectsUnit,
-  frmDisplayDataUnit, ModelMuseUtilities, StrUtils, frmConsoleLinesUnit;
+  frmDisplayDataUnit, ModelMuseUtilities, StrUtils, frmConsoleLinesUnit,
+  Generics.Collections;
 
 resourcestring
   StrTheMODFLOWNameFil = 'The MODFLOW Name file appears to be invalid';
@@ -59,6 +60,9 @@ resourcestring
   StrReadingStressPerio = 'Reading Stress Period %s';
   StrAbortingModelMuse = 'Aborting.  ModelMuse was unable to create %0:s. Pl' +
   'ease correct this problem. The error message was %1:s.';
+  StrADirectoryListedI = 'A directory listed in the name file "%s" does not ' +
+  'exist and could not be created.';
+  StrUnableToSaveTempo = 'Unable to save temporaray name file: %s';
 
 procedure TfrmImportModflow.btnOKClick(Sender: TObject);
 var
@@ -73,6 +77,17 @@ var
   YOrigin: double;
   GridAngle: double;
   OldFile: string;
+  LineIndex: Integer;
+  Splitter: TStringList;
+  Ftype: string;
+  Nunit: Integer;
+  BadUnitNumberLine: Integer;
+  UnitNumbers: TList<Integer>;
+  Fname: string;
+  FullFileName: string;
+  FileDir: string;
+  UnitNumberIndex: Integer;
+  NameFileName: string;
 //  DelimPos: Integer;
 begin
   inherited;
@@ -88,19 +103,121 @@ begin
       Exit;
     end;
 
-    if Pos(' ', ExtractFileName(edNameFile.FileName)) > 0 then
-    begin
-      Beep;
-      MessageDlg(StrTheNameOfTheMODF, mtError, [mbOK], 0);
-      Exit;
+    NameFileName := edNameFile.FileName;
+    SetCurrentDir(ExtractFileDir(edNameFile.FileName));
+
+
+    BadUnitNumberLine := -1;
+    NameFile := TStringList.Create;
+    Splitter := TStringList.Create;
+    UnitNumbers := TList<Integer>.Create;
+    try
+      Splitter.Delimiter := ' ';
+      NameFile.LoadFromFile(NameFileName);
+      for LineIndex := 0 to NameFile.Count - 1 do
+      begin
+        ALine := NameFile[LineIndex];
+        if (Length(ALine) > 0) and (ALine[1] <> '#') then
+        begin
+          Splitter.DelimitedText := ALine;
+          if Splitter.Count > 0 then
+          begin
+            Ftype := UpperCase(Splitter[0]);
+            // comment out MODFLOW-2000 files
+            if (Ftype = 'OBS') or (Ftype = 'LMG') or (Ftype = 'SEN')
+               or (Ftype = 'SEN') or (Ftype = 'PES') or (Ftype = 'GLOBAL')
+               or (Ftype = 'SOR') or (Ftype = 'DAF') or (Ftype = 'DAFG')
+               or (Ftype = 'DTOB') or (Ftype = 'ADV2')
+               // CLB, NDC, and WHS are only in Visual MODFLOW.
+               or (Ftype = 'CLB') or (Ftype = 'NDC') or (Ftype = 'WHS') then
+            begin
+              ALine := '#' + ALine;
+              NameFile[LineIndex] := ALine;
+            end
+            else if Splitter.Count > 2 then
+            begin
+              if (Ftype = 'DATAGLO(BINARY)') then
+              begin
+                Splitter[0] := 'DATA(BINARY)';
+                NameFile[LineIndex] := Splitter.DelimitedText;
+              end
+              else if (Ftype = 'DATAGLO') then
+              begin
+                Splitter[0] := 'DATA';
+                NameFile[LineIndex] := Splitter.DelimitedText;
+              end;
+
+              if TryStrToInt(Splitter[1], Nunit) then
+              begin
+                if Nunit = 6 then
+                begin
+                  BadUnitNumberLine := LineIndex;
+                end
+                else
+                begin
+                  UnitNumbers.Add(Nunit);
+                end;
+                Fname := Splitter[2];
+                FullFileName := ExpandFileName(Fname);
+                FileDir := ExtractFileDir(FullFileName);
+                if not DirectoryExists(FileDir) then
+                begin
+                  if not ForceDirectories(FileDir) then
+                  begin
+                    Beep;
+                    MessageDlg(Format(StrADirectoryListedI, [FileDir]),
+                      mtError, [mbOK], 0);
+                    Exit;
+                  end;
+                end;
+              end;
+            end;
+          end;
+        end;
+      end;
+      if BadUnitNumberLine >= 0 then
+      begin
+        Splitter.DelimitedText := NameFile[BadUnitNumberLine];
+        for UnitNumberIndex := 7 to MAXINT do
+        begin
+          if UnitNumbers.IndexOf(UnitNumberIndex) < 0 then
+          begin
+            Splitter[1] := IntToStr(UnitNumberIndex);
+            Break;
+          end;
+        end;
+        NameFile[BadUnitNumberLine] := Splitter.DelimitedText;
+      end;
+      NameFileName := IncludeTrailingPathDelimiter(ExtractFileDir(edNameFile.FileName))
+        + 'TempNameFile.nam';
+        try
+          NameFile.SaveToFile(NameFileName);
+        except  on EFCreateError do
+          begin
+            Beep;
+            MessageDlg(Format(StrUnableToSaveTempo, [NameFileName]), mtError, [mbOK], 0);
+          end;
+
+        end;
+    finally
+      NameFile.Free;
+      Splitter.Free;
+      UnitNumbers.Free;
     end;
+
+//    if Pos(' ', ExtractFileName(edNameFile.FileName)) > 0 then
+//    begin
+//      Beep;
+//      MessageDlg(StrTheNameOfTheMODF, mtError, [mbOK], 0);
+//      Exit;
+//    end;
 
     XOrigin := StrToFloat(rdeX.Text);
     YOrigin := StrToFloat(rdeY.Text);
     GridAngle := StrToFloat(rdeGridAngle.Text) * Pi/180;
 
     try
-      OldFile := ExtractFileDir(edNameFile.FileName) + '\old.txt';
+      OldFile := ExtractFileDir(NameFileName) + '\old.txt';
       if cbOldStream.Checked then
       begin
         With TStringList.Create do
@@ -128,10 +245,10 @@ begin
     try
       LineContents.Delimiter := ' ';
       try
-        NameFile.LoadFromFile(edNameFile.FileName);
+        NameFile.LoadFromFile(NameFileName);
       except on EFOpenError do
         begin
-          CantOpenFileMessage(edNameFile.FileName);
+          CantOpenFileMessage(NameFileName);
           Exit;
         end;
       end;
@@ -171,7 +288,7 @@ begin
       MessageDlg(StrNoLISTFileWasFou, mtError, [mbOK], 0);
       Exit;
     end;
-    SetCurrentDir(ExtractFileDir(edNameFile.FileName));
+    SetCurrentDir(ExtractFileDir(NameFileName));
 //    if Copy(ListFileName,1,2) = '.\' then
 //    begin
 //      DelimPos := PosEx(PathDelim,ListFileName,3);
@@ -185,7 +302,7 @@ begin
 
     FReadModflowInputProperly := False;
     Execute('"' + ModflowImporterName + '" '
-      + ExtractFileName(edNameFile.FileName), HandleModflowConsolLine);
+      + ExtractFileName(NameFileName), HandleModflowConsolLine);
     if not FReadModflowInputProperly then
     begin
       Beep;
@@ -213,8 +330,12 @@ begin
     FreeAndNil(frmShowHideObjects);
     FreeAndNil(frmDisplayData);
     ImportModflow2005(ListFileName, XOrigin, YOrigin, GridAngle,
-      UpdateStatusBar, ShowProgress, mtParent, edNameFile.FileName);
-
+      UpdateStatusBar, ShowProgress, mtParent, NameFileName);
+    DeleteFile(NameFileName);
+    if FileExists(OldFile) then
+    begin
+      DeleteFile(OldFile);
+    end;
   finally
     SetCurrentDir(CurrentDir);
     Enabled := True;

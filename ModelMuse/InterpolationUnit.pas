@@ -94,7 +94,12 @@ type
     // @name is used to find the closest node on an object
     // to the location of interest.
     FQuadTree: TRbwQuadTree;
+    FScreenObjectQuadTree: TRbwQuadTree;
+    FLastScreenObject: TScreenObject;
     function GetPointerToResult(const Location: TPoint2D): Pointer;
+    function GetScreenObjectAtLocation(const Location: TPoint2D): TScreenObject;
+    function GetQuadTreePointer(QuadTree: TRbwQuadTree;
+      const Location: TPoint2D): Pointer;
   protected
     procedure SetArraySize(const DataSet: TDataArray; Count: Integer); override;
     procedure StoreData(Sender: TObject; const DataSet: TDataArray); override;
@@ -126,6 +131,7 @@ type
     // by interpolation,
     function StringResult(const Location: TPoint2D): string; override;
     constructor Create(AOwner: TComponent); override;
+    function LastAnnotation: string; override;
   end;
 
   TInvDistSqPoint2DInterpolator = class(TCustomPoint2DInterpolator)
@@ -167,6 +173,7 @@ type
     // that set the @link(TDataArray)s
     // for this @classname by interpolation.
     FListOfTScreenObjects : TList;
+    FNearestScreenObject: TScreenObject;
     // @name gets the TExpression for the nearest @link(TScreenObject)
     // that sets TCustom2DInterpolater.@link(TCustom2DInterpolater.DataSet)
     // by interpolation,
@@ -220,6 +227,7 @@ type
     // @name tells what types of data with which this interpolator can be used.
     // (integer, real-number, boolean, and string)
     class function ValidReturnTypes: TRbwDataTypes; override;
+    function LastAnnotation: string; override;
   end;
 
   TCustomTriangleInterpolator = class(TCustomAnisotropicInterpolator)
@@ -280,6 +288,7 @@ uses Math, AbstractGridUnit, RealListUnit, TripackTypes, GIS_Functions, Types,
 resourcestring
   StrErrorEncoutereredI = 'Error encouterered in initializing %0:s for the ' +
   '%1:s.  Error was %2:s';
+  Str0sUsing1s = '%0:s using %1:s';
 
 type
   TSortRecord = record
@@ -325,6 +334,15 @@ end;
 class function TNearest2DInterpolator.InterpolatorName: string;
 begin
   result := 'Nearest';
+end;
+
+function TNearest2DInterpolator.LastAnnotation: string;
+begin
+  result := inherited;
+  if FNearestScreenObject <> nil then
+  begin
+    result := Format(Str0sUsing1s, [result, FNearestScreenObject.Name]);
+  end;
 end;
 
 destructor TNearest2DInterpolator.Destroy;
@@ -437,9 +455,8 @@ begin
               Cell := frmGoPhast.PhastGrid.GetCell(ClosestLocation,
                 AScreenObject.ViewDirection, DataSet.EvaluatedAt);
             end;
-          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-            {$IFDEF FMP}, msModflowFmp {$ENDIF}
-            , msModflowCfp:
+          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+            msModflowFmp, msModflowCfp:
             begin
               TopCell := frmGoPhast.Grid.TopContainingCell(ClosestLocation,
                 DataSet.EvaluatedAt);
@@ -981,15 +998,14 @@ end;
 function TNearest2DInterpolator.GetExpression(
   const Location: TPoint2D): TExpression;
 var
-  NearestScreenObject: TScreenObject;
   ClosestLocation: TPoint2D;
   SectionIndex: integer;
 begin
   result := nil;
-  NearestScreenObject := GetNearestScreenObject(Location, ClosestLocation, SectionIndex);
-  if NearestScreenObject <> nil then
+  FNearestScreenObject := GetNearestScreenObject(Location, ClosestLocation, SectionIndex);
+  if FNearestScreenObject <> nil then
   begin
-    InitializeVariablesAndExpression(ClosestLocation, NearestScreenObject, SectionIndex,
+    InitializeVariablesAndExpression(ClosestLocation, FNearestScreenObject, SectionIndex,
       FExpression);
     result := FExpression;
   end;
@@ -1105,9 +1121,8 @@ begin
         Cell := Model.PhastGrid.GetCell(Location,
           AScreenObject.ViewDirection, DataSet.EvaluatedAt);
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         // With MODFLOW, the only 2D data sets are in the top view.
         Assert(DataSet.Orientation = dsoTop);
@@ -1141,9 +1156,8 @@ begin
     Cell.Row := 0;
   end;
   case Model.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         case DataSet.EvaluatedAt of
           eaBlocks:
@@ -1429,22 +1443,24 @@ constructor TNearestPoint2DInterpolator.Create(AOwner: TComponent);
 begin
   inherited;
   FQuadTree := TRbwQuadTree.Create(self);
+  FScreenObjectQuadTree := TRbwQuadTree.Create(self);
 end;
 
 procedure TNearestPoint2DInterpolator.Finalize(const DataSet: TDataArray);
 begin
   FQuadTree.Clear;
+  FScreenObjectQuadTree.Clear;
   inherited;
 end;
 
-function TNearestPoint2DInterpolator.GetPointerToResult(
+function TNearestPoint2DInterpolator.GetQuadTreePointer(QuadTree: TRbwQuadTree;
   const Location: TPoint2D): Pointer;
 var
   X: Double;
   Y: Double;
   Data: TPointerArray;
 begin
-  if FQuadTree.Count = 0 then
+  if QuadTree.Count = 0 then
   begin
     result := nil;
     Exit;
@@ -1452,9 +1468,9 @@ begin
   X := Location.X;
   Y := Location.Y * Anisotropy;
 
-  if FQuadTree.Count > 0 then
+  if QuadTree.Count > 0 then
   begin
-    FQuadTree.FindClosestPointsData(X, Y, Data);
+    QuadTree.FindClosestPointsData(X, Y, Data);
     if Length(Data) > 0 then
     begin
       result := Data[0];
@@ -1468,6 +1484,47 @@ begin
   begin
     result := nil;
   end;
+end;
+
+function TNearestPoint2DInterpolator.GetScreenObjectAtLocation(
+  const Location: TPoint2D): TScreenObject;
+begin
+  result := GetQuadTreePointer(FScreenObjectQuadTree, Location);
+end;
+
+function TNearestPoint2DInterpolator.GetPointerToResult(
+  const Location: TPoint2D): Pointer;
+//var
+//  X: Double;
+//  Y: Double;
+//  Data: TPointerArray;
+begin
+  result := GetQuadTreePointer(FQuadTree, Location);
+  FLastScreenObject := GetScreenObjectAtLocation(Location);
+//  if FQuadTree.Count = 0 then
+//  begin
+//    result := nil;
+//    Exit;
+//  end;
+//  X := Location.X;
+//  Y := Location.Y * Anisotropy;
+//
+//  if FQuadTree.Count > 0 then
+//  begin
+//    FQuadTree.FindClosestPointsData(X, Y, Data);
+//    if Length(Data) > 0 then
+//    begin
+//      result := Data[0];
+//    end
+//    else
+//    begin
+//      result := nil;
+//    end;
+//  end
+//  else
+//  begin
+//    result := nil;
+//  end;
 end;
 
 function TNearestPoint2DInterpolator.IntegerResult(
@@ -1492,6 +1549,15 @@ begin
   result := 'Nearest Point';
 end;
 
+function TNearestPoint2DInterpolator.LastAnnotation: string;
+begin
+  result := inherited;
+  if FLastScreenObject <> nil then
+  begin
+    result := Format(Str0sUsing1s, [result, FLastScreenObject.Name]);
+  end;
+end;
+
 function TNearestPoint2DInterpolator.RealResult(
   const Location: TPoint2D): real;
 var
@@ -1514,12 +1580,14 @@ procedure TNearestPoint2DInterpolator.SetArraySize(const DataSet: TDataArray;
 begin
   inherited;
   FQuadTree.MaxPoints := Max(100, Count div 1000);
+  FScreenObjectQuadTree.MaxPoints := FQuadTree.MaxPoints;
 end;
 
 procedure TNearestPoint2DInterpolator.StoreData(Sender: TObject;
   const DataSet: TDataArray);
 begin
   InitializeQuadTreeLimits(FQuadTree, DataSet);
+  InitializeQuadTreeLimits(FScreenObjectQuadTree, DataSet);
   inherited StoreData(Sender, DataSet);
 end;
 
@@ -1529,6 +1597,7 @@ var
   Expression: TExpression;
 begin
   InitializeVariablesAndExpression(APoint, AScreenObject, SectionIndex, Expression);
+  FScreenObjectQuadTree.AddPoint(APoint.X, APoint.Y * Anisotropy, AScreenObject);
   case DataSet.DataType of
     rdtDouble:
       begin

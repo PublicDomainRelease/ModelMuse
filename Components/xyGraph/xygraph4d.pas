@@ -1704,9 +1704,13 @@ begin {------------------------------------------------------------------------}
     begin z1 := tmi; z2 := tma; vl := true; dp4d := datap4d; end;
 end;
 
+procedure shutdownxygraph4d; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+begin bm.free; end;
+
 procedure initxygraph4d; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
 begin
   bm := Tbitmap.create; bm.pixelformat := pf32bit; init := false;
+  closing := shutdownxygraph4d;
 end;
 
 end.

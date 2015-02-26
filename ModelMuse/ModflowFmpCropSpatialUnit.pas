@@ -11,7 +11,7 @@ type
     @longcode(
   TFmpCropIDRecord = record
     Cell: TCellLocation;
-    CropID: double;
+    CropID: integer;
     StartingTime: double;
     EndingTime: double;
     CropIDAnnotation: string;
@@ -85,7 +85,7 @@ type
 
   TFmpCropIDTimeListLink = class(TTimeListsModelLink)
   private
-    // @name is used to compute the recharge rates for a series of
+    // @name is used to compute the Crop ID for a series of
     // cells over a series of time intervals.
     FCropIDData: TModflowTimeList;
   protected
@@ -156,7 +156,7 @@ type
 
 
   // @name represents the MODFLOW Farm Process Crop ID
-  // boundaries associated with
+  // values associated with
   // a single @link(TScreenObject).
   //
   // @seealso(TFmpCropIDCollection)
@@ -731,7 +731,6 @@ begin
   if Used and (ParentModel <> nil) then
   begin
     Model := ParentModel as TCustomModel;
-    Assert(False);
     Model.InvalidateMfFmpCropID(self);
   end;
 end;

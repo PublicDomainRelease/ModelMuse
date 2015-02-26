@@ -64,6 +64,11 @@ resourcestring
   StrInvalidStreamTribu = 'Invalid Stream tributary number (Segment number, ' +
   'Tributary Number, Stress Period)';
   Str0d1d2d = '%0:d, %1:d, %2:d';
+  StrIncorrectParameter = 'Incorrect parameter definition in SFR package.';
+  StrTheParameterInstan = 'The parameter instance "%0:s" is not defined for ' +
+  'the SFR parameter "%1:s."';
+  StrOriginalSegmentNum = 'Original segment number = %0:d in stress period %' +
+  '1:d.';
 
 var
   DummyInteger: integer;
@@ -3112,10 +3117,14 @@ Type
   end;
 
   TMnw1OutputFile = class(TObject)
-    FileName: string;
+  private
+    FFileName: string;
+    procedure SetFileName(const Value: string);
+  public
     Flag: string;
     UnitNumber: integer;
     AllTime: boolean;
+    property FileName: string read FFileName write SetFileName;
   end;
 
   TMnw1OutputFiles = TObjectList<TMnw1OutputFile>;
@@ -5012,6 +5021,8 @@ begin
 end;
 
 procedure TDisImporter.FixElevations;
+const
+  MaxCount = 10;
 var
   LayerIndex: Integer;
   ModelMuseLayIndex: Integer;
@@ -5022,6 +5033,7 @@ var
   TopElev: Double;
   BotElev: Double;
   Thickness: Double;
+  Count: Integer;
   procedure ConvertElevToVariable(ModelMuseLayIndex: integer);
   var
     RowIndex: integer;
@@ -5278,13 +5290,15 @@ begin
       end;
     end;
   end;
-  MinThickness := MinThickness /(NLAY + 1);
+  MinThickness := MinThickness /Sqr(NLAY + 1);
   if MinThickness = 0 then
   begin
     MinThickness := 1;
   end;
 
+  Count := 0;
   repeat
+    Inc(Count);
     Changed := False;
     for LayerIndex := NLAY - 1 downto 0 do
     begin
@@ -5306,7 +5320,7 @@ begin
         HandleLayerGoingDown(False);
       end;
     end;
-  until not Changed;
+  until (not Changed) or (Count >= MaxCount);
   FHasFixedElevations := True;
 end;
 
@@ -7506,9 +7520,6 @@ begin
   end
   else
   begin
-  {$IFDEF DEBUG}
-    ShowMessage(ALabel);
-  {$ENDIF}
     Assert(False);
   end;
 end;
@@ -13038,7 +13049,7 @@ begin
   result.CreateSfrBoundary;
   FSfrBoundary := result.ModflowSfrBoundary;
   Reach := List[0];
-  FSfrBoundary.SegementNumber := Reach.SegmentNumber;
+  FSfrBoundary.SegmentNumber := Reach.SegmentNumber;
   AssignStartAndEndTimes;
   AssignReachValues(List, Result);
   ImportedElevations.CacheData;
@@ -13063,22 +13074,28 @@ var
   FlowItem: TFlowFileItem;
 begin
   ExternalFlow := FSfrBoundary.ExternalFlow;
+  FlowFileData := ExternalFlow.FlowFileData;
   if Length(Segment.InflowValues) > 0 then
   begin
     ExternalFlow.FlowFileChoice := ffcSpecify;
     ExternalFlow.ReferenceTimeChoice := ffrtStartOfModel;
-    FlowFileData := ExternalFlow.FlowFileData;
-    FlowFileData.Capacity := Length(Segment.InflowValues);
-    for FlowIndex := 0 to Length(Segment.InflowValues) - 1 do
+    if FlowFileData.Count = 0 then
     begin
-      FlowItem := FlowFileData.Add;
-      FlowItem.Time := Segment.InflowValues[FlowIndex].Time;
-      FlowItem.Inflow := Segment.InflowValues[FlowIndex].Inflow;
+      FlowFileData.Capacity := Length(Segment.InflowValues);
+      for FlowIndex := 0 to Length(Segment.InflowValues) - 1 do
+      begin
+        FlowItem := FlowFileData.Add;
+        FlowItem.Time := Segment.InflowValues[FlowIndex].Time;
+        FlowItem.Inflow := Segment.InflowValues[FlowIndex].Inflow;
+      end;
     end;
   end
   else
   begin
-    ExternalFlow.FlowFileChoice := ffcNone;
+    if FlowFileData.Count = 0 then
+    begin
+      ExternalFlow.FlowFileChoice := ffcNone;
+    end;
   end;
 end;
 
@@ -13088,10 +13105,54 @@ var
   NUMVAL: Integer;
   ValIndex: Integer;
   IUNIT: Integer;
+  ParamIndex: Integer;
+  Param: TListParameterObject;
+  InstIndex: Integer;
+  Instance: TSfrInstanceObject;
+  SegIndex: Integer;
+  ASeg: TSegment;
 begin
   Read(FImporter.FFile, SEGNUM);
-  FCurrentSegment := FCurrentSegments[SEGNUM-1];
-  Assert(FCurrentSegment.NSEG = SEGNUM);
+  if NP > 0 then
+  begin
+    FCurrentSegment := nil;
+    for ParamIndex := 0 to FParameters.ArrayLength - 1 do
+    begin
+      Param := FParameters[ParamIndex];
+      for InstIndex := 0 to Param.ArrayLength - 1 do
+      begin
+        Instance := Param.Instances[InstIndex] as TSfrInstanceObject;
+        for SegIndex := 0 to Instance.Segments.ArrayLength - 1 do
+        begin
+          ASeg := Instance.Segments[SegIndex];
+          if ASeg.NSEG = SEGNUM then
+          begin
+            FCurrentSegment := ASeg;
+            break;
+          end;
+        end;
+        if FCurrentSegment <> nil then
+        begin
+          break;
+        end;
+      end;
+      if FCurrentSegment <> nil then
+      begin
+        break;
+      end;
+    end;
+    if FCurrentSegment = nil then
+    begin
+      FCurrentSegment := FCurrentSegments[SEGNUM-1];
+      Assert(FCurrentSegment.NSEG = SEGNUM);
+    end;
+    Assert(FCurrentSegment <> nil);
+  end
+  else
+  begin
+    FCurrentSegment := FCurrentSegments[SEGNUM-1];
+    Assert(FCurrentSegment.NSEG = SEGNUM);
+  end;
   Read(FImporter.FFile, NUMVAL);
   SetLength(FCurrentSegment.InflowValues, NUMVAL);
   // reading IUNIT here isn't required. In the future, if another variable
@@ -13139,22 +13200,32 @@ begin
         begin
           Instance := Param.GetInstanceByName(InstanceName)
             as TSfrInstanceObject;
+          if Instance <> nil then
+          begin
+            frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
+              StrIncorrectParameter,
+              Format(StrTheParameterInstan, [InstanceName, Param.PARNAM]));
+
+          end;
         end;
-        Segment := Instance.GetSegByNumber(PriorSegNumber);
-        if (Segment <> nil) then
+        if Instance <> nil then
         begin
-          AssignParamIcalcValues(IcalcIndex, Segment);
-          ICalcItem := FSfrBoundary.ParamIcalc.Items[IcalcIndex];
-          ICalcItem.Param := Param.PARNAM;
-          ICalcItem.ParamInstance := DefaultInstanceName(StressPeriodIndex);
-          AssignFlowTableValues(IcalcIndex, Segment);
-          AssignSegmentFlowValues(IcalcIndex, Segment);
-          AssignChannelValues(IcalcIndex, StressPeriodIndex, Segment);
-          AssignEquationValues(IcalcIndex, Segment);
-          AssignUpstreamValues(IcalcIndex, StressPeriodIndex, Segment);
-          AssignDownstreamValues(Segment, StressPeriodIndex, IcalcIndex);
-          AssignUnsatValues(Segment, StressPeriodIndex, IcalcIndex);
-          AssignExternalFlows(Segment);
+          Segment := Instance.GetSegByNumber(PriorSegNumber);
+          if (Segment <> nil) then
+          begin
+            AssignParamIcalcValues(IcalcIndex, Segment);
+            ICalcItem := FSfrBoundary.ParamIcalc.Items[IcalcIndex];
+            ICalcItem.Param := Param.PARNAM;
+            ICalcItem.ParamInstance := DefaultInstanceName(StressPeriodIndex);
+            AssignFlowTableValues(IcalcIndex, Segment);
+            AssignSegmentFlowValues(IcalcIndex, Segment);
+            AssignChannelValues(IcalcIndex, StressPeriodIndex, Segment);
+            AssignEquationValues(IcalcIndex, Segment);
+            AssignUpstreamValues(IcalcIndex, StressPeriodIndex, Segment);
+            AssignDownstreamValues(Segment, StressPeriodIndex, IcalcIndex);
+            AssignUnsatValues(Segment, StressPeriodIndex, IcalcIndex);
+            AssignExternalFlows(Segment);
+          end;
         end;
       end;
     end;
@@ -13232,7 +13303,7 @@ begin
     begin
       Inc(IcalcIndex);
       SegmentArray := FStressPeriodSegments[StressPeriodIndex];
-      Segment := SegmentArray[FSfrBoundary.SegementNumber - 1];
+      Segment := SegmentArray[FSfrBoundary.SegmentNumber - 1];
       AssignParamIcalcValues(IcalcIndex, Segment);
       AssignFlowTableValues(IcalcIndex, Segment);
       AssignSegmentFlowValues(IcalcIndex, Segment);
@@ -26797,6 +26868,8 @@ var
   AParam: TParamInstance;
   StrInstance: TStrInstanceObject;
   ReachIndex: Integer;
+  ObjectIndex: Integer;
+  StartTimes: TList<double>;
 //  ErrorFound: boolean;
   procedure AddSegment;
   var
@@ -26871,355 +26944,409 @@ var
     PointIndex: Integer;
     SectionLength: double;
     TributaryNumber: integer;
+    SegmentNumber: Integer;
+    ScreenObjects: TList<TScreenObject>;
+    STime: Double;
+    SIndex: Integer;
+    StressPeriod: integer;
   begin
     Grid := frmGoPhast.PhastModel.ModflowGrid;
     UndoCreateScreenObject := nil;
     ChannelReachIndex := -1;
+    ScreenObjects := TList<TScreenObject>.Create;
     // loop over segments in all stress periods
-    for ScreenObjectIndex := 0 to Segments.Count - 1 do
-    begin
-      SegmentList := Segments[ScreenObjectIndex];
-      ReachList := SegmentList[0];
-
-      ScreenObject := TScreenObject.CreateWithViewDirection(FModel, vdTop,
-        UndoCreateScreenObject, False);
-
-      ScreenObject.Name := 'Str_Segment_' + IntToStr(ScreenObjectIndex+1);
-      FModel.AddScreenObject(ScreenObject);
-      ScreenObject.ElevationCount := ecOne;
-      ScreenObject.SetValuesOfIntersectedCells := True;
-      ScreenObject.EvaluatedAt := eaBlocks;
-      ScreenObject.Visible := False;
-      ScreenObject.Capacity := ReachList.Count;
-
-      ImportedElevations := ScreenObject.ImportedSectionElevations;
-      ImportedElevations.DataType := rdtDouble;
-      ImportedElevations.Count := ReachList.Count;
-      PriorBoundary := nil;
-      for Index := 0 to ReachList.Count - 1 do
+    try
+      for ScreenObjectIndex := 0 to Segments.Count - 1 do
       begin
-        Boundary := ReachList[Index];
-        NeighborPoints := False;
-        if PriorBoundary <> nil then
-        begin
-          if Max(Abs(PriorBoundary.Row - Boundary.Row),
-            Abs(PriorBoundary.Column - Boundary.Column)) = 1 then
-          begin
-            NeighborPoints := True;
-          end;
-        end;
+        SegmentList := Segments[ScreenObjectIndex];
+        ReachList := SegmentList[0];
+        SegmentNumber := ReachList[0].SegmentNumber;
+        StressPeriod :=  ReachList.StressPeriod;
 
-        if NeighborPoints then
+        ScreenObject := TScreenObject.CreateWithViewDirection(FModel, vdTop,
+          UndoCreateScreenObject, False);
+        ScreenObjects.Add(ScreenObject);
+
+        ScreenObject.Name := 'Str_Segment_' + IntToStr(ObjectIndex);
+        Inc(ObjectIndex);
+        FModel.AddScreenObject(ScreenObject);
+        ScreenObject.ElevationCount := ecOne;
+        ScreenObject.SetValuesOfIntersectedCells := True;
+        ScreenObject.EvaluatedAt := eaBlocks;
+        ScreenObject.Visible := False;
+        ScreenObject.Capacity := ReachList.Count;
+
+        ImportedElevations := ScreenObject.ImportedSectionElevations;
+        ImportedElevations.DataType := rdtDouble;
+        ImportedElevations.Count := ReachList.Count;
+        PriorBoundary := nil;
+        for Index := 0 to ReachList.Count - 1 do
         begin
-          if (Boundary.Row <> PriorBoundary.Row) then
+          Boundary := ReachList[Index];
+          NeighborPoints := False;
+          if PriorBoundary <> nil then
           begin
-            if (Boundary.Column <> PriorBoundary.Column) then
+            if Max(Abs(PriorBoundary.Row - Boundary.Row),
+              Abs(PriorBoundary.Column - Boundary.Column)) = 1 then
             begin
-              APoint := FImporter.CornerPoints[Min(Boundary.Row, PriorBoundary.Row),
-                Min(Boundary.Column, PriorBoundary.Column)]
+              NeighborPoints := True;
+            end;
+          end;
+
+          if NeighborPoints then
+          begin
+            if (Boundary.Row <> PriorBoundary.Row) then
+            begin
+              if (Boundary.Column <> PriorBoundary.Column) then
+              begin
+                APoint := FImporter.CornerPoints[Min(Boundary.Row, PriorBoundary.Row),
+                  Min(Boundary.Column, PriorBoundary.Column)]
+              end
+              else
+              begin
+                APoint := Grid.TwoDRowEdgeCenter(Boundary.Column-1,
+                  Min(Boundary.Row, PriorBoundary.Row));
+              end;
             end
             else
             begin
-              APoint := Grid.TwoDRowEdgeCenter(Boundary.Column-1,
-                Min(Boundary.Row, PriorBoundary.Row));
+              Assert((Boundary.Column <> PriorBoundary.Column));
+              APoint := Grid.TwoDColumnEdgeCenter(Min(Boundary.Column, PriorBoundary.Column),
+                Boundary.Row-1);
             end;
+            ScreenObject.AddPoint(APoint, False);
+            ScreenObject.AddPoint(APoint, True);
+            ScreenObject.AddPoint(FImporter.CenterPoints[Boundary.Row - 1,
+              Boundary.Column - 1], False);
           end
           else
           begin
-            Assert((Boundary.Column <> PriorBoundary.Column));
-            APoint := Grid.TwoDColumnEdgeCenter(Min(Boundary.Column, PriorBoundary.Column),
-              Boundary.Row-1);
+            ScreenObject.AddPoint(FImporter.CenterPoints[Boundary.Row - 1,
+              Boundary.Column - 1], True);
           end;
-          ScreenObject.AddPoint(APoint, False);
-          ScreenObject.AddPoint(APoint, True);
-          ScreenObject.AddPoint(FImporter.CenterPoints[Boundary.Row - 1,
-            Boundary.Column - 1], False);
-        end
-        else
-        begin
-          ScreenObject.AddPoint(FImporter.CenterPoints[Boundary.Row - 1,
-            Boundary.Column - 1], True);
+
+          ImportedElevations.RealValues[Index] :=
+            FGrid.LayerCenter(Boundary.Column - 1, Boundary.Row - 1,
+            FModel.ModflowLayerToDataSetLayer(Boundary.Layer));
+          PriorBoundary := Boundary;
         end;
+        ScreenObject.ElevationFormula := rsObjectImportedValuesR
+          + '("' + StrImportedElevations + '")';
+        ImportedElevations.CacheData;
+        ScreenObject.SectionStarts.CacheData;
 
-        ImportedElevations.RealValues[Index] :=
-          FGrid.LayerCenter(Boundary.Column - 1, Boundary.Row - 1,
-          FModel.ModflowLayerToDataSetLayer(Boundary.Layer));
-        PriorBoundary := Boundary;
-      end;
-      ScreenObject.ElevationFormula := rsObjectImportedValuesR
-        + '("' + StrImportedElevations + '")';
-      ImportedElevations.CacheData;
-      ScreenObject.SectionStarts.CacheData;
+        ScreenObject.CreateStrBoundary;
+        StrBoundary := ScreenObject.ModflowStrBoundary;
+        StrBoundary.SegmentNumber := ScreenObjectIndex + 1;
+        ScreenObject.Comment := Format(StrOriginalSegmentNum,
+          [SegmentNumber, StressPeriod+1]);
 
-      ScreenObject.CreateStrBoundary;
-      StrBoundary := ScreenObject.ModflowStrBoundary;
-      StrBoundary.SegmentNumber := ScreenObjectIndex + 1;
-
-      // loop over stress periods.
-      for StressPeriodIndex := 0 to SegmentList.Count - 1 do
-      begin
-        ScreenObjectsInStressPeriod :=
-          FScreenObjectsInAllStressPeriod[StressPeriodIndex];
-        ScreenObjectsInStressPeriod.Add(ScreenObject);
-        ReachList := SegmentList[StressPeriodIndex];
-
-        StageItem := ScreenObject.ImportedValues.Add as TValueArrayItem;
-        CondItem := ScreenObject.ImportedValues.Add as TValueArrayItem;
-        SbotItem := ScreenObject.ImportedValues.Add as TValueArrayItem;
-        StopItem := ScreenObject.ImportedValues.Add as TValueArrayItem;
-
-        StageItem.Name := 'Stage_SP_' + IntToStr(ReachList.StressPeriod+1);
-        CondItem.Name := 'Cond_SP_' + IntToStr(ReachList.StressPeriod+1);
-        SbotItem.Name := 'Sbot_SP_' + IntToStr(ReachList.StressPeriod+1);
-        StopItem.Name := 'Stop_SP_' + IntToStr(ReachList.StressPeriod+1);
-
-        StageItem.Values.DataType := rdtDouble;
-        CondItem.Values.DataType := rdtDouble;
-        SbotItem.Values.DataType := rdtDouble;
-        StopItem.Values.DataType := rdtDouble;
-
-        StageItem.Values.Count := ReachList.Count;
-        CondItem.Values.Count := ReachList.Count;
-        SbotItem.Values.Count := ReachList.Count;
-        StopItem.Values.Count := ReachList.Count;
-
-        WidthItem := nil;
-        SlopeItem := nil;
-        RoughnessItem := nil;
-        if ICALC > 0 then
+        for StressPeriodIndex := 0 to SegmentList.Count - 1 do
         begin
-          WidthItem := ScreenObject.ImportedValues.Add as TValueArrayItem;
-          SlopeItem := ScreenObject.ImportedValues.Add as TValueArrayItem;
-          RoughnessItem := ScreenObject.ImportedValues.Add as TValueArrayItem;
-
-          WidthItem.Name := 'Width_SP_' + IntToStr(ReachList.StressPeriod+1);
-          SlopeItem.Name := 'Slope_SP_' + IntToStr(ReachList.StressPeriod+1);
-          RoughnessItem.Name :=
-            'Roughness_SP_' + IntToStr(ReachList.StressPeriod+1);
-
-          WidthItem.Values.DataType := rdtDouble;
-          SlopeItem.Values.DataType := rdtDouble;
-          RoughnessItem.Values.DataType := rdtDouble;
-
-          WidthItem.Values.Count := ReachList.Count;
-          SlopeItem.Values.Count := ReachList.Count;
-          RoughnessItem.Values.Count := ReachList.Count;
-        end;
-
-        Flow := 0;
-
-        ChannelCharStart := 0;
-        if ICALC > 0 then
-        begin
-          ChannelCharStart :=
-            SegmentsNumbers[StressPeriodIndex][ReachList.SegmentNumber-1];
-        end;
-
-        for ReachIndex := 0 to ReachList.Count - 1 do
-        begin
-          AReach := ReachList[ReachIndex];
-          if ReachIndex = 0 then
+          ReachList := SegmentList[StressPeriodIndex];
+          STime := FModel.ModflowStressPeriods[ReachList.StressPeriod].StartTime;
+          SIndex := StartTimes.IndexOf(STime);
+          Assert(SIndex >= 0);
+          ScreenObjectsInStressPeriod :=
+            FScreenObjectsInAllStressPeriod[SIndex];
+          while ScreenObjectsInStressPeriod.Count < SegmentNumber do
           begin
-            Flow := AReach.Flow;
+            ScreenObjectsInStressPeriod.Add(nil);
           end;
-          StageItem.Values.RealValues[ReachIndex] := AReach.Stage;
+          ScreenObjectsInStressPeriod[SegmentNumber-1] := ScreenObject;
+        end;
+//
+        for StressPeriodIndex := 0 to SegmentList.Count - 1 do
+        begin
+          ReachList := SegmentList[StressPeriodIndex];
 
-          if ScreenObject.SectionLength[ReachIndex] = 1 then
+          StageItem := ScreenObject.ImportedValues.Add as TValueArrayItem;
+          CondItem := ScreenObject.ImportedValues.Add as TValueArrayItem;
+          SbotItem := ScreenObject.ImportedValues.Add as TValueArrayItem;
+          StopItem := ScreenObject.ImportedValues.Add as TValueArrayItem;
+
+          StageItem.Name := 'Stage_SP_' + IntToStr(ReachList.StressPeriod+1);
+          CondItem.Name := 'Cond_SP_' + IntToStr(ReachList.StressPeriod+1);
+          SbotItem.Name := 'Sbot_SP_' + IntToStr(ReachList.StressPeriod+1);
+          StopItem.Name := 'Stop_SP_' + IntToStr(ReachList.StressPeriod+1);
+
+          StageItem.Values.DataType := rdtDouble;
+          CondItem.Values.DataType := rdtDouble;
+          SbotItem.Values.DataType := rdtDouble;
+          StopItem.Values.DataType := rdtDouble;
+
+          StageItem.Values.Count := ReachList.Count;
+          CondItem.Values.Count := ReachList.Count;
+          SbotItem.Values.Count := ReachList.Count;
+          StopItem.Values.Count := ReachList.Count;
+
+          WidthItem := nil;
+          SlopeItem := nil;
+          RoughnessItem := nil;
+          if ICALC > 0 then
           begin
-            CondItem.Values.RealValues[ReachIndex] := AReach.Condfact;
-          end
-          else
+            WidthItem := ScreenObject.ImportedValues.Add as TValueArrayItem;
+            SlopeItem := ScreenObject.ImportedValues.Add as TValueArrayItem;
+            RoughnessItem := ScreenObject.ImportedValues.Add as TValueArrayItem;
+
+            WidthItem.Name := 'Width_SP_' + IntToStr(ReachList.StressPeriod+1);
+            SlopeItem.Name := 'Slope_SP_' + IntToStr(ReachList.StressPeriod+1);
+            RoughnessItem.Name :=
+              'Roughness_SP_' + IntToStr(ReachList.StressPeriod+1);
+
+            WidthItem.Values.DataType := rdtDouble;
+            SlopeItem.Values.DataType := rdtDouble;
+            RoughnessItem.Values.DataType := rdtDouble;
+
+            WidthItem.Values.Count := ReachList.Count;
+            SlopeItem.Values.Count := ReachList.Count;
+            RoughnessItem.Values.Count := ReachList.Count;
+          end;
+
+          Flow := 0;
+
+          ChannelCharStart := 0;
+          if ICALC > 0 then
           begin
-            SectionLength := 0;
-            PriorPoint := ScreenObject.Points[ScreenObject.SectionStart[ReachIndex]];
-            for PointIndex := ScreenObject.SectionStart[ReachIndex]+1
-              to ScreenObject.SectionEnd[ReachIndex] do
+            ChannelCharStart :=
+              SegmentsNumbers[StressPeriodIndex][ReachList.SegmentNumber-1];
+          end;
+
+          for ReachIndex := 0 to ReachList.Count - 1 do
+          begin
+            AReach := ReachList[ReachIndex];
+            if ReachIndex = 0 then
             begin
-              APoint := ScreenObject.Points[PointIndex];
-              SectionLength := SectionLength + Distance(PriorPoint,APoint);
-              PriorPoint := APoint;
+              Flow := AReach.Flow;
             end;
-            CondItem.Values.RealValues[ReachIndex] := AReach.Condfact / SectionLength;
+            StageItem.Values.RealValues[ReachIndex] := AReach.Stage;
+
+            if ScreenObject.SectionLength[ReachIndex] = 1 then
+            begin
+              CondItem.Values.RealValues[ReachIndex] := AReach.Condfact;
+            end
+            else
+            begin
+              SectionLength := 0;
+              PriorPoint := ScreenObject.Points[ScreenObject.SectionStart[ReachIndex]];
+              for PointIndex := ScreenObject.SectionStart[ReachIndex]+1
+                to ScreenObject.SectionEnd[ReachIndex] do
+              begin
+                APoint := ScreenObject.Points[PointIndex];
+                SectionLength := SectionLength + Distance(PriorPoint,APoint);
+                PriorPoint := APoint;
+              end;
+              CondItem.Values.RealValues[ReachIndex] := AReach.Condfact / SectionLength;
+            end;
+
+            SbotItem.Values.RealValues[ReachIndex] := AReach.Sbot;
+            StopItem.Values.RealValues[ReachIndex] := AReach.Stop;
+
+            if ICALC > 0 then
+            begin
+              ChannelCharacteristics :=
+                FChannelCharacteristicsStressPeriodArray[StressPeriodIndex]
+                [ReachIndex + ChannelCharStart];
+              WidthItem.Values.RealValues[ReachIndex] :=
+                ChannelCharacteristics.Width;
+              SlopeItem.Values.RealValues[ReachIndex] :=
+                ChannelCharacteristics.Slope;
+              RoughnessItem.Values.RealValues[ReachIndex] :=
+                ChannelCharacteristics.Roughness;
+            end;
           end;
 
-          SbotItem.Values.RealValues[ReachIndex] := AReach.Sbot;
-          StopItem.Values.RealValues[ReachIndex] := AReach.Stop;
+          if ReachList.ParameterName = '' then
+          begin
+            StrItem := StrBoundary.Values.Add as TStrItem;
+          end
+          else
+          begin
+            if StrBoundary.Parameters.Count = 0 then
+            begin
+              ParamItem := StrBoundary.Parameters.Add;
+              ParamItem.Param.ParamName := ReachList.ParameterName;
+            end
+            else
+            begin
+              ParamItem := StrBoundary.Parameters[0];
+            end;
+            StrItem := ParamItem.Param.Add as TStrItem;
+          end;
+
+
+          StrItem.StartTime := ReachList.StartTime;
+          StrItem.EndTime := ReachList.EndTime;
+
+          if StageItem.Values.UniformValues then
+          begin
+            StrItem.Stage := FortranFloatToStr(StageItem.Values.RealValues[0]);
+            StageItem.Free;
+          end
+          else
+          begin
+            StrItem.Stage := rsObjectImportedValuesR
+             + '("' + StageItem.Name + '")';
+          end;
+
+          if CondItem.Values.UniformValues then
+          begin
+            StrItem.Conductance := FortranFloatToStr(CondItem.Values.RealValues[0]);
+            CondItem.Free;
+          end
+          else
+          begin
+            StrItem.Conductance := rsObjectImportedValuesR
+             + '("' + CondItem.Name + '")';
+          end;
+
+          if StopItem.Values.UniformValues then
+          begin
+            StrItem.BedTop := FortranFloatToStr(StopItem.Values.RealValues[0]);
+            StopItem.Free;
+          end
+          else
+          begin
+            StrItem.BedTop := rsObjectImportedValuesR
+             + '("' + StopItem.Name + '")';
+          end;
+
+          if SbotItem.Values.UniformValues then
+          begin
+            StrItem.BedBottom := FortranFloatToStr(SbotItem.Values.RealValues[0]);
+            SbotItem.Free;
+          end
+          else
+          begin
+            StrItem.BedBottom := rsObjectImportedValuesR
+             + '("' + SbotItem.Name + '")';
+          end;
+
+          // Flow only applies to the first reach.
+          StrItem.Flow := FortranFloatToStr(Flow);
 
           if ICALC > 0 then
           begin
-            ChannelCharacteristics :=
-              FChannelCharacteristicsStressPeriodArray[StressPeriodIndex]
-              [ReachIndex + ChannelCharStart];
-            WidthItem.Values.RealValues[ReachIndex] :=
-              ChannelCharacteristics.Width;
-            SlopeItem.Values.RealValues[ReachIndex] :=
-              ChannelCharacteristics.Slope;
-            RoughnessItem.Values.RealValues[ReachIndex] :=
-              ChannelCharacteristics.Roughness;
-          end;
-        end;
-
-        if ReachList.ParameterName = '' then
-        begin
-          StrItem := StrBoundary.Values.Add as TStrItem;
-        end
-        else
-        begin
-          if StrBoundary.Parameters.Count = 0 then
-          begin
-            ParamItem := StrBoundary.Parameters.Add;
-            ParamItem.Param.ParamName := ReachList.ParameterName;
-          end
-          else
-          begin
-            ParamItem := StrBoundary.Parameters[0];
-          end;
-          StrItem := ParamItem.Param.Add as TStrItem;
-        end;
-
-
-        StrItem.StartTime := ReachList.StartTime;
-        StrItem.EndTime := ReachList.EndTime;
-
-        if StageItem.Values.UniformValues then
-        begin
-          StrItem.Stage := FortranFloatToStr(StageItem.Values.RealValues[0]);
-          StageItem.Free;
-        end
-        else
-        begin
-          StrItem.Stage := rsObjectImportedValuesR
-           + '("' + StageItem.Name + '")';
-        end;
-
-        if CondItem.Values.UniformValues then
-        begin
-          StrItem.Conductance := FortranFloatToStr(CondItem.Values.RealValues[0]);
-          CondItem.Free;
-        end
-        else
-        begin
-          StrItem.Conductance := rsObjectImportedValuesR
-           + '("' + CondItem.Name + '")';
-        end;
-
-        if StopItem.Values.UniformValues then
-        begin
-          StrItem.BedTop := FortranFloatToStr(StopItem.Values.RealValues[0]);
-          StopItem.Free;
-        end
-        else
-        begin
-          StrItem.BedTop := rsObjectImportedValuesR
-           + '("' + StopItem.Name + '")';
-        end;
-
-        if SbotItem.Values.UniformValues then
-        begin
-          StrItem.BedBottom := FortranFloatToStr(SbotItem.Values.RealValues[0]);
-          SbotItem.Free;
-        end
-        else
-        begin
-          StrItem.BedBottom := rsObjectImportedValuesR
-           + '("' + SbotItem.Name + '")';
-        end;
-
-        // Flow only applies to the first reach.
-        StrItem.Flow := FortranFloatToStr(Flow);
-
-        if ICALC > 0 then
-        begin
-          if WidthItem.Values.UniformValues then
-          begin
-            StrItem.Width := FortranFloatToStr(WidthItem.Values.RealValues[0]);
-            WidthItem.Free;
-          end
-          else
-          begin
-            StrItem.Width := rsObjectImportedValuesR
-             + '("' + WidthItem.Name + '")';
-          end;
-
-          if SlopeItem.Values.UniformValues then
-          begin
-            StrItem.Slope := FortranFloatToStr(SlopeItem.Values.RealValues[0]);
-            SlopeItem.Free;
-          end
-          else
-          begin
-            StrItem.Slope := rsObjectImportedValuesR
-             + '("' + SlopeItem.Name + '")';
-          end;
-
-          if RoughnessItem.Values.UniformValues then
-          begin
-            StrItem.Roughness := FortranFloatToStr(RoughnessItem.Values.RealValues[0]);
-            RoughnessItem.Free;
-          end
-          else
-          begin
-            StrItem.Roughness := rsObjectImportedValuesR
-             + '("' + RoughnessItem.Name + '")';
-          end;
-        end;
-
-        if NTRIB > 0 then
-        begin
-          Tribs := FTributariesStressPeriodArray
-            [StressPeriodIndex][ReachList.SegmentNumber-1];
-          for TribIndex := 0 to Length(Tribs.Itrib) - 1 do
-          begin
-            if Tribs.Itrib[TribIndex] > 0 then
+            if WidthItem.Values.UniformValues then
             begin
-              TributaryNumber := Tribs.Itrib[TribIndex];
-              if TributaryNumber-1 < ScreenObjectIndex then
-              begin
-                TributaryObject := ScreenObjectsInStressPeriod
-                  [TributaryNumber-1];
-              end
-              else
-              begin
-//                ErrorFound := True;
-                frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, StrInvalidStreamTribu,
-                  Format(Str0d1d2d, [ScreenObjectIndex+1, TributaryNumber, StressPeriodIndex+1]));
-              end;
-              if NP = 0 then
-              begin
-                OtherStrItem := TributaryObject.ModflowStrBoundary.
-                  Values[StrBoundary.Values.Count-1] as TStrItem;
-              end
-              else
-              begin
-                OtherStrItem := TributaryObject.ModflowStrBoundary.Parameters[0].Param
-                  [StrBoundary.Parameters[0].Param.Count-1] as TStrItem;
-              end;
-              OtherStrItem.OutflowSegment := StrBoundary.SegmentNumber;
+              StrItem.Width := FortranFloatToStr(WidthItem.Values.RealValues[0]);
+              WidthItem.Free;
             end
             else
             begin
-              break;
+              StrItem.Width := rsObjectImportedValuesR
+               + '("' + WidthItem.Name + '")';
+            end;
+
+            if SlopeItem.Values.UniformValues then
+            begin
+              StrItem.Slope := FortranFloatToStr(SlopeItem.Values.RealValues[0]);
+              SlopeItem.Free;
+            end
+            else
+            begin
+              StrItem.Slope := rsObjectImportedValuesR
+               + '("' + SlopeItem.Name + '")';
+            end;
+
+            if RoughnessItem.Values.UniformValues then
+            begin
+              StrItem.Roughness := FortranFloatToStr(RoughnessItem.Values.RealValues[0]);
+              RoughnessItem.Free;
+            end
+            else
+            begin
+              StrItem.Roughness := rsObjectImportedValuesR
+               + '("' + RoughnessItem.Name + '")';
             end;
           end;
         end;
 
-        if NDIV > 0 then
+      end;
+
+        // loop over stress periods.
+      for ScreenObjectIndex := 0 to Segments.Count - 1 do
+      begin
+        ScreenObject := ScreenObjects[ScreenObjectIndex];
+        StrBoundary := ScreenObject.ModflowStrBoundary;
+        SegmentList := Segments[ScreenObjectIndex];
+        for StressPeriodIndex := 0 to SegmentList.Count - 1 do
         begin
-          Diversion := FDiversionStressPeriodArray
-            [StressPeriodIndex][ReachList.SegmentNumber-1];
-          if Diversion.Iupseg > 0 then
+          ReachList := SegmentList[StressPeriodIndex];
+          if NTRIB > 0 then
           begin
-            DiversionObject := ScreenObjectsInStressPeriod[Diversion.Iupseg-1];
-            StrItem.DiversionSegment :=
-              DiversionObject.ModflowStrBoundary.SegmentNumber;
+            STime := FModel.ModflowStressPeriods[ReachList.StressPeriod].StartTime;
+            SIndex := StartTimes.IndexOf(STime);
+            Assert(SIndex >= 0);
+            ScreenObjectsInStressPeriod :=
+              FScreenObjectsInAllStressPeriod[SIndex];
+            Tribs := FTributariesStressPeriodArray
+              [SIndex][ReachList.SegmentNumber-1];
+            for TribIndex := 0 to Length(Tribs.Itrib) - 1 do
+            begin
+              if Tribs.Itrib[TribIndex] > 0 then
+              begin
+                TributaryNumber := Tribs.Itrib[TribIndex];
+                if TributaryNumber-1 < ScreenObjectIndex then
+                begin
+                  TributaryObject := ScreenObjectsInStressPeriod
+                    [TributaryNumber-1];
+                  Assert(TributaryObject <> nil);
+                end
+                else
+                begin
+  //                ErrorFound := True;
+                  frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, StrInvalidStreamTribu,
+                    Format(Str0d1d2d, [ScreenObjectIndex+1, TributaryNumber, StressPeriodIndex+1]));
+                  TributaryObject := nil;
+                end;
+                if TributaryObject <> nil then
+                begin
+                  if NP = 0 then
+                  begin
+                    OtherStrItem := TributaryObject.ModflowStrBoundary.
+                      Values.GetItemByStartTime(STime) as TStrItem;
+//                    OtherStrItem := TributaryObject.ModflowStrBoundary.
+//                      Values[StrBoundary.Values.Count-1] as TStrItem;
+                  end
+                  else
+                  begin
+                    OtherStrItem := TributaryObject.ModflowStrBoundary.
+                      Parameters[0].Param.GetItemByStartTime(STime) as TStrItem;
+//                      [StrBoundary.Parameters[0].Param.Count-1] as TStrItem;
+                  end;
+                  Assert(OtherStrItem <> nil);
+                  OtherStrItem.OutflowSegment := StrBoundary.SegmentNumber;
+                end;
+              end
+              else
+              begin
+                break;
+              end;
+            end;
+          end;
+
+          if NDIV > 0 then
+          begin
+            Diversion := FDiversionStressPeriodArray
+              [StressPeriodIndex][ReachList.SegmentNumber-1];
+            if Diversion.Iupseg > 0 then
+            begin
+              DiversionObject := ScreenObjectsInStressPeriod[Diversion.Iupseg-1];
+              StrItem.DiversionSegment :=
+                DiversionObject.ModflowStrBoundary.SegmentNumber;
+            end;
           end;
         end;
-      end;
-    end
+      end
+    finally
+      ScreenObjects.Free;
+    end;
   end;
   function SetStartAndEndTime: boolean;
   var
     InnerIndex: integer;
+    PriorSegNumbers: TGenericIntegerList;
   begin
     // initialize the start and end times for when the boundary will be
     // applied.
@@ -27232,6 +27359,8 @@ var
     FScreenObjectsInAllStressPeriod.Add(TList<TScreenObject>.Create);
     if StressPeriod.Reuse then
     begin
+      PriorSegNumbers := SegmentsNumbers[SegmentsNumbers.Count-2];
+      SegNumb.AddRange(PriorSegNumbers);
       Result := False;
       Exit;
     end
@@ -27255,12 +27384,12 @@ var
     end;
   end;
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(frmGoPhast.PhastModel, StrInvalidStreamTribu);
   if (FCurrentStressPeriod < 0) or
     (FCurrentStressPeriod < FStressPeriods.ArrayLength -1) then
   begin
     Exit;
   end;
+  frmErrorsAndWarnings.RemoveErrorGroup(frmGoPhast.PhastModel, StrInvalidStreamTribu);
   inherited;
   FStrPackage := FModel.ModflowPackages.StrPackage;
   FStrPackage.IsSelected := True;
@@ -27269,8 +27398,10 @@ begin
   FStrPackage.CalculateStage := ICALC > 0;
   SetLengthAndTimeUnit;
 
+  ObjectIndex := 1;
   SegmentsNumbers := TListOfTIntegerList.Create;
   Segments := TSegmentListList.Create;
+  StartTimes := TList<double>.Create;
   try
     if NP = 0 then
     {$REGION 'MyRegion'}
@@ -27282,6 +27413,7 @@ begin
         begin
           Continue;
         end;
+        StartTimes.Add(StartTime);
 
         ReachList := nil;
         PriorSegment := 0;
@@ -27322,6 +27454,7 @@ begin
         begin
           Continue;
         end;
+        StartTimes.Add(StartTime);
 //        // initialize the start and end times for when the boundary will be
 //        // applied.
 //        StartTime := FModel.ModflowStressPeriods[StressPeriodIndex].StartTime;
@@ -27397,7 +27530,8 @@ begin
     end;
   finally
     SegmentsNumbers.Free;
-    Segments.Free
+    Segments.Free;
+    StartTimes.Free;
   end;
   if FObsImporter <> nil then
   begin
@@ -27845,7 +27979,8 @@ end;
 function TStrLocationObject.LocationsMatch(AReach: TStrLocationObject): Boolean;
 begin
   result := (Row = AReach.Row) and (Column = AReach.Column)
-    and (Layer = AReach.Layer) and (ParameterName = AReach.ParameterName);
+    and (Layer = AReach.Layer) and (SegmentNumber = AReach.SegmentNumber)
+    and (ParameterName = AReach.ParameterName);
 end;
 
 { TStrObsImporter }
@@ -29206,8 +29341,12 @@ var
       ObsItem.ObsType := sotBaseFlow;
     end;
     ObsItem.ObservationReach := SwrObs.IOBSLOC;
-    ObsItem.ConnectedReach := SwrObs.IOBSLOC2;
+    ObsItem.ConnectedReachOrStructure := SwrObs.IOBSLOC2;
     ObsItem.ObservationLayer := SwrObs.IOBSLAY;
+    if ObsItem.ObsType = sotStructure then
+    begin
+      ObsItem.StructureName := AStructure.Name;
+    end;
   end;
 begin
   Observations := FModel.SwrObservations;
@@ -30961,14 +31100,7 @@ begin
       SetLength(FEvap, FModel.ModflowStressPeriods.Count);
     end;
     SetLength(FEvap[FCurrentStressPeriod], FGrid.RowCount, FGrid.ColumnCount);
-    try
     Read2DRealArray(FEvap[FCurrentStressPeriod]);
-    except
-      begin
-        ShowMessage(IntToStr(FCurrentStressPeriod));
-        raise;
-      end;
-    end;
   end
   else if ID = KLatFlow then
   begin
@@ -31433,7 +31565,7 @@ begin
         UpdateIndex(GeomIndex, ReachItem.FReachGeom_Array);
 
         StartingTime := FModel.ModflowStressPeriods[StressPeriod].StartTime;
-        if StressPeriodIndex+1 < IntList.Count - 1 then
+        if StressPeriodIndex+1 < IntList.Count then
         begin
           EndStressPeriod := IntList[StressPeriodIndex+1];
           EndingTime := FModel.ModflowStressPeriods[EndStressPeriod].StartTime;
@@ -32204,7 +32336,6 @@ begin
   end
   else
   begin
-    ShowMessage(ALabel);
     Assert(False);
   end;
 end;
@@ -32407,7 +32538,7 @@ function TSwrGeomArray.FindByStressPeriod(StressPeriod: Integer): integer;
 var
   Index: Integer;
 begin
-  result := -1;
+  result := 0;
   for Index := 0 to ArrayLength - 1 do
   begin
     if GeomArray[Index].FStartingStressPeriod = StressPeriod then
@@ -33698,6 +33829,13 @@ begin
   result := (Layer = OtherCell.Layer)
     and (Row = OtherCell.Row)
     and (Column = OtherCell.Column);
+end;
+
+{ TMnw1OutputFile }
+
+procedure TMnw1OutputFile.SetFileName(const Value: string);
+begin
+  FFileName := StringReplace(Value, '/', '\', [rfReplaceAll, rfIgnoreCase]);
 end;
 
 end.

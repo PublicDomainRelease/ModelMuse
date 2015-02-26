@@ -8,7 +8,7 @@ interface
 
 uses Classes, Graphics, FastGeo, GR32, ZoomBox2, GoPhastTypes, DataSetUnit,
   ColorSchemes, QuadTreeClass, Generics.Collections, Types, TriPackRoutines,
-  SparseDataSets;
+  SparseDataSets, SparseArrayUnit;
 
 const
   DefaultLineThickness = 2;
@@ -45,7 +45,7 @@ type
     IEND: TIntArray;
     property VertexNumbers[Layer, Row, Col: Integer]: Integer
       read GetVertexNumber write SetVertexNumber;
-    constructor Create;
+    constructor Create(Quantum1, Quantum2, Quantum3: TSPAQuantum);
     destructor Destroy; override;
   end;
 
@@ -209,7 +209,7 @@ implementation
 
 uses Math, RbwParser, BigCanvasMethods, PhastModelUnit,
   SysUtils, frmGoPhastUnit, frmDisplayDataUnit,
-  SutraMeshUnit, SparseArrayUnit, LineStorage, TriCP_Routines, RealListUnit,
+  SutraMeshUnit, LineStorage, TriCP_Routines, RealListUnit,
   CalCompRoutines, SubPolygonUnit;
 
 function Interpolate(const C1, C2 : TPoint2D; Val1, Val2 : TFloat;
@@ -279,8 +279,9 @@ procedure TContourCreator.ConvertAndDrawSegments(Sender: TObject;
 var
   SegmentI: array[0..3] of TPoint;
   Index: Integer;
-  CenterX: Integer;
-  CenterY: Integer;
+  CenterX: Int64;
+  CenterY: Int64;
+  PositionIndex: Int64;
 //  PointX: double;
 //  PointY: double;
 //  Data: Pointer;
@@ -290,20 +291,22 @@ var
 begin
   for Index := 0 to Length(SegmentArray) - 1 do
   begin
-    SegmentI[Index * 2].X := ZoomBox.XCoord(SegmentArray[Index, 1].x);
-    SegmentI[Index * 2].y := ZoomBox.YCoord(SegmentArray[Index, 1].y);
-    SegmentI[Index * 2 + 1].X := ZoomBox.XCoord(SegmentArray[Index, 2].x);
-    SegmentI[Index * 2 + 1].y := ZoomBox.YCoord(SegmentArray[Index, 2].y);
+    PositionIndex := Index;
+    SegmentI[PositionIndex * 2].X := ZoomBox.XCoord(SegmentArray[PositionIndex, 1].x);
+    SegmentI[PositionIndex * 2].y := ZoomBox.YCoord(SegmentArray[PositionIndex, 1].y);
+    SegmentI[PositionIndex * 2 + 1].X := ZoomBox.XCoord(SegmentArray[PositionIndex, 2].x);
+    SegmentI[PositionIndex * 2 + 1].y := ZoomBox.YCoord(SegmentArray[PositionIndex, 2].y);
   end;
   for Index := 0 to Length(SegmentArray) - 1 do
   begin
+    PositionIndex := Index;
     DrawBigPolyline32(Bitmap, Color, LineThickness,
-      SegmentI, True, False, Index * 2, 2);
+      SegmentI, True, False, PositionIndex * 2, 2);
     if LabelLocations <> nil then
     begin
       Assert(Labels <> nil);
-      CenterX := (SegmentI[Index * 2].X + SegmentI[Index * 2 + 1].X) div 2;
-      CenterY := (SegmentI[Index * 2].Y + SegmentI[Index * 2 + 1].Y) div 2;
+      CenterX := (SegmentI[PositionIndex * 2].X + SegmentI[PositionIndex * 2 + 1].X) div 2;
+      CenterY := (SegmentI[PositionIndex * 2].Y + SegmentI[PositionIndex * 2 + 1].Y) div 2;
       if (CenterX > 0) and (CenterY > 0)
         and (CenterX < LabelLocations.XMax) and (CenterY < LabelLocations.YMax) then
       begin
@@ -1727,7 +1730,8 @@ begin
   end;
 
   FTriangulationData.Free;
-  FTriangulationData := TTriangulationData.Create;
+  FTriangulationData := TTriangulationData.Create(GetQuantum(LayerLimit),
+    GetQuantum(RowLimit), GetQuantum(ColumnLimit));
   SetLength(FTriangulationData.Triangulation, MaxLength*6);
   SetLength(FTriangulationData.X, MaxLength);
   SetLength(FTriangulationData.Y, MaxLength);
@@ -2133,6 +2137,7 @@ var
   Element3D: TSutraElement3D;
   Element2D_Index: Integer;
   AnElement2D: TSutraElement2D;
+  LayerCount: Integer;
 //  MovedX: TRealArray;
 //  MovedY: TRealArray;
 //  PIndex: Integer;
@@ -2186,6 +2191,7 @@ begin
 
   LocalMesh := Mesh as TSutraMesh3D;
   MaxLength := 0;
+  LayerCount := 0;
 
   case LocalMesh.MeshType of
     mt2D, mtProfile:
@@ -2201,9 +2207,11 @@ begin
             end;
           else Assert(False);
         end;
+        LayerCount := 1;
       end;
     mt3D:
       begin
+        LayerCount := LocalMesh.LayerCount;
         case DataSet.EvaluatedAt of
           eaBlocks:
             begin
@@ -2212,6 +2220,7 @@ begin
           eaNodes:
             begin
               MaxLength := LocalMesh.Nodes.Count;
+              Inc(LayerCount);
             end;
           else Assert(False);
         end;
@@ -2221,7 +2230,8 @@ begin
   end;
 
   FTriangulationData.Free;
-  FTriangulationData := TTriangulationData.Create;
+  FTriangulationData := TTriangulationData.Create(GetQuantum(LayerCount),
+    GetQuantum(1), GetQuantum(MaxLength));
   SetLength(FTriangulationData.Triangulation, MaxLength*6);
   SetLength(FTriangulationData.X, MaxLength);
   SetLength(FTriangulationData.Y, MaxLength);
@@ -2639,14 +2649,21 @@ var
   MeshOutline: TMeshOutline;
 begin
   Assert(Assigned(Mesh));
-  Assert(Assigned(FMeshOutline));
+//  Assert(Assigned(FMeshOutline));
   Assert(Assigned(FTriangulationData));
   NeighborStart := 0;
   PlotList.Clear;
   CurrentLineList := nil;
   CurrentLine := nil;
 
-  MeshOutline := FMeshOutline as TMeshOutline;
+  if Assigned(FMeshOutline) then
+  begin
+    MeshOutline := FMeshOutline as TMeshOutline;
+  end
+  else
+  begin
+    MeshOutline := nil;
+  end;
 
   ALineList := TLineList.Create;
   PlotList.Add(ALineList);
@@ -2715,7 +2732,7 @@ begin
                 CrossY2 := PointY + Frac2*(Neighbor2Y-PointY);
               end;
 
-              if MeshOutline.PointInside(
+              if (MeshOutline = nil) or MeshOutline.PointInside(
                 (CrossX1+CrossX2)/2, (CrossY1+CrossY2)/2) then
               begin
                 ALine := TLine.Create;
@@ -2952,9 +2969,9 @@ end;
 
 { TTriangulationData }
 
-constructor TTriangulationData.Create;
+constructor TTriangulationData.Create(Quantum1, Quantum2, Quantum3: TSPAQuantum);
 begin
-  FVertexNumbers:= T3DSparseIntegerArray.Create(SPASmall);
+  FVertexNumbers:= T3DSparseIntegerArray.Create(Quantum1, Quantum2, Quantum3);
 end;
 
 destructor TTriangulationData.Destroy;

@@ -22,7 +22,7 @@ type
     jvspWaterPolicy: TJvStandardPage;
     jvspCropConsumptiveUse: TJvStandardPage;
     jvspSurfaceWater: TJvStandardPage;
-    jvspMandatoryPrintFlags: TJvStandardPage;
+    jvspMandatoryPrintFlags1: TJvStandardPage;
     frameFarmBudgetPrintFlag: TframeRadioGrid;
     frameAcreageOptimizationPrintSettings: TframeRadioGrid;
     splttrFarm: TJvNetscapeSplitter;
@@ -59,11 +59,33 @@ type
     lblRecomputeFlows: TLabel;
     comboRecomputeFlows: TComboBox;
     frameRoutingInformationPrintFlag: TframeRadioGrid;
+    cbGroundwaterAllotments: TCheckBox;
+    frameET_PrintFlag: TframeRadioGrid;
+    jvspMandatoryPrintFlags2: TJvStandardPage;
+    cbResetQMax: TCheckBox;
+    jvspMnwNwtOptions: TJvStandardPage;
+    lblMnwExplanation: TLabel;
+    grpMNWOptions: TGroupBox;
+    cbMnwClose: TCheckBox;
+    rdeRPCT: TRbwDataEntry;
+    lblRPCT: TLabel;
+    rdeHPCT: TRbwDataEntry;
+    lblHPCT: TLabel;
+    rdeQClose: TRbwDataEntry;
+    lblQClose: TLabel;
+    grpNwtOptions: TGroupBox;
+    rdePSIRAMPF: TRbwDataEntry;
+    lblPSIRAMPF: TLabel;
+    rdeSATTHK: TRbwDataEntry;
+    lblSATTHK: TLabel;
     procedure rcSelectionControllerEnabledChange(Sender: TObject);
     procedure comboAllotmentChange(Sender: TObject);
     procedure comboDeficiencyChange(Sender: TObject);
     procedure tvpglstFarmCustomDrawItem(Sender: TCustomTreeView;
       Node: TTreeNode; State: TCustomDrawState; var DefaultDraw: Boolean);
+    procedure frameET_PrintFlagrdgGridSelectCell(Sender: TObject; ACol,
+      ARow: Integer; var CanSelect: Boolean);
+    procedure cbMnwCloseClick(Sender: TObject);
   private
     procedure InitializeGrids;
     procedure MoveInheritedControls;
@@ -72,6 +94,7 @@ type
     procedure EnablePclose;
     procedure EnableIopfl;
     procedure EnableIPAPFL;
+    procedure EnableMnwControls;
   protected
     procedure Loaded; override;
   public
@@ -126,8 +149,20 @@ resourcestring
   StrWaterPolicyFlags = 'Water Policy Flags';
   StrCropConsumptiveUse = 'Crop Consumptive-Use Flags';
   StrSurfaceWaterFlags = 'Surface-Water Flags';
-  StrMandatoryPrintFlag = 'Mandatory Print Flags';
+  StrMandatoryPrintFlag1 = 'Mandatory Print Flags 1';
+  StrMandatoryPrintFlag2 = 'Mandatory Print Flags 2';
   StrOptionalPrintFlags = 'Optional Print Flags';
+  StrTextFileROUTOUT = 'Text file ROUT.OUT';
+  StrEveryStressPeriod = 'Every Stress Period';
+  StrFirstStressPeriod = 'First Stress Period';
+  Str1FBCOMPACTOUT = '1 FB_COMPACT.OUT';
+  Str2FBDETAILSOUT = '2 FB_DETAILS.OUT';
+  StrETArray = 'ET Array';
+  StrEvapAndTranspArra = 'Evap and Transp Arrays';
+  StrList = 'List by Farm';
+  StrListAndArrays = 'List and arrays';
+  StrTextFiles = 'Text files';
+  StrMNWOptions = 'MNW and NWT Options';
 //  StrAuxiliaryVariables = 'Auxiliary Variables and Options';
 
 {$R *.dfm}
@@ -163,6 +198,16 @@ begin
     [swaEqual, swaPriorWithCalls, swaPriorWithoutCalls]);
 end;
 
+procedure TframePkgFarm.frameET_PrintFlagrdgGridSelectCell(Sender: TObject;
+  ACol, ARow: Integer; var CanSelect: Boolean);
+begin
+  inherited;
+  if (ACol = 5) and (ARow = 2) then
+  begin
+    CanSelect := False;
+  end;
+end;
+
 procedure TframePkgFarm.GetData(Package: TModflowPackageSelection);
 var
   FarmProcess: TFarmProcess;
@@ -183,6 +228,7 @@ begin
   frameEfficiencyBehavior.ColItemIndex := Ord(FarmProcess.EfficiencyGroundwaterFunction)+1;
   frameEfficiencyBehavior.RowItemIndex := Ord(FarmProcess.EfficiencyReset) + 1;
   comboDeficiency.ItemIndex := Ord(FarmProcess.DeficiencyPolicy);
+  cbGroundwaterAllotments.Checked := FarmProcess.GroundwaterAllotmentsUsed;
 
   // Crop Consumptive-Use
   frameCropConsumptiveUse.ColItemIndex := Ord(FarmProcess.CropConsumptiveConcept)+1;
@@ -201,6 +247,8 @@ begin
   comboSupplyAndDemand.ItemIndex := Ord(FarmProcess.SupplyAndDemand);
   frameFarmBudgetPrintFlag.ColItemIndex := Ord(FarmProcess.FarmBudgetPrintFlags)+1;
   frameFarmBudgetPrintFlag.RowItemIndex := Ord(FarmProcess.FarmBudgetPrintHowMuch)+1;
+  frameET_PrintFlag.ColItemIndex := Ord(FarmProcess.EtPrintType)+1;
+  frameET_PrintFlag.RowItemIndex := Ord(FarmProcess.EtPrintLocation)+1;
 
   // Optional Print Flags
   frameRoutingInformationPrintFlag.ColItemIndex := Ord(FarmProcess.PrintRouting)+1;
@@ -214,8 +262,23 @@ begin
 
   comboCropIrrigationRequirement.ItemIndex := Ord(FarmProcess.CropIrrigationRequirement);
   comboRecomputeFlows.ItemIndex := Ord(FarmProcess.RecomputeOption);
+  cbResetQMax.Checked := FarmProcess.ResetMnwQMax;
 
   rgAssignmentMethod.ItemIndex := Ord(FarmProcess.AssignmentMethod);
+
+  // MNW and NWT options
+  cbMnwClose.Checked := FarmProcess.MnwClose;
+  rdeQClose.RealValue := FarmProcess.MnwClosureCriterion;
+  rdeHPCT.RealValue := FarmProcess.HeadChangeReduction;
+  rdeRPCT.RealValue := FarmProcess.ResidualChangeReduction;
+
+  rdePSIRAMPF.RealValue := FarmProcess.PsiRampf;
+  rdeSATTHK.RealValue := FarmProcess.SatThick;
+
+  EnableIopfl;
+  EnablePclose;
+  EnableIPAPFL;
+  EnableMnwControls;
 end;
 
 procedure TframePkgFarm.InitializeGrids;
@@ -261,8 +324,8 @@ begin
     frameFarmBudgetPrintFlag.rdgGrid.Cells[0,2] := StrDetailedEven;
     frameFarmBudgetPrintFlag.rdgGrid.Cells[1,1] := Str0;
     frameFarmBudgetPrintFlag.rdgGrid.Cells[1,2] := Str0;
-    frameFarmBudgetPrintFlag.rdgGrid.Cells[2,1] := '1 FB_COMPACT.OUT';
-    frameFarmBudgetPrintFlag.rdgGrid.Cells[2,2] := '2 FB_DETAILS.OUT';
+    frameFarmBudgetPrintFlag.rdgGrid.Cells[2,1] := Str1FBCOMPACTOUT;
+    frameFarmBudgetPrintFlag.rdgGrid.Cells[2,2] := Str2FBDETAILSOUT;
     frameFarmBudgetPrintFlag.rdgGrid.Cells[3,1] := Str2Odd;
     frameFarmBudgetPrintFlag.rdgGrid.Cells[3,2] := Str2Even;
     frameFarmBudgetPrintFlag.rdgGrid.FixedCols := 1;
@@ -298,9 +361,9 @@ begin
   try
     frameRoutingInformationPrintFlag.rdgGrid.Cells[1,0] := StrNone;
     frameRoutingInformationPrintFlag.rdgGrid.Cells[2,0] := StrListing;
-    frameRoutingInformationPrintFlag.rdgGrid.Cells[3,0] := 'Text file ROUT.OUT';
-    frameRoutingInformationPrintFlag.rdgGrid.Cells[0,1] := 'Every Stress Period';
-    frameRoutingInformationPrintFlag.rdgGrid.Cells[0,2] := 'First Stress Period';
+    frameRoutingInformationPrintFlag.rdgGrid.Cells[3,0] := StrTextFileROUTOUT;
+    frameRoutingInformationPrintFlag.rdgGrid.Cells[0,1] := StrEveryStressPeriod;
+    frameRoutingInformationPrintFlag.rdgGrid.Cells[0,2] := StrFirstStressPeriod;
     frameRoutingInformationPrintFlag.rdgGrid.Cells[1,1] := Str0;
     frameRoutingInformationPrintFlag.rdgGrid.Cells[1,2] := Str0;
     frameRoutingInformationPrintFlag.rdgGrid.Cells[2,1] := StrMinus1;
@@ -309,6 +372,29 @@ begin
     frameRoutingInformationPrintFlag.rdgGrid.Cells[3,2] := Str2;
   finally
     frameRoutingInformationPrintFlag.rdgGrid.EndUpdate
+  end;
+
+  frameET_PrintFlag.rdgGrid.BeginUpdate;
+  try
+    frameET_PrintFlag.rdgGrid.FixedCols := 1;
+    frameET_PrintFlag.rdgGrid.Cells[1,0] := StrNone;
+    frameET_PrintFlag.rdgGrid.Cells[2,0] := StrETArray;
+    frameET_PrintFlag.rdgGrid.Cells[3,0] := StrEvapAndTranspArra;
+    frameET_PrintFlag.rdgGrid.Cells[4,0] := StrList;
+    frameET_PrintFlag.rdgGrid.Cells[5,0] := StrListAndArrays;
+    frameET_PrintFlag.rdgGrid.Cells[0,1] := StrTextFiles;
+    frameET_PrintFlag.rdgGrid.Cells[0,2] := StrListing;
+    frameET_PrintFlag.rdgGrid.Cells[1,1] := Str0;
+    frameET_PrintFlag.rdgGrid.Cells[1,2] := Str0;
+    frameET_PrintFlag.rdgGrid.Cells[2,1] := Str1;
+    frameET_PrintFlag.rdgGrid.Cells[2,2] := StrMinus1;
+    frameET_PrintFlag.rdgGrid.Cells[3,1] := Str2;
+    frameET_PrintFlag.rdgGrid.Cells[3,2] := StrMinus2;
+    frameET_PrintFlag.rdgGrid.Cells[4,1] := Str3;
+    frameET_PrintFlag.rdgGrid.Cells[4,2] := StrMinus3;
+    frameET_PrintFlag.rdgGrid.Cells[5,1] := Str4;
+  finally
+    frameET_PrintFlag.rdgGrid.EndUpdate;
   end;
 end;
 
@@ -321,6 +407,7 @@ end;
 procedure TframePkgFarm.SetData(Package: TModflowPackageSelection);
 var
   FarmProcess: TFarmProcess;
+  AValue: double;
 begin
   inherited;
   FarmProcess := Package as TFarmProcess;
@@ -337,6 +424,7 @@ begin
   FarmProcess.EfficiencyGroundwaterFunction := TEfficiencyGroundwaterFunction(frameEfficiencyBehavior.ColItemIndex-1);
   FarmProcess.EfficiencyReset := TEfficiencyReset(frameEfficiencyBehavior.RowItemIndex-1);
   FarmProcess.DeficiencyPolicy := TDeficiencyPolicy(comboDeficiency.ItemIndex);
+  FarmProcess.GroundwaterAllotmentsUsed := cbGroundwaterAllotments.Checked;
 
   // Crop Consumptive-Use
   FarmProcess.CropConsumptiveConcept := TCropConsumptiveConcept(frameCropConsumptiveUse.ColItemIndex-1);
@@ -354,6 +442,8 @@ begin
   FarmProcess.SupplyAndDemand := TSupplyAndDemand(comboSupplyAndDemand.ItemIndex);
   FarmProcess.FarmBudgetPrintFlags := TFarmBudgetPrintFlags(frameFarmBudgetPrintFlag.ColItemIndex-1);
   FarmProcess.FarmBudgetPrintHowMuch := TFarmBudgetPrintHowMuch(frameFarmBudgetPrintFlag.RowItemIndex-1);
+  FarmProcess.EtPrintType := TEtPrintType(frameET_PrintFlag.ColItemIndex-1);
+  FarmProcess.EtPrintLocation := TEtPrintLocation(frameET_PrintFlag.RowItemIndex-1);
 
   // Optional Print Flags
   FarmProcess.PrintRouting := TPrintRouting(frameRoutingInformationPrintFlag.ColItemIndex-1);
@@ -368,8 +458,33 @@ begin
 
   FarmProcess.CropIrrigationRequirement := TCropIrrigationRequirement(comboCropIrrigationRequirement.ItemIndex);
   FarmProcess.RecomputeOption := TRecomputeOption(comboRecomputeFlows.ItemIndex);
+  FarmProcess.ResetMnwQMax := cbResetQMax.Checked;
 
   FarmProcess.AssignmentMethod := TUpdateMethod(rgAssignmentMethod.ItemIndex);
+
+  // MNW and NWT options
+  FarmProcess.MnwClose := cbMnwClose.Checked;
+  if TryStrToFloat(rdeQClose.Text, AValue) then
+  begin
+    FarmProcess.MnwClosureCriterion := AValue;
+  end;
+  if TryStrToFloat(rdeHPCT.Text, AValue) then
+  begin
+    FarmProcess.HeadChangeReduction := AValue;
+  end;
+  if TryStrToFloat(rdeRPCT.Text, AValue) then
+  begin
+    FarmProcess.ResidualChangeReduction := AValue;
+  end;
+
+  if TryStrToFloat(rdePSIRAMPF.Text, AValue) then
+  begin
+    FarmProcess.PsiRampf := AValue;
+  end;
+  if TryStrToFloat(rdeSATTHK.Text, AValue) then
+  begin
+    FarmProcess.SatThick := AValue;
+  end;
 end;
 
 procedure TframePkgFarm.tvpglstFarmCustomDrawItem(Sender: TCustomTreeView;
@@ -380,6 +495,19 @@ begin
   begin
     Sender.Canvas.Brush.Color := clMenuHighlight;
   end;
+end;
+
+procedure TframePkgFarm.EnableMnwControls;
+begin
+  rdeQClose.Enabled := cbMnwClose.Checked and rcSelectionController.Enabled;
+  rdeHPCT.Enabled := rdeQClose.Enabled;
+  rdeRPCT.Enabled := rdeQClose.Enabled;
+end;
+
+procedure TframePkgFarm.cbMnwCloseClick(Sender: TObject);
+begin
+  inherited;
+  EnableMnwControls;
 end;
 
 procedure TframePkgFarm.comboAllotmentChange(Sender: TObject);
@@ -402,6 +530,8 @@ begin
   tvpglstFarm.Items.Clear;
   Node := tvpglstFarm.Items.Add(nil, StrOptions) as TJvPageIndexNode;
   Node.PageIndex := jvspOptions.PageIndex;
+  Node := tvpglstFarm.Items.Add(nil, StrMNWOptions) as TJvPageIndexNode;
+  Node.PageIndex := jvspMnwNwtOptions.PageIndex;
   Node := tvpglstFarm.Items.Add(nil, StrParameters) as TJvPageIndexNode;
   Node.PageIndex := jvspParameters.PageIndex;
   Node := tvpglstFarm.Items.Add(nil, StrWhenToReadFlags) as TJvPageIndexNode;
@@ -412,8 +542,10 @@ begin
   Node.PageIndex := jvspCropConsumptiveUse.PageIndex;
   Node := tvpglstFarm.Items.Add(nil, StrSurfaceWaterFlags) as TJvPageIndexNode;
   Node.PageIndex := jvspSurfaceWater.PageIndex;
-  Node := tvpglstFarm.Items.Add(nil, StrMandatoryPrintFlag) as TJvPageIndexNode;
-  Node.PageIndex := jvspMandatoryPrintFlags.PageIndex;
+  Node := tvpglstFarm.Items.Add(nil, StrMandatoryPrintFlag1) as TJvPageIndexNode;
+  Node.PageIndex := jvspMandatoryPrintFlags1.PageIndex;
+  Node := tvpglstFarm.Items.Add(nil, StrMandatoryPrintFlag2) as TJvPageIndexNode;
+  Node.PageIndex := jvspMandatoryPrintFlags2.PageIndex;
   Node := tvpglstFarm.Items.Add(nil, StrOptionalPrintFlags) as TJvPageIndexNode;
   Node.PageIndex := jvspOptionalPrintFlags.PageIndex;
 //  Node := tvpglstFarm.Items.Add(nil, StrAuxiliaryVariables) as TJvPageIndexNode;
@@ -428,7 +560,10 @@ begin
   lblComments.Parent := jvspOptions;
   lblComments.Top := lblPackage.Top + lblPackage.Height + 8;
 
-  comboRecomputeFlows.Top := jvspOptions.ClientHeight
+  cbResetQMax.Top := jvspOptions.ClientHeight
+    - cbResetQMax.Height - 8;
+
+  comboRecomputeFlows.Top := cbResetQMax.Top
     - comboRecomputeFlows.Height - 8;
   lblRecomputeFlows.Top := comboRecomputeFlows.Top
     - lblRecomputeFlows.Height - 4;
@@ -455,6 +590,7 @@ begin
   EnablePclose;
   EnableIopfl;
   EnableIPAPFL;
+  EnableMnwControls;
 end;
 
 end.

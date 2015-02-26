@@ -34,7 +34,8 @@ type
     FData: TSparsePointerArray;
     // @name defines the section size. Once allocated, a section can
     // store a number of pointers.
-    FQuantum: TSPAQuantum;
+    FQuantum1: TSPAQuantum;
+    FQuantum2: TSPAQuantum;
     // See @link(IsValue).
     function GetIsValue(const Index1, Index2: NativeInt): boolean;
     // See @link(Items).
@@ -49,7 +50,7 @@ type
     // @name removes all items from @classname.
     procedure Clear; virtual;
     // @name creates an instance of @classname.
-    constructor Create(Quantum: TSPAQuantum);
+    constructor Create(Quantum1, Quantum2: TSPAQuantum);
     // @name destroys the current instance of @classname.
     // Do not call @name directly.  Call Free instead.
     destructor Destroy; override;
@@ -75,7 +76,9 @@ type
     FData: TSparsePointerArray;
     // @name defines the section size. Once allocated, a section can
     // store a number of pointers.
-    FQuantum: TSPAQuantum;
+    FQuantum1: TSPAQuantum;
+    FQuantum2: TSPAQuantum;
+    FQuantum3: TSPAQuantum;
     // See @link(IsValue).
     function GetIsValue(const Layer, Row, Col: NativeInt): boolean;
     // See @link(Items).
@@ -98,7 +101,7 @@ type
     // @name removes all items from @classname.
     procedure Clear; virtual;
     // @name creates an instance of @classname.
-    constructor Create(Quantum: TSPAQuantum);
+    constructor Create(Quantum1, Quantum2, Quantum3: TSPAQuantum);
     // @name destroys the current instance of @classname.
     // Do not call @name directly.  Call Free instead.
     destructor Destroy; override;
@@ -138,7 +141,7 @@ type
     // @name removes all the members of @classname.
     procedure Clear; override;
     // @name creates an instance of @classname.
-    constructor Create(Quantum: TSPAQuantum);
+    constructor Create(Quantum1, Quantum2: TSPAQuantum);
     // @name provides access to the real number stored at location
     // Index1, Index2. Before reading @name, read
     // @link(T2DSparsePointerArray.IsValue) to
@@ -158,7 +161,7 @@ type
     procedure SetItems(const Row, Col: NativeInt; const Value: boolean);
   public
     // @name creates an instance of @classname.
-    constructor Create(Quantum: TSPAQuantum);
+    constructor Create(Quantum1, Quantum2: TSPAQuantum);
     // @name provides access to the boolean stored at location
     // Layer, Row, Col. Before reading @name, read
     // @link(T3DSparsePointerArray.IsValue) to
@@ -183,7 +186,7 @@ type
     procedure SetItems(const Layer, Row, Col: NativeInt; const Value: boolean);
   public
     // @name creates an instance of @classname.
-    constructor Create(Quantum: TSPAQuantum);
+    constructor Create(Quantum1, Quantum2, Quantum3: TSPAQuantum);
     // @name provides access to the boolean stored at location
     // Layer, Row, Col. Before reading @name, read
     // @link(T3DSparsePointerArray.IsValue) to
@@ -211,7 +214,7 @@ type
     // @name removes all the members of @classname.
     procedure Clear; override;
     // @name creates an instance of @classname.
-    constructor Create(Quantum: TSPAQuantum);
+    constructor Create(Quantum1, Quantum2, Quantum3: TSPAQuantum);
     // @name provides access to the NativeInt stored at location
     // Layer, Row, Col. Before reading @name, read
     // @link(T3DSparsePointerArray.IsValue) to
@@ -223,39 +226,33 @@ type
   {@abstract(@name acts like a 3D array of real-numbers.  It provides
   constant time access to its elements through the its
   @link(T3DSparseRealArray.Items) property.  However, when many of the
-  elements are unassigned, it can use much less memory than an array.)}
+  elements are unassigned, it can use much less memory than an array.)
+  @seealso(T3DSparseCacheableRealArray)}
   T3DSparseRealArray = class(T3DSparsePointerArray)
   private
-    // @name is the number of real numbers stored in @classname.
-    FCount: NativeInt;
     // @name is an array of real numbers stored in @classname
     FValues: array of double;
-    FCached: Boolean;
-    FTempFileName: string;
     FCleared: Boolean;
     // See @link(Items).
     function GetItems(const Layer, Row, Col: NativeInt): double;
+  protected
+    // @name is the number of real numbers stored in @classname.
+    FCount: NativeInt;
     // See @link(Items).
     procedure SetItems(const Layer, Row, Col: NativeInt;
-      const Value: double);
-    procedure StoreData(Compressor: TStream);
-    procedure Restore;
-    procedure ReadData(DecompressionStream: TStream);
+      const Value: double); virtual;
   public
     procedure RemoveValue(const Layer, Row, Col: NativeInt);
     // @name removes all the members of @classname.
     procedure Clear; override;
     // @name creates an instance of @classname.
-    constructor Create(Quantum: TSPAQuantum);
-    destructor Destroy; override;
+    constructor Create(Quantum1, Quantum2, Quantum3: TSPAQuantum);
     // @name provides access to the real number stored at location
     // Layer, Row, Col. Before reading @name, read
     // @link(T3DSparsePointerArray.IsValue) to
     // be sure that a number is stored at Layer, Row, Col.
     property Items[const Layer, Row, Col: NativeInt]: double read GetItems
       write SetItems; default;
-    procedure Cache;
-    procedure CheckRestore;
   end;
 
   {@abstract(@name acts like a 3D array of strings.  It provides
@@ -277,7 +274,7 @@ type
     // @name removes all the members of @classname.
     procedure Clear; override;
     // @name creates an instance of @classname.
-    constructor Create(Quantum: TSPAQuantum);
+    constructor Create(Quantum1, Quantum2, Quantum3: TSPAQuantum);
     // @name provides access to the string stored at location
     // Layer, Row, Col. Before reading @name, read
     // @link(T3DSparsePointerArray.IsValue) to
@@ -288,8 +285,7 @@ type
 
 implementation
 
-uses
-  TempFiles, ZLib;
+
 
 function FreeSparsePointerItem(TheIndex: NativeInt; TheItem: Pointer): NativeInt;
 var
@@ -311,11 +307,12 @@ end;
 
 { T2DSparsePointerArray }
 
-constructor T2DSparsePointerArray.Create(Quantum: TSPAQuantum);
+constructor T2DSparsePointerArray.Create(Quantum1, Quantum2: TSPAQuantum);
 begin
   inherited Create;
-  FQuantum := Quantum;
-  FData := TSparsePointerArray.Create(Quantum);
+  FQuantum1 := Quantum1;
+  FQuantum2 := Quantum2;
+  FData := TSparsePointerArray.Create(Quantum1);
 end;
 
 procedure T2DSparsePointerArray.Clear;
@@ -365,7 +362,7 @@ begin
   begin
     if Value = nil then
       Exit;
-    InnerData := TSparsePointerArray.Create(FQuantum);
+    InnerData := TSparsePointerArray.Create(FQuantum2);
     FData[Index1] := InnerData;
   end;
   InnerData[Index2] := Value;
@@ -409,7 +406,7 @@ begin
   FData.ResetHighBound;
 end;
 
-constructor T3DSparsePointerArray.Create(Quantum: TSPAQuantum);
+constructor T3DSparsePointerArray.Create(Quantum1, Quantum2, Quantum3: TSPAQuantum);
 begin
   inherited Create;
 
@@ -421,8 +418,10 @@ begin
   Assert(False);
 {$IFEND}
 
-  FQuantum := Quantum;
-  FData := TSparsePointerArray.Create(Quantum);
+  FQuantum1 := Quantum1;
+  FQuantum2 := Quantum2;
+  FQuantum3 := Quantum3;
+  FData := TSparsePointerArray.Create(Quantum1);
   FMinLayer := -1;
   FMaxLayer := -1;
   FMinRow := -1;
@@ -475,7 +474,7 @@ begin
   begin
     if Value = nil then
       Exit;
-    InnerData := T2DSparsePointerArray.Create(FQuantum);
+    InnerData := T2DSparsePointerArray.Create(FQuantum2, FQuantum3);
     FData[Layer] := InnerData;
   end;
   InnerData[Row, Col] := Value;
@@ -484,7 +483,7 @@ end;
 
 { T3DSparseBooleanArray }
 
-constructor T3DSparseBooleanArray.Create(Quantum: TSPAQuantum);
+constructor T3DSparseBooleanArray.Create(Quantum1, Quantum2, Quantum3: TSPAQuantum);
 begin
   inherited;
   FTrue := True;
@@ -525,7 +524,7 @@ begin
   SetLength(FValues,0);
 end;
 
-constructor T3DSparseIntegerArray.Create(Quantum: TSPAQuantum);
+constructor T3DSparseIntegerArray.Create(Quantum1, Quantum2, Quantum3: TSPAQuantum);
 begin
   inherited;
   SetLength(FValues, 4);
@@ -621,49 +620,6 @@ end;
 
 { T3DSparseRealArray }
 
-procedure T3DSparseRealArray.Cache;
-var
-  Compressor: TCompressionStream;
-  MemStream: TMemoryStream;
-  TempStream: TMemoryStream;
-begin
-  if not FCached then
-  begin
-    if FTempFileName = '' then
-    begin
-      FTempFileName := TempFileName;
-    end;
-    MemStream := TMemoryStream.Create;
-    try
-      Compressor := TCompressionStream.Create(clDefault, MemStream);
-      TempStream := TMemoryStream.Create;
-      try
-        MemStream.Position := 0;
-        StoreData(TempStream);
-        TempStream.SaveToStream(Compressor);
-      finally
-        Compressor.Free;
-        TempStream.Free;
-      end;
-      MemStream.Position := 0;
-      ZipAFile(FTempFileName, MemStream);
-    finally
-      MemStream.Free
-    end;
-    FCached := True;
-  end;
-  Clear;
-  FCleared := True;
-end;
-
-procedure T3DSparseRealArray.CheckRestore;
-begin
-  if FCached and FCleared then
-  begin
-    Restore;
-  end;
-end;
-
 procedure T3DSparseRealArray.Clear;
 begin
   inherited;
@@ -671,19 +627,10 @@ begin
   SetLength(FValues, 0);
 end;
 
-constructor T3DSparseRealArray.Create(Quantum: TSPAQuantum);
+constructor T3DSparseRealArray.Create(Quantum1, Quantum2, Quantum3: TSPAQuantum);
 begin
   inherited;
   SetLength(FValues, 4);
-end;
-
-destructor T3DSparseRealArray.Destroy;
-begin
-  if FileExists(FTempFileName) then
-  begin
-    DeleteFile(FTempFileName);
-  end;
-  inherited;
 end;
 
 function T3DSparseRealArray.GetItems(const Layer, Row,
@@ -696,55 +643,9 @@ begin
   result := FValues[Pred(longint(resultPtr))];
 end;
 
-procedure T3DSparseRealArray.ReadData(DecompressionStream: TStream);
-var
-  ColIndex: NativeInt;
-  RowIndex: NativeInt;
-  LayerIndex: NativeInt;
-  Index: NativeInt;
-  AValue: double;
-  ACount: NativeInt;
-begin
-  DecompressionStream.Read(ACount, SizeOf(ACount));
-  if ACount > 0 then
-  begin
-    for Index := 0 to ACount - 1 do
-    begin
-      DecompressionStream.Read(LayerIndex, SizeOf(LayerIndex));
-      DecompressionStream.Read(RowIndex, SizeOf(RowIndex));
-      DecompressionStream.Read(ColIndex, SizeOf(ColIndex));
-      DecompressionStream.Read(AValue, SizeOf(AValue));
-      Items[LayerIndex, RowIndex, ColIndex] := AValue;
-    end;
-  end;
-end;
-
 procedure T3DSparseRealArray.RemoveValue(const Layer, Row, Col: NativeInt);
 begin
   inherited Items[Layer, Row, Col] := nil;
-end;
-
-procedure T3DSparseRealArray.Restore;
-var
-  MemStream: TMemoryStream;
-  DecompressionStream: TDecompressionStream;
-begin
-  Assert(FCached);
-  Assert(FCleared);
-  MemStream := TMemoryStream.Create;
-  try
-    ExtractAFile(FTempFileName, MemStream);
-    DecompressionStream := TDecompressionStream.Create(MemStream);
-  try
-    ReadData(DecompressionStream);
-    FCached := True;
-  finally
-    DecompressionStream.Free;
-  end;
-  finally
-    MemStream.Free;
-  end;
-  FCleared := False;
 end;
 
 procedure T3DSparseRealArray.SetItems(const Layer, Row,
@@ -752,7 +653,6 @@ procedure T3DSparseRealArray.SetItems(const Layer, Row,
 var
   DataPtr: Pointer;
 begin
-  FCached := False;
   FCleared := False;
   DataPtr := inherited Items[Layer, Row, Col];
   if DataPtr = nil then
@@ -779,36 +679,6 @@ begin
   end;
 end;
 
-procedure T3DSparseRealArray.StoreData(Compressor: TStream);
-var
-  LayerIndex: NativeInt;
-  RowIndex: NativeInt;
-  ColIndex: NativeInt;
-  AValue: Double;
-begin
-  Compressor.Write(FCount, SizeOf(FCount));
-  if FCount > 0 then
-  begin
-    for LayerIndex := FMinLayer to FMaxLayer do
-    begin
-      for RowIndex := FMinRow to FMaxRow do
-      begin
-        for ColIndex := FMinCol to FMaxCol do
-        begin
-          if IsValue[LayerIndex, RowIndex, ColIndex] then
-          begin
-            AValue := Items[LayerIndex, RowIndex, ColIndex];
-            Compressor.Write(LayerIndex, SizeOf(LayerIndex));
-            Compressor.Write(RowIndex, SizeOf(RowIndex));
-            Compressor.Write(ColIndex, SizeOf(ColIndex));
-            Compressor.Write(AValue, SizeOf(AValue));
-          end;
-        end;
-      end;
-    end;
-  end;
-end;
-
 { T3DSparseStringArray }
 
 procedure T3DSparseStringArray.Clear;
@@ -818,7 +688,7 @@ begin
   SetLength(FValues,0);
 end;
 
-constructor T3DSparseStringArray.Create(Quantum: TSPAQuantum);
+constructor T3DSparseStringArray.Create(Quantum1, Quantum2, Quantum3: TSPAQuantum);
 begin
   inherited;
   SetLength(FValues, 4);
@@ -872,7 +742,7 @@ begin
   FCount := 0;
 end;
 
-constructor T2DSparseRealArray.Create(Quantum: TSPAQuantum);
+constructor T2DSparseRealArray.Create(Quantum1, Quantum2: TSPAQuantum);
 begin
   inherited;
   SetLength(FValues, 4);
@@ -913,7 +783,7 @@ end;
 
 { T2DSparseBooleanArray }
 
-constructor T2DSparseBooleanArray.Create(Quantum: TSPAQuantum);
+constructor T2DSparseBooleanArray.Create(Quantum1, Quantum2: TSPAQuantum);
 begin
   inherited;
   FTrue := True;

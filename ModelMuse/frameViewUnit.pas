@@ -3221,9 +3221,8 @@ var
 begin
   result := nil;
   case frmGoPhast.PhastModel.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         Grid := frmGoPhast.PhastModel.SelectedModel.Grid;
         result := Grid.TopDataSet;
@@ -3245,7 +3244,8 @@ begin
         end;
       end;
   else
-    Assert(False);
+    result := nil;
+//    Assert(False);
   end;
 end;
 
@@ -3837,9 +3837,8 @@ begin
     if DataSet.IsValue[Layer, Row, Column] and (Layer >= 0) then
     begin
       case frmGoPhast.PhastModel.ModelSelection of
-        msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-          {$IFDEF FMP}, msModflowFmp {$ENDIF}
-          , msModflowCfp:
+        msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+          msModflowFmp, msModflowCfp:
         begin
           ShowValue := (Layer <= frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount);
         end;
@@ -3907,9 +3906,8 @@ begin
     if DataSet.Orientation = dso3D then
     begin
       case frmGoPhast.PhastModel.ModelSelection of
-        msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-        {$IFDEF FMP}, msModflowFmp {$ENDIF}
-        , msModflowCfp:
+        msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+        msModflowFmp, msModflowCfp:
         begin
           Layer := frmGoPhast.PhastModel.SelectedModel.SelectedLayer;
         end;
@@ -3937,9 +3935,8 @@ begin
     begin
       ShowValue := False;
       case frmGoPhast.PhastModel.ModelSelection of
-        msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-        {$IFDEF FMP}, msModflowFmp {$ENDIF}
-        , msModflowCfp:
+        msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+        msModflowFmp, msModflowCfp:
         begin
           ShowValue := (Layer < frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount);
         end;

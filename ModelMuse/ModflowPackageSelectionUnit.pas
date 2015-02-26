@@ -2901,7 +2901,7 @@ Type
   // @name is used in conjunction with @link(TCropConsumptiveConcept)
   // to specify ICCFL
   TCropConsumptiveLinkage = (cclNotLinked, cclLinked);
-  // IALLOT (0, 1, 2, 3)
+  // IALLOTSW (0, 1, 2, 3)
   TSurfaceWaterAllotment = (swaNone, swaEqual, swaPriorWithCalls,
     swaPriorWithoutCalls);
   // IFWLCB
@@ -2951,6 +2951,11 @@ Type
   // RECOMP_Q_BD option
   TRecomputeOption = (roNotComputed, roComputed);
 
+  // IETPFL
+  TEtPrintLocation = (eplText, eplListing);
+  // IETPFL
+  TEtPrintType = (eptNone, eptET, eptEvapAndTrans, eptList, eptArrayAndList);
+
   TFarmProcess = class(TModflowPackageSelection)
   private
     FCropIrrigationRequirement: TCropIrrigationRequirement;
@@ -2982,9 +2987,21 @@ Type
     FMfFmpPrecip: TModflowBoundaryDisplayTimeList;
     FMfFmpCropID: TModflowBoundaryDisplayTimeList;
     FMfFmpMaxPumpingRate: TModflowBoundaryDisplayTimeList;
-    FMfFmpFarmID: TModflowBoundaryDisplayTimeList;
+    FMfFmpFarmWellFarmID: TModflowBoundaryDisplayTimeList;
     FMfFmpFarmWellPumpIfRequired: TModflowBoundaryDisplayTimeList;
     FPrintRoutingFrequency: TPrintRoutingFrequency;
+    FGroundwaterAllotmentsUsed: boolean;
+    FEtPrintLocation: TEtPrintLocation;
+    FEtPrintType: TEtPrintType;
+    FMfFmpFarmID: TModflowBoundaryDisplayTimeList;
+    FResetMnwQMax: boolean;
+    FStoredMnwClosureCriterion: TRealStorage;
+    FStoredResidualChangeReduction: TRealStorage;
+    FMnwClose: Boolean;
+    FStoredHeadChangeReduction: TRealStorage;
+    FStoredPsiRampf: TRealStorage;
+    FStoredSatThick: TRealStorage;
+//    FSurfaceWaterAllotments: Boolean;
     procedure SetAcerageOptimizationPrintChoice(
       const Value: TAcerageOptimizationPrintChoice);
     procedure SetAcerageOptimizationPrintLocation(
@@ -3020,6 +3037,7 @@ Type
     procedure GetMfFmpEvapUseList(Sender: TObject; NewUseList: TStringList);
     procedure GetMfFmpPrecipUseList(Sender: TObject; NewUseList: TStringList);
     procedure GetMfFmpCropIDUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetMfFmpFarmIDUseList(Sender: TObject; NewUseList: TStringList);
     procedure GetMfFmpMaxPumpRateUseList(Sender: TObject;
       NewUseList: TStringList);
     procedure GetMfFmpFarmWellFarmIDUseList(Sender: TObject;
@@ -3029,8 +3047,30 @@ Type
     procedure InitializeFarmRefEtDisplay(Sender: TObject);
     procedure InitializeFarmPrecipDisplay(Sender: TObject);
     procedure InitializeFarmCropIdDisplay(Sender: TObject);
+    procedure InitializeFarmIdDisplay(Sender: TObject);
     procedure InitializeFarmWellDisplay(Sender: TObject);
     procedure SetPrintRoutingFrequency(const Value: TPrintRoutingFrequency);
+    procedure SetGroundwaterAllotmentsUsed(const Value: boolean);
+    procedure SetEtPrintLocation(const Value: TEtPrintLocation);
+    procedure SetEtPrintType(const Value: TEtPrintType);
+    procedure SetResetMnwQMax(const Value: boolean);
+    procedure SetMnwClose(const Value: Boolean);
+    procedure SetStoredHeadChangeReduction(const Value: TRealStorage);
+    procedure SetStoredMnwClosureCriterion(const Value: TRealStorage);
+    procedure SetStoredResidualChangeReduction(const Value: TRealStorage);
+    function GetHeadChangeReduction: double;
+    function GetMnwClosureCriterion: double;
+    function GetResidualChangeReduction: double;
+    procedure SetHeadChangeReduction(const Value: double);
+    procedure SetMnwClosureCriterion(const Value: double);
+    procedure SetResidualChangeReduction(const Value: double);
+    procedure SetStoredPsiRampf(const Value: TRealStorage);
+    procedure SetStoredSatThick(const Value: TRealStorage);
+    function GetPsiRampf: double;
+    function GetSatThick: double;
+    procedure SetPsiRampf(const Value: double);
+    procedure SetSatThick(const Value: double);
+//    procedure SetSurfaceWaterAllotments(const Value: Boolean);
   public
     procedure Assign(Source: TPersistent); override;
     { TODO -cRefactor : Consider replacing Model with an interface. }
@@ -3041,21 +3081,36 @@ Type
     function EvapUsed (Sender: TObject): boolean;
     function PrecipUsed (Sender: TObject): boolean;
     function CropIdUsed (Sender: TObject): boolean;
+    function FarmIdUsed (Sender: TObject): boolean;
     function FarmWellsUsed (Sender: TObject): boolean;
     function FarmWellsPumpRequiredUsed (Sender: TObject): boolean;
+    property MfFmpFarmID: TModflowBoundaryDisplayTimeList read FMfFmpFarmID;
     property MfFmpEvapRate: TModflowBoundaryDisplayTimeList read FMfFmpEvapRate;
     property MfFmpPrecip: TModflowBoundaryDisplayTimeList read FMfFmpPrecip;
     property MfFmpCropID: TModflowBoundaryDisplayTimeList read FMfFmpCropID;
     property MfFmpMaxPumpingRate: TModflowBoundaryDisplayTimeList
       read FMfFmpMaxPumpingRate;
-    property MfFmpFarmID: TModflowBoundaryDisplayTimeList read FMfFmpFarmID;
+    property MfFmpFarmWellFarmID: TModflowBoundaryDisplayTimeList read FMfFmpFarmWellFarmID;
     property MfFmpFarmWellPumpIfRequired: TModflowBoundaryDisplayTimeList
       read FMfFmpFarmWellPumpIfRequired;
     // PCLOSE
     property SurfaceWaterClosure: Double read GetSurfaceWaterClosure
       write SetSurfaceWaterClosure;
+    // QCLOSE
+    property MnwClosureCriterion: double read GetMnwClosureCriterion
+      write SetMnwClosureCriterion;
+    // HPCT
+    property HeadChangeReduction: double read GetHeadChangeReduction
+      write SetHeadChangeReduction;
+    // RPCT
+    property ResidualChangeReduction: double read GetResidualChangeReduction
+      write SetResidualChangeReduction;
+    // PSIRAMPF
+    property PsiRampf: double read GetPsiRampf write SetPsiRampf;
+    // SATTHK
+    property SatThick: double read GetSatThick write SetSatThick;
   published
-  // IRTFL (1 & 2, 3)
+    // IRTFL (1 & 2, 3)
     property RootingDepth: TRootingDepth read FRootingDepth
       write SetRootingDepth;
     // ICUFL (3, 2, 1, -1)
@@ -3083,6 +3138,9 @@ Type
     // IDEFFL (-2, -1, 0, 1, 2)
     property DeficiencyPolicy: TDeficiencyPolicy read FDeficiencyPolicy
       write SetDeficiencyPolicy;
+    // IALLOTGW
+    property GroundwaterAllotmentsUsed: boolean read FGroundwaterAllotmentsUsed
+      write SetGroundwaterAllotmentsUsed;
 
     // ICCFL (1 and 3, 2 and 4)
     // @name is used in conjunction with @link(CropConsumptiveLinkage)
@@ -3094,7 +3152,7 @@ Type
     // to specify ICCFL
     property CropConsumptiveLinkage: TCropConsumptiveLinkage
       read FCropConsumptiveLinkage write SetCropConsumptiveLinkage;
-    // IALLOT
+    // IALLOTSW
     property SurfaceWaterAllotment: TSurfaceWaterAllotment
       read FSurfaceWaterAllotment write SetSurfaceWaterAllotment;
     // IFWLCB
@@ -3113,6 +3171,12 @@ Type
     // IFBPFL: (odd number, even number)
     property FarmBudgetPrintHowMuch: TFarmBudgetPrintHowMuch
       read FFarmBudgetPrintHowMuch write SetFarmBudgetPrintHowMuch;
+    // IETPFL (positive or negative)
+    property EtPrintLocation: TEtPrintLocation read FEtPrintLocation
+      write SetEtPrintLocation;
+    // IETPFL (0, 1, 2, 3, 4)
+    property EtPrintType: TEtPrintType read FEtPrintType write SetEtPrintType;
+
     // IRTPFL (-2 and -1, 0, 1 and 2)
     property PrintRouting: TPrintRouting read FPrintRouting
       write SetPrintRouting;
@@ -3143,6 +3207,7 @@ Type
     //  IRRFL 0, 1, -1
     property RoutedReturn: TRoutedReturn read FRoutedReturn
       write SetRoutedReturn;
+
     // PCLOSE
     property StoredSurfaceWaterClosure: TRealStorage
       read FStoredSurfaceWaterClosure write SetStoredSurfaceWaterClosure;
@@ -3151,6 +3216,24 @@ Type
       write SetRecomputeOption;
     property AssignmentMethod: TUpdateMethod read FAssignmentMethod
       write SetAssignmentMethod Stored True;
+    // QMAXRESET
+    property ResetMnwQMax: boolean read FResetMnwQMax write SetResetMnwQMax;
+    // MNWCLOSE option
+    property MnwClose: Boolean read FMnwClose write SetMnwClose;
+    // QCLOSE
+    property StoredMnwClosureCriterion: TRealStorage
+      read FStoredMnwClosureCriterion write SetStoredMnwClosureCriterion;
+    // HPCT
+    property StoredHeadChangeReduction: TRealStorage
+      read FStoredHeadChangeReduction write SetStoredHeadChangeReduction;
+    // RPCT
+    property StoredResidualChangeReduction: TRealStorage
+      read FStoredResidualChangeReduction write SetStoredResidualChangeReduction;
+    // PSIRAMPF
+    property StoredPsiRampf: TRealStorage read FStoredPsiRampf write SetStoredPsiRampf;
+    // SATTHK
+    property StoredSatThick: TRealStorage read FStoredSatThick write SetStoredSatThick;
+
   end;
 
   TCfpElevationChoice = (cecIndividual, cecGroup);
@@ -3919,6 +4002,12 @@ Type
     procedure SetByNodePrintFrequency(const Value: TMnw1PrintFrequency);
     procedure SetQSumPrintFrequency(const Value: TMnw1PrintFrequency);
     procedure GetUseList(ParameterIndex: Integer; NewUseList: TStringList);
+    function GetRelativeQSumFileName: string;
+    procedure SetRelativeQSumFileName(const Value: string);
+    function GetRelativeByNodeFileName: string;
+    function GetRelativeWellFileName: string;
+    procedure SetRelativeByNodeFileName(const Value: string);
+    procedure SetRelativeWellFileName(const Value: string);
   public
     procedure Assign(Source: TPersistent); override;
     { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
@@ -3961,13 +4050,21 @@ Type
     property StoredLossExponent: TRealStorage read FStoredLossExponent
       write SetStoredLossExponent;
     // iunw1
-    property WellFileName: string read FWellFileName write SetWellFileName;
+    property WellFileName: string read FWellFileName write SetWellFileName
+      stored False;
+    property RelativeWellFileName: string read GetRelativeWellFileName
+      write SetRelativeWellFileName;
     // iunby
-    property ByNodeFileName: string read FByNodeFileName write SetByNodeFileName;
+    property ByNodeFileName: string read FByNodeFileName
+      write SetByNodeFileName stored False;
+    property RelativeByNodeFileName: string read GetRelativeByNodeFileName
+      write SetRelativeByNodeFileName;
     property ByNodePrintFrequency: TMnw1PrintFrequency
       read FByNodePrintFrequency write SetByNodePrintFrequency;
     // iunqs
-    property QSumFileName: string read FQSumFileName write SetQSumFileName;
+    property QSumFileName: string read FQSumFileName write SetQSumFileName stored False;
+    property RelativeQSumFileName: string Read GetRelativeQSumFileName
+      write SetRelativeQSumFileName;
     property QSumPrintFrequency: TMnw1PrintFrequency read FQSumPrintFrequency
       write SetQSumPrintFrequency;
   end;
@@ -3999,7 +4096,7 @@ uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
   ModflowFmpPrecipitationUnit, ModflowFmpCropUnit, ModflowFmpCropSpatialUnit,
   ModflowFmpWellUnit, ModflowCfpWriterUnit, ModflowCfpRechargeUnit,
   ModflowSwrWriterUnit, ModflowSwrUnit, ModflowSwrDirectRunoffUnit,
-  ModflowSwrReachUnit, ModflowMnw1Writer, ModflowMnw1Unit;
+  ModflowSwrReachUnit, ModflowMnw1Writer, ModflowMnw1Unit, ModflowFmpFarmIdUnit;
 
 resourcestring
   StrLengthUnitsForMod = 'Length units for model are undefined';
@@ -12513,6 +12610,7 @@ begin
     EfficiencyGroundwaterFunction := SourceFarm.EfficiencyGroundwaterFunction;
     EfficiencyReset := SourceFarm.EfficiencyReset;
     DeficiencyPolicy := SourceFarm.DeficiencyPolicy;
+    GroundwaterAllotmentsUsed := SourceFarm.GroundwaterAllotmentsUsed;
     CropConsumptiveConcept := SourceFarm.CropConsumptiveConcept;
     CropConsumptiveLinkage := SourceFarm.CropConsumptiveLinkage;
     SurfaceWaterAllotment := SourceFarm.SurfaceWaterAllotment;
@@ -12521,6 +12619,8 @@ begin
     SupplyAndDemand := SourceFarm.SupplyAndDemand;
     FarmBudgetPrintFlags := SourceFarm.FarmBudgetPrintFlags;
     FarmBudgetPrintHowMuch := SourceFarm.FarmBudgetPrintHowMuch;
+    EtPrintLocation := SourceFarm.EtPrintLocation;
+    EtPrintType := SourceFarm.EtPrintType;
     PrintRouting := SourceFarm.PrintRouting;
     PrintRoutingFrequency := SourceFarm.PrintRoutingFrequency;
     AcerageOptimizationPrintChoice := SourceFarm.AcerageOptimizationPrintChoice;
@@ -12532,6 +12632,13 @@ begin
     AssignmentMethod := SourceFarm.AssignmentMethod;
     SurfaceWaterClosure := SourceFarm.SurfaceWaterClosure;
     RecomputeOption := SourceFarm.RecomputeOption;
+    ResetMnwQMax := SourceFarm.ResetMnwQMax;
+    MnwClose := SourceFarm.MnwClose;
+    MnwClosureCriterion := SourceFarm.MnwClosureCriterion;
+    HeadChangeReduction := SourceFarm.HeadChangeReduction;
+    ResidualChangeReduction := SourceFarm.ResidualChangeReduction;
+    PsiRampf := SourceFarm.PsiRampf;
+    SatThick := SourceFarm.SatThick;
 //    WellFieldOption := SourceFarm.WellFieldOption;
   end;
   inherited;
@@ -12542,6 +12649,18 @@ constructor TFarmProcess.Create(Model: TBaseModel);
 begin
   inherited;
   FStoredSurfaceWaterClosure := TRealStorage.Create;
+  FStoredSurfaceWaterClosure.OnChange := OnValueChanged;
+  FStoredMnwClosureCriterion := TRealStorage.Create;
+  FStoredMnwClosureCriterion.OnChange := OnValueChanged;
+  FStoredResidualChangeReduction := TRealStorage.Create;
+  FStoredResidualChangeReduction.OnChange := OnValueChanged;
+  FStoredHeadChangeReduction := TRealStorage.Create;
+  FStoredHeadChangeReduction.OnChange := OnValueChanged;
+  FStoredPsiRampf := TRealStorage.Create;
+  FStoredPsiRampf.OnChange := OnValueChanged;
+  FStoredSatThick := TRealStorage.Create;
+  FStoredSatThick.OnChange := OnValueChanged;
+
   InitializeVariables;
 
   if Model <> nil then
@@ -12560,11 +12679,24 @@ begin
     FMfFmpPrecip.Name := StrFarmPrecip;
     AddTimeList(FMfFmpPrecip);
 
+    FMfFmpFarmID := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfFmpFarmID.OnInitialize := InitializeFarmIdDisplay;
+    FMfFmpFarmID.OnGetUseList := GetMfFmpFarmIDUseList;
+    FMfFmpFarmID.OnTimeListUsed := FarmIdUsed;
+    FMfFmpFarmID.Name := StrFarmID2;
+    FMfFmpFarmID.DataType := rdtInteger;
+    FMfFmpFarmID.AddMethod := vamReplace;
+    FMfFmpFarmID.Orientation := dsoTop;
+    AddTimeList(FMfFmpFarmID);
+
     FMfFmpCropID := TModflowBoundaryDisplayTimeList.Create(Model);
     FMfFmpCropID.OnInitialize := InitializeFarmCropIdDisplay;
     FMfFmpCropID.OnGetUseList := GetMfFmpCropIDUseList;
     FMfFmpCropID.OnTimeListUsed := CropIdUsed;
     FMfFmpCropID.Name := StrFarmCropID;
+    FMfFmpCropID.DataType := rdtInteger;
+    FMfFmpCropID.AddMethod := vamReplace;
+    FMfFmpCropID.Orientation := dsoTop;
     AddTimeList(FMfFmpCropID);
 
     FMfFmpMaxPumpingRate := TModflowBoundaryDisplayTimeList.Create(Model);
@@ -12574,12 +12706,12 @@ begin
     FMfFmpMaxPumpingRate.Name := StrFarmMaxPumpRate;
     AddTimeList(FMfFmpMaxPumpingRate);
 
-    FMfFmpFarmID := TModflowBoundaryDisplayTimeList.Create(Model);
-    FMfFmpFarmID.OnInitialize := InitializeFarmWellDisplay;
-    FMfFmpFarmID.OnGetUseList := GetMfFmpFarmWellFarmIDUseList;
-    FMfFmpFarmID.OnTimeListUsed := FarmWellsUsed;
-    FMfFmpFarmID.Name := StrFarmWellFarmID;
-    AddTimeList(FMfFmpFarmID);
+    FMfFmpFarmWellFarmID := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfFmpFarmWellFarmID.OnInitialize := InitializeFarmWellDisplay;
+    FMfFmpFarmWellFarmID.OnGetUseList := GetMfFmpFarmWellFarmIDUseList;
+    FMfFmpFarmWellFarmID.OnTimeListUsed := FarmWellsUsed;
+    FMfFmpFarmWellFarmID.Name := StrFarmWellFarmID;
+    AddTimeList(FMfFmpFarmWellFarmID);
 
     FMfFmpFarmWellPumpIfRequired := TModflowBoundaryDisplayTimeList.Create(Model);
     FMfFmpFarmWellPumpIfRequired.OnInitialize := InitializeFarmWellDisplay;
@@ -12599,12 +12731,18 @@ end;
 destructor TFarmProcess.Destroy;
 begin
   FMfFmpFarmWellPumpIfRequired.Free;
-  FMfFmpFarmID.Free;
+  FMfFmpFarmWellFarmID.Free;
   FMfFmpMaxPumpingRate.Free;
   FMfFmpCropID.Free;
+  FMfFmpFarmID.Free;
   FMfFmpPrecip.Free;
   FMfFmpEvapRate.Free;
   FStoredSurfaceWaterClosure.Free;
+  FStoredMnwClosureCriterion.Free;
+  FStoredResidualChangeReduction.Free;
+  FStoredHeadChangeReduction.Free;
+  FStoredPsiRampf.Free;
+  FStoredSatThick.Free;
   inherited;
 end;
 
@@ -12612,6 +12750,11 @@ function TFarmProcess.EvapUsed(Sender: TObject): boolean;
 begin
   result := PackageUsed(Sender)
     and (ConsumptiveUse in [cuPotentialAndReferenceET, cuCropCoefficient]);
+end;
+
+function TFarmProcess.FarmIdUsed(Sender: TObject): boolean;
+begin
+  result := PackageUsed(Sender);
 end;
 
 function TFarmProcess.FarmWellsPumpRequiredUsed(Sender: TObject): boolean;
@@ -12625,9 +12768,13 @@ begin
   result := PackageUsed(Sender);
 end;
 
+function TFarmProcess.GetHeadChangeReduction: double;
+begin
+  result := StoredHeadChangeReduction.Value;
+end;
+
 procedure TFarmProcess.GetMfFmpCropIDUseList(Sender: TObject;
   NewUseList: TStringList);
-{$IFDEF FMP}
 var
   ScreenObjectIndex: Integer;
   ScreenObject: TScreenObject;
@@ -12635,9 +12782,7 @@ var
   ValueIndex: Integer;
   PhastModel: TCustomModel;
   Boundary: TFmpCropIDBoundary;
-{$ENDIF}
 begin
-{$IFDEF FMP}
   PhastModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
   begin
@@ -12656,12 +12801,10 @@ begin
       end;
     end;
   end;
-{$ENDIF}
 end;
 
 procedure TFarmProcess.GetMfFmpEvapUseList(Sender: TObject;
   NewUseList: TStringList);
-{$IFDEF FMP}
 var
   ScreenObjectIndex: Integer;
   ScreenObject: TScreenObject;
@@ -12669,9 +12812,7 @@ var
   ValueIndex: Integer;
   PhastModel: TCustomModel;
   Boundary: TFmpRefEvapBoundary;
-{$ENDIF}
 begin
-{$IFDEF FMP}
   PhastModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
   begin
@@ -12690,39 +12831,84 @@ begin
       end;
     end;
   end;
-{$ENDIF}
+end;
+
+procedure TFarmProcess.GetMfFmpFarmIDUseList(Sender: TObject;
+  NewUseList: TStringList);
+var
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  Item: TCustomModflowBoundaryItem;
+  ValueIndex: Integer;
+  PhastModel: TCustomModel;
+  Boundary: TFmpFarmIDBoundary;
+begin
+  PhastModel := FModel as TCustomModel;
+  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+    if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    Boundary := ScreenObject.ModflowFmpFarmID;
+    if (Boundary <> nil) and Boundary.Used then
+    begin
+      for ValueIndex := 0 to Boundary.Values.Count -1 do
+      begin
+        Item := Boundary.Values[ValueIndex] as TCustomModflowBoundaryItem;
+        UpdateUseList(0, NewUseList, Item);
+      end;
+    end;
+  end;
 end;
 
 procedure TFarmProcess.GetMfFmpFarmWellFarmIDUseList(Sender: TObject;
   NewUseList: TStringList);
+var
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  Item: TCustomModflowBoundaryItem;
+  ValueIndex: Integer;
+  PhastModel: TCustomModel;
+  Boundary: TFmpFarmIDBoundary;
 begin
-{$IFDEF FMP}
-  UpdateDisplayUseList(NewUseList, ptQMAX,
-    FmpWellFarmIDPosition, StrFarmWellFarmID);
-{$ENDIF}
+  PhastModel := FModel as TCustomModel;
+  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+    if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    Boundary := ScreenObject.ModflowFmpFarmID;
+    if (Boundary <> nil) and Boundary.Used then
+    begin
+      for ValueIndex := 0 to Boundary.Values.Count -1 do
+      begin
+        Item := Boundary.Values[ValueIndex] as TCustomModflowBoundaryItem;
+        UpdateUseList(0, NewUseList, Item);
+      end;
+    end;
+  end;
 end;
 
 procedure TFarmProcess.GetMfFmpFarmWellPumpIfRequiredUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
-{$IFDEF FMP}
   UpdateDisplayUseList(NewUseList, ptQMAX,
     FmpWellPumpOnlyIfCropRequiresWaterPosition, StrFarmWellPumpRequired);
-{$ENDIF}
 end;
 
 procedure TFarmProcess.GetMfFmpMaxPumpRateUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
-{$IFDEF FMP}
   UpdateDisplayUseList(NewUseList, ptQMAX,
     FmpWellMaxPumpingRatePosition, StrFarmMaxPumpRate);
-{$ENDIF}
 end;
 
 procedure TFarmProcess.GetMfFmpPrecipUseList(Sender: TObject;
   NewUseList: TStringList);
-{$IFDEF FMP}
 var
   ScreenObjectIndex: Integer;
   ScreenObject: TScreenObject;
@@ -12730,9 +12916,7 @@ var
   ValueIndex: Integer;
   PhastModel: TCustomModel;
   Boundary: TFmpPrecipBoundary;
-{$ENDIF}
 begin
-{$IFDEF FMP}
   PhastModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
   begin
@@ -12751,7 +12935,26 @@ begin
       end;
     end;
   end;
-{$ENDIF}
+end;
+
+function TFarmProcess.GetMnwClosureCriterion: double;
+begin
+  result := StoredMnwClosureCriterion.Value;
+end;
+
+function TFarmProcess.GetPsiRampf: double;
+begin
+  result := StoredPsiRampf.Value
+end;
+
+function TFarmProcess.GetResidualChangeReduction: double;
+begin
+  result := StoredResidualChangeReduction.Value;
+end;
+
+function TFarmProcess.GetSatThick: double;
+begin
+  result := StoredSatThick.Value
 end;
 
 function TFarmProcess.GetSurfaceWaterClosure: Double;
@@ -12760,15 +12963,12 @@ begin
 end;
 
 procedure TFarmProcess.InitializeFarmCropIdDisplay(Sender: TObject);
-{$IFDEF FMP}
 var
   List: TModflowBoundListOfTimeLists;
   FarmWriter: TModflowFmpWriter;
   Index: Integer;
   TimeList: TModflowBoundaryDisplayTimeList;
-{$ENDIF}
 begin
-{$IFDEF FMP}
   List := TModflowBoundListOfTimeLists.Create;
   FarmWriter := TModflowFmpWriter.Create(FModel as TCustomModel, etDisplay);
   try
@@ -12791,19 +12991,46 @@ begin
     FarmWriter.Free;
     List.Free;
   end;
-{$ENDIF}
 end;
 
-procedure TFarmProcess.InitializeFarmPrecipDisplay(Sender: TObject);
-{$IFDEF FMP}
+procedure TFarmProcess.InitializeFarmIdDisplay(Sender: TObject);
 var
   List: TModflowBoundListOfTimeLists;
   FarmWriter: TModflowFmpWriter;
   Index: Integer;
   TimeList: TModflowBoundaryDisplayTimeList;
-{$ENDIF}
 begin
-{$IFDEF FMP}
+  List := TModflowBoundListOfTimeLists.Create;
+  FarmWriter := TModflowFmpWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfFmpFarmID);
+
+    for Index := 0 to List.Count - 1 do
+    begin
+      TimeList := List[Index];
+      TimeList.CreateDataSets;
+    end;
+
+    FarmWriter.UpdateFarmIDDisplay(List);
+
+    for Index := 0 to List.Count - 1 do
+    begin
+      TimeList := List[Index];
+      TimeList.ComputeAverage;
+    end;
+  finally
+    FarmWriter.Free;
+    List.Free;
+  end;
+end;
+
+procedure TFarmProcess.InitializeFarmPrecipDisplay(Sender: TObject);
+var
+  List: TModflowBoundListOfTimeLists;
+  FarmWriter: TModflowFmpWriter;
+  Index: Integer;
+  TimeList: TModflowBoundaryDisplayTimeList;
+begin
   List := TModflowBoundListOfTimeLists.Create;
   FarmWriter := TModflowFmpWriter.Create(FModel as TCustomModel, etDisplay);
   try
@@ -12826,19 +13053,15 @@ begin
     FarmWriter.Free;
     List.Free;
   end;
-{$ENDIF}
 end;
 
 procedure TFarmProcess.InitializeFarmRefEtDisplay(Sender: TObject);
-{$IFDEF FMP}
 var
   List: TModflowBoundListOfTimeLists;
   FarmWriter: TModflowFmpWriter;
   Index: Integer;
   TimeList: TModflowBoundaryDisplayTimeList;
-{$ENDIF}
 begin
-{$IFDEF FMP}
   List := TModflowBoundListOfTimeLists.Create;
   FarmWriter := TModflowFmpWriter.Create(FModel as TCustomModel, etDisplay);
   try
@@ -12861,36 +13084,32 @@ begin
     FarmWriter.Free;
     List.Free;
   end;
-{$ENDIF}
 end;
 
 procedure TFarmProcess.InitializeFarmWellDisplay(Sender: TObject);
-{$IFDEF FMP}
 var
   FarmWriter: TModflowFmpWriter;
   List: TModflowBoundListOfTimeLists;
-{$ENDIF}
 begin
-{$IFDEF FMP}
   MfFmpMaxPumpingRate.CreateDataSets;
-  MfFmpFarmID.CreateDataSets;
+  MfFmpFarmWellFarmID.CreateDataSets;
   MfFmpFarmWellPumpIfRequired.CreateDataSets;
 
   List := TModflowBoundListOfTimeLists.Create;
   FarmWriter := TModflowFmpWriter.Create(FModel as TCustomModel, etDisplay);
   try
     List.Add(MfFmpMaxPumpingRate);
-    List.Add(MfFmpFarmID);
+    List.Add(MfFmpFarmWellFarmID);
     List.Add(MfFmpFarmWellPumpIfRequired);
-    FarmWriter.UpdateDisplay(List, [FmpWellMaxPumpingRatePosition]);
+    FarmWriter.UpdateDisplay(List, [FmpWellMaxPumpingRatePosition,
+      FmpWellFarmIDPosition, FmpWellPumpOnlyIfCropRequiresWaterPosition]);
   finally
     FarmWriter.Free;
     List.Free;
   end;
   MfFmpMaxPumpingRate.LabelAsSum;
-  MfFmpFarmID.ComputeAverage;
+  MfFmpFarmWellFarmID.ComputeAverage;
   MfFmpFarmWellPumpIfRequired.ComputeAverage;
-{$ENDIF}
 end;
 
 procedure TFarmProcess.InitializeVariables;
@@ -12903,6 +13122,7 @@ begin
   EfficiencyGroundwaterFunction := egfDeliveriesVary;
   EfficiencyReset := erStressPeriod;
   DeficiencyPolicy := dpNoPolicy;
+  GroundwaterAllotmentsUsed := False;
   CropConsumptiveConcept := cccConcept1;
   CropConsumptiveLinkage := cclNotLinked;
   SurfaceWaterAllotment := swaNone;
@@ -12911,6 +13131,8 @@ begin
   SupplyAndDemand := sadDefault;
   FarmBudgetPrintFlags := fbpNone;
   FarmBudgetPrintHowMuch := fbpCompact;
+  EtPrintLocation := eplText;
+  EtPrintType := eptNone;
   PrintRouting := prListingFile;
   PrintRoutingFrequency := prfAllPeriods;
   AcerageOptimizationPrintChoice := aopcCellFractionsAndResourceConstraints;
@@ -12922,6 +13144,14 @@ begin
   AssignmentMethod := umAssign;
   SurfaceWaterClosure := 0.001;
   RecomputeOption := roNotComputed;
+  ResetMnwQMax := False;
+
+  MnwClose := False;
+  MnwClosureCriterion := 1e-6;
+  HeadChangeReduction := 0.1;
+  ResidualChangeReduction := 0.1;
+  PsiRampf := 0.1;
+  SatThick := 0.1;
 end;
 
 function TFarmProcess.PrecipUsed(Sender: TObject): boolean;
@@ -13040,6 +13270,24 @@ begin
   end;
 end;
 
+procedure TFarmProcess.SetEtPrintLocation(const Value: TEtPrintLocation);
+begin
+  if FEtPrintLocation <> Value then
+  begin
+    FEtPrintLocation := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetEtPrintType(const Value: TEtPrintType);
+begin
+  if FEtPrintType <> Value then
+  begin
+    FEtPrintType := Value;
+    InvalidateModel;
+  end;
+end;
+
 procedure TFarmProcess.SetFarmBudgetPrintFlags(Value: TFarmBudgetPrintFlags);
 begin
   if Value = fbpAsciiCompact then
@@ -13073,6 +13321,26 @@ begin
   end;
 end;
 
+procedure TFarmProcess.SetGroundwaterAllotmentsUsed(const Value: boolean);
+begin
+  SetBooleanProperty(FGroundwaterAllotmentsUsed, Value);
+end;
+
+procedure TFarmProcess.SetHeadChangeReduction(const Value: double);
+begin
+  StoredHeadChangeReduction.Value := Value;
+end;
+
+procedure TFarmProcess.SetMnwClose(const Value: Boolean);
+begin
+  SetBooleanProperty(FMnwClose, Value);
+end;
+
+procedure TFarmProcess.SetMnwClosureCriterion(const Value: double);
+begin
+  StoredMnwClosureCriterion.Value := Value;
+end;
+
 procedure TFarmProcess.SetPrecipitation(const Value: TPrecipitation);
 begin
   if FPrecipitation <> Value then
@@ -13101,6 +13369,11 @@ begin
   end;
 end;
 
+procedure TFarmProcess.SetPsiRampf(const Value: double);
+begin
+  StoredPsiRampf.Value := Value;
+end;
+
 procedure TFarmProcess.SetRecomputeOption(const Value: TRecomputeOption);
 begin
   if FRecomputeOption <> Value then
@@ -13108,6 +13381,16 @@ begin
     FRecomputeOption := Value;
     InvalidateModel;
   end;
+end;
+
+procedure TFarmProcess.SetResetMnwQMax(const Value: boolean);
+begin
+  SetBooleanProperty(FResetMnwQMax, Value);
+end;
+
+procedure TFarmProcess.SetResidualChangeReduction(const Value: double);
+begin
+  StoredResidualChangeReduction.Value := Value;
 end;
 
 procedure TFarmProcess.SetRootingDepth(const Value: TRootingDepth);
@@ -13137,6 +13420,11 @@ begin
   end;
 end;
 
+procedure TFarmProcess.SetSatThick(const Value: double);
+begin
+  StoredSatThick.Value := Value;
+end;
+
 procedure TFarmProcess.SetSaveNetRecharge(Value: TSaveNetRecharge);
 begin
   if Value in [snrListing, snrNone] then
@@ -13164,6 +13452,32 @@ begin
   end;
 end;
 
+procedure TFarmProcess.SetStoredHeadChangeReduction(const Value: TRealStorage);
+begin
+  FStoredHeadChangeReduction.Assign(Value)
+end;
+
+procedure TFarmProcess.SetStoredMnwClosureCriterion(const Value: TRealStorage);
+begin
+  FStoredMnwClosureCriterion.Assign(Value)
+end;
+
+procedure TFarmProcess.SetStoredPsiRampf(const Value: TRealStorage);
+begin
+  FStoredPsiRampf.Assign(Value)
+end;
+
+procedure TFarmProcess.SetStoredResidualChangeReduction(
+  const Value: TRealStorage);
+begin
+  FStoredResidualChangeReduction.Assign(Value)
+end;
+
+procedure TFarmProcess.SetStoredSatThick(const Value: TRealStorage);
+begin
+  FStoredSatThick.Assign(Value)
+end;
+
 procedure TFarmProcess.SetStoredSurfaceWaterClosure(const Value: TRealStorage);
 begin
   FStoredSurfaceWaterClosure.Assign(Value);
@@ -13187,6 +13501,11 @@ begin
     InvalidateModel;
   end;
 end;
+
+//procedure TFarmProcess.SetSurfaceWaterAllotments(const Value: Boolean);
+//begin
+//  SetBooleanProperty(FSurfaceWaterAllotments, Value);
+//end;
 
 procedure TFarmProcess.SetSurfaceWaterClosure(const Value: Double);
 begin
@@ -15359,6 +15678,45 @@ begin
   GetUseList(ReferenceElevationPosition, NewUseList);
 end;
 
+function TMnw1Package.GetRelativeByNodeFileName: string;
+begin
+  if FModel = nil then
+  begin
+    result := ByNodeFileName;
+  end
+  else
+  begin
+    result := ExtractRelativePath((FModel as TCustomModel).ModelFileName,
+      ByNodeFileName);
+  end;
+end;
+
+function TMnw1Package.GetRelativeQSumFileName: string;
+begin
+  if FModel = nil then
+  begin
+    result := QSumFileName;
+  end
+  else
+  begin
+    result := ExtractRelativePath((FModel as TCustomModel).ModelFileName,
+      QSumFileName);
+  end;
+end;
+
+function TMnw1Package.GetRelativeWellFileName: string;
+begin
+  if FModel = nil then
+  begin
+    result := WellFileName;
+  end
+  else
+  begin
+    result := ExtractRelativePath((FModel as TCustomModel).ModelFileName,
+      WellFileName);
+  end;
+end;
+
 procedure TMnw1Package.GetSkinUseList(Sender: TObject; NewUseList: TStringList);
 begin
   GetUseList(SkinFactorPosition, NewUseList);
@@ -15521,6 +15879,21 @@ begin
     FQSumPrintFrequency := Value;
     InvalidateModel;
   end;
+end;
+
+procedure TMnw1Package.SetRelativeByNodeFileName(const Value: string);
+begin
+  ByNodeFileName := ExpandFileName(Value);
+end;
+
+procedure TMnw1Package.SetRelativeQSumFileName(const Value: string);
+begin
+  QSumFileName := ExpandFileName(Value);
+end;
+
+procedure TMnw1Package.SetRelativeWellFileName(const Value: string);
+begin
+  WellFileName := ExpandFileName(Value);
 end;
 
 procedure TMnw1Package.SetStoredLossExponent(const Value: TRealStorage);

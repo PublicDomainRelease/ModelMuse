@@ -866,6 +866,11 @@ C
 C6------IF PRINT CODE (IPRN) >0 OR =0 THEN PRINT ARRAY VALUES.
   320 Continue
 !  320 IF(IPRN.GE.0) CALL ULAPRW(A,ANAME,0,0,JJ,II,0,IPRN,IOUT)
+! RBW Test for NAN. NAN is not equal to anything including itself.
+        DO 380 I=1,II
+          Do 380 J=1,JJ
+            if (A(J,I).NE.A(J,I)) A(J,I) = 0
+  380   CONTINUE      
         DO 400 I=1,II
            WRITE(IOUT, *) (A(J,I),J=1,JJ)
   400   CONTINUE

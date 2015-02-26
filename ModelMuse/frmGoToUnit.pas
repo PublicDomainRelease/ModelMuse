@@ -9,7 +9,7 @@ uses
   UndoItemsScreenObjects, SysUtils, Types, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, frmCustomGoPhastUnit, ComCtrls, Buttons,
   CompressedImageUnit, ExtCtrls, Spin, ArgusDataEntry, Mask, JvExMask, JvSpin,
-  AbstractGridUnit, GoPhastTypes;
+  AbstractGridUnit, GoPhastTypes, ScreenObjectUnit;
 
 type
   TNavigationType = (ntPosition, ntGrid, mtMesh, ntObject, ntImage);
@@ -175,9 +175,11 @@ procedure MoveToImage(BitMapItem: TCompressedBitmapItem);
 procedure MoveToMesh(NodeOrElementNumber: Integer; MeshMoveTo: TMeshMoveTo;
   MoveToViews: TViewDirections);
 
+procedure GoToObject(AScreenObject: TScreenObject);
+
 implementation
 
-uses frmGoPhastUnit, ScreenObjectUnit,
+uses frmGoPhastUnit,
   DataSetUnit, FastGEO, PhastModelUnit, SutraMeshUnit, QuadTreeClass, UndoItems;
 
 resourcestring
@@ -645,9 +647,8 @@ begin
             FrontCell := frmGoPhast.PhastGrid.FrontContainingCell(APoint, eaBlocks);
             SetGridSpinEditValue(seLayer,FrontCell.Lay+1);
           end;
-        msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-          {$IFDEF FMP}, msModflowFmp {$ENDIF}
-          , msModflowCfp:
+        msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+          msModflowFmp, msModflowCfp:
           begin
             Layer := frmGoPhast.ModflowGrid.NearestLayerPosition(seCol.AsInteger-1,
               frmGoPhast.ModflowGrid.SelectedRow, APoint.Y);
@@ -715,6 +716,31 @@ begin
     Screen.Cursor := crDefault;
   end;
 end;
+
+procedure GoToObject(AScreenObject: TScreenObject);
+var
+  XCoordinate, YCoordinate: double;
+begin
+  XCoordinate := AScreenObject.Points[0].X;
+  YCoordinate := AScreenObject.Points[0].Y;
+  case AScreenObject.ViewDirection of
+    vdTop:
+      begin
+        SetTopPosition(XCoordinate, YCoordinate);
+      end;
+    vdFront:
+      begin
+        SetFrontPosition(XCoordinate, YCoordinate);
+      end;
+    vdSide:
+      begin
+        SetSidePosition(YCoordinate, XCoordinate);
+      end;
+  else
+    Assert(False);
+  end;
+end;
+
 
 procedure TfrmGoTo.SetData;
 var
@@ -823,24 +849,25 @@ begin
                 frmGoPhast.UndoStack.Submit(UndoShowHide);
               end;
 
-              XCoordinate := AScreenObject.Points[0].X;
-              YCoordinate := AScreenObject.Points[0].Y;
-              case AScreenObject.ViewDirection of
-                vdTop:
-                  begin
-                    SetTopPosition(XCoordinate, YCoordinate);
-                  end;
-                vdFront:
-                  begin
-                    SetFrontPosition(XCoordinate, YCoordinate);
-                  end;
-                vdSide:
-                  begin
-                    SetSidePosition(YCoordinate, XCoordinate);
-                  end;
-              else
-                Assert(False);
-              end;
+              GoToObject(AScreenObject);
+//              XCoordinate := AScreenObject.Points[0].X;
+//              YCoordinate := AScreenObject.Points[0].Y;
+//              case AScreenObject.ViewDirection of
+//                vdTop:
+//                  begin
+//                    SetTopPosition(XCoordinate, YCoordinate);
+//                  end;
+//                vdFront:
+//                  begin
+//                    SetFrontPosition(XCoordinate, YCoordinate);
+//                  end;
+//                vdSide:
+//                  begin
+//                    SetSidePosition(YCoordinate, XCoordinate);
+//                  end;
+//              else
+//                Assert(False);
+//              end;
             end;
           end;
         end;
@@ -936,9 +963,8 @@ begin
   case frmGoPhast.ModelSelection of
     msUndefined: Assert(False);
     msPhast, msSutra22: tabCell.Caption := StrElement;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         tabCell.Caption := StrBlock;
       end

@@ -41,6 +41,13 @@ uses
 
 resourcestring
   StrWritingMNW1Package = 'Writing MNW1 Package input.';
+  StrInvalidDirectoryIn = 'Invalid directory in MNW1 package';
+  StrTheDirectoryForWell = 'The directory for the well output file for the M' +
+  'NW1 package does not exist.';
+  StrTheDirectoryForTh = 'The directory for the QSUM output file for the MNW' +
+  '1 package does not exist.';
+  StrTheDirectoryForByNode = 'The directory for the by-node output file for ' +
+  'the MNW1 package does not exist.';
 
 { TModflowMNW1_Writer }
 
@@ -68,35 +75,36 @@ var
 begin
   frmErrorsAndWarnings.BeginUpdate;
   try
-  try
     Dummy := TStringList.Create;
-    for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
-    begin
-      if not frmProgressMM.ShouldContinue then
+    try
+      frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidDirectoryIn);
+      for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
       begin
-        Exit;
-      end;
-      ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
-      if ScreenObject.Deleted then
-      begin
-        Continue;
-      end;
-      if not ScreenObject.UsedModels.UsesModel(Model) then
-      begin
-        Continue;
-      end;
-      Boundary := ScreenObject.ModflowMnw1Boundary;
-      if (Boundary = nil) or not Boundary.Used then
-      begin
-        Continue;
-      end;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
+        if ScreenObject.Deleted then
+        begin
+          Continue;
+        end;
+        if not ScreenObject.UsedModels.UsesModel(Model) then
+        begin
+          Continue;
+        end;
+        Boundary := ScreenObject.ModflowMnw1Boundary;
+        if (Boundary = nil) or not Boundary.Used then
+        begin
+          Continue;
+        end;
 
-      FWells.Add(Boundary);
-      Boundary.GetCellValues(Values, Dummy, Model);
+        FWells.Add(Boundary);
+        Boundary.GetCellValues(Values, Dummy, Model);
+      end;
+    finally
+      Dummy.Free;
     end;
-  finally
-    Dummy.Free;
-  end;
 
   finally
     frmErrorsAndWarnings.EndUpdate;
@@ -253,10 +261,17 @@ procedure TModflowMNW1_Writer.WriteDataSet3a;
 var
   WellFileName: string;
   iunw1: integer;
+  FileDir: string;
 begin
   WellFileName := FMnwPackage.WellFileName;
   if WellFileName <> '' then
   begin
+    FileDir := ExtractFileDir(WellFileName);
+    if not DirectoryExists(FileDir) then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrInvalidDirectoryIn,
+        StrTheDirectoryForWell);
+    end;
     WellFileName := ExtractRelativePath(FNameOfFile, WellFileName);
     WellFileName := StringReplace(WellFileName, ' ', '_', [rfReplaceAll]);
     iunw1 := Model.UnitNumbers.UnitNumber(StrMnw1WellOutput);
@@ -273,10 +288,17 @@ procedure TModflowMNW1_Writer.WriteDataSet3b;
 var
   ByNodeFileName: string;
   iunby: integer;
+  FileDir: string;
 begin
   ByNodeFileName := FMnwPackage.ByNodeFileName;
   if ByNodeFileName <> '' then
   begin
+    FileDir := ExtractFileDir(ByNodeFileName);
+    if not DirectoryExists(FileDir) then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrInvalidDirectoryIn,
+        StrTheDirectoryForByNode);
+    end;
     ByNodeFileName := ExtractRelativePath(FNameOfFile, ByNodeFileName);
     ByNodeFileName := StringReplace(ByNodeFileName, ' ', '_', [rfReplaceAll]);
     iunby := Model.UnitNumbers.UnitNumber(StrMnw1ByNode);
@@ -297,10 +319,17 @@ procedure TModflowMNW1_Writer.WriteDataSet3c;
 var
   QSumFileName: string;
   iunqs: integer;
+  FileDir: string;
 begin
   QSumFileName := FMnwPackage.QSumFileName;
   if QSumFileName <> '' then
   begin
+    FileDir := ExtractFileDir(QSumFileName);
+    if not DirectoryExists(FileDir) then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrInvalidDirectoryIn,
+        StrTheDirectoryForTh);
+    end;
     QSumFileName := ExtractRelativePath(FNameOfFile, QSumFileName);
     QSumFileName := StringReplace(QSumFileName, ' ', '_', [rfReplaceAll]);
     iunqs := Model.UnitNumbers.UnitNumber(StrMnw1QSum);

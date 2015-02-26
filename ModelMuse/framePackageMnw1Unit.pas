@@ -30,10 +30,12 @@ type
     procedure rcSelectionControllerEnabledChange(Sender: TObject);
     procedure fedByNodeChange(Sender: TObject);
     procedure fedQSumChange(Sender: TObject);
+    procedure fedWellFileNameChange(Sender: TObject);
   private
     procedure EnableLossExponent;
     procedure EnableByNodeFrequency;
     procedure EnableQSumFrequency;
+    procedure SetFileEditColor(FileEdit: TJvFilenameEdit);
     { Private declarations }
   public
     procedure GetData(Package: TModflowPackageSelection); override;
@@ -73,6 +75,9 @@ begin
   comboByNodeFrequency.ItemIndex := Ord(Mnw1Package.ByNodePrintFrequency);
   comboQSumFrequency.ItemIndex := Ord(Mnw1Package.QSumPrintFrequency);
   comboLosstypeChange(nil);
+  fedByNodeChange(nil);
+  fedQSumChange(nil);
+  fedWellFileNameChange(nil);
 end;
 
 procedure TframePackageMnw1.rcSelectionControllerEnabledChange(Sender: TObject);
@@ -101,6 +106,25 @@ begin
     TMnw1PrintFrequency(comboQSumFrequency.ItemIndex);
 end;
 
+procedure TframePackageMnw1.SetFileEditColor(FileEdit: TJvFilenameEdit);
+var
+  Color: Integer;
+  FileName: TFileName;
+  FileDir: string;
+begin
+  Color := clWindow;
+  FileName := FileEdit.FileName;
+  if FileName <> '' then
+  begin
+    FileDir := ExtractFileDir(FileName);
+    if not DirectoryExists(FileDir) then
+    begin
+      Color := clRed;
+    end;
+  end;
+  FileEdit.Color := Color;
+end;
+
 procedure TframePackageMnw1.EnableQSumFrequency;
 begin
   comboQSumFrequency.Enabled := rcSelectionController.Enabled
@@ -123,12 +147,20 @@ procedure TframePackageMnw1.fedByNodeChange(Sender: TObject);
 begin
   inherited;
   EnableByNodeFrequency;
+  SetFileEditColor(fedByNode);
 end;
 
 procedure TframePackageMnw1.fedQSumChange(Sender: TObject);
 begin
   inherited;
   EnableQSumFrequency;
+  SetFileEditColor(fedQSum);
+end;
+
+procedure TframePackageMnw1.fedWellFileNameChange(Sender: TObject);
+begin
+  inherited;
+  SetFileEditColor(fedWellFileName);
 end;
 
 end.

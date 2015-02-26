@@ -185,6 +185,7 @@ function ShowHelp(const Keyword: string; HelpFormat: THelpFormat): boolean;
 var
   GlobalFont: TFont = nil;
   GlobalColor: TColor = clBtnFace;
+  ShowingForm: boolean = False;
 
 resourcestring
   StrNone = 'none';
@@ -429,17 +430,22 @@ end;
 
 function ShowAForm(const FormClass: TFormClass): integer;
 begin
-  with FormClass.Create(nil) do
-  begin
-    try
-      if ModalResult = mrNone then
-      begin
-        ShowModal;
+  ShowingForm := True;
+  try
+    with FormClass.Create(nil) do
+    begin
+      try
+        if ModalResult = mrNone then
+        begin
+          ShowModal;
+        end;
+        result := ModalResult;
+      finally
+        Free;
       end;
-      result := ModalResult;
-    finally
-      Free;
     end;
+  finally
+    ShowingForm := False;
   end;
 end;
 

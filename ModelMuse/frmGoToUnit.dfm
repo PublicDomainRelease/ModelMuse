@@ -10,19 +10,19 @@ inherited frmGoTo: TfrmGoTo
   Caption = 'Go To'
   ExplicitWidth = 317
   ExplicitHeight = 360
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pcMain: TPageControl
     Left = 0
     Top = 0
-    Width = 301
-    Height = 240
+    Width = 299
+    Height = 233
     ActivePage = tabObject
     Align = alClient
     TabOrder = 0
     OnChange = pcMainChange
-    ExplicitWidth = 299
-    ExplicitHeight = 233
+    ExplicitWidth = 301
+    ExplicitHeight = 240
     object tabPosition: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'The_Position_Tab'
@@ -32,8 +32,8 @@ inherited frmGoTo: TfrmGoTo
       ExplicitWidth = 0
       ExplicitHeight = 0
       DesignSize = (
-        293
-        207)
+        291
+        200)
       object lblX: TLabel
         Left = 268
         Top = 11
@@ -155,8 +155,8 @@ inherited frmGoTo: TfrmGoTo
       ExplicitWidth = 0
       ExplicitHeight = 0
       DesignSize = (
-        293
-        207)
+        291
+        200)
       object lblCol: TLabel
         Left = 234
         Top = 41
@@ -292,8 +292,8 @@ inherited frmGoTo: TfrmGoTo
       object lvScreenObjects: TListView
         Left = 0
         Top = 0
-        Width = 291
-        Height = 159
+        Width = 293
+        Height = 166
         Align = alClient
         Columns = <
           item
@@ -305,8 +305,8 @@ inherited frmGoTo: TfrmGoTo
       end
       object pnlObject: TPanel
         Left = 0
-        Top = 159
-        Width = 291
+        Top = 166
+        Width = 293
         Height = 41
         Align = alBottom
         ParentColor = True
@@ -348,14 +348,14 @@ inherited frmGoTo: TfrmGoTo
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 240
-    Width = 301
+    Top = 233
+    Width = 299
     Height = 82
     Align = alBottom
     ParentColor = True
     TabOrder = 1
-    ExplicitTop = 233
-    ExplicitWidth = 299
+    ExplicitTop = 240
+    ExplicitWidth = 301
     object btnCancel: TBitBtn
       Left = 197
       Top = 40

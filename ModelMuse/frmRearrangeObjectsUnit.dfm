@@ -10,13 +10,13 @@ inherited frmRearrangeObjects: TfrmRearrangeObjects
   Caption = 'Rearrange Objects'
   ExplicitWidth = 339
   ExplicitHeight = 445
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object sgObjects: TStringGrid
     Left = 0
     Top = 105
-    Width = 331
-    Height = 207
+    Width = 321
+    Height = 196
     Align = alClient
     ColCount = 2
     DefaultColWidth = 20
@@ -27,18 +27,20 @@ inherited frmRearrangeObjects: TfrmRearrangeObjects
     OnMouseDown = sgObjectsMouseDown
     OnMouseMove = sgObjectsMouseMove
     OnMouseUp = sgObjectsMouseUp
+    OnMouseWheelDown = sgObjectsMouseWheelDown
+    OnMouseWheelUp = sgObjectsMouseWheelUp
     OnSelectCell = sgObjectsSelectCell
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 312
-    Width = 331
+    Top = 301
+    Width = 321
     Height = 99
     Align = alBottom
     ParentColor = True
     TabOrder = 2
     DesignSize = (
-      331
+      321
       99)
     object btnCancel: TBitBtn
       Left = 221
@@ -46,11 +48,9 @@ inherited frmRearrangeObjects: TfrmRearrangeObjects
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 2
+      TabOrder = 3
     end
     object btnOK: TBitBtn
       Left = 124
@@ -58,11 +58,9 @@ inherited frmRearrangeObjects: TfrmRearrangeObjects
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 1
+      TabOrder = 2
       OnClick = btnOKClick
     end
     object btnHelp: TBitBtn
@@ -71,11 +69,9 @@ inherited frmRearrangeObjects: TfrmRearrangeObjects
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 0
+      TabOrder = 1
       OnClick = btnHelpClick
     end
     object rgShow: TRadioGroup
@@ -91,20 +87,20 @@ inherited frmRearrangeObjects: TfrmRearrangeObjects
         'All'
         'Visible'
         'Selected')
-      TabOrder = 3
+      TabOrder = 0
       OnClick = rgShowClick
     end
   end
   object pnlInstructions: TPanel
     Left = 0
     Top = 0
-    Width = 331
+    Width = 321
     Height = 105
     Align = alTop
     ParentColor = True
     TabOrder = 0
     DesignSize = (
-      331
+      321
       105)
     object lblInstructions: TLabel
       Left = 8

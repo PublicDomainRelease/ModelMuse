@@ -1,6 +1,6 @@
 ModelMuse is a graphical user interface (GUI) for the U.S. Geological Survey
 (USGS) models MODFLOW–2005, MODFLOW-LGR, MODFLOW-LGR2, MODFLOW-NWT, MODFLOW-CFP, 
-MODPATH, ZONEBUDGET, PHAST, SUTRA and MT3DMS.  This software package 
+MODFLOW-OWHM, MODPATH, ZONEBUDGET, PHAST, SUTRA and MT3DMS.  This software package 
 provides a GUI for creating the flow and transport input  file for PHAST and the 
 input files for the other models. In 
 ModelMuse, the spatial data for the model are independent of the grid, and the 

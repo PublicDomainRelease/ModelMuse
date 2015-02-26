@@ -1,6 +1,6 @@
 XYGRAPH Delphi Unit 
-Version 2.3, july 2006 
-See revised copyright notes in XYGRAPH.PAS
+Final version 3.0, june 2009 
+XYGRAPH is free of copyright and is public domain.
 
 You should find the following 19 files:
 
@@ -62,42 +62,16 @@ this routine in case you forget but that may not be always full proof.
 
 SUPPORT
 
-As a matter of principle I will respond to all e-mail.
-I do take comments from users very seriously and will try to follow their
-suggestions as long as they are within the scope of XYGRAPH (and not too 
-complicated). If you have problems with the use of XYGRAPH I will help you
-but I am not going to write your application for you.
-However keep in mind that I am doing this as a hobby and not for a living
-and have other obligations as well, I cannot always respond overnight.
+There is no longer support for XYGRAPH, therefore from now on it is free of rights.
 
 CONTACT
 
-Please resist the temptation of making alterations to XYGRAPH yourself:
-- changing someone else's program is very hazardous as you often cannot
-  forsee the consequences
-- when you download future versions of XYGRAPH you have to do it all
-  over again
-- you deny your fellow programmers the benefits of your ideas
+I will still answer questions but in principle there is no longer support.
+There will be no more upgrades.
 
-Contact me for implying improvements or extensions instead. I am happy to
-do it for you, in fact many extensions are actually based om comments from
-users.
+--  mailto:wcemmens@solcon.nl
 
-Inform me also of any bugs you find. I use XYGRAPH for my own applications
-and as such have tested it extensively. However I cannot test every
-possible combination of conditions so some bugs may still be present.
-
-Also contact me if you are just satisfied.
-NOTE: For all mails: please mention 'xygraph' clearly in the mail's subject
-header, otherwise I might think it is Spam and will delete it unread.
-
---  wcemmens@solcon.nl
-
-Visit my website for regular upgrades.
-
---  www.solcon.nl/wcemmens
-
-Also inform me if you want to receive any XYGRAPH mailing.
+--  http://home.solcon.nl/wcemmens
 
 HISTORY
 
@@ -110,6 +84,9 @@ HISTORY
 2.0 dec  2003: implementation of 3D plotting, textangle
 2.1 aug  2004: all types of polar plots, red/green stereo, timeaxis
 2.2 apr  2005: 4D plotting, 3D labels, missing data, array plot
+2.3 jul  2006: many refinements
+2.4 oct  2007: user defined axes in 2D, viewing postion in 3D, many more
+3.0 june 2009: user defined axes in 3D, cluster plotting
 
 ACKNOWLEDGEMENTS
 
@@ -137,6 +114,13 @@ Thanks to:
 - Nicolas Rousselon
 - Klaus Krug
 - Thomas Harnisch
+- Sarah Ashton
+- Michael Weagley
+- Daniel Maszkowski
+- Xiuwen Zheng
+- Anvarov Rais
+- Bill Olson
+- Edmund Stokes
 for comments and suggestions (or reporting bugs).
 
 Textangle routine by Claus Ziegler (www.zieglersoft.dk).

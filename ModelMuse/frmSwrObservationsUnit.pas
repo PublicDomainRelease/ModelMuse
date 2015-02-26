@@ -216,7 +216,7 @@ begin
     Grid.Cells[Ord(ocName), ItemIndex+1] := Item.ObsName;
     Grid.ItemIndex[Ord(ocType), ItemIndex+1] := Ord(Item.ObsType);
     Grid.IntegerValue[Ord(ocReach), ItemIndex+1] := Item.ObservationReach;
-    Grid.IntegerValue[Ord(ocConnectedReach), ItemIndex+1] := Item.ConnectedReach;
+    Grid.IntegerValue[Ord(ocConnectedReach), ItemIndex+1] := Item.ConnectedReachOrStructure;
     Grid.Cells[Ord(ocStructure), ItemIndex+1] := Item.StructureName;
     Grid.IntegerValue[Ord(ocLayer), ItemIndex+1] := Item.ObservationLayer;
   end;
@@ -293,7 +293,7 @@ begin
         ObsItem.ObsName := ObsName;
         ObsItem.ObsType := ObsType;
         ObsItem.ObservationReach := ObsLocation;
-        ObsItem.ConnectedReach := ObsConnected;
+        ObsItem.ConnectedReachOrStructure := ObsConnected;
         ObsItem.StructureName := StructureName;
         ObsItem.ObservationLayer := ObsLayer;
       end;

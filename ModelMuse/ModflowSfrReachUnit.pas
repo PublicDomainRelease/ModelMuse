@@ -505,7 +505,8 @@ begin
   inherited;
   PhastModel := Model as TPhastModel;
   if (PhastModel <> nil)
-    and not (csDestroying in PhastModel.ComponentState) then
+    and not (csDestroying in PhastModel.ComponentState)
+    and not PhastModel.Clearing then
   begin
     ScreenObj := ScreenObject;
     if (ScreenObj <> nil)
@@ -603,7 +604,8 @@ begin
     UpdateFormula(Value, BrooksCoreyExponentPosition, FBrooksCoreyExponent);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -625,7 +627,8 @@ begin
     UpdateFormula(Value, HydraulicConductivityPosition, FHydraulicConductivity);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -647,7 +650,8 @@ begin
     UpdateFormula(Value, InitialWaterContentPosition, FInitialWaterContent);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -669,7 +673,8 @@ begin
     UpdateFormula(Value, ReachLengthPosition, FReachLength);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -691,7 +696,8 @@ begin
     UpdateFormula(Value, SaturatedWaterContentPosition, FSaturatedWaterContent);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -713,7 +719,8 @@ begin
     UpdateFormula(Value, StreambedElevationPosition, FStreambedElevation);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -735,7 +742,8 @@ begin
     UpdateFormula(Value, StreamBedThicknessPosition, FStreamBedThickness);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -757,7 +765,8 @@ begin
     UpdateFormula(Value, StreamSlopePosition, FStreamSlope);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -779,7 +788,8 @@ begin
     UpdateFormula(Value, VerticalKPosition, FVerticalK);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)

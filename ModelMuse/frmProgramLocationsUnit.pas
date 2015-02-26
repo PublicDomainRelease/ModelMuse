@@ -93,13 +93,8 @@ resourcestring
 
 procedure TfrmProgramLocations.AdjustHeight;
 begin
-{$IFNDEF FMP}
-  ClientHeight := jvrltModflowCFP.Top + jvrltModflowCFP.Height
-    + pnlBottom.Height;
-{$ELSE}
   ClientHeight := jvrltModflowFmp.Top + jvrltModflowFmp.Height
     + pnlBottom.Height;
-{$ENDIF}
 end;
 
 procedure TfrmProgramLocations.btnOKClick(Sender: TObject);
@@ -209,7 +204,7 @@ begin
   end;
 
   try
-    fedModflowFmp.FileName := Locations.ModflowFmpLocation;
+    fedModflowFmp.FileName := Locations.ModflowOwhmLocation;
   except on EComboEditError do
     fedModflowFmp.FileName := '';
   end;
@@ -247,7 +242,7 @@ begin
     Locations.ModflowLgrLocation := fedModflowLgr.FileName;
     Locations.ModflowLgr2Location := fedModflowLgr2.FileName;
     Locations.ModflowNwtLocation := fedModflowNwt.FileName;
-    Locations.ModflowFmpLocation := fedModflowFmp.FileName;
+    Locations.ModflowOwhmLocation := fedModflowFmp.FileName;
     Locations.ModflowCfpLocation := fedModflowCfp.FileName;
     Locations.Mt3dmsLocation := fedMt3dms.FileName;
     Undo := TUndoChangeProgramLocations.Create(Locations);
@@ -266,9 +261,7 @@ var
   ZoneBudgetOK: Boolean;
   FileEditorOK: Boolean;
   ModflowNwtOK: Boolean;
-{$IFDEF FMP}
   ModflowFmpOK: Boolean;
-{$ENDIF}
   ModflowCfpOK: Boolean;
   function CheckControl(Edit: TJvFilenameEdit): boolean;
   begin
@@ -333,14 +326,10 @@ begin
   ModflowNwtOK := CheckControl(fedModflowNWT)
     or (frmGoPhast.PhastModel.ModelSelection  <> msModflowNWT);
 
-{$IFDEF FMP}
   jvrltModflowFmp.Collapsed :=
     (frmGoPhast.PhastModel.ModelSelection  <> msModflowFMP);
   ModflowFmpOK := CheckControl(fedModflowFmp)
     or (frmGoPhast.PhastModel.ModelSelection  <> msModflowFmp);
-{$ELSE}
-  jvrltModflowFmp.Visible := False;
-{$ENDIF}
 
   jvrltModflowCFP.Collapsed :=
     (frmGoPhast.PhastModel.ModelSelection  <> msModflowCFP);
@@ -366,10 +355,7 @@ begin
   FileEditorOK := CheckControl(fedTextEditor);
 
   btnOK.Enabled := ModflowOK and ModflowLgrOK and ModflowLgr2OK
-    and ModflowNwtOK
-{$IFDEF FMP}
-    and ModflowFmpOK
-{$ENDIF}
+    and ModflowNwtOK and ModflowFmpOK
     and ModflowCfpOK and ModpathOK and ZoneBudgetOK and FileEditorOK;
 
 end;

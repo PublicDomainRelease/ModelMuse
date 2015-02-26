@@ -14,10 +14,17 @@ type
     procedure WriteFile(const AFileName: string);
   end;
 
+resourcestring
+  StrInvalidSelectionOf = 'Invalid selection of time unit';
+  StrTheFarmProcessReq = 'The farm process requires that the time unit be se' +
+  't to days if rooting depth or consumptive use is to be calculate from cli' +
+  'mate data.';
+
 implementation
 
 uses ModflowUnitNumbers, frmProgressUnit, Forms, FastGEO, ModelMuseUtilities,
-  frmGoPhastUnit, ModflowOptionsUnit, GoPhastTypes;
+  frmGoPhastUnit, ModflowOptionsUnit, GoPhastTypes, ModflowPackageSelectionUnit,
+  frmErrorsAndWarningsUnit;
 
 resourcestring
   StrWritingDiscretizati = 'Writing Discretization Package input.';
@@ -45,6 +52,7 @@ procedure TModflowDiscretizationWriter.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
 begin
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidSelectionOf);
   if Model.PackageGeneratedExternally(StrDIS) then
   begin
     Exit;
@@ -181,12 +189,27 @@ end;
 procedure TModflowDiscretizationWriter.WriteDataSet1;
 var
   ModflowOptions: TModflowOptions;
+  FarmProcess: TFarmProcess;
 begin
   WriteInteger(Model.ModflowLayerCount);
   WriteInteger(Model.ModflowGrid.RowCount);
   WriteInteger(Model.ModflowGrid.ColumnCount);
   WriteInteger(Model.ModflowFullStressPeriods.Count);
   ModflowOptions := Model.ModflowOptions;
+  if (Model.ModelSelection = msModflowFmp)
+    and Model.ModflowPackages.FarmProcess.IsSelected then
+  begin
+    FarmProcess := Model.ModflowPackages.FarmProcess;
+    if (FarmProcess.RootingDepth = rdCalculated)
+      or (FarmProcess.ConsumptiveUse = cuCalculated) then
+    begin
+      if ModflowOptions.TimeUnit <> 4 then
+      begin
+        frmErrorsAndWarnings.AddError(Model, StrInvalidSelectionOf,
+          StrTheFarmProcessReq)
+      end;
+    end;
+  end;
   WriteInteger(ModflowOptions.TimeUnit);
   WriteInteger(ModflowOptions.LengthUnit);
   WriteString(' # NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI');

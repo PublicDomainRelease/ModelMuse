@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics,
   Controls, Forms, Dialogs, frameFormulaGridUnit, ExtCtrls,
   Grids, RbwDataGrid4, StdCtrls, Mask, JvExMask, JvSpin, Buttons,
-  UndoItemsScreenObjects, ArgusDataEntry;
+  UndoItemsScreenObjects, ArgusDataEntry, ModflowFmpFarmUnit;
 
 type
   TDiversionType = (dtDiversion, dtReturnFlow);
@@ -50,10 +50,8 @@ type
   private
     FChanged: boolean;
     FOnChange: TNotifyEvent;
-{$IFDEF FMP}
     FChanging: Boolean;
     property Changing: Boolean read FChanging write FChanging;
-{$ENDIF}
     procedure DoChange;
 //    procedure ClearGrid(Grid: TRbwDataGrid4);
     { Private declarations }
@@ -61,8 +59,9 @@ type
     property DataChanged: Boolean read FChanged;
     procedure InitializeControls;
     // ScreenObjectList contains only objects that define farms.
-    procedure GetData(ScreenObjectList: TScreenObjectEditCollection; DiversionType: TDiversionType);
-    procedure SetData(List: TScreenObjectEditCollection; DiversionType: TDiversionType);
+    procedure GetData(FarmList: TFarmList;
+      DiversionType: TDiversionType);
+    procedure SetData(FarmList: TFarmList; DiversionType: TDiversionType);
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     procedure LayoutMultiRowEditControls; override;
     { Public declarations }
@@ -74,9 +73,9 @@ var
 implementation
 
 uses
-  ModflowFmpFarmUnit, ModflowDrtUnit, frmGoPhastUnit, ModflowGridUnit,
+  ModflowDrtUnit, frmGoPhastUnit, ModflowGridUnit,
   GoPhastTypes, ModflowTimeUnit, PhastModelUnit, ScreenObjectUnit,
-  ModflowSfrUnit, frmCustomGoPhastUnit;
+  ModflowSfrUnit, frmCustomGoPhastUnit, ModflowSwrReachUnit;
 
 resourcestring
   StrObjectName = 'Object name';
@@ -205,7 +204,6 @@ end;
 
 procedure TframeFarmDiversion.DoChange;
 begin
-{$IFDEF FMP}
   if Changing then
   begin
     Exit;
@@ -215,21 +213,17 @@ begin
     OnChange(Self);
   end;
   FChanged := True;
-{$ENDIF}
 end;
 
 procedure TframeFarmDiversion.edFormulaChange(Sender: TObject);
 begin
   inherited;
-//  FChanged := True;
   DoChange;
 end;
 
 procedure TframeFarmDiversion.GetData(
-  ScreenObjectList: TScreenObjectEditCollection; DiversionType: TDiversionType);
-{$IFDEF FMP}
+  FarmList: TFarmList; DiversionType: TDiversionType);
 var
-  AFarmItem: TScreenObjectEditItem;
   FirstFarm: TFarm;
   DelivReturns: TSemiRoutedDeliveriesAndReturnFlowCollection;
   AnItem: TSemiRoutedDeliveriesAndRunoffItem;
@@ -241,15 +235,13 @@ var
   ObjectIndex: Integer;
   AFarm: TFarm;
   FirstDelivReturns: TSemiRoutedDeliveriesAndReturnFlowCollection;
-{$ENDIF}
 begin
-{$IFDEF FMP}
-  Assert(ScreenObjectList.Count > 0);
+  Assert(FarmList.Count > 0);
   Changing := True;
   Grid.BeginUpdate;
   try
-    AFarmItem := ScreenObjectList[0];
-    FirstFarm := AFarmItem.ScreenObject.ModflowFmpFarm;
+    ClearGrid;
+    FirstFarm := FarmList[0];
     DelivReturns := nil;
     case DiversionType of
       dtDiversion:
@@ -315,10 +307,9 @@ begin
         end;
       end;
 
-      for ObjectIndex := 1 to ScreenObjectList.Count - 1 do
+      for ObjectIndex := 1 to FarmList.Count - 1 do
       begin
-        AFarmItem := ScreenObjectList[ObjectIndex];
-        AFarm := AFarmItem.ScreenObject.ModflowFmpFarm;
+        AFarm := FarmList[ObjectIndex];
         case DiversionType of
           dtDiversion:
             begin
@@ -353,7 +344,6 @@ begin
     FChanged := False;
     Changing := False;
   end;
-{$ENDIF}
 end;
 
 procedure TframeFarmDiversion.GridMouseUp(Sender: TObject; Button: TMouseButton;
@@ -541,23 +531,19 @@ end;
 procedure TframeFarmDiversion.sbInsertClick(Sender: TObject);
 begin
   inherited;
-//  FChanged := True;
   DoChange;
 end;
 
 procedure TframeFarmDiversion.seNumberChange(Sender: TObject);
 begin
   inherited;
-//  FChanged := True;
   DoChange;
 end;
 
-procedure TframeFarmDiversion.SetData(List: TScreenObjectEditCollection;
+procedure TframeFarmDiversion.SetData(FarmList: TFarmList;
   DiversionType: TDiversionType);
-{$IFDEF FMP}
 var
   index: Integer;
-  Item: TScreenObjectEditItem;
   Farm: TFarm;
   DelivReturn: TSemiRoutedDeliveriesAndReturnFlowCollection;
   Count: Integer;
@@ -570,13 +556,10 @@ var
   DiversionLocation: TReturnLocation;
   DiversionCell: TReturnCell;
   GridItemIndex: Integer;
-{$ENDIF}
 begin
-{$IFDEF FMP}
-  for index := 0 to List.Count - 1 do
+  for index := 0 to FarmList.Count - 1 do
   begin
-    Item := List[index];
-    Farm := Item.ScreenObject.ModflowFmpFarm;
+    Farm := FarmList[index];
     if Farm <> nil then
     begin
       DelivReturn := nil;
@@ -624,8 +607,6 @@ begin
                 begin
                   DiversionObject.ScreenObject := nil;
                 end;
-//                DiversionObject.ObjectName :=
-//                  Grid.Cells[Ord(docObject)+2,TimeIndex];
                 DiversionObject.DiversionPosition :=
                   TDiversionPosition(Grid.ItemIndex[Ord(docChoice)+2,TimeIndex]);
                 if DiversionObject.DiversionPosition = dpMiddle then
@@ -633,7 +614,6 @@ begin
                   DiversionObject.DiversionVertex :=
                     StrToInt(Grid.Cells[Ord(docVertex)+2,TimeIndex]);
                 end;
-//  TDiversionObjectColumns = (docObject, docChoice, docVertex);
               end;
             rtLocation:
               begin
@@ -643,7 +623,6 @@ begin
                 DiversionLocation.Y :=
                   StrToFloatDef(Grid.Cells[Ord(dlcY)+2,TimeIndex], 0);
                 DiversionLocation.Z := 0;
-//  TDiversionLocationColumns = (dlcX, dlcY);
               end;
             rtCell:
               begin
@@ -653,16 +632,13 @@ begin
                 DiversionCell.Col :=
                   StrToIntDef(Grid.Cells[Ord(dccColumn)+2,TimeIndex], 0);
                 DiversionCell.Lay := 0;
-//  TDiversionCellColumns = (dccRow, dccColumn);
               end;
             else Assert(False);
           end;
         end;
       end;
-//  TDiversionTimeColumns = (dtcStart, dtcEnd);
     end;
   end;
-{$ENDIF}
 end;
 
 procedure TframeFarmDiversion.InitializeControls;
@@ -673,11 +649,12 @@ var
   ScreenObjectIndex: Integer;
   AScreenObject: TScreenObject;
   SfrBoundary: TSfrBoundary;
+  SwrBoundary: TSwrReachBoundary;
 begin
   comboSfrObjects.Items.BeginUpdate;
   try
     comboSfrObjects.Items.Clear;
-    if frmGoPhast.PhastModel.SfrIsSelected then
+    if frmGoPhast.PhastModel.SfrIsSelected or frmGoPhast.PhastModel.SwrIsSelected then
     begin
       LocalModel := frmGoPhast.PhastModel;
       for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
@@ -688,12 +665,18 @@ begin
           Continue;
         end;
         SfrBoundary := AScreenObject.ModflowSfrBoundary;
+        SwrBoundary := AScreenObject.ModflowSwrReaches;
         if (SfrBoundary <> nil) and SfrBoundary.Used then
+        begin
+          comboSfrObjects.Items.AddObject(AScreenObject.Name, AScreenObject);
+        end
+        else if (SwrBoundary <> nil) and SwrBoundary.Used then
         begin
           comboSfrObjects.Items.AddObject(AScreenObject.Name, AScreenObject);
         end;
       end;
     end;
+
   finally
     comboSfrObjects.Items.EndUpdate
   end;

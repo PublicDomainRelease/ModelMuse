@@ -520,10 +520,8 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end
@@ -535,7 +533,6 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Anchors = [akTop, akRight]
       Caption = 'OK'
       Default = True
-      DoubleBuffered = True
       Enabled = False
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
@@ -556,7 +553,6 @@ inherited frmImportGriddedData: TfrmImportGriddedData
         0000}
       ModalResult = 1
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -566,10 +562,8 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
   end

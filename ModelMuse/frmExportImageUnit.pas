@@ -1240,7 +1240,7 @@ var
   ViewDirection: TViewDirection;
   VRuler: TRulerPainter;
   RulerRect: TRect;
-  RulerPostion: Integer;
+//  RulerPostion: Integer;
   TextHeight: integer;
 begin
   if cbVerticalScale.Checked then

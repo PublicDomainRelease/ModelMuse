@@ -60,10 +60,10 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<VerInfo_MajorVer>3</VerInfo_MajorVer>
-			<VerInfo_MinorVer>4</VerInfo_MinorVer>
+			<VerInfo_MinorVer>5</VerInfo_MinorVer>
 			<DCC_ExeOutput>.\$(Config)\$(Platform)</DCC_ExeOutput>
 			<VerInfo_Locale>1033</VerInfo_Locale>
-			<VerInfo_Keys>FileVersion=3.4.0.0;ProductVersion=3.4.0.0</VerInfo_Keys>
+			<VerInfo_Keys>FileVersion=3.5.0.0;ProductVersion=3.5.0.0</VerInfo_Keys>
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 			<Manifest_File>None</Manifest_File>
 			<DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>
@@ -108,7 +108,7 @@
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
 			<DCC_DebugDCUs>true</DCC_DebugDCUs>
 			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
-			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+			<DCC_Define>DEBUG;FMP;$(DCC_Define)</DCC_Define>
 			<DCC_Optimize>false</DCC_Optimize>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
@@ -1083,8 +1083,8 @@
 				<Form>frmClimate</Form>
 				<FormType>dfm</FormType>
 			</DCCReference>
-			<DCCReference Include="frameScreenObjectFarmUnit.pas">
-				<Form>frameScreenObjectFarm</Form>
+			<DCCReference Include="frameFarmUnit.pas">
+				<Form>frameFarm</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="frameDeliveryGridUnit.pas">
@@ -1248,6 +1248,16 @@
 			<DCCReference Include="frameScreenObjectMnw1Unit.pas">
 				<Form>frameScreenObjectMnw1</Form>
 				<FormType>dfm</FormType>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="CacheableSparseDataSets.pas"/>
+			<DCCReference Include="Export2DMeshUnit.pas"/>
+			<DCCReference Include="frmFarmUnit.pas">
+				<Form>frmFarm</Form>
+			</DCCReference>
+			<DCCReference Include="ModflowFmpFarmIdUnit.pas"/>
+			<DCCReference Include="frameScreenObjectFarmIDUnit.pas">
+				<Form>frameScreenObjectFarmID</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<None Include="ModelMuse.todo"/>

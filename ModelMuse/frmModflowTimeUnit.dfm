@@ -57,7 +57,7 @@ inherited frmModflowTime: TfrmModflowTime
     Top = 0
     Width = 754
     Height = 292
-    ActivePage = tabMt3dms
+    ActivePage = tabModflow
     Align = alClient
     TabOrder = 0
     OnChange = pgcMainChange
@@ -483,6 +483,7 @@ inherited frmModflowTime: TfrmModflowTime
           ItemHeight = 18
           TabOrder = 1
           Text = 'seconds (1)'
+          OnChange = comboTimeUnitChange
           Items.Strings = (
             'undefined (0)'
             'seconds (1)'
@@ -517,6 +518,10 @@ inherited frmModflowTime: TfrmModflowTime
     object tabMt3dms: TTabSheet
       Caption = 'MT3DMS'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline frameGrid: TframeGrid
         Left = 0
         Top = 0

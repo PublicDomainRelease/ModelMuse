@@ -6,6 +6,9 @@ inherited frameContourData: TframeContourData
     ActivePage = tabSelection
     ExplicitHeight = 399
     inherited tabSelection: TTabSheet
+      ExplicitLeft = 4
+      ExplicitTop = 27
+      ExplicitWidth = 562
       ExplicitHeight = 368
       DesignSize = (
         562
@@ -47,10 +50,10 @@ inherited frameContourData: TframeContourData
       object lblSpacing: TLabel [8]
         Left = 444
         Top = 145
-        Width = 77
+        Width = 123
         Height = 16
         Anchors = [akLeft, akRight, akBottom]
-        Caption = 'Label spacing'
+        Caption = 'Label spacing (pixels)'
       end
       inherited comboColorScheme: TComboBox
         Top = 222
@@ -135,12 +138,6 @@ inherited frameContourData: TframeContourData
         OnClick = cbSpecifyContoursClick
         LinkedControls = <>
         AutoSize = False
-        HotTrackFont.Charset = DEFAULT_CHARSET
-        HotTrackFont.Color = clWindowText
-        HotTrackFont.Height = 17
-        HotTrackFont.Name = 'Microsoft Sans Serif'
-        HotTrackFont.Pitch = fpVariable
-        HotTrackFont.Style = []
       end
       object cbLabelContours: TCheckBox
         Left = 319
@@ -202,6 +199,9 @@ inherited frameContourData: TframeContourData
       end
     end
     inherited tabFilters: TTabSheet
+      ExplicitLeft = 4
+      ExplicitTop = 27
+      ExplicitWidth = 562
       ExplicitHeight = 368
       DesignSize = (
         562
@@ -220,6 +220,9 @@ inherited frameContourData: TframeContourData
       end
     end
     inherited tabLegend: TTabSheet
+      ExplicitLeft = 4
+      ExplicitTop = 27
+      ExplicitWidth = 562
       ExplicitHeight = 368
       inherited imLegend: TImage
         Height = 368
@@ -246,7 +249,7 @@ inherited frameContourData: TframeContourData
       end
     end
   end
-  object fdContourFont: TFontDialog [2]
+  object fdContourFont: TFontDialog
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11

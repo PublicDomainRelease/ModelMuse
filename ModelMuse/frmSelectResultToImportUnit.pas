@@ -3684,8 +3684,15 @@ begin
     if ILAY = 1 then
     begin
       WaterTableArray := AnArray;
-      SetLength(WaterTableArray, Length(WaterTableArray),
-        Length(WaterTableArray[0]));
+      if Length(WaterTableArray) > 0 then
+      begin
+        SetLength(WaterTableArray, Length(WaterTableArray),
+          Length(WaterTableArray[0]));
+      end
+      else
+      begin
+        SetLength(WaterTableArray, Length(WaterTableArray));
+      end;
     end
     else
     begin

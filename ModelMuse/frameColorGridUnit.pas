@@ -404,7 +404,9 @@ begin
     VirtNoneNode := virttreecomboDataSets.Tree.AddChild(nil);
     virttreecomboDataSets.Tree.Selected[VirtNoneNode] := True;
 
-    if csDestroying in frmGoPhast.PhastModel.ComponentState then
+    if (frmGoPhast.PhastModel = nil)
+      or (csDestroying in frmGoPhast.PhastModel.ComponentState)
+      or frmGoPhast.PhastModel.Clearing then
     begin
       Exit;
     end;
@@ -848,7 +850,8 @@ end;
 procedure TframeColorGrid.UpdateLabelsAndLegend;
 begin
   if FGettingData or (frmGoPhast.PhastModel = nil)
-    or (csDestroying in frmGoPhast.PhastModel.ComponentState) then
+    or (csDestroying in frmGoPhast.PhastModel.ComponentState)
+    or frmGoPhast.PhastModel.Clearing then
   begin
     Exit;
   end;

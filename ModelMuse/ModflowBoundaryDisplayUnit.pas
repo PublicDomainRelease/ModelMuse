@@ -6,9 +6,12 @@ uses Windows, SysUtils, Classes, DataSetUnit, SparseDataSets, ZLib,
   GoPhastTypes;
 
 type
+  TValueAddMethod = (vamAdd, vamReplace);
+
   TModflowBoundaryDisplayDataArray = class(TRealSparseDataSet)
   private
     FCount: T3DSparseIntegerArray;
+    FAddMethod: TValueAddMethod;
     function GetCellCount(Layer, Row, Column: integer): integer;
     procedure SetCellCount(Layer, Row, Column: integer; const Value: integer);
   protected
@@ -27,12 +30,16 @@ type
     procedure LabelAsSum;
     property CellCount[Layer, Row, Column: integer]: integer read GetCellCount
       Write SetCellCount;
+    procedure UpdateDimensions(NumberOfLayers, NumberOfRows,
+      NumberOfColumns: integer; ForceResize: boolean = False); override;
+    property AddMethod: TValueAddMethod read FAddMethod write FAddMethod;
   end;
 
   TModflowBoundaryDisplayTimeList = class(TCustomTimeList)
   private
     FOnInitialize: TNotifyEvent;
     FOnGetUseList: TOnGetUseList;
+    FAddMethod: TValueAddMethod;
     procedure SetOnInitialize(const Value: TNotifyEvent);
   protected
     FUseList: TStringList;
@@ -56,6 +63,7 @@ type
     // @name is public in @classname instead of protected as in
     // @link(TCustomTimeList).
     procedure SetUpToDate(const Value: boolean); override;
+    property AddMethod: TValueAddMethod read FAddMethod write FAddMethod;
   end;
 
   THobDisplayTimeList = class(TModflowBoundaryDisplayTimeList)
@@ -153,6 +161,13 @@ procedure TModflowBoundaryDisplayDataArray.AddDataValue(
   const DataAnnotation: string; DataValue: Double;
   ColIndex, RowIndex, LayerIndex: Integer);
 begin
+  case Orientation of
+    dsoTop: LayerIndex := 0;
+    dsoFront: RowIndex := 0;
+    dsoSide: ColIndex := 0;
+    dso3D: ; // do nothing.
+    else Assert(False);
+  end;
   // The way the annotations are handled here is related to the
   // fact that strings are reference counted variables.
   // A new string will be allocated each time a string is changed
@@ -160,7 +175,7 @@ begin
   // the reference count of the string is increased.  Thus, it
   // saves memory to change a string only when it really needs to be
   // changed and to just copy it whenever possible.
-  if IsValue[LayerIndex, RowIndex, ColIndex] then
+  if (AddMethod = vamAdd) and IsValue[LayerIndex, RowIndex, ColIndex] then
   begin
     if Annotation[LayerIndex, RowIndex, ColIndex] = StrNoValueAssigned then
     begin
@@ -214,7 +229,7 @@ constructor TModflowBoundaryDisplayDataArray.Create(AnOwner: TComponent);
 begin
   inherited;
   FDataCached := False;
-  FCount:= T3DSparseIntegerArray.Create(SPASmall);
+  FCount:= T3DSparseIntegerArray.Create(SPASmall, SPASmall, SPASmall);
 end;
 
 destructor TModflowBoundaryDisplayDataArray.Destroy;
@@ -375,6 +390,28 @@ begin
 
 end;
 
+procedure TModflowBoundaryDisplayDataArray.UpdateDimensions(NumberOfLayers,
+  NumberOfRows, NumberOfColumns: integer; ForceResize: boolean);
+var
+  OldLayerCount: integer;
+  OldRowCount: integer;
+  OldColumnCount: integer;
+begin
+  OldLayerCount := LayerCount;
+  OldRowCount := RowCount;
+  OldColumnCount := ColumnCount;
+  inherited;
+  if ((OldLayerCount > MaxSmallArraySize) <> (NumberOfLayers > MaxSmallArraySize))
+    or ((OldRowCount > MaxSmallArraySize) <> (NumberOfRows > MaxSmallArraySize))
+    or ((OldColumnCount > MaxSmallArraySize) <> (NumberOfColumns > MaxSmallArraySize))
+    then
+  begin
+    FCount.Free;
+    FCount := T3DSparseIntegerArray.Create(GetQuantum(NumberOfLayers),
+      GetQuantum(NumberOfRows), GetQuantum(NumberOfColumns));
+  end;
+end;
+
 { TModflowBoundaryDisplayTimeList }
 
 procedure TModflowBoundaryDisplayTimeList.ComputeAverage;
@@ -520,7 +557,8 @@ begin
   begin
     StressPeriod := LocalModel.ModflowFullStressPeriods[TimeIndex];
     DataArray := TModflowBoundaryDisplayDataArray.Create(LocalModel);
-    DataArray.Orientation := dso3D;
+    DataArray.AddMethod := AddMethod;
+    DataArray.Orientation := Orientation;
     DataArray.EvaluatedAt := eaBlocks;
     DataArray.Limits := Limits;
     Add(StressPeriod.StartTime, DataArray);

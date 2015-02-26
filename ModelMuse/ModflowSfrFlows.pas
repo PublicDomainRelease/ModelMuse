@@ -258,7 +258,8 @@ begin
     UpdateFormula(Value, PrecipitationPosition, FPrecipitation);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -280,7 +281,8 @@ begin
     UpdateFormula(Value, RunnoffPosition, FRunnoff);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -319,7 +321,8 @@ begin
     UpdateFormula(Value, EvapotranspirationPosition, FEvapotranspiration);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)
@@ -341,7 +344,8 @@ begin
     UpdateFormula(Value, FlowPosition, FFlow);
     PhastModel := Model as TPhastModel;
     if (PhastModel <> nil)
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not PhastModel.Clearing then
     begin
       ScreenObj := ScreenObject;
       if (ScreenObj <> nil)

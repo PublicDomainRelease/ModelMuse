@@ -463,12 +463,13 @@ begin
           (Model as TPhastModel).InvalidateMfStrConductance(self);
         end;
       end;
-  {$IFDEF FMP}
     ptQMAX:
       begin
-        { TODO -cFMP : This needs to be finished }
+        if Model <> nil then
+        begin
+          (Model as TPhastModel).InvalidateMfFmpMaxPumpingRate(self);
+        end;
       end
-  {$ENDIF}
     else Assert(False);
   end;
 end;

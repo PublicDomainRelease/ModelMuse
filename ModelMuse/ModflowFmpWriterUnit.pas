@@ -6,12 +6,12 @@ uses
   CustomModflowWriterUnit, ModflowPackageSelectionUnit, ModflowCellUnit,
   ModflowBoundaryUnit, OrderedCollectionUnit, ScreenObjectUnit, GoPhastTypes,
   ModflowFmpWellUnit, PhastModelUnit, ModflowFmpFarmUnit, Contnrs,
-  ModflowFmpCropUnit, RbwParser, Classes, ModflowBoundaryDisplayUnit;
+  ModflowFmpCropUnit, RbwParser, Classes, ModflowBoundaryDisplayUnit,
+  DataSetUnit;
 
-  {$IFDEF FMP}
 type
   TWellFieldOption = (wfNotUsed, wfUsed);
-  TWriteLocation = (wlMain, wlOpenClose, wlOFE, wlCID, wlRoot, wlCropUse, wlETR,
+  TWriteLocation = (wlMain, wlOpenClose, wlOFE, wlCID, wlFID, wlRoot, wlCropUse, wlETR,
     wlEtFrac, wlSwLosses, wlPFLX, wlCropFunc, wlWaterCost, wlDeliveries,
     wlSemiRouteDeliv, wlSemiRouteReturn, wlCall);
 
@@ -19,6 +19,7 @@ type
   private
     FFarmProcess: TFarmProcess;
     FCropIDs: TList;
+    FFarmIDs: TList;
     FRefEts: TList;
     FPrecip: TList;
     FNameOfFile: string;
@@ -39,15 +40,17 @@ type
     ICOST: Integer;
     MXNRDT: integer;
     INRDFL: integer;
-    IALLOT: integer;
+    IALLOTSW: integer;
     ISRDFL: integer;
     ISRRFL: integer;
+    IALLOTGW: Integer;
     FStressPeriodStartTime: Double;
     FWriteLocation: TWriteLocation;
     FOpenCloseFileStream: TFileStream;
     FOFE_FileStream: TFileStream;
     FOpenCloseFileName: string;
     FCID_FileStream: TFileStream;
+    FFID_FileStream: TFileStream;
     FRoot_FileStream: TFileStream;
     FCropUse_FileStream: TFileStream;
     FETR_FileStream: TFileStream;
@@ -60,6 +63,8 @@ type
     FSemiDeliveries_FileStream: TFileStream;
     FSemiReturn_FileStream: TFileStream;
     FCall_FileStream: TFileStream;
+    FStressPeriod: Integer;
+    FACtiveSurfaceCells: array of array of boolean;
     procedure WriteDataSet1;
     procedure WriteDataSet2a;
     procedure WriteDataSet2cParamDimen;
@@ -70,9 +75,10 @@ type
     procedure WriteDataSet2cPrintFlags;
     procedure WriteDataSet2cAuxVar;
     procedure WriteDataSet2cOptions;
+    procedure WriteDataSet2cMnwOptions;
+    procedure WriteNwtOptions;
     procedure WriteDataSets3And4;
     procedure WriteDataSet5;
-    procedure WriteDataSet6;
     procedure WriteDataSet7;
     procedure WriteDataSet8;
     procedure WriteDataSet9;
@@ -85,25 +91,30 @@ type
     procedure WriteDataSet17;
     procedure WriteDataSet18;
     procedure WriteDataSet19;
-    procedure WriteDataSets21to36;
-    procedure WriteDataSet24;
-    procedure WriteDataSet25(TimeIndex: Integer);
-    procedure WriteDataSet26;
-    procedure WriteDataSet27a;
-    procedure WriteDataSet27b(TimeIndex: Integer);
-    procedure WriteDataSet28;
+    procedure WriteDataSet20;
+    procedure WriteDataSets22to39;
+    procedure WriteDataSet25;
+    procedure WriteDataSet26(TimeIndex: Integer);
+    procedure WriteDataSet27;
+    procedure WriteDataSet28(TimeIndex: Integer);
     procedure WriteDataSet29;
-    procedure WriteDataSet30(TimeIndex: Integer);
+    procedure WriteDataSet30a;
+    procedure WriteDataSet30b(TimeIndex: Integer);
     procedure WriteDataSet31;
     procedure WriteDataSet32;
-    procedure WriteDataSet33;
-    procedure WriteDataSet34a;
-    procedure WriteDataSet34b;
+    procedure WriteDataSet33(TimeIndex: Integer);
+    procedure WriteDataSet34;
     procedure WriteDataSet35;
     procedure WriteDataSet36;
+    procedure WriteDataSet37a;
+    procedure WriteDataSet37b;
+    procedure WriteDataSet38;
+    procedure WriteDataSet39;
     function NumberOfFarms: Integer;
     function GetEfficiencyFlag: integer;
     function GetRootingDepthFlag: integer;
+    // IALLOTGW;
+    function GetGroundwaterAllotmentFlag: Integer;
     procedure FillFarmList;
     function GetCropFractionFlag: integer;
     function GetInnefficienyLossesFlag: Integer;
@@ -123,13 +134,18 @@ type
     function GetWaterCostCoefficientsFlag: integer;
     function GetMaxNonRoutedDelivery: integer;
     procedure EvaluateCropID;
+    procedure EvaluateFarmID;
     procedure EvaluateReferenceET;
     procedure EvaluatePrecip;
+    procedure EvaluateGwAllotment;
     function GetSemiRoutedSurfaceWaterDeliveryFlag: integer;
     function GetSemiRoutedSurfaceWaterRunoffReturnflowFlag: integer;
     function GetWellFieldOption: TWellFieldOption;
     procedure SetFlags;
     procedure RemoveErrorAndWarningMessages;
+    procedure EvaluateActiveCells;
+    procedure CheckIntegerDataSet(IntegerArray: TDataArray;
+      const ErrorMessage: string);
   protected
     class function Extension: string; override;
     function Package: TModflowPackageSelection; override;
@@ -152,7 +168,8 @@ type
     procedure FarmBudgetUnitNumber(var UnitNumber: Integer);
     procedure RemoveNoDefinedError(var NoDefinedErrorRoot: string); override;
     procedure ShowNoBoundaryError(const NoDefinedErrorRoot: string); override;
-    procedure Evaluate; override;
+    procedure WriteBeforeCells; override;
+    procedure WriteBeforeParamCells; override;
   public
     // @name creates and instance of @classname.
     Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
@@ -161,6 +178,7 @@ type
     procedure UpdateRefEtDisplay(TimeLists: TModflowBoundListOfTimeLists);
     procedure UpdatePrecipDisplay(TimeLists: TModflowBoundListOfTimeLists);
     procedure UpdateCropIDDisplay(TimeLists: TModflowBoundListOfTimeLists);
+    procedure UpdateFarmIDDisplay(TimeLists: TModflowBoundListOfTimeLists);
     procedure WriteString(const Value: AnsiString); overload; override;
     Procedure WriteU2DRELHeader(const Comment: string); override;
     procedure WriteConstantU2DREL(const Comment: string;
@@ -168,25 +186,25 @@ type
     Procedure WriteU2DINTHeader(const Comment: string); override;
     procedure WriteConstantU2DINT(const Comment: string;
       const Value: integer); override;
+    procedure Evaluate; override;
   end;
-  {$ENDIF}
 
 implementation
 
-{$IFDEF FMP}
 uses
-  ModflowUnitNumbers, Forms, frmProgressUnit, DataSetUnit,
+  ModflowUnitNumbers, Forms, frmProgressUnit,
   frmFormulaErrorsUnit, ModflowFmpSoilUnit, SysUtils, ModflowTimeUnit,
   RealListUnit, ModflowFmpClimateUnit, ModflowFmpAllotmentUnit,
   frmErrorsAndWarningsUnit, ModflowFmpCropSpatialUnit,
   Generics.Collections, ModflowFmpEvapUnit, ModflowFmpPrecipitationUnit,
-  ModflowOutputControlUnit;
+  ModflowOutputControlUnit, ModflowFmpFarmIdUnit, frmGoPhastUnit,
+  ModflowMNW2_WriterUnit;
 
 resourcestring
   StrWritingDataSet2a = '  Writing Data Set 2a.';
   StrWritingDataSet2c = '  Writing Data Set 2c.';
 //  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
-  StrWritingDataSets = '  Writing Data Sets 21 to 36.';
+  StrWritingDataSets = '  Writing Data Sets 22 to 39.';
   StrSoilS = 'Soil: %s';
   StrCapillaryFringe = 'Capillary Fringe';
   StrRootingDepth = 'Rooting Depth';
@@ -233,13 +251,13 @@ resourcestring
   StrSWcost2 = 'SWcost2';
   StrSWcost3 = 'SWcost3';
   StrSWcost4 = 'SWcost4';
-  StrWritingDataSet27a = '  Writing Data Set 27a.';
-  StrWritingDataSet27b = '  Writing Data Set 27b.';
+  StrWritingDataSet30a = '  Writing Data Set 30a.';
+  StrWritingDataSet30b = '  Writing Data Set 30b.';
   StrWPFSlope = 'WPF-Slope';
   StrWIntercept = 'WIntercept';
   StrPrice = 'Price';
-  StrWritingDataSet34a = '  Writing Data Set 34a.';
-  StrWritingDataSet34b = '  Writing Data Set 34b.';
+  StrWritingDataSet37a = '  Writing Data Set 37a.';
+  StrWritingDataSet37b = '  Writing Data Set 37b.';
   StrRootingDepthNotDe = 'Rooting depth not defined in the following crops.';
   StrConsumptiveUseFact = 'Consumptive use factors undefined in the followin' +
   'g crops';
@@ -259,6 +277,22 @@ resourcestring
   StrInvalidFarmSurface = 'Invalid Farm surface water flow option';
   StrIRDFLInTheFarmPr = 'IRDFL in the Farm Process must be equal to 0 if the' +
   ' SFR package is not selected.';
+  StrClimateStartingTim = 'Climate starting time: %d';
+  StrErrorInFarmD = 'Error in Farm %d.';
+  StrFarmD = 'Farm %d';
+  StrFarmCostsHaveNot = 'Farm Costs have not been defined';
+  StrInFarmDFarmC = 'In farm # %d, farm costs have not been defined';
+  StrFarmAllotmentsNot = 'Farm allotments not defined.';
+  StrInFarmDTheFar = 'In farm #%d, the farm allotment has not been defined.';
+  StrTheCropspecificWa = 'The crop-specific water-production function is und' +
+  'efined in the following crops';
+  StrIfTheFarmProcess = 'If the Farm Process is active in a child model, it ' +
+  'must also be active in the parent model.';
+  StrInvalidFarmProcess = 'Invalid Farm Process activation';
+  StrInvalidFarmID = 'Invalid Farm ID in Farm Process';
+  StrRow0dColumn = 'Row: %0:d; Column: %1:d';
+  StrInvalidSoilIDInF = 'Invalid Soil ID in Farm Process';
+  StrInvalidCropIDInF = 'Invalid Crop ID in Farm Process.';
 //  StrIRRFLInTheFarmPr = 'IRRFL in the Farm Process must be equal to 0 if the' +
 //  ' SFR package is not selected.';
 
@@ -276,6 +310,7 @@ begin
   FFarmProcess := Model.ModflowPackages.FarmProcess;
   FFarms := TFarmList.Create;
   FCropIDs := TObjectList.Create;
+  FFarmIDs := TObjectList.Create;
   FRefEts := TObjectList.Create;
   FPrecip := TObjectList.Create;
 end;
@@ -284,9 +319,11 @@ destructor TModflowFmpWriter.Destroy;
 begin
   FPrecip.Free;
   FRefEts.Free;
+  FFarmIDs.Free;
   FCropIDs.Free;
   FFarms.Free;
   FOFE_FileStream.Free;
+  FFID_FileStream.Free;
   FCID_FileStream.Free;
   FRoot_FileStream.Free;
   FCropUse_FileStream.Free;
@@ -352,6 +389,39 @@ begin
   end;
 end;
 
+function TModflowFmpWriter.GetGroundwaterAllotmentFlag: Integer;
+var
+  LocalModel: TCustomModel;
+  FarmIndex: integer;
+  AFarm: TFarm;
+begin
+  if FFarmProcess.GroundwaterAllotmentsUsed then
+  begin
+    if Model is TChildModel then
+    begin
+      result := -1;
+    end
+    else
+    begin
+      Result := 1;
+      LocalModel := Model;
+      for FarmIndex := 0 to LocalModel.Farms.Count - 1 do
+      begin
+        AFarm := LocalModel.Farms[FarmIndex];
+        if AFarm.GwAllotment.Count > 1 then
+        begin
+          Result := 2;
+          exit;
+        end;
+      end;
+    end;
+  end
+  else
+  begin
+    Result := 0;
+  end;
+end;
+
 function TModflowFmpWriter.GetInnefficienyLossesFlag: Integer;
 var
   Crops: TCropCollection;
@@ -367,7 +437,7 @@ begin
     filSpecified:
       begin
         result := 1;
-        Crops := (Model as TPhastModel).FmpCrops;
+        Crops := Model.FmpCrops;
         for CropIndex := 0 to Crops.Count - 1 do
         begin
           Losses := Crops[CropIndex].LossesCollection;
@@ -424,7 +494,7 @@ begin
     rdSpecified:
       begin
         result := 1;
-        Crops := (Model as TPhastModel).FmpCrops;
+        Crops := Model.FmpCrops;
         for CropIndex := 0 to Crops.Count - 1 do
         begin
           RootDepths := Crops[CropIndex].FmpRootDepthCollection;
@@ -468,10 +538,10 @@ end;
 
 procedure TModflowFmpWriter.SetFlags;
 var
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
   // Parameter Dimensions
-  LocalModel := Model as TPhastModel;
+  LocalModel := Model as TCustomModel;
   NCROPS := LocalModel.FmpCrops.Count;
 
   // When-to-read flags
@@ -486,6 +556,7 @@ begin
   IDEFFL := Ord(FFarmProcess.DeficiencyPolicy)-2;
   IBEN := GetCropBenefitsFlag;
   ICOST := GetWaterCostCoefficientsFlag;
+  IALLOTGW := GetGroundwaterAllotmentFlag;
 
   // Crop Consumptive Use Flag
   ICCFL := GetCropConsumptiveUseFlag;
@@ -500,7 +571,7 @@ begin
   begin
     INRDFL := 0;
   end;
-  IALLOT := Ord(FFarmProcess.SurfaceWaterAllotment);
+  IALLOTSW := Ord(FFarmProcess.SurfaceWaterAllotment);
   ISRDFL := GetSemiRoutedSurfaceWaterDeliveryFlag;
   ISRRFL := GetSemiRoutedSurfaceWaterRunoffReturnflowFlag;
 
@@ -526,6 +597,7 @@ var
   CropIDIndex: integer;
   DataSetIndex: integer;
 begin
+  EvaluateActiveCells;
   frmErrorsAndWarnings.BeginUpdate;
   try
     RemoveErrorAndWarningMessages;
@@ -565,6 +637,75 @@ begin
         begin
           DataArray := DataSets[DataSetIndex];
           DataArray.UpToDate := True;
+          CheckIntegerDataSet(DataArray, StrInvalidCropIDInF);
+          DataArray.CacheData;
+        end;
+      end;
+
+      SetTimeListsUpToDate(TimeLists);
+    finally
+      DataSets.Free;
+    end;
+  finally
+    frmErrorsAndWarnings.EndUpdate;
+  end;
+end;
+
+procedure TModflowFmpWriter.UpdateFarmIDDisplay(
+  TimeLists: TModflowBoundListOfTimeLists);
+var
+  DataSets: TList;
+  FarmID: TModflowBoundaryDisplayTimeList;
+  TimeIndex: integer;
+  TimeListIndex: integer;
+  List: TValueCellList;
+  TimeList: TModflowBoundaryDisplayTimeList;
+  DataArray: TDataArray;
+  FarmIDIndex: integer;
+  DataSetIndex: integer;
+begin
+  EvaluateActiveCells;
+  { TODO -cFMP : This needs to be finished }
+  frmErrorsAndWarnings.BeginUpdate;
+  try
+    RemoveErrorAndWarningMessages;
+    if not (Package as TFarmProcess).FarmIdUsed(self) then
+    begin
+      UpdateNotUsedDisplay(TimeLists);
+      Exit;
+    end;
+    DataSets := TList.Create;
+    try
+      EvaluateFarmID;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      FarmID := TimeLists[0];
+      for TimeIndex := 0 to FarmID.Count - 1 do
+      begin
+        DataSets.Clear;
+
+        for TimeListIndex := 0 to TimeLists.Count - 1 do
+        begin
+          TimeList := TimeLists[TimeListIndex];
+          DataArray := TimeList[TimeIndex]
+            as TModflowBoundaryDisplayDataArray;
+          DataSets.Add(DataArray);
+        end;
+
+        for FarmIDIndex := 0 to FFarmIDs.Count - 1 do
+        begin
+          List := FFarmIDs[FarmIDIndex];
+          UpdateCellDisplay(List, DataSets, [], nil, [0]);
+          List.Cache;
+        end;
+        for DataSetIndex := 0 to DataSets.Count - 1 do
+        begin
+          DataArray := DataSets[DataSetIndex];
+          DataArray.UpToDate := True;
+          CheckIntegerDataSet(DataArray, StrInvalidFarmID);
           DataArray.CacheData;
         end;
       end;
@@ -715,16 +856,37 @@ var
   LocalLayer: integer;
   AuxValue: integer;
   AuxName: string;
+  MNW2NAM: STRING;
 begin
   Well_Cell := Cell as TFmpWell_Cell;
-  LocalLayer := Model.
-    DataSetLayerToModflowLayer(Well_Cell.Layer);
+  if Well_Cell.Mnw1 or Well_Cell.Mnw2 then
+  begin
+    LocalLayer := 0;
+  end
+  else
+  begin
+    LocalLayer := Model.
+      DataSetLayerToModflowLayer(Well_Cell.Layer);
+  end;
   WriteInteger(LocalLayer);
   WriteInteger(Well_Cell.Row+1);
   WriteInteger(Well_Cell.Column+1);
-  WriteInteger(FFarmWellID);
+  if Well_Cell.Mnw1 or Well_Cell.Mnw2 then
+  begin
+    WriteInteger(-FFarmWellID);
+  end
+  else
+  begin
+    WriteInteger(FFarmWellID);
+  end;
   WriteInteger(Well_Cell.FarmID);
   WriteFloat(Well_Cell.MaxPumpingRate);
+  if Well_Cell.Mnw2 then
+  begin
+    MNW2NAM := Copy(Well_Cell.MnwName, 1, 20);
+    TModflowMNW2_Writer.AdjustWellID(MNW2NAM);
+    WriteString(MNW2NAM);
+  end;
   Inc(FFarmWellID);
 
 //  Skip QMAXRESET because MNW1 is not supported.
@@ -748,13 +910,28 @@ begin
     else Assert(False);
   end;
 
-  WriteIface(Well_Cell.IFace);
-  WriteString(' # ' + DataSetIdentifier + ' Layer, Row, Column, Farm-Well-ID, Farm ID, '
-    + VariableIdentifiers + ',' + AuxName + ',' + ' IFACE');
+  // FMP does not accept auxilliary variables.
+//  WriteIface(Well_Cell.IFace);
+
+  WriteString(' # ' + DataSetIdentifier
+    + ' Layer, Row, Column, Farm-Well-ID, Farm ID, ' + VariableIdentifiers);
+  if Well_Cell.Mnw2 then
+  begin
+    WriteString(', MNW2NAM ');
+  end;
+
+//  WriteString(VariableIdentifiers + ',' + AuxName + ',' + ' IFACE');
+
 //  // The annotation identifies the object used to define the well.
 //  // This can be helpful in identifying when used with PEST.
 //  WriteString(Well_Cell.PumpingRateAnnotation);
   NewLine;
+end;
+
+procedure TModflowFmpWriter.WriteBeforeParamCells;
+begin
+  inherited;
+  WriteNwtOptions;
 end;
 
 procedure TModflowFmpWriter.WriteConstantU2DINT(const Comment: string;
@@ -764,7 +941,7 @@ var
 begin
   case FWriteLocation of
     wlMain: inherited;
-    wlOpenClose, wlCID:
+    wlOpenClose, wlCID, wlFID:
       begin
         OldLocation := FWriteLocation;
         FWriteLocation := wlMain;
@@ -791,6 +968,12 @@ begin
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheClimateDataFor);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoFarmsHaveBeenD);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidFarmSurface);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrFarmCostsHaveNot);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrFarmAllotmentsNot);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrMultinodeWellsCan);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheCropspecificWa);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidSoilIDInF);
+
   RemoveNoDefinedError(Dummy);
 end;
 
@@ -816,18 +999,11 @@ end;
 procedure TModflowFmpWriter.WriteCustomStressPeriod(TimeIndex: Integer);
 begin
   inherited;
+  FStressPeriod := TimeIndex;
   FStressPeriodStartTime := Model.ModflowFullStressPeriods[TimeIndex].StartTime;
 
-  frmProgressMM.AddMessage(StrWritingDataSet24);
-  WriteDataSet24;
-  Application.ProcessMessages;
-  if not frmProgressMM.ShouldContinue then
-  begin
-    Exit;
-  end;
-
   frmProgressMM.AddMessage(StrWritingDataSet25);
-  WriteDataSet25(TimeIndex);
+  WriteDataSet25;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
   begin
@@ -835,23 +1011,15 @@ begin
   end;
 
   frmProgressMM.AddMessage(StrWritingDataSet26);
-  WriteDataSet26;
+  WriteDataSet26(TimeIndex);
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
 
-  frmProgressMM.AddMessage(StrWritingDataSet27a);
-  WriteDataSet27a;
-  Application.ProcessMessages;
-  if not frmProgressMM.ShouldContinue then
-  begin
-    Exit;
-  end;
-
-  frmProgressMM.AddMessage(StrWritingDataSet27b);
-  WriteDataSet27b(TimeIndex);
+  frmProgressMM.AddMessage(StrWritingDataSet27);
+  WriteDataSet27;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
   begin
@@ -859,7 +1027,7 @@ begin
   end;
 
   frmProgressMM.AddMessage(StrWritingDataSet28);
-  WriteDataSet28;
+  WriteDataSet28(TimeIndex);
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
   begin
@@ -874,8 +1042,16 @@ begin
     Exit;
   end;
 
-  frmProgressMM.AddMessage(StrWritingDataSet30);
-  WriteDataSet30(TimeIndex);
+  frmProgressMM.AddMessage(StrWritingDataSet30a);
+  WriteDataSet30a;
+  Application.ProcessMessages;
+  if not frmProgressMM.ShouldContinue then
+  begin
+    Exit;
+  end;
+
+  frmProgressMM.AddMessage(StrWritingDataSet30b);
+  WriteDataSet30b(TimeIndex);
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
   begin
@@ -899,23 +1075,15 @@ begin
   end;
 
   frmProgressMM.AddMessage(StrWritingDataSet33);
-  WriteDataSet33;
+  WriteDataSet33(TimeIndex);
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
 
-  frmProgressMM.AddMessage(StrWritingDataSet34a);
-  WriteDataSet34a;
-  Application.ProcessMessages;
-  if not frmProgressMM.ShouldContinue then
-  begin
-    Exit;
-  end;
-
-  frmProgressMM.AddMessage(StrWritingDataSet34b);
-  WriteDataSet34b;
+  frmProgressMM.AddMessage(StrWritingDataSet34);
+  WriteDataSet34;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
   begin
@@ -937,10 +1105,43 @@ begin
   begin
     Exit;
   end;
+
+  frmProgressMM.AddMessage(StrWritingDataSet37a);
+  WriteDataSet37a;
+  Application.ProcessMessages;
+  if not frmProgressMM.ShouldContinue then
+  begin
+    Exit;
+  end;
+
+  frmProgressMM.AddMessage(StrWritingDataSet37b);
+  WriteDataSet37b;
+  Application.ProcessMessages;
+  if not frmProgressMM.ShouldContinue then
+  begin
+    Exit;
+  end;
+
+  frmProgressMM.AddMessage(StrWritingDataSet38);
+  WriteDataSet38;
+  Application.ProcessMessages;
+  if not frmProgressMM.ShouldContinue then
+  begin
+    Exit;
+  end;
+
+  frmProgressMM.AddMessage(StrWritingDataSet39);
+  WriteDataSet39;
+  Application.ProcessMessages;
+  if not frmProgressMM.ShouldContinue then
+  begin
+    Exit;
+  end;
 end;
 
 procedure TModflowFmpWriter.WriteDataSet1;
 begin
+  // MXLP is omitted. How would it ever be used?
   CountParametersAndParameterCells(NPFWL, MXL);
   if NPFWL > 0 then
   begin
@@ -976,7 +1177,7 @@ begin
 
       FWriteLocation := wlOpenClose;
 
-      Crops := (Model as TPhastModel).FmpCrops;
+      Crops := Model.FmpCrops;
       for CropIndex := 0 to Crops.Count - 1 do
       begin
         RootDepths := Crops[CropIndex].FmpRootDepthCollection;
@@ -1026,7 +1227,7 @@ begin
 
       FWriteLocation := wlOpenClose;
 
-      Crops := (Model as TPhastModel).FmpCrops;
+      Crops := Model.FmpCrops;
       for CropIndex := 0 to Crops.Count - 1 do
       begin
         CropID := CropIndex + 1;
@@ -1080,7 +1281,7 @@ begin
 
       FWriteLocation := wlOpenClose;
 
-      Crops := (Model as TPhastModel).FmpCrops;
+      Crops := Model.FmpCrops;
       for CropIndex := 0 to Crops.Count - 1 do
       begin
         CropID := CropIndex + 1;
@@ -1131,7 +1332,7 @@ begin
 
       FWriteLocation := wlOpenClose;
 
-      Crops := (Model as TPhastModel).FmpCrops;
+      Crops := Model.FmpCrops;
       for CropIndex := 0 to Crops.Count - 1 do
       begin
         ACrop := Crops[CropIndex];
@@ -1161,8 +1362,8 @@ var
   CropIndex: Integer;
   ACrop: TCropItem;
   CropID: Integer;
-  Expression: TExpression;
-  Value: Boolean;
+//  Expression: TExpression;
+//  Value: Boolean;
 begin
   if (IRTFL = 3) or (ICUFL = 3) or (IPFL = 3) then
   begin
@@ -1181,7 +1382,7 @@ begin
       FWriteLocation := wlOpenClose;
 
 
-      Crops := (Model as TPhastModel).FmpCrops;
+      Crops := Model.FmpCrops;
       for CropIndex := 0 to Crops.Count - 1 do
       begin
         ACrop := Crops[CropIndex];
@@ -1207,19 +1408,19 @@ begin
           ACrop, StrMaximumRootingDept);
         WriteFloatValueFromGlobalFormula(ACrop.RootGrowthCoefficient,
           ACrop, StrRootGrowthCoeffici);
-        WriteBooleanValueFromGlobalFormula(ACrop.Irrigated,
-          ACrop, 'Irrigation flag');
-        Expression := EvaluateValueFromGlobalFormula(ACrop.Irrigated, ACrop,
-          StrIrrigationFlag, [rdtBoolean]);
-        Value := Expression.BooleanResult;
-        if Value then
-        begin
-          WriteInteger(0);
-        end
-        else
-        begin
-          WriteInteger(1);
-        end;
+        WriteBooleanValueFromGlobalFormula('not (' + ACrop.Irrigated + ')',
+          ACrop, StrIrrigationFlag);
+//        Expression := EvaluateValueFromGlobalFormula(ACrop.Irrigated, ACrop,
+//          StrIrrigationFlag, [rdtBoolean]);
+//        Value := Expression.BooleanResult;
+//        if Value then
+//        begin
+//          WriteInteger(0);
+//        end
+//        else
+//        begin
+//          WriteInteger(1);
+//        end;
         WriteString(' # Data Set 15: Crop-ID BaseT MinCutT MaxCutT C0 C1 C2 C3 BegRootD MaxRootD RootGC {NONIRR}');
         NewLine;
       end;
@@ -1234,7 +1435,7 @@ end;
 procedure TModflowFmpWriter.WriteDataSet16;
 var
   FmpClimate: TClimateCollection;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
   StressPeriods: TModflowStressPeriods;
   StepIndex: Integer;
   StartingTime: Double;
@@ -1260,7 +1461,7 @@ begin
       FWriteLocation := wlOpenClose;
 
 
-      LocalModel := (Model as TPhastModel);
+      LocalModel := Model;
       StressPeriods := LocalModel.ModflowFullStressPeriods;
       StartingTime := StressPeriods.First.StartTime;
       LenSim := Trunc(StressPeriods.Last.EndTime - StartingTime);
@@ -1319,7 +1520,7 @@ begin
       FWriteLocation := wlOpenClose;
 
 
-      Crops := (Model as TPhastModel).FmpCrops;
+      Crops := Model.FmpCrops;
       for CropIndex := 0 to Crops.Count - 1 do
       begin
         ACrop := Crops[CropIndex];
@@ -1362,12 +1563,19 @@ begin
       FWriteLocation := wlOpenClose;
 
 
-      Crops := (Model as TPhastModel).FmpCrops;
+      Crops := Model.FmpCrops;
       for CropIndex := 0 to Crops.Count - 1 do
       begin
         CropID := CropIndex + 1;
         WriteInteger(CropID);
         CropFunctions := Crops[CropIndex].CropFunctionCollection;
+        if (CropFunctions.Count <> 1) then
+        begin
+          frmErrorsAndWarnings.AddError(Model,
+            StrTheCropspecificWa, Crops[CropIndex].CropName);
+          Exit;
+        end;
+        Assert(CropFunctions.Count = 1);
         CropFuncItem := CropFunctions[0];
         WriteFloatValueFromGlobalFormula(CropFuncItem.Slope ,
           Crops[CropIndex], StrWPFSlope);
@@ -1412,25 +1620,34 @@ begin
       begin
         AFarm := FFarms[FarmIndex];
         WriteInteger(AFarm.FarmId);
-        CostsItem := AFarm.FarmCostsCollection[0];
-        WriteFloatValueFromGlobalFormula(CostsItem.GWcost1 ,
-          AFarm, StrGWcost1);
-        WriteFloatValueFromGlobalFormula(CostsItem.GWcost2 ,
-          AFarm, StrGWcost2);
-        WriteFloatValueFromGlobalFormula(CostsItem.GWcost3 ,
-          AFarm, StrGWcost3);
-        WriteFloatValueFromGlobalFormula(CostsItem.GWcost4 ,
-          AFarm, StrGWcost4);
-        WriteFloatValueFromGlobalFormula(CostsItem.SWcost1 ,
-          AFarm, StrSWcost1);
-        WriteFloatValueFromGlobalFormula(CostsItem.SWcost2 ,
-          AFarm, StrSWcost2);
-        WriteFloatValueFromGlobalFormula(CostsItem.SWcost3 ,
-          AFarm, StrSWcost3);
-        WriteFloatValueFromGlobalFormula(CostsItem.SWcost4 ,
-          AFarm, StrSWcost4);
-        WriteString(' # Data Set 19: Farm-ID GWcost1 GWcost2 GWcost3 GWcost4 SWcost1 SWcost2 SWcost3 SWcost4');
-        NewLine;
+
+        if AFarm.FarmCostsCollection.Count > 0 then
+        begin
+          CostsItem := AFarm.FarmCostsCollection[0];
+          WriteFloatValueFromGlobalFormula(CostsItem.GWcost1 ,
+            AFarm, StrGWcost1);
+          WriteFloatValueFromGlobalFormula(CostsItem.GWcost2 ,
+            AFarm, StrGWcost2);
+          WriteFloatValueFromGlobalFormula(CostsItem.GWcost3 ,
+            AFarm, StrGWcost3);
+          WriteFloatValueFromGlobalFormula(CostsItem.GWcost4 ,
+            AFarm, StrGWcost4);
+          WriteFloatValueFromGlobalFormula(CostsItem.SWcost1 ,
+            AFarm, StrSWcost1);
+          WriteFloatValueFromGlobalFormula(CostsItem.SWcost2 ,
+            AFarm, StrSWcost2);
+          WriteFloatValueFromGlobalFormula(CostsItem.SWcost3 ,
+            AFarm, StrSWcost3);
+          WriteFloatValueFromGlobalFormula(CostsItem.SWcost4 ,
+            AFarm, StrSWcost4);
+          WriteString(' # Data Set 19: Farm-ID GWcost1 GWcost2 GWcost3 GWcost4 SWcost1 SWcost2 SWcost3 SWcost4');
+          NewLine;
+        end
+        else
+        begin
+          frmErrorsAndWarnings.AddError(Model, StrFarmCostsHaveNot,
+            Format(StrInFarmDFarmC, [AFarm.FarmId]));
+        end;
       end;
     finally
       FWriteLocation := wlMain;
@@ -1440,7 +1657,99 @@ begin
 
 end;
 
-procedure TModflowFmpWriter.WriteDataSet24;
+procedure TModflowFmpWriter.WriteDataSet20;
+var
+  FarmIndex: Integer;
+  Farms: TFarmCollection;
+  AFarm: TFarm;
+  Allotment: string;
+begin
+  if IALLOTGW = 1 then
+  begin
+    Farms := Model.Farms;
+    for FarmIndex := 0 to Farms.Count - 1 do
+    begin
+      AFarm := Farms[FarmIndex];
+      if AFarm.GwAllotment.Count > 0 then
+      begin
+        Allotment := AFarm.GwAllotment[0].Allotment;
+        WriteInteger(AFarm.FarmId);
+        WriteFloatValueFromGlobalFormula(Allotment, AFarm, 'ALLOTGW');
+        WriteString(' # Data Set 20');
+        NewLine;
+      end
+      else
+      begin
+        frmErrorsAndWarnings.AddError(Model, StrFarmAllotmentsNot,
+          Format(StrInFarmDTheFar, [AFarm.FarmId]));
+      end;
+    end;
+  end;
+end;
+
+procedure TModflowFmpWriter.WriteDataSet25;
+var
+  Farms: TFarmCollection;
+  FarmIndex: Integer;
+  AFarm: TFarm;
+  ALLOTGW: Double;
+//  Allotment: string;
+begin
+  if IALLOTGW = 2 then
+  begin
+    Farms := Model.Farms;
+    for FarmIndex := 0 to Farms.Count - 1 do
+    begin
+      AFarm := Farms[FarmIndex];
+      ALLOTGW := AFarm.GwAllotment.GetAllotmentTimeValuesFromTime(
+        FStressPeriodStartTime).Allotment;
+      WriteInteger(AFarm.FarmId);
+      WriteFloat(ALLOTGW);
+      WriteString(' # Data Set 25');
+      NewLine;
+    end;
+  end;
+end;
+
+procedure TModflowFmpWriter.WriteDataSet26(TimeIndex: Integer);
+var
+  FarmIDList: TValueCellList;
+  Comment: string;
+  DataTypeIndex: Integer;
+  DataType: TRbwDataType;
+  DefaultValue: Double;
+//  Dummy: TDataArray;
+  AFileName: string;
+  FarmIdArray: TDataArray;
+begin
+  FarmIDList := FFarmIDs[TimeIndex];
+  DefaultValue := 0;
+  DataType := rdtInteger;
+  DataTypeIndex := 0;
+  Comment := 'Data Set 26: FID';
+
+  if FFID_FileStream = nil then
+  begin
+    AFileName := ChangeFileExt(FNameOfFile, '.FID');
+    WriteToNameFile(StrDATA, Model.UnitNumbers.UnitNumber(StrFmpFID),
+      AFileName, foInput);
+    FFID_FileStream := TFileStream.Create(AFileName,
+      fmCreate or fmShareDenyWrite);
+  end;
+
+  FarmIdArray := nil;
+  FWriteLocation := wlFID;
+  try
+    WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
+      FarmIDList, umAssign, False, FarmIdArray, False);
+    CheckIntegerDataSet(FarmIdArray, StrInvalidFarmID);
+  finally
+    FWriteLocation := wlMain;
+    FarmIdArray.Free;
+  end;
+end;
+
+procedure TModflowFmpWriter.WriteDataSet27;
 var
   Crops: TCropCollection;
   FarmIndex: Integer;
@@ -1464,13 +1773,13 @@ begin
 
     WriteString('EXTERNAL ');
     WriteInteger(Model.UnitNumbers.UnitNumber(StrFmpOFE));
-    WriteString(' # Data Set 24 Farm-ID OFE(FID,CID)');
+    WriteString(' # Data Set 27 Farm-ID OFE(FID,CID)');
     NewLine;
 
     FWriteLocation := wlOFE;
 
     try
-      Crops := (Model as TPhastModel).FmpCrops;
+      Crops := Model.FmpCrops;
       for FarmIndex := 0 to FFarms.Count - 1 do
       begin
         AFarm := FFarms[FarmIndex];
@@ -1481,7 +1790,7 @@ begin
           if (Efficiencies.Count <> 1) then
           begin
             frmErrorsAndWarnings.AddError(Model,
-              StrCropEfficiencesNot, (AFarm.ScreenObject as TScreenObject).Name);
+              StrCropEfficiencesNot, Format(StrFarmD, [AFarm.FarmId]));
             Exit;
           end;
         end;
@@ -1495,13 +1804,13 @@ begin
           if UsedCropEffItem = nil then
           begin
             frmErrorsAndWarnings.AddError(Model,
-              StrCropEfficiencesNot, (AFarm.ScreenObject as TScreenObject).Name);
+              StrCropEfficiencesNot, Format(StrFarmD, [AFarm.FarmId]));
             Exit;
           end;
 
           Assert(UsedCropEffItem <> nil);
           WriteFloatValueFromGlobalFormula(UsedCropEffItem.Efficiency,
-            AFarm.ScreenObject, Crops[CropIndex].CropName);
+            AFarm, Crops[CropIndex].CropName);
         end;
         NewLine;
       end;
@@ -1511,21 +1820,22 @@ begin
   end;
 end;
 
-procedure TModflowFmpWriter.WriteDataSet25(TimeIndex: Integer);
+procedure TModflowFmpWriter.WriteDataSet28(TimeIndex: Integer);
 var
   CropIDList: TValueCellList;
   Comment: string;
   DataTypeIndex: Integer;
   DataType: TRbwDataType;
   DefaultValue: Double;
-  Dummy: TDataArray;
+//  Dummy: TDataArray;
   AFileName: string;
+  CropIdArray: TDataArray;
 begin
   CropIDList := FCropIDs[TimeIndex];
   DefaultValue := 0;
   DataType := rdtInteger;
   DataTypeIndex := 0;
-  Comment := 'Data Set 25: CID';
+  Comment := 'Data Set 28: CID';
 
   if FCID_FileStream = nil then
   begin
@@ -1536,16 +1846,19 @@ begin
       fmCreate or fmShareDenyWrite);
   end;
 
+  CropIdArray := nil;
   FWriteLocation := wlCID;
   try
     WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
-      CropIDList, umAssign, False, Dummy);
+      CropIDList, umAssign, False, CropIdArray, False);
+    CheckIntegerDataSet(CropIdArray, StrInvalidCropIDInF);
   finally
     FWriteLocation := wlMain;
+    CropIdArray.Free;
   end;
 end;
 
-procedure TModflowFmpWriter.WriteDataSet26;
+procedure TModflowFmpWriter.WriteDataSet29;
 var
   Crops: TCropCollection;
   CropIndex: Integer;
@@ -1567,13 +1880,13 @@ begin
 
     WriteString('EXTERNAL ');
     WriteInteger(Model.UnitNumbers.UnitNumber(StrFmpRoot));
-    WriteString(' # Data set 26: Crop-ID ROOT');
+    WriteString(' # Data set 29: Crop-ID ROOT');
     NewLine;
 
 
     FWriteLocation := wlRoot;
     try
-      Crops := (Model as TPhastModel).FmpCrops;
+      Crops := Model.FmpCrops;
       for CropIndex := 0 to Crops.Count - 1 do
       begin
         CropID := CropIndex + 1;
@@ -1601,7 +1914,7 @@ begin
   end;
 end;
 
-procedure TModflowFmpWriter.WriteDataSet27a;
+procedure TModflowFmpWriter.WriteDataSet30a;
 var
   Crops: TCropCollection;
   CropIndex: Integer;
@@ -1609,6 +1922,7 @@ var
   WaterUseCollection: TCropWaterUseCollection;
   AWaterUseItem: TCropWaterUseItem;
   AFileName: string;
+  ACrop: TCropItem;
 begin
   if ICUFL < 3  then
   begin
@@ -1623,7 +1937,7 @@ begin
 
     WriteString('EXTERNAL ');
     WriteInteger(Model.UnitNumbers.UnitNumber(StrFmpCropUse));
-    WriteString(' # Data set 27a: Crop-ID CU {NONIRR}');
+    WriteString(' # Data set 30a: Crop-ID CU {NONIRR}');
     NewLine;
 
 
@@ -1634,25 +1948,33 @@ begin
 //    WriteString(' # Data set 27a: Crop-ID CU {NONIRR}');
 //    NewLine;
     Try
-      Crops := (Model as TPhastModel).FmpCrops;
+      Crops := Model.FmpCrops;
       for CropIndex := 0 to Crops.Count - 1 do
       begin
         CropID := CropIndex + 1;
+        ACrop := Crops[CropIndex];
         WriteInteger(CropID);
-        WaterUseCollection := Crops[CropIndex].CropWaterUseCollection;
+        WaterUseCollection := ACrop.CropWaterUseCollection;
         AWaterUseItem := WaterUseCollection.ItemByStartTime(FStressPeriodStartTime)
           as TCropWaterUseItem;
         if AWaterUseItem = nil then
         begin
           frmErrorsAndWarnings.AddError(Model,
-            StrConsumptiveUseFact, Crops[CropIndex].CropName);
+            StrConsumptiveUseFact, ACrop.CropName);
           Exit;
         end;
         Assert(AWaterUseItem <> nil);
 
         WriteFloatValueFromGlobalFormula(AWaterUseItem.CropValue,
-          Crops[CropIndex], 'Crop-ID CU {NONIRR}');
-  //      WriteString(' # Data set 27a: Crop-ID CU {NONIRR}');
+          ACrop, 'Crop-ID CU {NONIRR}');
+        WriteBooleanValueFromGlobalFormula('not (' + AWaterUseItem.Irrigated + ')',
+          ACrop, 'Crop-ID CU {NONIRR}');
+        WriteString(' # Data set 30a: Crop-ID CU NONIRR');
+        if CropIndex = 0 then
+        begin
+          WriteString(' Stress Period: ');
+          WriteInteger(FStressPeriod+1);
+        end;
         NewLine;
       end;
     finally
@@ -1661,7 +1983,7 @@ begin
   end;
 end;
 
-procedure TModflowFmpWriter.WriteDataSet27b(TimeIndex: Integer);
+procedure TModflowFmpWriter.WriteDataSet30b(TimeIndex: Integer);
 var
   RefEtList: TValueCellList;
   Comment: string;
@@ -1677,7 +1999,7 @@ begin
     DefaultValue := 0;
     DataType := rdtDouble;
     DataTypeIndex := 0;
-    Comment := 'Data Set 27b: ETR';
+    Comment := 'Data Set 30b: ETR';
 
     if FETR_FileStream = nil then
     begin
@@ -1698,7 +2020,7 @@ begin
   end;
 end;
 
-procedure TModflowFmpWriter.WriteDataSet28;
+procedure TModflowFmpWriter.WriteDataSet31;
 var
   Crops: TCropCollection;
   CropIndex: Integer;
@@ -1721,14 +2043,14 @@ begin
 
     WriteString('EXTERNAL ');
     WriteInteger(Model.UnitNumbers.UnitNumber(StrFmpETFrac));
-    WriteString(' # Data set 28: Crop-ID FTR FEP FEI');
+    WriteString(' # Data set 31: Crop-ID FTR FEP FEI');
     NewLine;
 
 
     FWriteLocation := wlEtFrac;
 
     try
-      Crops := (Model as TPhastModel).FmpCrops;
+      Crops := Model.FmpCrops;
       for CropIndex := 0 to Crops.Count - 1 do
       begin
         CropID := CropIndex + 1;
@@ -1742,7 +2064,7 @@ begin
           Crops[CropIndex], StrEvaporativeFraction);
         WriteFloatValueFromGlobalFormula(EvapFractionItem.IrrigFraction,
           Crops[CropIndex], StrEvaporativeFractionIrr);
-        WriteString(' # Data set 28: Crop-ID FTR FEP FEI');
+        WriteString(' # Data set 32: Crop-ID FTR FEP FEI');
         NewLine;
       end;
     finally
@@ -1751,7 +2073,7 @@ begin
   end;
 end;
 
-procedure TModflowFmpWriter.WriteDataSet29;
+procedure TModflowFmpWriter.WriteDataSet32;
 var
   Crops: TCropCollection;
   CropIndex: Integer;
@@ -1773,14 +2095,14 @@ begin
 
     WriteString('EXTERNAL ');
     WriteInteger(Model.UnitNumbers.UnitNumber(StrFmpSwLosses));
-    WriteString(' # Data set 29: Crop-ID FIESWP FIESWI');
+    WriteString(' # Data set 32: Crop-ID FIESWP FIESWI');
     NewLine;
 
 
     FWriteLocation := wlSwLosses;
 
     try
-      Crops := (Model as TPhastModel).FmpCrops;
+      Crops := Model.FmpCrops;
       for CropIndex := 0 to Crops.Count - 1 do
       begin
         CropID := CropIndex + 1;
@@ -1791,7 +2113,7 @@ begin
           Crops[CropIndex], StrFractionOfInefficPrecip);
         WriteFloatValueFromGlobalFormula(LossesItem.IrrigationLosses,
           Crops[CropIndex], StrFractionOfInefficIrrig);
-        WriteString(' # Data set 29: Crop-ID FIESWP FIESWI');
+        WriteString(' # Data set 32: Crop-ID FIESWP FIESWI');
         NewLine;
       end;
     finally
@@ -1809,8 +2131,16 @@ end;
 procedure TModflowFmpWriter.WriteDataSet2cAuxVar;
 //var
 //  AuxUsed: Boolean;
+var
+  ChildModels: TChildModelCollection;
+  ChildIndex: Integer;
 begin
-//  QMAXRESET is not specified because MNW1 is not supported.
+  if FFarmProcess.ResetMnwQMax
+    and (Model.ModflowPackages.Mnw1Package.IsSelected
+    or Model.ModflowPackages.Mnw2Package.IsSelected) then
+  begin
+    WriteString('AUX QMAXRESET ');
+  end;
   case FFarmProcess.CropIrrigationRequirement of
     cirContinuously: ;
     cirOnlyWhenNeeded:
@@ -1819,7 +2149,21 @@ begin
       end;
     else Assert(False);
   end;
-  WriteString('AUX IFACE');
+  if Model is TChildModel then
+  begin
+    ChildModels := frmGoPhast.PhastModel.ChildModels;
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      if ChildModels[ChildIndex].ChildModel = Model then
+      begin
+        WriteString('AUX LGRGRID');
+//        WriteInteger(ChildIndex+1);
+        break;
+      end;
+    end;
+  end;
+  // FMP does not accept auxilliary variables.
+//  WriteString('AUX IFACE');
   NewLine;
 end;
 
@@ -1828,6 +2172,25 @@ begin
   WriteInteger(ICCFL);
   WriteString(' # Data Set 2c Crop Consumptive-Use Flag: ICCFL');
   NewLine;
+end;
+
+procedure TModflowFmpWriter.WriteDataSet2cMnwOptions;
+var
+  QCLOSE: Double;
+  HPCT: Double;
+  RPCT: Double;
+begin
+  if FFarmProcess.MnwClose then
+  begin
+    QCLOSE := FFarmProcess.MnwClosureCriterion;
+    HPCT := FFarmProcess.HeadChangeReduction;
+    RPCT := FFarmProcess.ResidualChangeReduction;
+    WriteFloat(QClose);
+    WriteFloat(HPCT);
+    WriteFloat(RPCT);
+    WriteString('# Data Set 2c: QCLOSE HPCT RPCT');
+    NewLine;
+  end;
 end;
 
 procedure TModflowFmpWriter.WriteDataSet2cOptions;
@@ -1856,7 +2219,11 @@ begin
     OptionsUsed := True;
   end;
 
-//  MNWCLOSE is not specified because MNW1 is not supported by ModelMuse.
+  if FFarmProcess.MnwClose then
+  begin
+    WriteString('MNWCLOSE ');
+    OptionsUsed := True;
+  end;
 
   if not OptionsUsed then
   begin
@@ -1872,14 +2239,15 @@ var
   MXACTW: Integer;
   NFARMS: Integer;
   NSOILS: Integer;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
   CountCells(MXACTW);
   NFARMS := NumberOfFarms;
-  LocalModel := Model as TPhastModel;
+  LocalModel := Model;
   NSOILS := LocalModel.FmpSoils.Count;
 
   WriteInteger(MXACTW);
+  // MXACTFWP is always omitted in ModelMuse.
   WriteInteger(NFARMS);
   WriteInteger(NCROPS);
   WriteInteger(NSOILS);
@@ -1891,9 +2259,10 @@ procedure TModflowFmpWriter.WriteDataSet2cPrintFlags;
 const
   Dummy = -1000;
 var
-  IFWLCB, IFNRCB, ISDPFL, IFBPFL, IRTPFL, IOPFL, IPAPFL: Integer;
+  IFWLCB, IFNRCB, ISDPFL, IFBPFL, IRTPFL, IOPFL, IPAPFL, IETPFL: Integer;
   FileDir: string;
   CommentString: string;
+  IRTPFL_Required: Boolean;
 //  AFileName: string;
 begin
   FileDir := IncludeTrailingPathDelimiter(ExtractFileDir(FNameOfFile));
@@ -2003,14 +2372,29 @@ begin
   end;
   {$ENDREGION}
 
+  {$REGION 'IETPFL'}
+  IETPFL := Ord(FFarmProcess.EtPrintType);
+  if FFarmProcess.EtPrintLocation = eplListing then
+  begin
+    IETPFL := -IETPFL;
+  end;
+  {$ENDREGION}
+
   WriteInteger(IFWLCB);
   WriteInteger(IFNRCB);
   WriteInteger(ISDPFL);
   WriteInteger(IFBPFL);
+  WriteInteger(IETPFL);
 
-  CommentString := ' # Data Set 2c Mandatory and Optional Print Flags: IFWLCB IFNRCB ISDPFL IFBPFL';
+  CommentString := ' # Data Set 2c Mandatory and Optional Print Flags: IFWLCB IFNRCB ISDPFL IFBPFL IETPFL';
 
-  if Model.ModflowPackages.SfrPackage.IsSelected then
+  IRTPFL_Required := Model.ModflowPackages.SfrPackage.IsSelected;
+  if (not IRTPFL_Required) and (Model is TChildModel) then
+  begin
+    IRTPFL_Required := TChildModel(Model).ParentModel.
+      ModflowPackages.SfrPackage.IsSelected;
+  end;
+  if IRTPFL_Required then
   begin
     {$REGION 'IRTPFL'}
     IRTPFL := Dummy;
@@ -2058,7 +2442,7 @@ begin
     WriteInteger(IOPFL);
     CommentString := CommentString + ' IOPFL';
   end;
-  if  IALLOT > 1 then
+  if  IALLOTSW > 1 then
   begin
    {$REGION 'IPAPFL'}
    IPAPFL := Dummy;
@@ -2123,6 +2507,10 @@ begin
   PCLOSE := FFarmProcess.SurfaceWaterClosure;
 
   SfrSelected := Model.ModflowPackages.SfrPackage.IsSelected;
+  if (not SfrSelected) and (Model is TChildModel) then
+  begin
+    SfrSelected := TChildModel(Model).ParentModel.ModflowPackages.SfrPackage.IsSelected;
+  end;
 
   IRDFL := 0;
   case FFarmProcess.RoutedDelivery of
@@ -2138,7 +2526,7 @@ begin
       StrIRDFLInTheFarmPr);
   end;
 
-  if not SfrSelected or (IRDFL = 0)  then
+  if not SfrSelected {or (IRDFL = 0)}  then
   begin
     IRRFL := 0;
   end
@@ -2170,9 +2558,9 @@ begin
   WriteInteger(IRDFL);
   WriteInteger(ISRRFL);
   WriteInteger(IRRFL);
-  WriteInteger(IALLOT);
-  DataSetLabel := DataSetLabel + 'ISRDFL IRDFL ISRRFL IRRFL IALLOT ';
-  if IALLOT > 1 then
+  WriteInteger(IALLOTSW);
+  DataSetLabel := DataSetLabel + 'ISRDFL IRDFL ISRRFL IRRFL IALLOTSW ';
+  if IALLOTSW > 1 then
   begin
     WriteFloat(PCLOSE);
     DataSetLabel := DataSetLabel + 'PCLOSE ';
@@ -2188,7 +2576,7 @@ var
   EvapFractions: TEvapFractionsCollection;
 begin
   result := 1;
-  Crops := (Model as TPhastModel).FmpCrops;
+  Crops := Model.FmpCrops;
   for CropIndex := 0 to Crops.Count - 1 do
   begin
     EvapFractions := Crops[CropIndex].EvapFractionsCollection;
@@ -2210,7 +2598,7 @@ begin
   if IDEFFL > 0 then
   begin
     result := 1;
-    Crops := (Model as TPhastModel).FmpCrops;
+    Crops := Model.FmpCrops;
     for CropIndex := 0 to Crops.Count - 1 do
     begin
       CropFunctions := Crops[CropIndex].CropFunctionCollection;
@@ -2304,23 +2692,35 @@ begin
     WriteInteger(ICOST);
     CommentString := CommentString + ' IBEN ICOST';
   end;
+  if IALLOTGW < 0 then
+  begin
+    WriteString(' P');
+  end
+  else
+  begin
+    WriteInteger(IALLOTGW);
+  end;
+  CommentString := CommentString + ' IALLOTGW';
   WriteString(CommentString);
   NewLine;
 end;
 
 procedure TModflowFmpWriter.WriteDataSet2cWhenToRead;
+const
+  IFRMFL = 2;
 begin
+  WriteInteger(IFRMFL);
   WriteInteger(IRTFL);
   WriteInteger(ICUFL);
   WriteInteger(IPFL);
   WriteInteger(IFTEFL);
   WriteInteger(IIESWFL);
   WriteInteger(IEFFL);
-  WriteString(' # Data Set 2c When-to-Read-Flags: IRTFL ICUFL IPFL IFTEFL IIESWFL IEFFL');
+  WriteString(' # Data Set 2c When-to-Read-Flags: IFRMFL, IRTFL ICUFL IPFL IFTEFL IIESWFL IEFFL');
   NewLine;
 end;
 
-procedure TModflowFmpWriter.WriteDataSet30(TimeIndex: Integer);
+procedure TModflowFmpWriter.WriteDataSet33(TimeIndex: Integer);
 var
   PrecipList: TValueCellList;
   Comment: string;
@@ -2336,7 +2736,7 @@ begin
     DefaultValue := 0;
     DataType := rdtDouble;
     DataTypeIndex := 0;
-    Comment := 'Data Set 30: PFLX';
+    Comment := 'Data Set 33: PFLX';
 
     if FPFLX_FileStream = nil then
     begin
@@ -2357,7 +2757,7 @@ begin
   end;
 end;
 
-procedure TModflowFmpWriter.WriteDataSet31;
+procedure TModflowFmpWriter.WriteDataSet34;
 var
   CropIndex: Integer;
   Crops: TCropCollection;
@@ -2379,13 +2779,13 @@ begin
 
     WriteString('EXTERNAL ');
     WriteInteger(Model.UnitNumbers.UnitNumber(StrFmpCropFunc));
-    WriteString(' # Data set 31: Crop-ID WPF-Slope WPF-Int Crop-Price');
+    WriteString(' # Data set 34: Crop-ID WPF-Slope WPF-Int Crop-Price');
     NewLine;
 
 
     FWriteLocation := wlCropFunc;
     try
-      Crops := (Model as TPhastModel).FmpCrops;
+      Crops := Model.FmpCrops;
       for CropIndex := 0 to Crops.Count - 1 do
       begin
         CropID := CropIndex + 1;
@@ -2398,7 +2798,7 @@ begin
           Crops[CropIndex], StrWIntercept);
         WriteFloatValueFromGlobalFormula(CropFuncItem.Price ,
           Crops[CropIndex], StrPrice);
-        WriteString(' # Data set 31: Crop-ID WPF-Slope WPF-Int Crop-Price');
+        WriteString(' # Data set 34: Crop-ID WPF-Slope WPF-Int Crop-Price');
         NewLine;
       end;
     finally
@@ -2407,7 +2807,7 @@ begin
   end;
 end;
 
-procedure TModflowFmpWriter.WriteDataSet32;
+procedure TModflowFmpWriter.WriteDataSet35;
 var
   CostsItem: TFarmCostsItem;
   FarmIndex: Integer;
@@ -2427,7 +2827,7 @@ begin
 
     WriteString('EXTERNAL ');
     WriteInteger(Model.UnitNumbers.UnitNumber(StrFmpWaterCost));
-    WriteString(' # Data Set 32: Farm-ID GWcost1 GWcost2 GWcost3 GWcost4 SWcost1 SWcost2 SWcost3 SWcost4');
+    WriteString(' # Data Set 35: Farm-ID GWcost1 GWcost2 GWcost3 GWcost4 SWcost1 SWcost2 SWcost3 SWcost4');
     NewLine;
 
     FWriteLocation := wlWaterCost;
@@ -2453,7 +2853,7 @@ begin
           AFarm, StrSWcost3);
         WriteFloatValueFromGlobalFormula(CostsItem.SWcost4 ,
           AFarm, StrSWcost4);
-        WriteString(' # Data Set 32: Farm-ID GWcost1 GWcost2 GWcost3 GWcost4 SWcost1 SWcost2 SWcost3 SWcost4');
+        WriteString(' # Data Set 35: Farm-ID GWcost1 GWcost2 GWcost3 GWcost4 SWcost1 SWcost2 SWcost3 SWcost4');
         NewLine;
       end;
     finally
@@ -2462,7 +2862,7 @@ begin
   end;
 end;
 
-procedure TModflowFmpWriter.WriteDataSet33;
+procedure TModflowFmpWriter.WriteDataSet36;
 var
   DeliveryIndex: Integer;
   FarmIndex: Integer;
@@ -2487,7 +2887,7 @@ begin
 
     WriteString('EXTERNAL ');
     WriteInteger(Model.UnitNumbers.UnitNumber(StrFmpDeliveries));
-    WriteString(' # Data Set 33: Farm-ID (NRDV NRDR NRDU)...');
+    WriteString(' # Data Set 36: Farm-ID (NRDV NRDR NRDU)...');
     NewLine;
 
     FWriteLocation := wlDeliveries;
@@ -2520,7 +2920,8 @@ begin
             if NRDU = 0 then
             begin
               frmErrorsAndWarnings.AddError(Model,
-                StrVirtualFarmNumber, (AFarm.ScreenObject as TScreenObject).Name);
+                StrVirtualFarmNumber, Format(StrFarmD, [AFarm.FarmId]));
+              Exit;
             end;
             Assert(NRDU <> 0);
           end
@@ -2532,11 +2933,11 @@ begin
         end;
         for DeliveryIndex := DeliveryParam.Count to MXNRDT - 1 do
         begin
-          WriteInteger(0);
-          WriteInteger(0);
+          WriteFloat(0);
+          WriteInteger(DeliveryIndex+1);
           WriteInteger(0);
         end;
-        WriteString(' # Data Set 33: Farm-ID (NRDV NRDR NRDU)...');
+        WriteString(' # Data Set 36: Farm-ID (NRDV NRDR NRDU)...');
         NewLine;
       end;
     finally
@@ -2545,7 +2946,7 @@ begin
   end;
 end;
 
-procedure TModflowFmpWriter.WriteDataSet34a;
+procedure TModflowFmpWriter.WriteDataSet37a;
 var
   FarmIndex: Integer;
   AFarm: TFarm;
@@ -2567,7 +2968,7 @@ begin
 
     WriteString('EXTERNAL ');
     WriteInteger(Model.UnitNumbers.UnitNumber(StrFmpSemiRouteDeliv));
-    WriteString(' # Data set 34a Farm-ID Row Column Segment Reach');
+    WriteString(' # Data set 37a Farm-ID Row Column Segment Reach');
     NewLine;
 
     FWriteLocation := wlSemiRouteDeliv;
@@ -2595,7 +2996,7 @@ begin
           WriteInteger(SegmentReach.Segment);
           WriteInteger(SegmentReach.Reach);
         end;
-        WriteString(' # Data set 34a Farm-ID Row Column Segment Reach');
+        WriteString(' # Data set 37a Farm-ID Row Column Segment Reach');
         NewLine;
       end;
     finally
@@ -2604,7 +3005,7 @@ begin
   end;
 end;
 
-procedure TModflowFmpWriter.WriteDataSet34b;
+procedure TModflowFmpWriter.WriteDataSet37b;
 var
   FarmIndex: Integer;
   AFarm: TFarm;
@@ -2626,7 +3027,7 @@ begin
 
     WriteString('EXTERNAL ');
     WriteInteger(Model.UnitNumbers.UnitNumber(StrFmpSemiRouteReturn));
-    WriteString(' # Data set 34b Farm-ID Row Column Segment Reach');
+    WriteString(' # Data set 37b Farm-ID Row Column Segment Reach');
     NewLine;
 
     FWriteLocation := wlSemiRouteReturn;
@@ -2654,7 +3055,7 @@ begin
           WriteInteger(SegmentReach.Segment);
           WriteInteger(SegmentReach.Reach);
         end;
-        WriteString(' # Data set 34b Farm-ID Row Column Segment Reach');
+        WriteString(' # Data set 37b Farm-ID Row Column Segment Reach');
         NewLine;
       end;
     finally
@@ -2663,24 +3064,24 @@ begin
   end;
 end;
 
-procedure TModflowFmpWriter.WriteDataSet35;
+procedure TModflowFmpWriter.WriteDataSet38;
 var
   FmpAllotment: TAllotmentCollection;
   AllotmentRecord: TAllotmentRecord;
 begin
-  if (IALLOT = 1) then
+  if (IALLOTSW = 1) then
   begin
-    FmpAllotment := (Model as TPhastModel).FmpAllotment;
+    FmpAllotment := Model.FmpAllotment;
 
     AllotmentRecord := FmpAllotment.GetAllotmentTimeValuesFromTime(FStressPeriodStartTime);
 
     WriteFloat(AllotmentRecord.Allotment);
-    WriteString(' # Data Set 35: ALLOT');
+    WriteString(' # Data Set 38: ALLOT');
     NewLine;
   end;
 end;
 
-procedure TModflowFmpWriter.WriteDataSet36;
+procedure TModflowFmpWriter.WriteDataSet39;
 var
   FarmIndex: Integer;
   AFarm: TFarm;
@@ -2688,7 +3089,7 @@ var
   WaterRightsItem: TWaterRightsItem;
   AFileName: string;
 begin
-  if IALLOT = 2 then
+  if IALLOTSW = 2 then
   begin
     if FCall_FileStream = nil then
     begin
@@ -2701,7 +3102,7 @@ begin
 
     WriteString('EXTERNAL ');
     WriteInteger(Model.UnitNumbers.UnitNumber(StrFmpCall));
-    WriteString(' # Data Set 36: Farm-ID CALL');
+    WriteString(' # Data Set 39: Farm-ID CALL');
     NewLine;
 
     FWriteLocation := wlCall;
@@ -2716,7 +3117,7 @@ begin
           as TWaterRightsItem;
         WriteFloatValueFromGlobalFormula(WaterRightsItem.WaterRights ,
           AFarm, 'Call');
-        WriteString(' # Data Set 36: Farm-ID CALL');
+        WriteString(' # Data Set 39: Farm-ID CALL');
         NewLine;
       end;
     finally
@@ -2726,14 +3127,16 @@ begin
 
 end;
 
-procedure TModflowFmpWriter.WriteDataSets21to36;
+procedure TModflowFmpWriter.WriteDataSets22to39;
 const
-  D7PName =      ' # Data Set 23: PARNAM';
-  D7PNameIname = ' # Data Set 23: PARNAM Iname';
-  DS5 = ' # Data Set 21: ITMP NP';
-  DataSetIdentifier = 'Data Set 22:';
+  D7PName =      ' # Data Set 24: PARNAM';
+  D7PNameIname = ' # Data Set 24: PARNAM Iname';
+  DS5 = ' # Data Set 22: ITMP NP';
+  DataSetIdentifier = 'Data Set 23:';
   VariableIdentifiers = 'QMAX';
 begin
+  // WriteBeforeCells and WriteCustomStressPeriod are called
+  // by WriteStressPeriods.
   WriteStressPeriods(VariableIdentifiers, DataSetIdentifier, DS5,
     D7PNameIname, D7PName);
 end;
@@ -2754,6 +3157,7 @@ end;
 
 procedure TModflowFmpWriter.WriteFile(const AFileName: string);
 begin
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidFarmProcess);
   if (not Package.IsSelected) or not (Model.ModelSelection = msModflowFmp) then
   begin
     Exit
@@ -2761,6 +3165,13 @@ begin
   if Model.PackageGeneratedExternally(StrFMP) then
   begin
     Exit;
+  end;
+  if Model is TChildModel then
+  begin
+    if not TChildModel(Model).ParentModel.ModflowPackages.FarmProcess.IsSelected then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrInvalidFarmProcess, StrIfTheFarmProcess);
+    end;
   end;
   FNameOfFile := FileName(AFileName);
   WriteToNameFile(StrFMP, Model.UnitNumbers.UnitNumber(StrFMP),
@@ -2784,7 +3195,7 @@ begin
   OpenFile(FNameOfFile);
   try
     FWriteLocation := wlMain;
-    frmProgressMM.AddMessage('Writing FMP2 Package input.');
+    frmProgressMM.AddMessage('Writing FMP3 Package input.');
     frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
@@ -2808,6 +3219,8 @@ begin
     begin
       Exit;
     end;
+
+    // Data set 2b is never used with ModelMuse. Data set 2c is used instead.
 
     frmProgressMM.AddMessage(StrWritingDataSet2c);
     WriteDataSet2cParamDimen;
@@ -2866,8 +3279,12 @@ begin
       Exit;
     end;
 
-    // QCLOSE, HPCT, and RPCT are not specified in data set 2c
-    // because MNW1 is not supported by ModelMuse.
+    WriteDataSet2cMnwOptions;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
 
     frmProgressMM.AddMessage(StrWritingDataSets3and4);
     WriteDataSets3And4;
@@ -2885,13 +3302,14 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet6);
-    WriteDataSet6;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+    // Data set 6 is never used. Data set 26 is used instead.
+//    frmProgressMM.AddMessage(StrWritingDataSet6);
+//    WriteDataSet6;
+//    Application.ProcessMessages;
+//    if not frmProgressMM.ShouldContinue then
+//    begin
+//      Exit;
+//    end;
 
     frmProgressMM.AddMessage(StrWritingDataSet7);
     WriteDataSet7;
@@ -2917,7 +3335,7 @@ begin
       Exit;
     end;
 
-    // Data set 10 is never used. Data set 25 is always used instead.
+    // Data set 10 is never used. Data set 28 is always used instead.
 
     frmProgressMM.AddMessage(StrWritingDataSet11);
     WriteDataSet11;
@@ -2991,11 +3409,20 @@ begin
       Exit;
     end;
 
-    // Data sets 20a and 20b are never used.
-    // Data sets 34a and 34b are used instead.
+    frmProgressMM.AddMessage(StrWritingDataSet20);
+    WriteDataSet20;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+
+    // Data sets 21a and 21b are never used.
+    // Data sets 37a and 37b are used instead.
 
     frmProgressMM.AddMessage(StrWritingDataSets);
-    WriteDataSets21to36;
+    WriteDataSets22to39;
 
   finally
     CloseFile;
@@ -3113,6 +3540,7 @@ var
   ScreenObjectIndex: Integer;
   Boundary: TFmpCropIDBoundary;
 begin
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidCropIDInF);
   frmErrorsAndWarnings.BeginUpdate;
   EmptyParamList := TStringList.Create;
   try
@@ -3136,6 +3564,57 @@ begin
   finally
     EmptyParamList.Free;
     frmErrorsAndWarnings.EndUpdate;
+  end;
+end;
+
+procedure TModflowFmpWriter.EvaluateFarmID;
+var
+  EmptyParamList: TStringList;
+  ScreenObject: TScreenObject;
+  ScreenObjectIndex: Integer;
+  Boundary: TFmpFarmIDBoundary;
+begin
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidFarmID);
+  frmErrorsAndWarnings.BeginUpdate;
+  EmptyParamList := TStringList.Create;
+  try
+    for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
+    begin
+      ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
+      if ScreenObject.Deleted then
+      begin
+        Continue;
+      end;
+      if not ScreenObject.UsedModels.UsesModel(Model) then
+      begin
+        Continue;
+      end;
+      Boundary := ScreenObject.ModflowFmpFarmID;
+      if Boundary <> nil then
+      begin
+        Boundary.GetCellValues(FFarmIDs, EmptyParamList, Model);
+      end;
+    end;
+  finally
+    EmptyParamList.Free;
+    frmErrorsAndWarnings.EndUpdate;
+  end;
+end;
+
+procedure TModflowFmpWriter.EvaluateGwAllotment;
+var
+  Farms: TFarmCollection;
+  FarmIndex: Integer;
+  AFarm: TFarm;
+begin
+  if IALLOTGW = 2 then
+  begin
+    Farms := Model.Farms;
+    for FarmIndex := 0 to Farms.Count - 1 do
+    begin
+      AFarm := Farms[FarmIndex];
+      AFarm.GwAllotment.EvaluateAllotment;
+    end;
   end;
 end;
 
@@ -3197,27 +3676,34 @@ end;
 
 procedure TModflowFmpWriter.FillFarmList;
 var
-  AFarm: TFarm;
-  AScreenObject: TScreenObject;
-  ScreenObjectIndex: Integer;
+//  AFarm: TFarm;
+//  AScreenObject: TScreenObject;
+//  ScreenObjectIndex: Integer;
+  LocalModel: TCustomModel;
+  FarmIndex: Integer;
 begin
-  for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
+  LocalModel := Model;
+  for FarmIndex := 0 to LocalModel.Farms.Count - 1 do
   begin
-    AScreenObject := Model.ScreenObjects[ScreenObjectIndex];
-    if AScreenObject.Deleted then
-    begin
-      Continue;
-    end;
-    if not AScreenObject.UsedModels.UsesModel(Model) then
-    begin
-      Continue;
-    end;
-    AFarm := AScreenObject.ModflowFmpFarm;
-    if (AFarm <> nil) and AFarm.Used then
-    begin
-      FFarms.Add(AFarm);
-    end;
+    FFarms.Add(LocalModel.Farms[FarmIndex]);
   end;
+//  for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
+//  begin
+//    AScreenObject := Model.ScreenObjects[ScreenObjectIndex];
+//    if AScreenObject.Deleted then
+//    begin
+//      Continue;
+//    end;
+//    if not AScreenObject.UsedModels.UsesModel(Model) then
+//    begin
+//      Continue;
+//    end;
+//    AFarm := AScreenObject.ModflowFmpFarm;
+//    if (AFarm <> nil) and AFarm.Used then
+//    begin
+//      FFarms.Add(AFarm);
+//    end;
+//  end;
   if FFarms.Count = 0 then
   begin
     frmErrorsAndWarnings.AddError(Model, StrNoFarmsHaveBeenD, StrNoFarmsHaveBeenD);
@@ -3230,6 +3716,7 @@ var
 begin
   DataArray := Model.DataArrayManager.GetDataSetByName(KSoilID);
   Assert(DataArray <> nil);
+  CheckIntegerDataSet(DataArray, StrInvalidSoilIDInF);
   FOpenCloseFileName := ChangeFileExt(FNameOfFile, '.SID');
   Model.AddModelInputFile(FOpenCloseFileName);
   FOpenCloseFileStream := TFileStream.Create(FOpenCloseFileName,
@@ -3255,9 +3742,79 @@ begin
   end;
 end;
 
+procedure TModflowFmpWriter.CheckIntegerDataSet(IntegerArray: TDataArray;
+  const ErrorMessage: string);
+var
+  ColIndex: Integer;
+  RowIndex: Integer;
+begin
+  Assert(IntegerArray <> nil);
+  for RowIndex := 0 to Model.Grid.RowCount - 1 do
+  begin
+    for ColIndex := 0 to Model.Grid.ColumnCount - 1 do
+    begin
+      if FACtiveSurfaceCells[RowIndex, ColIndex] then
+      begin
+        if not IntegerArray.IsValue[0, RowIndex, ColIndex] then
+        begin
+          frmErrorsAndWarnings.AddError(Model, ErrorMessage,
+            Format(StrRow0dColumn, [RowIndex + 1, ColIndex + 1]));
+        end
+        else
+        begin
+          if IntegerArray.DataType = rdtInteger then
+          begin
+            if (IntegerArray.IntegerData[0, RowIndex, ColIndex] <= 0) then
+            begin
+              frmErrorsAndWarnings.AddError(Model, ErrorMessage,
+                Format(StrRow0dColumn, [RowIndex + 1, ColIndex + 1]));
+            end;
+          end
+          else
+          begin
+            if (IntegerArray.RealData[0, RowIndex, ColIndex] <= 0) then
+            begin
+              frmErrorsAndWarnings.AddError(Model, ErrorMessage,
+                Format(StrRow0dColumn, [RowIndex + 1, ColIndex + 1]));
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
+
+procedure TModflowFmpWriter.EvaluateActiveCells;
+var
+  RowIndex: Integer;
+  LayerIndex: Integer;
+  ActiveDataSet: TDataArray;
+  ColumnIndex: Integer;
+begin
+  SetLength(FACtiveSurfaceCells, Model.Grid.RowCount, Model.Grid.ColumnCount);
+  ActiveDataSet := Model.DataArrayManager.GetDataSetByName(rsActive);
+  for RowIndex := 0 to Model.Grid.RowCount - 1 do
+  begin
+    for ColumnIndex := 0 to Model.Grid.ColumnCount - 1 do
+    begin
+      FACtiveSurfaceCells[RowIndex,ColumnIndex] := False;
+      for LayerIndex := 0 to Model.Grid.LayerCount - 1 do
+      begin
+        FACtiveSurfaceCells[RowIndex,ColumnIndex] :=
+          ActiveDataSet.BooleanData[LayerIndex, RowIndex, ColumnIndex];
+        if FACtiveSurfaceCells[RowIndex,ColumnIndex] then
+        begin
+          break;
+        end;
+      end;
+    end;
+  end;
+end;
+
 procedure TModflowFmpWriter.EvaluateAll;
 var
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
   frmErrorsAndWarnings.BeginUpdate;
   try
@@ -3266,7 +3823,7 @@ begin
     // because the error message would be deleted in Evaluate.
     frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoCropsHaveBeenD);
 
-    LocalModel := Model as TPhastModel;
+    LocalModel := Model as TCustomModel;
     if LocalModel.FmpSoils.Count = 0 then
     begin
       frmErrorsAndWarnings.AddError(Model, StrNoCropsHaveBeenD, StrNoCropsHaveBeenD);
@@ -3274,11 +3831,15 @@ begin
     FillFarmList;
 
     SetFlags;
+
+    EvaluateActiveCells;
     Evaluate;
     EvaluateCropID;
+    EvaluateFarmID;
     EvaluateReferenceET;
     EvaluatePrecip;
-    (Model as TPhastModel).FmpAllotment.EvaluateAllotment;
+    EvaluateGwAllotment;
+    Model.FmpAllotment.EvaluateAllotment;
   finally
     frmErrorsAndWarnings.EndUpdate;
   end;
@@ -3299,6 +3860,7 @@ var
   var
     ACrop: TCropItem;
     AClimate: TClimateItem;
+    Farm: TFarm;
   begin
     if ErrorObject = nil then
     begin
@@ -3317,7 +3879,12 @@ var
     else if ErrorObject is TClimateItem then
     begin
       AClimate := TClimateItem(ErrorObject);
-      result := Format('Climate starting time: %d', [AClimate.StartTime]);
+      result := Format(StrClimateStartingTim, [AClimate.StartTime]);
+    end
+    else if ErrorObject is TFarm then
+    begin
+      Farm := TFarm(ErrorObject);
+      result := Format(StrErrorInFarmD, [Farm.FarmID]);
     end
     else if ErrorObject is TScreenObject then
     begin
@@ -3330,7 +3897,7 @@ var
     end;
   end;
 begin
-  Compiler := Model.rpThreeDFormulaCompiler;
+  Compiler := Model.ParentModel.rpThreeDFormulaCompiler;
 
   ErrorFormula := Formula;
 
@@ -3407,6 +3974,30 @@ begin
   WriteInteger(Value);
 end;
 
+procedure TModflowFmpWriter.WriteNwtOptions;
+var
+  PSIRAMPF: double;
+  SATTHK: Extended;
+begin
+  if Model.ModflowPackages.NwtPackage.IsSelected then
+  begin
+    PSIRAMPF := FFarmProcess.PsiRampf;
+    SATTHK := FFarmProcess.SatThick;
+
+    WriteString('SPECIFY ');
+    WriteFloat(PSIRAMPF);
+    WriteFloat(SATTHK);
+    WriteString(' # NWT options: PSIRAMPF SATTHK');
+    NewLine;
+  end;
+end;
+
+procedure TModflowFmpWriter.WriteBeforeCells;
+begin
+  inherited;
+  WriteNwtOptions;
+end;
+
 procedure TModflowFmpWriter.WriteBooleanValueFromGlobalFormula(Formula: string;
   ErrorObject: TObject; const DataSetErrorString: string);
 var
@@ -3429,7 +4020,7 @@ end;
 procedure TModflowFmpWriter.WriteDataSet9;
 var
   SoilIndex: Integer;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
   ASoil: TSoilItem;
   SoilID: Integer;
   Formula: string;
@@ -3449,7 +4040,7 @@ begin
     FWriteLocation := wlOpenClose;
 
 
-    LocalModel := Model as TPhastModel;
+    LocalModel := Model;
     for SoilIndex := 0 to LocalModel.FmpSoils.Count - 1 do
     begin
       ASoil := LocalModel.FmpSoils[SoilIndex];
@@ -3500,25 +4091,25 @@ begin
   end;
 end;
 
-procedure TModflowFmpWriter.WriteDataSet6;
-var
-  DataArray: TDataArray;
-begin
-  DataArray := Model.DataArrayManager.GetDataSetByName(KFarmID);
-  Assert(DataArray <> nil);
-  FOpenCloseFileName := ChangeFileExt(FNameOfFile, '.FID');
-  Model.AddModelInputFile(FOpenCloseFileName);
-  FOpenCloseFileStream := TFileStream.Create(FOpenCloseFileName,
-    fmCreate or fmShareDenyWrite);
-  try
-    FWriteLocation := wlOpenClose;
-    FOpenCloseFileName := ExtractFileName(FOpenCloseFileName);
-    WriteArray(DataArray, 0, 'Data set 6: FID', StrNoValueAssigned);
-  finally
-    FreeAndNil(FOpenCloseFileStream);
-    FWriteLocation := wlMain;
-  end;
-end;
+//procedure TModflowFmpWriter.WriteDataSet6;
+//var
+//  DataArray: TDataArray;
+//begin
+//  DataArray := Model.DataArrayManager.GetDataSetByName(KFarmID);
+//  Assert(DataArray <> nil);
+//  FOpenCloseFileName := ChangeFileExt(FNameOfFile, '.FID');
+//  Model.AddModelInputFile(FOpenCloseFileName);
+//  FOpenCloseFileStream := TFileStream.Create(FOpenCloseFileName,
+//    fmCreate or fmShareDenyWrite);
+//  try
+//    FWriteLocation := wlOpenClose;
+//    FOpenCloseFileName := ExtractFileName(FOpenCloseFileName);
+//    WriteArray(DataArray, 0, 'Data set 6: FID', StrNoValueAssigned);
+//  finally
+//    FreeAndNil(FOpenCloseFileStream);
+//    FWriteLocation := wlMain;
+//  end;
+//end;
 
 procedure TModflowFmpWriter.WriteDataSet7;
 var
@@ -3548,7 +4139,7 @@ begin
 
       FWriteLocation := wlOpenClose;
       try
-        Crops := (Model as TPhastModel).FmpCrops;
+        Crops := Model.FmpCrops;
         for FarmIndex := 0 to FFarms.Count - 1 do
         begin
           AFarm := FFarms[FarmIndex];
@@ -3557,7 +4148,7 @@ begin
           if Efficiencies.Count <> NCROPS then
           begin
             frmErrorsAndWarnings.AddError(Model,
-              StrCropEfficiencesNot, (AFarm.ScreenObject as TScreenObject).Name);
+              StrCropEfficiencesNot, Format(StrFarmD, [AFarm.FarmId]));
             Exit;
           end;
           Assert(Efficiencies.Count = NCROPS);
@@ -3567,13 +4158,13 @@ begin
             if ACropEffCollection.Count <> 1 then
             begin
               frmErrorsAndWarnings.AddError(Model,
-                StrCropEfficiencesNot, (AFarm.ScreenObject as TScreenObject).Name);
+                StrCropEfficiencesNot, Format(StrFarmD, [AFarm.FarmId]));
               Exit;
             end;
             Assert(ACropEffCollection.Count = 1);
             EffItem := ACropEffCollection[0];
 
-            WriteFloatValueFromGlobalFormula(EffItem.Efficiency, AFarm.ScreenObject,
+            WriteFloatValueFromGlobalFormula(EffItem.Efficiency, AFarm,
               Crops[CropIndex].CropName);
           end;
           NewLine;
@@ -3582,7 +4173,7 @@ begin
         FWriteLocation := wlMain;
       end;
     finally
-        FreeAndNil(FOpenCloseFileStream);
+      FreeAndNil(FOpenCloseFileStream);
     end;
   end;
 end;
@@ -3621,7 +4212,7 @@ begin
   begin
     Cell := CellList[CellIndex] as TFmpWell_Cell;
     WriteCell(Cell, DataSetIdentifier, VariableIdentifiers);
-    CheckCell(Cell, 'FMP2');
+    CheckCell(Cell, 'FMP3');
   end;
   // Dummy inactive cells to fill out data set 4b.
   // Each instance of a parameter is required to have the same
@@ -3650,7 +4241,8 @@ procedure TModflowFmpWriter.WriteStressPeriods(const VariableIdentifiers,
 begin
   inherited;
 end;
-  procedure TModflowFmpWriter.WriteString(const Value: AnsiString);
+
+procedure TModflowFmpWriter.WriteString(const Value: AnsiString);
 begin
   if Length(Value) > 0 then
   begin
@@ -3670,6 +4262,11 @@ begin
         begin
           Assert(FCID_FileStream <> nil);
           FCID_FileStream.Write(Value[1], Length(Value)*SizeOf(AnsiChar));
+        end;
+      wlFID:
+        begin
+          Assert(FFID_FileStream <> nil);
+          FFID_FileStream.Write(Value[1], Length(Value)*SizeOf(AnsiChar));
         end;
       wlRoot:
         begin
@@ -3769,6 +4366,20 @@ begin
           FWriteLocation := wlCID;
         end;
       end;
+    wlFID:
+      begin
+        FWriteLocation := wlMain;
+        try
+          WriteString( 'EXTERNAL ');
+          WriteInteger(Model.UnitNumbers.UnitNumber(StrFmpFID));
+          WriteString( ' 1 (FREE)   ');
+          WriteInteger(IPRN_Integer);
+          WriteString( ' # ' + Comment);
+          NewLine;
+        finally
+          FWriteLocation := wlFID;
+        end;
+      end;
     else
       Assert(False);
   end;
@@ -3823,10 +4434,6 @@ begin
     else
       Assert(False);
   end;
-
-
 end;
-
-{$ENDIF}
 
 end.

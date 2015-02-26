@@ -9,58 +9,58 @@ inherited framePackageMnw1: TframePackageMnw1
   object lblMaxIterations: TLabel [2]
     Left = 143
     Top = 160
-    Width = 286
-    Height = 16
+    Width = 237
+    Height = 13
     Caption = 'Maximum number of MNW iterations (NOMOITER)'
   end
   object lblLosstype: TLabel [3]
     Left = 167
     Top = 195
-    Width = 127
-    Height = 16
+    Width = 106
+    Height = 13
     Caption = 'Loss type (LOSSTYPE)'
   end
   object lblLossExponent: TLabel [4]
     Left = 167
     Top = 227
-    Width = 157
-    Height = 16
+    Width = 133
+    Height = 13
     Caption = 'Loss Exponent (PLossMNW)'
   end
   object lblWellFileName: TLabel [5]
     Left = 16
     Top = 257
-    Width = 191
-    Height = 16
+    Width = 156
+    Height = 13
     Caption = 'Well file name (iunw1) (Optional)'
   end
   object lblByNode: TLabel [6]
     Left = 16
     Top = 327
-    Width = 270
-    Height = 16
+    Width = 227
+    Height = 13
     Caption = 'File name for output by node (iunby) (Optional)'
   end
   object lblQSum: TLabel [7]
     Left = 16
     Top = 391
-    Width = 265
-    Height = 16
+    Width = 220
+    Height = 13
     Caption = 'File name for output by well (iunqs) (Optional)'
   end
   object lblByNodeFrequency: TLabel [8]
     Left = 435
     Top = 327
-    Width = 59
-    Height = 16
+    Width = 51
+    Height = 13
     Anchors = [akTop, akRight]
     Caption = 'Frequency'
   end
   object lblQSumFrequency: TLabel [9]
     Left = 435
     Top = 391
-    Width = 59
-    Height = 16
+    Width = 51
+    Height = 13
     Anchors = [akTop, akRight]
     Caption = 'Frequency'
   end
@@ -72,7 +72,7 @@ inherited framePackageMnw1: TframePackageMnw1
     Left = 16
     Top = 157
     Width = 121
-    Height = 24
+    Height = 21
     MaxValue = 2147483647.000000000000000000
     MinValue = 1.000000000000000000
     Value = 1.000000000000000000
@@ -83,7 +83,7 @@ inherited framePackageMnw1: TframePackageMnw1
     Left = 16
     Top = 192
     Width = 145
-    Height = 26
+    Height = 23
     Style = csOwnerDrawVariable
     ButtonStyle = fsLighter
     Color = clBtnFace
@@ -91,7 +91,7 @@ inherited framePackageMnw1: TframePackageMnw1
     Enabled = False
     ImageHeight = 0
     ImageWidth = 0
-    ItemHeight = 20
+    ItemHeight = 17
     ItemIndex = 0
     TabOrder = 2
     OnChange = comboLosstypeChange
@@ -129,18 +129,19 @@ inherited framePackageMnw1: TframePackageMnw1
     Left = 16
     Top = 276
     Width = 564
-    Height = 24
+    Height = 21
     DefaultExt = '.wel'
     Filter = 'Well files (*.wel)|*.wel|All files (*.*)|*.*'
     Enabled = False
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 4
+    OnChange = fedWellFileNameChange
   end
   object fedByNode: TJvFilenameEdit [15]
     Left = 16
     Top = 348
     Width = 413
-    Height = 24
+    Height = 21
     DefaultExt = '.ByNode'
     Enabled = False
     Anchors = [akLeft, akTop, akRight]
@@ -151,7 +152,7 @@ inherited framePackageMnw1: TframePackageMnw1
     Left = 16
     Top = 410
     Width = 413
-    Height = 24
+    Height = 21
     DefaultExt = '.ByWell'
     Enabled = False
     Anchors = [akLeft, akTop, akRight]
@@ -162,7 +163,7 @@ inherited framePackageMnw1: TframePackageMnw1
     Left = 435
     Top = 346
     Width = 145
-    Height = 26
+    Height = 23
     Style = csOwnerDrawVariable
     Anchors = [akTop, akRight]
     ButtonStyle = fsLighter
@@ -171,7 +172,7 @@ inherited framePackageMnw1: TframePackageMnw1
     Enabled = False
     ImageHeight = 0
     ImageWidth = 0
-    ItemHeight = 20
+    ItemHeight = 17
     ItemIndex = -1
     TabOrder = 5
     Items = <
@@ -190,7 +191,7 @@ inherited framePackageMnw1: TframePackageMnw1
     Left = 435
     Top = 410
     Width = 145
-    Height = 26
+    Height = 23
     Style = csOwnerDrawVariable
     Anchors = [akTop, akRight]
     ButtonStyle = fsLighter
@@ -199,7 +200,7 @@ inherited framePackageMnw1: TframePackageMnw1
     Enabled = False
     ImageHeight = 0
     ImageWidth = 0
-    ItemHeight = 20
+    ItemHeight = 17
     ItemIndex = -1
     TabOrder = 8
     Items = <

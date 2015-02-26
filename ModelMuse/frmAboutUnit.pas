@@ -522,6 +522,12 @@ begin
     dgCredit.Cells[1, Row] := 'Wilko C Emmens';
     dgCredit.Cells[2, Row] := 'wcemmens@solcon.nl, http://home.solcon.nl/wcemmens/xygraph.htm';
 
+    Inc(Row);
+    Assert(Row < dgCredit.RowCount);
+    dgCredit.Cells[0, Row] := 'Gmsh';
+    dgCredit.Cells[1, Row] := 'Christophe Geuzaine and Jean-François Remacle';
+    dgCredit.Cells[2, Row] := 'http://geuz.org/gmsh/';
+
     Assert(Row = dgCredit.RowCount-1);
   finally
     dgCredit.EndUpdate

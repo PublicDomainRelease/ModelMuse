@@ -63,12 +63,47 @@ uses
 
 constructor TSutraBoundaryWriter.Create(Model: TCustomModel;
   EvaluationType: TEvaluationType; BoundaryType: TSutraBoundaryType);
+var
+  Mesh: TSutraMesh3D;
+  NumberOfLayers: Integer;
+  NumberOfRows: Integer;
+  NumberOfColumns: Integer;
 begin
   inherited Create(Model, EvaluationType);
   FBoundaryType := BoundaryType;
   FPQTimeLists := TObjectList<TSutraTimeList>.Create;
   FUTimeLists := TObjectList<TSutraTimeList>.Create;
-  FNodeNumbers := T3DSparseIntegerArray.Create(SPASmall);
+  Mesh := Model.SutraMesh;
+  if Mesh <> nil then
+  begin
+
+    if (Model.Mesh.MeshType = mt3D)
+//      and (EvaluatedAt = eaNodes)
+      {and (Orientation = dso3D)} then
+    begin
+      NumberOfLayers := frmGoPhast.PhastModel.
+        SutraLayerStructure.LayerCount+1;
+    end
+    else
+    begin
+      NumberOfLayers := frmGoPhast.PhastModel.
+        SutraLayerStructure.LayerCount;
+    end;
+    NumberOfRows := 1;
+//    case EvaluatedAt of
+//      eaBlocks: NumberOfColumns := Mesh.Elements.Count;
+      {eaNodes:} NumberOfColumns := Mesh.Mesh2D.Nodes.Count;
+//      else Assert(False);
+//    end;
+  end
+  else
+  begin
+    NumberOfLayers := 0;
+    NumberOfRows := 0;
+    NumberOfColumns := 0;
+  end;
+  FNodeNumbers := T3DSparseIntegerArray.Create(GetQuantum(NumberOfLayers),
+    GetQuantum(NumberOfRows), GetQuantum(NumberOfColumns));
 end;
 
 destructor TSutraBoundaryWriter.Destroy;

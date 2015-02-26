@@ -364,7 +364,7 @@ uses Contnrs, JvListComb, frmGoPhastUnit, ScreenObjectUnit,
   ModflowConstantHeadBoundaryUnit, frmShowHideObjectsUnit,
   frameSfrParamInstancesUnit, LayerStructureUnit, frmErrorsAndWarningsUnit, 
   frmManageFluxObservationsUnit, ModflowSubsidenceDefUnit, Mt3dmsChemUnit,
-  ModflowTimeUnit;
+  ModflowTimeUnit, ModflowDiscretizationWriterUnit;
 
 resourcestring
   StrLPFParameters = 'LPF or NWT Parameters';
@@ -422,6 +422,8 @@ resourcestring
   'running MODPATH.';
   StrFarmProcess = 'Farm Process';
   StrConduitFlowProcess = 'Conduit Flow Process';
+  StrMODFLOWDoesNotAll = 'MODFLOW does not allow the MNW1 and MNW2 packages ' +
+  'to both be used in the same model.';
 //  StrSurfaceWaterRouting = 'Surface-Water Routing';
 
 {$R *.dfm}
@@ -717,6 +719,7 @@ var
   ModflowPackages: TModflowPackages;
   SubPackage: TSubPackageSelection;
   SwtPackage: TSwtPackageSelection;
+  FarmProcess: TFarmProcess;
 begin
   inherited;
   CheckLpfParameters;
@@ -802,8 +805,7 @@ begin
     frmGoPhast.acLayersExecute(nil);
   end;
 
-  if frmGoPhast.ModelSelection in [msModflowNWT
-    {$IFDEF FMP}, msModflowFmp {$ENDIF}] then
+  if frmGoPhast.ModelSelection in [msModflowNWT, msModflowFmp] then
   begin
     if frmGoPhast.PhastModel.ModflowPackages.SwrPackage.IsSelected
       and (frmGoPhast.PhastModel.SwrReachGeometry.Count = 0) then
@@ -812,10 +814,20 @@ begin
     end;
   end;
 
-{$IFDEF FMP}
+  frmErrorsAndWarnings.RemoveErrorGroup(frmGoPhast.PhastModel, StrInvalidSelectionOf);
   if (frmGoPhast.ModelSelection = msModflowFmp)
     and frmGoPhast.PhastModel.ModflowPackages.FarmProcess.IsSelected then
   begin
+    FarmProcess := frmGoPhast.PhastModel.ModflowPackages.FarmProcess;
+    if (FarmProcess.RootingDepth = rdCalculated)
+      or (FarmProcess.ConsumptiveUse = cuCalculated) then
+    begin
+      if frmGoPhast.PhastModel.ModflowOptions.TimeUnit <> 4 then
+      begin
+        frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, StrInvalidSelectionOf,
+          StrTheFarmProcessReq)
+      end;
+    end;
     if (frmGoPhast.PhastModel.FmpCrops.Count = 0) then
     begin
       frmGoPhast.acFarmCropsExecute(nil);
@@ -835,7 +847,6 @@ begin
       frmGoPhast.acFarmAllotmentExecute(nil);
     end;
   end;
-{$ENDIF}
 
   if frmErrorsAndWarnings.HasMessages then
   begin
@@ -1378,7 +1389,7 @@ begin
       begin
         FSteadyParameters.Remove(ActiveFrame.CurrentParameter);
       end;
-    ptCHD..ptDRT, ptSFR, ptRCH, ptEVT, ptETS, ptSTR{$IFDEF FMP}, ptQMAX {$ENDIF}:
+    ptCHD..ptDRT, ptSFR, ptRCH, ptEVT, ptETS, ptSTR, ptQMAX:
       begin
         FTransientListParameters.Remove(ActiveFrame.CurrentParameter);
       end;
@@ -1448,7 +1459,7 @@ begin
         begin
           Parameter := FSteadyParameters.Add as TModflowParameter;
         end;
-      ptCHD..ptSFR, ptRCH, ptEVT, ptETS, ptSTR{$IFDEF FMP}, ptQMAX {$ENDIF}:
+      ptCHD..ptSFR, ptRCH, ptEVT, ptETS, ptSTR, ptQMAX:
         begin
           Parameter := FTransientListParameters.Add as TModflowParameter;
         end;
@@ -1643,24 +1654,32 @@ begin
     FSfrParameterInstances := TSfrParamInstances.Create(nil);
     FSfrParameterInstances.Assign(SfrParameterInstances);
 
+//    if ParameterNames.Count = 0 then
+//    begin
+//      FSfrParameterInstances.Clear;
+//    end;
+
     for Index := 0 to FSfrParameterInstances.Count - 1 do
     begin
       Item := FSfrParameterInstances.Items[Index];
       PageIndex := ParameterNames.IndexOf(Item.ParameterName);
-      Assert(PageIndex >= 0);
-      Page := jplSfrParameters.Pages[PageIndex];
-      Assert(Page.ControlCount= 1);
-      Page.Handle;
-      Frame := Page.Controls[0] as TframeSfrParamInstances;
-      Frame.seInstanceCount.AsInteger := Frame.seInstanceCount.AsInteger +1;
-      Row := Frame.seInstanceCount.AsInteger;
-      Frame.rdgSfrParamInstances.Cells[Ord(sicStartTime), Row] :=
-        FloatToStr(Item.StartTime);
-      Frame.rdgSfrParamInstances.Cells[Ord(sicEndTime), Row] :=
-        FloatToStr(Item.EndTime);
-      Frame.rdgSfrParamInstances.Cells[Ord(sicInstanceName), Row] :=
-        Item.ParameterInstance;
-      Frame.rdgSfrParamInstances.Objects[Ord(sicInstanceName), Row] := Item;
+      if PageIndex >= 0 then
+      begin
+        Assert(PageIndex >= 0);
+        Page := jplSfrParameters.Pages[PageIndex];
+        Assert(Page.ControlCount= 1);
+        Page.Handle;
+        Frame := Page.Controls[0] as TframeSfrParamInstances;
+        Frame.seInstanceCount.AsInteger := Frame.seInstanceCount.AsInteger +1;
+        Row := Frame.seInstanceCount.AsInteger;
+        Frame.rdgSfrParamInstances.Cells[Ord(sicStartTime), Row] :=
+          FloatToStr(Item.StartTime);
+        Frame.rdgSfrParamInstances.Cells[Ord(sicEndTime), Row] :=
+          FloatToStr(Item.EndTime);
+        Frame.rdgSfrParamInstances.Cells[Ord(sicInstanceName), Row] :=
+          Item.ParameterInstance;
+        Frame.rdgSfrParamInstances.Objects[Ord(sicInstanceName), Row] := Item;
+      end;
     end;
   finally
     ParameterNames.Free;
@@ -1721,11 +1740,7 @@ begin
     AddNode(StrObservations, StrObservations, PriorNode);
     AddNode(StrOutput, StrOutput, PriorNode);
 
-    if frmGoPhast.ModelSelection in [msModflowNWT
-    {$IFDEF FMP}
-      , msModflowFMP
-    {$ENDIF}
-    ] then
+    if frmGoPhast.ModelSelection in [msModflowNWT, msModflowFMP] then
     begin
       AddNode(StrSurfaceWaterRoutin, StrSurfaceWaterRoutin, PriorNode);
     end;
@@ -1735,12 +1750,11 @@ begin
       AddNode(StrConduitFlowProcess, StrConduitFlowProcess, PriorNode);
     end;
 
-  {$IFDEF FMP}
     if frmGoPhast.ModelSelection = msModflowFMP then
     begin
       AddNode(StrFarmProcess, StrFarmProcess, PriorNode);
     end;
-  {$ENDIF}
+
     AddNode(StrPostProcessors, StrPostProcessors, PriorNode);
     AddNode(StrMT3DMS_Classificaton, StrMT3DMS_Classificaton, PriorNode);
     NilNodes;
@@ -1988,7 +2002,7 @@ begin
   Item := FNewPackages.Add;
   Item.Packages.Assign(frmGoPhast.PhastModel.ModflowPackages);
   comboModel.AddItem(StrParentModel, Item.Packages);
-  if frmGoPhast.PhastModel.ModelSelection in [msModflowLGR, msModflowLGR2] then
+  if frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
     begin
@@ -2242,12 +2256,10 @@ begin
   begin
     CurrentParameterType := ptUndefined;
   end
-{$IFDEF FMP}
   else if jvplPackages.ActivePage = jvspFMP then
   begin
     CurrentParameterType := ptQMAX;
   end
-{$ENDIF}
   else
   begin
     CurrentParameterType := ptUndefined;
@@ -2339,9 +2351,7 @@ begin
     ptHUF_KDEP: Root := 'KDEP_Par';
     ptHUF_LVDA: Root := 'LVDA_Par';
     ptSTR: Root := 'STR_Par';
-  {$IFDEF FMP}
     ptQMAX: Root := 'QMAX_Par';
-  {$ENDIF}
     else Assert(False);
   end;
   UpRoot := UpperCase(Root);
@@ -2367,7 +2377,7 @@ begin
           end;
         end;
       end;
-    ptCHD..ptSFR, ptRCH, ptEVT, ptETS, ptSTR{$IFDEF FMP}, ptQMAX {$ENDIF}:
+    ptCHD..ptSFR, ptRCH, ptEVT, ptETS, ptSTR, ptQMAX:
       begin
         for Index := 0 to FTransientListParameters.Count - 1 do
         begin
@@ -2546,6 +2556,12 @@ begin
       stCheckBox:
         begin
           Frame.Selected := not Frame.Selected and Frame.CanSelect;
+          if ((Frame = framePkgMnw1) or (Frame = framePkgMnw2))
+            and framePkgMnw1.Selected and framePkgMnw2.Selected then
+          begin
+            Beep;
+            MessageDlg(StrMODFLOWDoesNotAll, mtWarning, [mbOK], 0);
+          end;
         end;
       stRadioButton:
         begin
@@ -2597,7 +2613,7 @@ begin
     case Param.ParameterType of
       ptLPF_HK, ptLPF_HANI, ptLPF_VK,
         ptLPF_VANI, ptLPF_SS, ptLPF_SY, ptLPF_VKCB, ptHUF_SYTP, ptHUF_LVDA,
-        ptSTR{$IFDEF FMP}, ptQMAX {$ENDIF}: ;  // do nothing
+        ptSTR, ptQMAX: ;  // do nothing
       ptHFB: ActiveFrame := frameHFBParameterDefinition;
       else Assert(False);
     end;
@@ -2651,9 +2667,7 @@ begin
       ptETS: ActiveFrame := frameEtsParameterDefinition;
       ptSFR: ActiveFrame := frameSfrParameterDefinition;
       ptSTR: ActiveFrame := frameStrParameterDefinition;
-    {$IFDEF FMP}
       ptQMAX: ActiveFrame := frameFmpParameterDefinition;
-    {$ENDIF}
       else Assert(False);
     end;
     ActiveGrid := ActiveFrame.dgParameters;
@@ -2703,7 +2717,7 @@ begin
   Packages.HufPackage.Frame := framePkgHuf;
   FPackageList.Add(Packages.HufPackage);
 
-  if frmGoPhast.ModelSelection = msModflowNWT then
+  if frmGoPhast.ModelSelection in [msModflowNWT, msModflowFmp] then
   begin
     Packages.UpwPackage.Frame := framePkgUPW;
     FPackageList.Add(Packages.UpwPackage);
@@ -2754,7 +2768,7 @@ begin
   Packages.De4Package.Frame := framePkgDE4;
   FPackageList.Add(Packages.De4Package);
 
-  if frmGoPhast.ModelSelection = msModflowNWT then
+  if frmGoPhast.ModelSelection in [msModflowNWT, msModflowFmp] then
   begin
     Packages.NwtPackage.Frame := framePkgNwt;
     FPackageList.Add(Packages.NwtPackage);
@@ -2817,13 +2831,11 @@ begin
   Packages.FhbPackage.Frame := framePkgFHB;
   FPackageList.Add(Packages.FhbPackage);
 
-{$IFDEF FMP}
   if frmGoPhast.ModelSelection = msModflowFMP then
   begin
     Packages.FarmProcess.Frame := framePkgFrm;
     FPackageList.Add(Packages.FarmProcess);
   end;
-{$ENDIF}
 
   if frmGoPhast.ModelSelection = msModflowCFP then
   begin
@@ -2831,17 +2843,13 @@ begin
     FPackageList.Add(Packages.ConduitFlowProcess);
   end;
 
-  if frmGoPhast.ModelSelection in [msModflow, msModflowNWT] then
+  if frmGoPhast.ModelSelection in [msModflow, msModflowNWT, msModflowFmp] then
   begin
     Packages.SwiPackage.Frame := framePackageSWI;
     FPackageList.Add(Packages.SwiPackage);
   end;
 
-  if frmGoPhast.ModelSelection in [msModflowNWT
-  {$IFDEF FMP}
-    , msModflowFMP
-  {$ENDIF}
-  ] then
+  if frmGoPhast.ModelSelection in [msModflowNWT, msModflowFMP] then
   begin
     Packages.SwrPackage.Frame := framePkgSWR;
     FPackageList.Add(Packages.SwrPackage);
@@ -2952,7 +2960,7 @@ begin
 
   TempParentPackages := FOldPackages.Add;
   TempParentPackages.Packages.Assign(frmGoPhast.PhastModel.ModflowPackages);
-  if frmGoPhast.PhastModel.ModelSelection in [msModflowLGR, msModflowLGR2] then
+  if frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
     begin
@@ -3011,7 +3019,7 @@ begin
     Mt3dmsNewlySelected := not OldPackages.Mt3dBasic.IsSelected
       and NewPackages.Mt3dBasic.IsSelected;
     PhastModel.ModflowPackages := NewPackages;
-    if PhastModel.ModelSelection in [msModflowLGR, msModflowLGR2] then
+    if PhastModel.LgrUsed then
     begin
       Assert(PhastModel.ChildModels.Count = FNewPackages.Count -1);
       for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
@@ -3072,7 +3080,8 @@ var
   ConcBoundary: TMt3dmsConcBoundary;
 begin
   LocalModel := frmGoPhast.PhastModel;
-  if (LocalModel <> nil) and not (csDestroying in LocalModel.ComponentState) then
+  if (LocalModel <> nil) and not (csDestroying in LocalModel.ComponentState)
+    and not LocalModel.Clearing then
   begin
     for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
     begin
@@ -3104,7 +3113,7 @@ begin
       LayerGroup.AquiferType := FOldAquiferType[Index];
     end;
     frmGoPhast.PhastModel.ModflowPackages := FOldPackages[0].Packages;
-    if frmGoPhast.PhastModel.ModelSelection in [msModflowLGR, msModflowLGR2] then
+    if frmGoPhast.PhastModel.LgrUsed then
     begin
       Assert(frmGoPhast.PhastModel.ChildModels.Count = FOldPackages.Count -1);
       for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do

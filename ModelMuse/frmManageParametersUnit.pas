@@ -135,8 +135,8 @@ const
      (Package: 'HUF'; PType: 'SYTP'; PClass: pctSteady),
      (Package: 'HUF'; PType: 'KDEP'; PClass: pctHUF),
      (Package: 'HUF'; PType: 'LVDA'; PClass: pctSteady),
-     (Package: 'STR'; PType: 'STR'; PClass: pctTransient) {$IFDEF FMP},
-     (Package: 'FMP'; PType: 'QMAX'; PClass: pctTransient) {$ENDIF}
+     (Package: 'STR'; PType: 'STR'; PClass: pctTransient),
+     (Package: 'FMP'; PType: 'QMAX'; PClass: pctTransient)
      );
 
 Type
@@ -512,9 +512,7 @@ begin
     ptHUF_KDEP: result := frmGoPhast.PhastModel.HufIsSelected;
     ptHUF_LVDA: result := frmGoPhast.PhastModel.HufIsSelected;
     ptSTR: result := frmGoPhast.PhastModel.StrIsSelected;
-  {$IFDEF FMP}
     ptQMAX: result := frmGoPhast.PhastModel.FarmProcessIsSelected;
-  {$ENDIF}
     else Assert(False);
   end;
 end;

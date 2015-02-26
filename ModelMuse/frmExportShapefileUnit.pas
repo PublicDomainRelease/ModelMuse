@@ -308,9 +308,8 @@ begin
             RealList.AddUnique(TimeItem.EndingTime);
           end;
         end;
-      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-        {$IFDEF FMP}, msModflowFmp {$ENDIF}
-        , msModflowCfp:
+      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+        msModflowFmp, msModflowCfp:
         begin
           for Index := 0 to
             frmGoPhast.PhastModel.ModflowStressPeriods.Count - 1 do
@@ -1331,7 +1330,6 @@ begin
               + SuffixStr;
           end;
 
-          Names.AddObject(string(RootName), DataArray);
           case DataArray.DataType of
             rdtDouble:
               FieldFormat := 'N18,10';
@@ -1345,7 +1343,8 @@ begin
               Assert(False);
           end;
           FieldName := RootName;
-          FieldName := FixShapeFileFieldName(FieldName);
+          FieldName := FixShapeFileFieldName(FieldName, Names);
+          Names.AddObject(string(FieldName), DataArray);
           Fields.AddObject(string(FieldName + '=' + FieldFormat), DataArray);
         end;
       dsoFront, dsoSide, dso3D:
@@ -1370,7 +1369,6 @@ begin
                 + SuffixStr;
             end;
           end;
-          Names.AddObject(string(RootName), DataArray);
           case DataArray.DataType of
             rdtDouble:
               FieldFormat := 'N18,10';
@@ -1384,7 +1382,8 @@ begin
           if LayerCharacters = 0 then
           begin
             FieldName := RootName;
-            FieldName := FixShapeFileFieldName(FieldName);
+            FieldName := FixShapeFileFieldName(FieldName, Names);
+            Names.AddObject(string(FieldName), DataArray);
             Fields.AddObject(String(FieldName + '=' + FieldFormat), DataArray);
           end
           else
@@ -1392,7 +1391,8 @@ begin
             for LayerIndex := 1 to LayerLimit do
             begin
               FieldName := RootName + 'L' + AnsiString(IntToStr(LayerIndex));
-              FieldName := FixShapeFileFieldName(FieldName);
+              FieldName := FixShapeFileFieldName(FieldName, Names);
+              Names.AddObject(string(FieldName), DataArray);
               Fields.AddObject(String(FieldName + '=' + FieldFormat), DataArray);
             end;
           end;
@@ -1439,7 +1439,6 @@ begin
             SetLength(RootName, 8 - LayerCharacters - TimeCharacters);
           end;
           TimeRoot := RootName + 'T' + AnsiString(IntToStr(TimeIndex + 1));
-          Names.AddObject(string(TimeRoot), DataArray);
           case DataArray.DataType of
             rdtDouble:
               FieldFormat := 'N18,10';
@@ -1453,7 +1452,8 @@ begin
           if LayerCharacters = 0 then
           begin
             FieldName := TimeRoot;
-            FieldName := FixShapeFileFieldName(FieldName);
+            FieldName := FixShapeFileFieldName(FieldName, Fields);
+            Names.AddObject(string(FieldName), DataArray);
             Fields.AddObject(string(FieldName + '=' + FieldFormat), DataArray);
           end
           else
@@ -1461,7 +1461,8 @@ begin
             for LayerIndex := 1 to LayerLimit do
             begin
               FieldName := TimeRoot + 'L' + AnsiString(IntToStr(LayerIndex));
-              FieldName := FixShapeFileFieldName(FieldName);
+              FieldName := FixShapeFileFieldName(FieldName, Fields);
+              Names.AddObject(string(FieldName), DataArray);
               Fields.AddObject(string(FieldName + '='
                 + FieldFormat), DataArray);
             end;
@@ -1620,7 +1621,7 @@ begin
     else
     begin
       LayerCount := FLocalMesh.LayerCount;
-      RowCount := 0;
+      RowCount := 1;
       ColumnCount := FLocalMesh.Mesh2D.Elements.Count
     end;
     for DataSetIndex := 0 to DataSets.Count - 1 do
@@ -1670,13 +1671,12 @@ var
 begin
   case frmGoPhast.ModelSelection of
     msPhast, msModflow, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
       , msModflowCfp, msSutra22:
       begin
         comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel);
         comboModel.Visible := False;
       end;
-    msModflowLGR, msModflowLGR2:
+    msModflowLGR, msModflowLGR2, msModflowFmp:
       begin
         comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel);
         for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
@@ -1749,7 +1749,7 @@ begin
     end
     else
     begin
-      RowCount := 0;
+      RowCount := 1;
       ColumnCount := FLocalMesh.Mesh2D.Nodes.Count - 1;
     end;
     for DataSetIndex := 0 to DataSets.Count - 1 do
@@ -1810,19 +1810,20 @@ begin
       dso3D: ; // do nothing
       else Assert(False);
     end;
-    if (FLocalMesh <> nil) and (FLocalMesh.MeshType in [mt2D, mtProfile]) then
-    begin
-      FieldName := RootName;
-    end
-    else if DataArray.Orientation = dsoTop then
-    begin
-      FieldName := RootName;
-    end
-    else
-    begin
-      FieldName := RootName + 'L' + AnsiString(IntToStr(Layer+1));
-    end;
-    FieldName := FixShapeFileFieldName(FieldName);
+//    if (FLocalMesh <> nil) and (FLocalMesh.MeshType in [mt2D, mtProfile]) then
+//    begin
+//      FieldName := RootName;
+//    end
+//    else if DataArray.Orientation = dsoTop then
+//    begin
+//      FieldName := RootName;
+//    end
+//    else
+//    begin
+//      FieldName := RootName + 'L' + AnsiString(IntToStr(Layer+1));
+//    end;
+//    FieldName := FixShapeFileFieldName(FieldName);
+    FieldName := AnsiString(FNames[DataSetIndex]);
     if DataArray.IsValue[Layer, Row, Col] then
     begin
       case DataArray.DataType of
@@ -1929,7 +1930,7 @@ begin
     else
     begin
       LayerCount := FLocalMesh.LayerCount;
-      RowCount := 0;
+      RowCount := 1;
       ColumnCount := FLocalMesh.Mesh2D.Nodes.Count-1
     end;
     for DataSetIndex := 0 to DataSets.Count - 1 do
@@ -2028,7 +2029,7 @@ begin
     end
     else
     begin
-      RowCount := 0;
+      RowCount := 1;
       ColumnCount := FLocalMesh.Mesh2D.Nodes.Count - 1;
     end;
     for DataSetIndex := 0 to DataSets.Count - 1 do
@@ -2075,9 +2076,8 @@ begin
         lblNodes.Caption := StrNodeShapefileName;
         Caption := StrExportGridDataTo;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         lblElements.Caption := StrCellShapefileName;
         lblNodes.Caption := StrCellCornerShapefi;

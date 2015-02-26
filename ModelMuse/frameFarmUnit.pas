@@ -1,4 +1,4 @@
-unit frameScreenObjectFarmUnit;
+unit frameFarmUnit;
 
 interface
 
@@ -8,10 +8,10 @@ uses
   Mask, JvExMask, JvSpin, ExtCtrls, ComCtrls, frameGridUnit,
   frameFormulaGridUnit, JvgPage, frameDeliveryGridUnit, frameFarmDiversionUnit,
   UndoItemsScreenObjects, ModflowFmpFarmUnit, RbwDataGrid4, ModflowFmpCropUnit,
-  ClassificationUnit;
+  ClassificationUnit, RbwParser;
 
 type
-  TframeScreenObjectFarm = class(TframeScreenObject)
+  TframeFarm = class(TframeScreenObject)
     tabCrops: TTabSheet;
     tabDiversionLocation: TTabSheet;
     tabReturnFlowLocation: TTabSheet;
@@ -29,6 +29,10 @@ type
     frameFormulaGridCosts: TframeFormulaGrid;
     frameDelivery: TframeDeliveryGrid;
     pnlTop: TPanel;
+    tabGW_Allocation: TTabSheet;
+    frameGW_Allocation: TframeFormulaGrid;
+    rbwprsrFarmParser: TRbwParser;
+    edFarmName: TLabeledEdit;
     procedure frameFormulaGridCropsedFormulaChange(Sender: TObject);
     procedure frameFormulaGridCropsGridSetEditText(Sender: TObject; ACol,
       ARow: Integer; const Value: string);
@@ -57,56 +61,75 @@ type
       ARow: Integer; const Value: string);
     procedure frameFormulaGridReturnFlowGridSetEditText(Sender: TObject; ACol,
       ARow: Integer; const Value: string);
+    procedure frameGW_AllocationGridSetEditText(Sender: TObject; ACol,
+      ARow: Integer; const Value: string);
+    procedure frameGW_AllocationseNumberChange(Sender: TObject);
+    procedure frameGW_AllocationedFormulaChange(Sender: TObject);
+    procedure frameGW_AllocationsbAddClick(Sender: TObject);
+    procedure frameGW_AllocationsbInsertClick(Sender: TObject);
+    procedure frameGW_AllocationsbDeleteClick(Sender: TObject);
+    procedure frameFormulaGridCropsGridButtonClick(Sender: TObject; ACol,
+      ARow: Integer);
+    procedure frameFormulaGridCostsGridButtonClick(Sender: TObject; ACol,
+      ARow: Integer);
+    procedure frameDeliveryGridButtonClick(Sender: TObject; ACol,
+      ARow: Integer);
+    procedure frameFormulaGridWaterRightsGridButtonClick(Sender: TObject; ACol,
+      ARow: Integer);
+    procedure frameGW_AllocationGridButtonClick(Sender: TObject; ACol,
+      ARow: Integer);
   private
     FChangedCrops: boolean;
     FChangedCosts: boolean;
     FChangedWaterRights: boolean;
     FOnChange: TNotifyEvent;
     FChangedID: Boolean;
-{$IFDEF FMP}
     FChanging: Boolean;
-    procedure InitializeControls;
-    procedure GetCropEffForFirstFarm(FarmItem: TScreenObjectEditItem);
-    procedure GetCostsForFirstFarm(FarmItem: TScreenObjectEditItem);
-    procedure GetWaterRightsForFirstFarm(FarmItem: TScreenObjectEditItem);
+    FChangedAllotment: Boolean;
+    procedure GetCropEffForFirstFarm(FirstFarm: TFarm);
+    procedure GetCostsForFirstFarm(FirstFarm: TFarm);
+    procedure GetWaterRightsForFirstFarm(FirstFarm: TFarm);
+    procedure GetGwAllotmentForFirstFarm(FirstFarm: TFarm);
     procedure GetMaxTimeAndCountForCrops(var MaxIndex, MaxTimeCount: Integer;
       AFarm: TFarm);
     procedure SetCropEfficiencies(Farm: TFarm; Crops: TCropCollection);
     procedure SetFarmCosts(Farm: TFarm);
     procedure SetWaterRights(Farm: TFarm);
+    procedure SetGwAllotment(Farm: TFarm);
     procedure Change(Sender: TObject);
     property Changing: Boolean read FChanging write FChanging;
-{$ENDIF}
     procedure DoChange;
+    procedure EditFormula(Grid: TRbwDataGrid4; ACol, ARow: Integer);
     { Private declarations }
   public
-    procedure GetData(ScreenObjectList: TScreenObjectEditCollection);
-    procedure SetData(List: TScreenObjectEditCollection; SetAll: boolean;
-      ClearAll: boolean; FarmIdEdit: TScreenObjectDataEdit);
+    procedure InitializeControls;
+    procedure GetData(FarmList: TFarmList);
+    procedure SetData(FarmList: TFarmList);
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     { Public declarations }
   end;
 
 var
-  frameScreenObjectFarm: TframeScreenObjectFarm;
+  frameFarm: TframeFarm;
 
 implementation
 
 uses
   GoPhastTypes, frmGoPhastUnit,
   ModflowTimeUnit, Generics.Collections, ScreenObjectUnit, DataSetUnit,
-  PhastModelUnit, ModflowPackagesUnit, ModflowPackageSelectionUnit;
+  PhastModelUnit, ModflowPackagesUnit, ModflowPackageSelectionUnit,
+  ModflowFmpAllotmentUnit, frmFormulaUnit, frmConvertChoiceUnit;
 
 resourcestring
   StrGWBaseMaintenance = 'GW base maintenance costs / volume (GWCost1)';
-  StrGWPumpingCostsV = 'GW pumping costs / volume / lift (GWCost2)';
-  StrGWVerticalLiftCos = 'GW vertical lift costs / volume / lift (GWCost3)';
-  StrGWDeliveryCosts = 'GW delivery costs / volume / distance (GWCost4)';
+  StrGWPumpingCostsV = 'GW pumping costs / (volume * lift) (GWCost2)';
+  StrGWVerticalLiftCos = 'GW vertical lift costs / (volume * lift) (GWCost3)';
+  StrGWDeliveryCosts = 'GW delivery costs / (volume * distance) (GWCost4)';
   StrFixedPriceOfSemi = 'Fixed price of (semi-) routed SW / volume (SWCost1)';
-  StrVerticalLiftCosts = 'Vertical lift costs of (semi-) routed SW / volume ' +
-  '/ lift (SWCost2)';
-  StrDeliveryCostsOfS = 'Delivery costs of (semi-) routed SW / volume / dist' +
-  'ance (SWCost3)';
+  StrVerticalLiftCosts = 'Vertical lift costs of (semi-) routed SW / (volume ' +
+  '* lift) (SWCost2)';
+  StrDeliveryCostsOfS = 'Delivery costs of (semi-) routed SW / (volume * dist' +
+  'ance) (SWCost3)';
   StrFixedPriceOfNonr = 'Fixed price of non-routed SW / volume (SWCost4)';
   StrWaterRightsCallC = 'Water Rights Call (CALL)';
   StrCropEfficiency = '%s on-farm efficiency (OFE)';
@@ -116,14 +139,18 @@ type
   TWaterCostColumns = (wccStartTime, wccEndTime, wccGWCost1, wccGWCost2,
     wccGWCost3, wccGWCost4, wccSWCost1, wccSWCost2, wccSWCost3, wccSWCost4);
   TWaterRightsCallColumns = (wrccStartTime, wrccEndTime, wrccCall);
+  TGwAllocationColumns = (gacStartTime, gacEndTime, gacAllotment);
 
 {$R *.dfm}
 
-{ TframeScreenObjectFarm }
+{ TframeFarm }
 
-procedure TframeScreenObjectFarm.DoChange;
+resourcestring
+  StrErrorInFormulaS = 'Error in formula: %s';
+
+
+procedure TframeFarm.DoChange;
 begin
-{$IFDEF FMP}
   if Changing then
   begin
     Exit;
@@ -132,39 +159,118 @@ begin
   begin
     OnChange(Self);
   end;
-{$ENDIF}
 end;
 
-{$IFDEF FMP}
-procedure TframeScreenObjectFarm.Change(Sender: TObject);
+procedure TframeFarm.EditFormula(Grid: TRbwDataGrid4; ACol, ARow: Integer);
+var
+  AFormula: string;
+  frmFormula: TfrmFormula;
+  CompiledFormula: TExpression;
+  ParentControl: TWinControl;
+begin
+  AFormula := Grid.Cells[ACol, ARow];
+  if AFormula = '' then
+  begin
+    AFormula := '0';
+  end;
+
+//  with TfrmFormula.Create(self) do
+  begin
+    frmFormula := TfrmFormula.Create(self);
+    try
+      // GIS functions are not included and
+      // Data sets are not included
+      // because the variables will be evaluated for screen objects and
+      // not at specific locations.
+
+      ParentControl := Parent;
+      while ParentControl <> nil do
+      begin
+        if ParentControl is TCustomForm then
+        begin
+          break;
+        end;
+        ParentControl := ParentControl.Parent;
+      end;
+
+      if (ParentControl <> nil) and (ParentControl is TCustomForm) then
+      begin
+        frmFormula.PopupParent := TCustomForm(ParentControl);
+      end;
+
+      // Show the functions and global variables.
+      frmFormula.UpdateTreeList;
+
+      // put the formula in the TfrmFormula.
+      frmFormula.Formula := AFormula;
+      // The user edits the formula.
+      frmFormula.ShowModal;
+      if frmFormula.ResultSet then
+      begin
+        try
+          AFormula := frmFormula.Formula;
+          rbwprsrFarmParser.Compile(AFormula);
+
+        except on E: ERbwParserError do
+          begin
+            Beep;
+            raise ERbwParserError.Create(Format(StrErrorInFormulaS,
+              [E.Message]));
+            Exit;
+          end
+        end;
+        CompiledFormula := rbwprsrFarmParser.CurrentExpression;
+
+        if CompiledFormula.ResultType in [rdtDouble, rdtInteger] then
+        begin
+          Grid.Cells[ACol, ARow] := CompiledFormula.DecompileDisplay;
+        end
+        else
+        begin
+          AFormula := AdjustFormula(AFormula, CompiledFormula.ResultType, rdtDouble);
+          rbwprsrFarmParser.Compile(AFormula);
+          CompiledFormula := rbwprsrFarmParser.CurrentExpression;
+          Grid.Cells[ACol, ARow] := CompiledFormula.DecompileDisplay;
+        end;
+        if Assigned(Grid.OnSetEditText) then
+        begin
+          Grid.OnSetEditText(Grid, ACol, ARow, Grid.Cells[ACol, ARow]);
+        end;
+      end;
+    finally
+      frmFormula.Free;
+    end;
+  end
+end;
+
+procedure TframeFarm.Change(Sender: TObject);
 begin
   DoChange;
 end;
 
-{$ENDIF}
-
-procedure TframeScreenObjectFarm.GetData(
-  ScreenObjectList: TScreenObjectEditCollection);
-{$IFDEF FMP}
+procedure TframeFarm.GetData(FarmList: TFarmList);
 var
-  FarmObjects: TScreenObjectEditCollection;
   ItemIndex: Integer;
-  SourceItem: TScreenObjectEditItem;
   AFarm: TFarm;
-  NewItem: TScreenObjectEditItem;
-  AFarmItem: TScreenObjectEditItem;
-//  ShouldContinue: Boolean;
   FirstFarm: TFarm;
   FarmProcess: TFarmProcess;
   Packages: TModflowPackages;
   SfrPackage: TSfrPackageSelection;
-{$ENDIF}
 begin
-{$IFDEF FMP}
+  if FarmList.count = 0 then
+  begin
+    seFarmId.AsInteger := 0;
+    ClearGrid(frameFormulaGridCrops.Grid);
+    ClearGrid(frameFormulaGridCosts.Grid);
+    ClearGrid(frameFormulaGridWaterRights.Grid);
+    ClearGrid(frameGW_Allocation.Grid);
+    Enabled := False;
+    Exit;
+  end;
+  Enabled := True;
   Changing := True;
+  FrameLoaded := False;
   try
-    InitializeControls;
-
     Packages := frmGoPhast.PhastModel.ModflowPackages;
     FarmProcess := Packages.FarmProcess;
     tabCosts.TabVisible :=
@@ -181,80 +287,82 @@ begin
     tabWaterRights.TabVisible :=
       FarmProcess.SurfaceWaterAllotment = swaPriorWithCalls;
 
-    FarmObjects := TScreenObjectEditCollection.Create;
     try
-      FarmObjects.OwnScreenObject := True;
-      FarmObjects.Capacity := ScreenObjectList.Count;
-      for ItemIndex := 0 to ScreenObjectList.Count-1 do
-      begin
-        SourceItem := ScreenObjectList[ItemIndex];
-        AFarm := SourceItem.ScreenObject.ModflowFmpFarm;
-        if (AFarm <> nil) and AFarm.Used then
-        begin
-          NewItem := FarmObjects.Add;
-          NewItem.ScreenObject := TScreenObject.Create(nil);
-          NewItem.Assign(SourceItem);
-        end;
-      end;
-      if FarmObjects.Count = 0 then
-      begin
-        Exit;
-      end;
-
-
       frameFormulaGridCrops.Grid.BeginUpdate;
       frameFormulaGridCosts.Grid.BeginUpdate;
       frameFormulaGridWaterRights.Grid.BeginUpdate;
+      frameGW_Allocation.Grid.BeginUpdate;
       try
-        AFarmItem := FarmObjects[0];
-        GetCropEffForFirstFarm(AFarmItem);
-        GetCostsForFirstFarm(AFarmItem);
-        GetWaterRightsForFirstFarm(AFarmItem);
-        FirstFarm := AFarmItem.ScreenObject.ModflowFmpFarm;
-        if FarmObjects.Count = 1 then
+        ClearGrid(frameFormulaGridCrops.Grid);
+        ClearGrid(frameFormulaGridCosts.Grid);
+        ClearGrid(frameFormulaGridWaterRights.Grid);
+        ClearGrid(frameGW_Allocation.Grid);
+
+        FirstFarm := FarmList[0];
+        GetCropEffForFirstFarm(FirstFarm);
+        GetCostsForFirstFarm(FirstFarm);
+        GetWaterRightsForFirstFarm(FirstFarm);
+        GetGwAllotmentForFirstFarm(FirstFarm);
+        if FarmList.Count = 1 then
         begin
           seFarmId.AsInteger := FirstFarm.FarmId;
           seFarmId.Enabled := True;
+          edFarmName.Text := FirstFarm.FarmName;
+          edFarmName.Enabled := True;
         end
         else
         begin
           seFarmId.AsInteger := 0;
           seFarmId.Enabled := False;
+          edFarmName.Text := '';
+          edFarmName.Enabled := False;
         end;
 
-        for ItemIndex := 1 to FarmObjects.Count - 1 do
+        for ItemIndex := 1 to FarmList.Count - 1 do
         begin
-          AFarmItem := FarmObjects[ItemIndex];
-          AFarm := AFarmItem.ScreenObject.ModflowFmpFarm;
+          AFarm := FarmList[ItemIndex];
           if not AFarm.FarmEfficiencyCollection.IsSame(
             FirstFarm.FarmEfficiencyCollection) then
           begin
             ClearGrid(frameFormulaGridCrops.Grid);
             frameFormulaGridCrops.seNumber.AsInteger := 0;
+            break;
           end;
         end;
 
-        for ItemIndex := 1 to FarmObjects.Count - 1 do
+        for ItemIndex := 1 to FarmList.Count - 1 do
         begin
-          AFarmItem := FarmObjects[ItemIndex];
-          AFarm := AFarmItem.ScreenObject.ModflowFmpFarm;
+          AFarm := FarmList[ItemIndex];
           if not AFarm.FarmCostsCollection.IsSame(
             FirstFarm.FarmCostsCollection) then
           begin
             ClearGrid(frameFormulaGridCosts.Grid);
             frameFormulaGridCosts.seNumber.AsInteger := 0;
+            break;
           end;
         end;
 
-        for ItemIndex := 1 to FarmObjects.Count - 1 do
+        for ItemIndex := 1 to FarmList.Count - 1 do
         begin
-          AFarmItem := FarmObjects[ItemIndex];
-          AFarm := AFarmItem.ScreenObject.ModflowFmpFarm;
+          AFarm := FarmList[ItemIndex];
           if not AFarm.WaterRights.IsSame(
             FirstFarm.WaterRights) then
           begin
             ClearGrid(frameFormulaGridWaterRights.Grid);
             frameFormulaGridWaterRights.seNumber.AsInteger := 0;
+            break;
+          end;
+        end;
+
+        for ItemIndex := 1 to FarmList.Count - 1 do
+        begin
+          AFarm := FarmList[ItemIndex];
+          if not AFarm.GwAllotment.IsSame(
+            FirstFarm.GwAllotment) then
+          begin
+            ClearGrid(frameGW_Allocation.Grid);
+            frameGW_Allocation.seNumber.AsInteger := 0;
+            break;
           end;
         end;
 
@@ -262,27 +370,55 @@ begin
         frameFormulaGridCrops.Grid.EndUpdate;
         frameFormulaGridCosts.Grid.EndUpdate;
         frameFormulaGridWaterRights.Grid.EndUpdate;
+        frameGW_Allocation.Grid.EndUpdate;
       end;
 
-      frameFormulaGridDiversion.GetData(FarmObjects, dtDiversion);
-      frameFormulaGridReturnFlow.GetData(FarmObjects, dtReturnFlow);
+      frameFormulaGridDiversion.GetData(FarmList, dtDiversion);
+      frameFormulaGridReturnFlow.GetData(FarmList, dtReturnFlow);
 
-      frameDelivery.GetData(FarmObjects);
+      frameDelivery.GetData(FarmList);
 
     finally
-      FarmObjects.Free;
       FChangedCrops := False;
       FChangedCosts := False;
       FChangedWaterRights := False;
       FChangedID := False;
+      FChangedAllotment := false;
     end;
   finally
     Changing := False;
+    FrameLoaded := True;
   end;
-{$ENDIF}
 end;
 
-procedure TframeScreenObjectFarm.frameDeliveryGridSetEditText(Sender: TObject;
+procedure TframeFarm.GetGwAllotmentForFirstFarm(FirstFarm: TFarm);
+var
+  AFarm: TFarm;
+  Grid: TRbwDataGrid4;
+  TimeIndex: Integer;
+  ATimeItem: TAllotmentItem;
+begin
+  AFarm := FirstFarm;
+  frameGW_Allocation.seNumber.AsInteger := AFarm.GwAllotment.Count;
+  frameGW_Allocation.seNumber.OnChange(frameGW_Allocation.seNumber);
+  Grid := frameGW_Allocation.Grid;
+  for TimeIndex := 0 to AFarm.GwAllotment.Count - 1 do
+  begin
+    ATimeItem := AFarm.GwAllotment[TimeIndex];
+    Grid.Cells[Ord(wrccStartTime), TimeIndex+1] := FloatToStr(ATimeItem.StartTime);
+    Grid.Cells[Ord(wrccEndTime), TimeIndex+1] := FloatToStr(ATimeItem.EndTime);
+    Grid.Cells[Ord(wrccCall), TimeIndex+1] := ATimeItem.Allotment;
+  end;
+end;
+
+procedure TframeFarm.frameDeliveryGridButtonClick(Sender: TObject; ACol,
+  ARow: Integer);
+begin
+  inherited;
+  EditFormula(Sender as TRbwDataGrid4, ACol, ARow);
+end;
+
+procedure TframeFarm.frameDeliveryGridSetEditText(Sender: TObject;
   ACol, ARow: Integer; const Value: string);
 begin
   inherited;
@@ -291,7 +427,7 @@ begin
 
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridCostsedFormulaChange(
+procedure TframeFarm.frameFormulaGridCostsedFormulaChange(
   Sender: TObject);
 begin
   inherited;
@@ -299,7 +435,14 @@ begin
   FChangedCosts := True;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridCostsGridSetEditText(
+procedure TframeFarm.frameFormulaGridCostsGridButtonClick(Sender: TObject; ACol,
+  ARow: Integer);
+begin
+  inherited;
+  EditFormula(Sender as TRbwDataGrid4, ACol, ARow);
+end;
+
+procedure TframeFarm.frameFormulaGridCostsGridSetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
 begin
   inherited;
@@ -308,7 +451,7 @@ begin
   DoChange;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridCostssbAddClick(
+procedure TframeFarm.frameFormulaGridCostssbAddClick(
   Sender: TObject);
 begin
   inherited;
@@ -317,7 +460,7 @@ begin
   DoChange;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridCostssbDeleteClick(
+procedure TframeFarm.frameFormulaGridCostssbDeleteClick(
   Sender: TObject);
 begin
   inherited;
@@ -326,7 +469,7 @@ begin
   DoChange;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridCostssbInsertClick(
+procedure TframeFarm.frameFormulaGridCostssbInsertClick(
   Sender: TObject);
 begin
   inherited;
@@ -335,7 +478,7 @@ begin
   DoChange;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridCostsseNumberChange(
+procedure TframeFarm.frameFormulaGridCostsseNumberChange(
   Sender: TObject);
 begin
   inherited;
@@ -344,7 +487,7 @@ begin
   DoChange;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridCropsedFormulaChange(
+procedure TframeFarm.frameFormulaGridCropsedFormulaChange(
   Sender: TObject);
 begin
   inherited;
@@ -352,7 +495,14 @@ begin
   FChangedCrops := True;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridCropsGridSetEditText(
+procedure TframeFarm.frameFormulaGridCropsGridButtonClick(Sender: TObject; ACol,
+  ARow: Integer);
+begin
+  inherited;
+  EditFormula(Sender as TRbwDataGrid4, ACol, ARow);
+end;
+
+procedure TframeFarm.frameFormulaGridCropsGridSetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
 begin
   inherited;
@@ -361,7 +511,7 @@ begin
   DoChange;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridCropssbAddClick(
+procedure TframeFarm.frameFormulaGridCropssbAddClick(
   Sender: TObject);
 begin
   inherited;
@@ -370,7 +520,7 @@ begin
   DoChange;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridCropssbDeleteClick(
+procedure TframeFarm.frameFormulaGridCropssbDeleteClick(
   Sender: TObject);
 begin
   inherited;
@@ -379,7 +529,7 @@ begin
   DoChange;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridCropssbInsertClick(
+procedure TframeFarm.frameFormulaGridCropssbInsertClick(
   Sender: TObject);
 begin
   inherited;
@@ -388,7 +538,7 @@ begin
   DoChange;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridCropsseNumberChange(
+procedure TframeFarm.frameFormulaGridCropsseNumberChange(
   Sender: TObject);
 begin
   inherited;
@@ -397,7 +547,7 @@ begin
   DoChange;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridDiversionGridSetEditText(
+procedure TframeFarm.frameFormulaGridDiversionGridSetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
 begin
   inherited;
@@ -406,7 +556,7 @@ begin
 
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridReturnFlowGridSetEditText(
+procedure TframeFarm.frameFormulaGridReturnFlowGridSetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
 begin
   inherited;
@@ -414,7 +564,7 @@ begin
   UpdateNextTimeCell(frameFormulaGridReturnFlow.Grid, ACol, ARow);
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridWaterRightsedFormulaChange(
+procedure TframeFarm.frameFormulaGridWaterRightsedFormulaChange(
   Sender: TObject);
 begin
   inherited;
@@ -422,7 +572,14 @@ begin
   FChangedWaterRights := True;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridWaterRightsGridSetEditText(
+procedure TframeFarm.frameFormulaGridWaterRightsGridButtonClick(Sender: TObject;
+  ACol, ARow: Integer);
+begin
+  inherited;
+  EditFormula(Sender as TRbwDataGrid4, ACol, ARow);
+end;
+
+procedure TframeFarm.frameFormulaGridWaterRightsGridSetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
 begin
   inherited;
@@ -431,7 +588,7 @@ begin
   DoChange;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridWaterRightssbAddClick(
+procedure TframeFarm.frameFormulaGridWaterRightssbAddClick(
   Sender: TObject);
 begin
   inherited;
@@ -440,7 +597,7 @@ begin
   DoChange;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridWaterRightssbDeleteClick(
+procedure TframeFarm.frameFormulaGridWaterRightssbDeleteClick(
   Sender: TObject);
 begin
   inherited;
@@ -449,7 +606,7 @@ begin
   DoChange;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridWaterRightssbInsertClick(
+procedure TframeFarm.frameFormulaGridWaterRightssbInsertClick(
   Sender: TObject);
 begin
   inherited;
@@ -458,7 +615,7 @@ begin
   DoChange;
 end;
 
-procedure TframeScreenObjectFarm.frameFormulaGridWaterRightsseNumberChange(
+procedure TframeFarm.frameFormulaGridWaterRightsseNumberChange(
   Sender: TObject);
 begin
   inherited;
@@ -467,16 +624,70 @@ begin
   DoChange;
 end;
 
-{$IFDEF FMP}
-procedure TframeScreenObjectFarm.GetCostsForFirstFarm(
-  FarmItem: TScreenObjectEditItem);
+procedure TframeFarm.frameGW_AllocationedFormulaChange(Sender: TObject);
+begin
+  inherited;
+  frameGW_Allocation.edFormulaChange(Sender);
+  FChangedAllotment := True;
+end;
+
+procedure TframeFarm.frameGW_AllocationGridButtonClick(Sender: TObject; ACol,
+  ARow: Integer);
+begin
+  inherited;
+  EditFormula(Sender as TRbwDataGrid4, ACol, ARow);
+end;
+
+procedure TframeFarm.frameGW_AllocationGridSetEditText(Sender: TObject; ACol,
+  ARow: Integer; const Value: string);
+begin
+  inherited;
+  FChangedAllotment := True;
+  UpdateNextTimeCell(frameGW_Allocation.Grid, ACol, ARow);
+  DoChange;
+end;
+
+procedure TframeFarm.frameGW_AllocationsbAddClick(Sender: TObject);
+begin
+  inherited;
+  frameGW_Allocation.sbAddClick(Sender);
+  FChangedAllotment := True;
+  DoChange;
+end;
+
+procedure TframeFarm.frameGW_AllocationsbDeleteClick(Sender: TObject);
+begin
+  inherited;
+  frameGW_Allocation.sbDeleteClick(Sender);
+  FChangedAllotment := True;
+  DoChange;
+end;
+
+procedure TframeFarm.frameGW_AllocationsbInsertClick(Sender: TObject);
+begin
+  inherited;
+  frameGW_Allocation.sbInsertClick(Sender);
+  FChangedAllotment := True;
+  DoChange;
+end;
+
+procedure TframeFarm.frameGW_AllocationseNumberChange(Sender: TObject);
+begin
+  inherited;
+  frameGW_Allocation.seNumberChange(Sender);
+  FChangedAllotment := True;
+  DoChange;
+end;
+
+procedure TframeFarm.GetCostsForFirstFarm(
+  FirstFarm: TFarm);
 var
   AFarm: TFarm;
   TimeIndex: Integer;
   Grid: TRbwDataGrid4;
   TimeItem: TFarmCostsItem;
 begin
-  AFarm := FarmItem.ScreenObject.ModflowFmpFarm;
+  AFarm := FirstFarm;
   frameFormulaGridCosts.seNumber.AsInteger := AFarm.FarmCostsCollection.Count;
   frameFormulaGridCosts.seNumber.OnChange(frameFormulaGridCosts.seNumber);
   Grid := frameFormulaGridCosts.Grid;
@@ -495,11 +706,9 @@ begin
     Grid.Cells[Ord(wccSWCost4), TimeIndex+1] := TimeItem.SWCost4;
   end;
 end;
-{$ENDIF}
 
-{$IFDEF FMP}
-procedure TframeScreenObjectFarm.GetCropEffForFirstFarm(
-  FarmItem: TScreenObjectEditItem);
+procedure TframeFarm.GetCropEffForFirstFarm(
+  FirstFarm: TFarm);
 var
   AFarm: TFarm;
   CropIndex: Integer;
@@ -510,43 +719,43 @@ var
   Grid: TRbwDataGrid4;
   MaxTimeCount: Integer;
 begin
-  AFarm := FarmItem.ScreenObject.ModflowFmpFarm;
+  AFarm := FirstFarm;
   GetMaxTimeAndCountForCrops(MaxIndex, MaxTimeCount, AFarm);
   frameFormulaGridCrops.seNumber.AsInteger := MaxTimeCount;
   frameFormulaGridCrops.seNumber.OnChange(frameFormulaGridCrops.seNumber);
 
-  FarmEff := AFarm.FarmEfficiencyCollection[MaxIndex];
-  Grid := frameFormulaGridCrops.Grid;
-  for TimeIndex := 0 to FarmEff.CropEfficiency.Count - 1 do
+  if MaxIndex >= 0 then
   begin
-    TimeItem := FarmEff.CropEfficiency[TimeIndex];
-    Grid.Cells[Ord(ccStartTime), TimeIndex+1] := FloatToStr(TimeItem.StartTime);
-    Grid.Cells[Ord(ccEndTime), TimeIndex+1] := FloatToStr(TimeItem.EndTime);
-  end;
-
-  for CropIndex := 0 to AFarm.FarmEfficiencyCollection.Count - 1 do
-  begin
-    FarmEff := AFarm.FarmEfficiencyCollection[CropIndex];
+    FarmEff := AFarm.FarmEfficiencyCollection[MaxIndex];
+    Grid := frameFormulaGridCrops.Grid;
     for TimeIndex := 0 to FarmEff.CropEfficiency.Count - 1 do
     begin
       TimeItem := FarmEff.CropEfficiency[TimeIndex];
-      Grid.Cells[Ord(ccCrop) + CropIndex, TimeIndex+1] := TimeItem.Efficiency;
+      Grid.Cells[Ord(ccStartTime), TimeIndex+1] := FloatToStr(TimeItem.StartTime);
+      Grid.Cells[Ord(ccEndTime), TimeIndex+1] := FloatToStr(TimeItem.EndTime);
+    end;
+
+    for CropIndex := 0 to AFarm.FarmEfficiencyCollection.Count - 1 do
+    begin
+      FarmEff := AFarm.FarmEfficiencyCollection[CropIndex];
+      for TimeIndex := 0 to FarmEff.CropEfficiency.Count - 1 do
+      begin
+        TimeItem := FarmEff.CropEfficiency[TimeIndex];
+        Grid.Cells[Ord(ccCrop) + CropIndex, TimeIndex+1] := TimeItem.Efficiency;
+      end;
     end;
   end;
 end;
-{$ENDIF}
 
-
-{$IFDEF FMP}
-procedure TframeScreenObjectFarm.GetWaterRightsForFirstFarm(
-  FarmItem: TScreenObjectEditItem);
+procedure TframeFarm.GetWaterRightsForFirstFarm(
+  FirstFarm: TFarm);
 var
   AFarm: TFarm;
   TimeIndex: Integer;
   ATimeItem: TWaterRightsItem;
   Grid: TRbwDataGrid4;
 begin
-  AFarm := FarmItem.ScreenObject.ModflowFmpFarm;
+  AFarm := FirstFarm;
   frameFormulaGridWaterRights.seNumber.AsInteger := AFarm.WaterRights.Count;
   frameFormulaGridWaterRights.seNumber.OnChange(frameFormulaGridWaterRights.seNumber);
   Grid := frameFormulaGridWaterRights.Grid;
@@ -558,10 +767,8 @@ begin
     Grid.Cells[Ord(wrccCall), TimeIndex+1] := ATimeItem.WaterRights;
   end;
 end;
-{$ENDIF}
 
-{$IFDEF FMP}
-procedure TframeScreenObjectFarm.InitializeControls;
+procedure TframeFarm.InitializeControls;
 var
   Grid: TRbwDataGrid4;
   Crops: TCropCollection;
@@ -573,6 +780,7 @@ var
   ColIndex: Integer;
 begin
   seFarmId.AsInteger := 0;
+  edFarmName.Text := '';
 
   frameFormulaGridDiversion.OnChange := Change;
   frameFormulaGridReturnFlow.OnChange := Change;
@@ -580,6 +788,8 @@ begin
 
   tabDiversionLocation.TabVisible := frmGoPhast.PhastModel.SfrIsSelected;
   tabReturnFlowLocation.TabVisible := tabDiversionLocation.TabVisible;
+
+  tabGW_Allocation.TabVisible := frmGoPhast.PhastModel.ModflowPackages.FarmProcess.GroundwaterAllotmentsUsed;
 
   pcMain.ActivePageIndex := 0;
   StressPeriods := frmGoPhast.PhastModel.ModflowStressPeriods;
@@ -692,14 +902,30 @@ begin
     end;
     frameFormulaGridWaterRights.LayoutMultiRowEditControls;
 
+    Grid := frameGW_Allocation.Grid;
+    ClearGrid(Grid);
+    Grid.BeginUpdate;
+    try
+      frameFormulaGridWaterRights.FirstFormulaColumn := Ord(gacAllotment);
+      Grid.Cells[Ord(gacStartTime), 0] := StrStartingTime;
+      Grid.Cells[Ord(gacEndTime), 0] := StrEndingTime;
+      Grid.Cells[Ord(gacAllotment), 0] := 'Groundwater allotment';
+      Grid.Columns[Ord(gacStartTime)].PickList := StartTimes;
+      Grid.Columns[Ord(gacEndTime)].PickList := EndTimes;
+      Grid.Columns[Ord(gacStartTime)].ComboUsed := True;
+      Grid.Columns[Ord(gacEndTime)].ComboUsed := True;
+    finally
+      Grid.EndUpdate;
+    end;
+    frameGW_Allocation.LayoutMultiRowEditControls;
+
   finally
     EndTimes.Free;
     StartTimes.Free;
   end;
 end;
-{$ENDIF}
 
-procedure TframeScreenObjectFarm.seFarmIdChange(Sender: TObject);
+procedure TframeFarm.seFarmIdChange(Sender: TObject);
 begin
   inherited;
   FChangedID := True;
@@ -707,132 +933,84 @@ begin
 end;
 
 
-procedure TframeScreenObjectFarm.SetData(List: TScreenObjectEditCollection;
-  SetAll, ClearAll: boolean; FarmIdEdit: TScreenObjectDataEdit);
-{$IFDEF FMP}
+procedure TframeFarm.SetData(FarmList: TFarmList);
 var
   index: Integer;
-  Item: TScreenObjectEditItem;
   Farm: TFarm;
   Crops: TCropCollection;
-  FarmCreated: Boolean;
   IntValue: Integer;
-  DataArray: TDataArray;
-  DataSetIndex: Integer;
-{$ENDIF}
 begin
-{$IFDEF FMP}
-  if ClearAll then
+  if {FarmCreated or} FChangedID then
   begin
-    for index := 0 to List.Count - 1 do
+    IntValue := seFarmId.AsInteger;
+    for index := 0 to FarmList.Count - 1 do
     begin
-      Item := List[index];
-      Item.ScreenObject.ModflowFmpFarm := nil;
-    end;
-  end
-  else
-  begin
-    FarmCreated := False;
-    if SetAll or FChangedID or FChangedCrops or FChangedCosts or FChangedWaterRights
-      or frameFormulaGridDiversion.DataChanged
-      or frameFormulaGridReturnFlow.DataChanged or frameDelivery.DataChanged then
-    begin
-      for index := 0 to List.Count - 1 do
-      begin
-        Item := List[index];
-        Farm := Item.ScreenObject.ModflowFmpFarm;
-        if (Farm = nil) and SetAll then
-        begin
-          Item.ScreenObject.CreateFarm;
-          FarmCreated := True;
-        end;
-      end;
-    end;
-    if FarmCreated or FChangedID then
-    begin
-      IntValue := seFarmId.AsInteger;
-//      if IntValue > 0 then
-      begin
-        for Index := 0 to List.Count - 1 do
-        begin
-          Item := List[Index];
-          Farm := Item.ScreenObject.ModflowFmpFarm;
-          if (Farm <> nil) then
-
-
-          { TODO : See if UpdateScreenObjectData can be made to do this. }
-//          DataSetIndex := self.GetDataSetIndexByName(rsLakeID);
-//          Edit := FDataEdits[DataSetIndex];
-          DataArray := FarmIdEdit.DataArray;
-          Assert(AnsiSameText(DataArray.Name, KFarmID));
-          if (Farm = nil) or (IntValue = 0) then
-          begin
-            Item.ScreenObject.RemoveDataSet(DataArray)
-          end
-          else
-          begin
-            DataSetIndex := Item.ScreenObject.AddDataSet(DataArray);
-            Item.ScreenObject.DataSetFormulas[DataSetIndex] := IntToStr(IntValue)
-          end;
-        end;
-      end;
-
-    end;
-    if FarmCreated or FChangedCrops then
-    begin
-      Crops := frmGoPhast.PhastModel.FmpCrops;
-      for index := 0 to List.Count - 1 do
-      begin
-        Item := List[index];
-        Farm := Item.ScreenObject.ModflowFmpFarm;
-        if Farm <> nil then
-        begin
-          SetCropEfficiencies(Farm, Crops);
-        end;
-      end;
-    end;
-    if FarmCreated or FChangedCosts then
-    begin
-      for index := 0 to List.Count - 1 do
-      begin
-        Item := List[index];
-        Farm := Item.ScreenObject.ModflowFmpFarm;
-        if Farm <> nil then
-        begin
-          SetFarmCosts(Farm);
-        end;
-      end;
-    end;
-    if FarmCreated or FChangedWaterRights then
-    begin
-      for index := 0 to List.Count - 1 do
-      begin
-        Item := List[index];
-        Farm := Item.ScreenObject.ModflowFmpFarm;
-        if Farm <> nil then
-        begin
-          SetWaterRights(Farm);
-        end;
-      end;
-    end;
-    if FarmCreated or frameFormulaGridDiversion.DataChanged then
-    begin
-      frameFormulaGridDiversion.SetData(List, dtDiversion);
-    end;
-    if FarmCreated or frameFormulaGridReturnFlow.DataChanged then
-    begin
-      frameFormulaGridReturnFlow.SetData(List, dtReturnFlow);
-    end;
-    if FarmCreated or frameDelivery.DataChanged then
-    begin
-      frameDelivery.SetData(List);
+      Farm := FarmList[index];
+      Farm.FarmId := IntValue;
+      Farm.FarmName := edFarmName.Text;
     end;
   end;
-{$ENDIF}
+  if {FarmCreated or} FChangedCrops then
+  begin
+    Crops := frmGoPhast.PhastModel.FmpCrops;
+    for index := 0 to FarmList.Count - 1 do
+    begin
+      Farm := FarmList[index];
+//        Farm := Item.ScreenObject.ModflowFmpFarm;
+      if Farm <> nil then
+      begin
+        SetCropEfficiencies(Farm, Crops);
+      end;
+    end;
+  end;
+  if {armCreated or} FChangedCosts then
+  begin
+    for index := 0 to FarmList.Count - 1 do
+    begin
+      Farm := FarmList[index];
+      if Farm <> nil then
+      begin
+        SetFarmCosts(Farm);
+      end;
+    end;
+  end;
+  if {FarmCreated or} FChangedWaterRights then
+  begin
+    for index := 0 to FarmList.Count - 1 do
+    begin
+      Farm := FarmList[index];
+      if Farm <> nil then
+      begin
+        SetWaterRights(Farm);
+      end;
+    end;
+  end;
+  if FChangedAllotment then
+  begin
+    for index := 0 to FarmList.Count - 1 do
+    begin
+      Farm := FarmList[index];
+      if Farm <> nil then
+      begin
+        SetGwAllotment(Farm);
+      end;
+    end;
+  end;
+  if {FarmCreated or} frameFormulaGridDiversion.DataChanged then
+  begin
+    frameFormulaGridDiversion.SetData(FarmList, dtDiversion);
+  end;
+  if {FarmCreated or} frameFormulaGridReturnFlow.DataChanged then
+  begin
+    frameFormulaGridReturnFlow.SetData(FarmList, dtReturnFlow);
+  end;
+  if {FarmCreated or} frameDelivery.DataChanged then
+  begin
+    frameDelivery.SetData(FarmList);
+  end;
 end;
 
-{$IFDEF FMP}
-procedure TframeScreenObjectFarm.SetWaterRights(Farm: TFarm);
+procedure TframeFarm.SetWaterRights(Farm: TFarm);
 var
   Grid: TRbwDataGrid4;
   WaterRightsItem: TWaterRightsItem;
@@ -868,10 +1046,8 @@ begin
     WaterRights.Last.Free;
   end;
 end;
-{$ENDIF}
 
-{$IFDEF FMP}
-procedure TframeScreenObjectFarm.SetFarmCosts(Farm: TFarm);
+procedure TframeFarm.SetFarmCosts(Farm: TFarm);
 var
   EndTime: Double;
   Grid: TRbwDataGrid4;
@@ -915,10 +1091,46 @@ begin
     FarmCosts.Last.Free;
   end;
 end;
-{$ENDIF}
 
-{$IFDEF FMP}
-procedure TframeScreenObjectFarm.SetCropEfficiencies(Farm: TFarm; Crops: TCropCollection);
+procedure TframeFarm.SetGwAllotment(Farm: TFarm);
+var
+  GwAllotment: TAllotmentCollection;
+  Grid: TRbwDataGrid4;
+  Count: Integer;
+  RowIndex: Integer;
+  StartTime: double;
+  EndTime: double;
+  AllotmentItem: TAllotmentItem;
+begin
+  GwAllotment := Farm.GwAllotment;
+  Grid := frameGW_Allocation.Grid;
+  Count := 0;
+  for RowIndex := 1 to frameGW_Allocation.seNumber.AsInteger do
+  begin
+    if TryStrToFloat(Grid.Cells[Ord(gacStartTime), RowIndex], StartTime)
+      and TryStrToFloat(Grid.Cells[Ord(gacEndTime), RowIndex], EndTime) then
+    begin
+      if Count < GwAllotment.Count then
+      begin
+        AllotmentItem := GwAllotment[Count];
+      end
+      else
+      begin
+        AllotmentItem := GwAllotment.Add;
+      end;
+      Inc(Count);
+      AllotmentItem.StartTime := StartTime;
+      AllotmentItem.EndTime := EndTime;
+      AllotmentItem.Allotment := Grid.Cells[Ord(gacAllotment), RowIndex];
+    end;
+  end;
+  while GwAllotment.Count > Count do
+  begin
+    GwAllotment.Last.Free;
+  end;
+end;
+
+procedure TframeFarm.SetCropEfficiencies(Farm: TFarm; Crops: TCropCollection);
 var
   EndTime: Double;
   EfficienciesItem: TFarmEfficienciesItem;
@@ -935,10 +1147,6 @@ var
   RowIndex: Integer;
   ARow: Integer;
 begin
-  if seFarmId.AsInteger > 0 then
-  begin
-    Farm.FarmId := seFarmId.AsInteger;
-  end;
   EfficiencyCollection := Farm.FarmEfficiencyCollection;
   for CropIndex := EfficiencyCollection.Count to Crops.Count - 1 do
   begin
@@ -992,10 +1200,8 @@ begin
     Rows.Free;
   end;
 end;
-{$ENDIF}
 
-{$IFDEF FMP}
-procedure TframeScreenObjectFarm.GetMaxTimeAndCountForCrops(
+procedure TframeFarm.GetMaxTimeAndCountForCrops(
   var MaxIndex: Integer; var MaxTimeCount: Integer; AFarm: TFarm);
 var
   FarmEff: TFarmEfficienciesItem;
@@ -1004,7 +1210,7 @@ begin
   MaxTimeCount := 0;
   Assert(frameFormulaGridCrops.Grid.ColCount = AFarm.FarmEfficiencyCollection.Count + 2);
   Assert(AFarm.FarmEfficiencyCollection.Count > 0);
-  MaxIndex := 0;
+  MaxIndex := -1;
   for CropIndex := 0 to AFarm.FarmEfficiencyCollection.Count - 1 do
   begin
     FarmEff := AFarm.FarmEfficiencyCollection[CropIndex];
@@ -1015,6 +1221,5 @@ begin
     end;
   end;
 end;
-{$ENDIF}
 
 end.

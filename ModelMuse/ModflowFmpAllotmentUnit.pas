@@ -44,6 +44,7 @@ type
     function GetAllotmentTimeValuesFromTime(StartTime: double): TAllotmentRecord;
     property Items[Index: Integer]: TAllotmentItem read GetItems
       write SetItems; default;
+    function Add: TAllotmentItem;
   end;
 
 
@@ -107,6 +108,11 @@ begin
 end;
 
 { TAllotmentCollection }
+
+function TAllotmentCollection.Add: TAllotmentItem;
+begin
+  result := inherited Add as TAllotmentItem;
+end;
 
 procedure TAllotmentCollection.EvaluateAllotment;
 var

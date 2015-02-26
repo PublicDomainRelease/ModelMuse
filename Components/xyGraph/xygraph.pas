@@ -1,36 +1,45 @@
-unit xygraph; // version 2.3
+unit xygraph; // final version 3.0
 
-{===== revised copyright notice 2005 =====================================}
+{===== IMPORTANT revised copyright notice 2009 IMPORTANT==================}
 {                                                                         }
 { In this notice XYGRAPH means the sourcefiles XYGRAPH.PAS, XYCOMMON.PAS, }
 { XYGRAPH3D.PAS and XYGRAPH4D.PAS and any parts thereof, including        }
-{ compiled units, or objects, components and executable programs created  }
-{ with or using XYGRAPH.                                                  }
-{ XYGRAPH is supplied as freeware and is subjected to copyright by        }
-{ international law.                                                      }
+{ compiled units.                                                         }
 {                                                                         }
-{ XYGRAPH may be used freely for all purposes of non-commercial nature,   }
-{ including internal reports in commercial companies and open             }
-{ presentations and publications of basically scientific nature           }
-{ (I appreciate to get a copy).                                           }
+{ XYGRAPH is supplied free of copyright or any other rights and is to be  }
+{ considerd public domain.                                                }
 {                                                                         }
-{ Without prior permission it is not allowed to use XYGRAPH or graphs     }
-{ constructed with it for commercial application, including brochures.    }
-{ Also, it is not allowed to publish or distribute XYGRAPH without        }
-{ permission, except in cases falling under the freeware-for-freeware     }
-{ principle in which this copyright notice must remain unchanged and I    }
-{ must to be informed.                                                    }
+{ XYGRAPH may be used freely for all purposes of either commercial or     }
+{ non-commercial nature, and may be distributed in any form and by any    }
+{ medium.                                                                 }
 {                                                                         }
-{ Wilko C Emmens, Castricum, The Netherlands, 2005                        }
+{ Wilko C Emmens, Hengelo Ov, The Netherlands, 2009                       }
 { mailto:wcemmens@solcon.nl                                               }
-{ http://www.solcon.nl/wcemmens                                           }
-{                                                                         }
-{ Please contact the author for proposed modifications or improvements    }
-{ or any other matter (like bugs you found).                              }
+{ http://home.solcon.nl/wcemmens                                          }
 {                                                                         }
 {=========================================================================}
 
-(* >> New in version 2.3 (including 2.2.1)
+(* >> New in version 3.0 (including 2.4.1)
+   XYInitRuler : new options for measuring
+   XY3DAxisScale : optionally sets axis divisions and labels
+   XY3DPlotCluster : Plots cluster of points as symbols
+   XY3DCircle : more options
+   XY3DSetView : more options
+
+   >> New in version 2.4 (including 2.3.4)
+   XYAxisScale : optionally sets axis divisions and labels
+   XYAxisShape : option to create user-defined non-linear axis scales
+   XYXAxis and XYYAxis : locate at zero position
+   XYClearBuffer :  extended option to clear a single buffer
+   XYSaveAsMetafile : extended functionality for use in canvasmode
+   XYSetGridlines : extended option to set colour of gridlines
+   XYPrint and XYPrint2 : extended lay-out options
+   XY3DCreateSurface : creates pre-filled data arrays of a function f(x,y)
+   XY3DSetView : extended options for image shifting
+   XY3DShowContour : more options in fast mode
+   XY3DShowSurface : more options in face colouring
+   
+   >> New in version 2.3 (including 2.2.1)
    XY3DLoadSurface and XY3DShowSurface : extended options for colour coding
    XY3DSetColors : extended version for general use
    XYDrawFunction : new options to set X range
@@ -111,7 +120,6 @@ unit xygraph; // version 2.3
 
 interface
 
-{$D '>>>  XYGRAPH 2.2  (C) WILKO C EMMENS 2002,2005   <<<'}
 {$R+}
 
 uses Windows , {Messages,} SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
@@ -208,8 +216,11 @@ procedure xycleargraph(paintbox:Tpaintbox; bcolor,fcolor:Tcolor; scale:single);
 procedure xystartgraph(x1,x2,y1,y2,dx1,dx2,dy1,dy2:integer; nclip:boolean);
 procedure xysetratio(r:single);
 procedure xysetreduction(xr,yr:integer);
-procedure xysetgridlines(xcoarse,xfine,ycoarse,yfine:integer);
+procedure xysetgridlines(xcoarse,xfine,ycoarse,yfine:integer); overload;
+procedure xysetgridlines(color:Tcolor); overload; 
 procedure xytitle(cl:Tcolor;txt:string);
+procedure xyaxisshape(conv,inv : Tsimplefunctiontype; f : single);
+procedure xyaxisscale(min,max:single;nc,nf:integer;fm:single;fix:boolean);
 procedure xyxaxis(cl:Tcolor;x1,x2,incr,zmx:single;txt:string;code:integer;grid,log,fix:boolean;fit:integer); overload;
 procedure xyyaxis(cl:Tcolor;y1,y2,incr,zmx:single;txt:string;code:integer;grid,log,fix:boolean;fit:integer); overload;
 procedure xyyearaxis(cl:Tcolor;code,jaar:integer;grid:boolean);
@@ -253,22 +264,28 @@ procedure xyradardraw(xw : array of single;sy,sf:integer);
 
 procedure xycopytoclipboard;
 procedure xysaveasbitmap(s:string; showtxt:boolean; var ok:boolean);
-procedure xyprint(show:boolean);
-procedure xyprint2(corr:single);
+procedure xyprint(show:boolean); overload;
+procedure xyprint(show:boolean;scale:single;posn:integer); overload;
+procedure xyprint2; overload;
+procedure xyprint2(corr,scale:single;posn:integer); overload;
 procedure xysaveasmetafile(s:string; showtxt:boolean; var ok:boolean;
    scale : integer); overload;
+procedure xysaveasmetafile(s:string; showtxt:boolean; var ok:boolean;
+   scale : integer; plot:Tprocedure); overload;
 procedure XYMouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 procedure XYMouseMove(Shift: TShiftState;  X, Y: Integer);
 procedure XYMouseUp(Button: TMouseButton; var Shift: TShiftState; X, Y: Integer);
 procedure XYKeyDown(var Key: Word; Shift: TShiftState);
 
-procedure xyclearbuffer;
+procedure xyclearbuffer; overload;
+procedure xyclearbuffer(n:integer); overload;
 procedure xyputbuffer(n:integer);
 procedure xygetbuffer(n:integer);
 
 {for C++ users only:}
 
 procedure initxygraph;
+procedure shutdownxygraph;
 
 {the following procedures are needed for communication with XYGRAPH3D;
   do not call them directly}
@@ -281,6 +298,7 @@ procedure xylanguage(n:integer);
 
 {for backward compatibility only:}
 
+procedure xyprint2(corr:single); overload;
 procedure xysaveasmetafile(s:string; showtxt:boolean; var ok:boolean); overload;
 procedure xysaveasmetafile2(s:string; showtxt:boolean; var ok:boolean;
    scale : integer);
@@ -291,6 +309,10 @@ procedure xylabelaxis(cl:Tcolor;labels:array of string;grid:boolean);
 procedure xysymbolp(st,sz,fl:integer;x,y:double);
 type exporttype = Texporttype; simplefunctiontype = Tsimplefunctiontype;
    graphdata = Tgraphdata; graphtype = Tgraphtype; axistype = Taxistype;
+
+{ for communication with XYGRAPH4D: }
+
+type action = procedure; var closing : action;
 
 implementation
 
@@ -303,11 +325,12 @@ type datapointer = ^Tdatatype;
 
 const maxrad = 12;
 type astype = record                         {waardes en instellingen van assen}
-                on,log,side : boolean;
-                col : Tcolor;             
+                on,log,side,shpe : boolean;
+                col, grcolr : Tcolor;
                 mi,ma,zf0,zf1,zf0x,zf1x : double; {zfo=soll zf0x=ist}
                 dlog,pix,incr : single;
                 org,len,ndec,ninc,typ : integer;
+                cnv : Tsimplefunctiontype;
                end;
      dummyastype = record on:boolean; org,len:integer; end;
      graftype = record                         {instelingen hele grafiek}
@@ -315,6 +338,7 @@ type astype = record                         {waardes en instellingen van assen}
                  xf0,xf1 : double;             {zoomfactoren X}
                  yf0,yf1 : single;             {zoomfactoren Y}
                  xgridc,xgridf,ygridc,ygridf : integer; {rasterlijnen}
+                 gridcol : Tcolor;             {kleur van rasterlijnen}
                  ok,nclip,cont : boolean;      {ok,noclip,=contour}
                  zmxx, zmxy : single;          {zoomgrenzen}
                  case polar : integer of
@@ -325,7 +349,7 @@ type astype = record                         {waardes en instellingen van assen}
                       trck,tras,trkl : integer;{data tracking mode, yas,kol}
                       dat : datapointer);      {pointer naar datarray}
                  1,2: (xpc,ypc,rp:integer;     {pos centrum en straal}
-                       col : Tcolor;           {kleur}
+                       col, grcol : Tcolor;    {kleur}
                        mi,ma: array[1..maxrad] of single; {y waarden}
                        ndec:array[1..maxrad] of shortint;{n decim}
                        pix : single;           {y dichtheid}
@@ -384,9 +408,9 @@ var xorg,yorg,xlen,ylen : integer;    {offset en lengte asssen}
     dtmin : double;                   {vroegste datum}
     status : integer;                 {hoe ver zijn we gekomen}
     yascount : integer;               {hoeveel y-assen al getekend}
-    efac : single;
-    endec : integer;
-    eexp : string;
+    efac : single;                    {factor exp notatie}
+    endec : integer;                  {aantal dec exp notatie}
+    eexp : string;                    {E symbool exp notatie}
 
     ndata, nkol  : integer;           {aantal punten in data array}
     xdata, ydata : integer;           {welk data punt}
@@ -397,6 +421,12 @@ var xorg,yorg,xlen,ylen : integer;    {offset en lengte asssen}
     trackas,trackkl : integer;        {y-as/kolom voor data tracking}
     istracking : integer;             {data tracking staat aan op gr. n}
     ld1,ld2 : integer;                {lengte van maandnamen}
+    schuin : boolean;                 {schuine lijn bij ruler, en meten}
+    shape, xshape, yshape : boolean;  {niet-rechte as}
+    fconv, xconv, yconv : Tsimplefunctiontype; {conversiefuncties}
+    finv, xinv, yinv : Tsimplefunctiontype; {inverse conversiefuncties}
+    fsf, xsf, ysf : single;           {correctiefactor schaal}
+    gridcolor : Tcolor;               {kleuren van rasterlijnen}
 
     blokx0,blokx1,bloky0,bloky1 : integer; {positie blok}
     blokon : boolean;                 {blok aan}
@@ -416,6 +446,8 @@ var xorg,yorg,xlen,ylen : integer;    {offset en lengte asssen}
     coordok : boolean;                {geef coordinaten}
     coordcolor : Tcolor;              {lineaal kleur}
     coordas : integer;                {bij welke y-as hoort lineaal}
+    meetmode : integer;               {mode voor meten}
+    meten : boolean;                  {meten wel of niet}
 
     graphs : grafstype;               {instelingen van alle grafieken}
     pblabel : integer;                {label van paintbox}
@@ -424,7 +456,7 @@ var xorg,yorg,xlen,ylen : integer;    {offset en lengte asssen}
 
     dag : array[1..13] of integer;    {begindagen in het jaar van een maand}
 
-    stil : boolean;                   {sille modus}
+    stil : boolean;                   {stille modus}
     rul3d : boolean;                  {3d ruler}
     hoogte3d : single;                {hoogte van 3D oppervlak}
 
@@ -452,7 +484,7 @@ var  zmax : single = 1/1000;
 var  symbols : array of symboltype;   {lijst van symbolen die nog moeten}
      nsymbols : integer;              {aantal symbolen in de lijst}
 
-     lastpoint : boolean;             {moet er nog een laatse punt}
+     lastpoint : boolean;             {moet er nog een laatste punt}
      islastpoint : record x,y:integer;col:Tcolor; end; {wat is dit punt}
      lastsymb : record col,wi,xx,yy,s1,s2,s3 : integer; end; {laatste symbool}
      lastsymok : boolean;             {lastsymbol is gevuld}
@@ -478,6 +510,15 @@ var labels : array of string;
     nlabels : integer;
     dolabels : boolean;
 
+var xas : record cl,grcl:Tcolor;x1,x2,incr,zmx:single;txt:string;
+          code:integer;grid,log,fix:boolean;fit:integer;
+          sets:array[1..39] of single; fnt : fonttype;
+          scale : boolean; mi,ma,fm : single; nc,nf:integer;
+          shape : boolean; cnv,inv : Tsimplefunctiontype; sf : single;
+          fx : boolean; end;
+    xzeropos, yzeropos : integer;
+    xdelayed : boolean;
+
 {==============================================================================}
 
 function  xyget(n:integer):single; begin result := getn(n); end;
@@ -502,6 +543,7 @@ function posx(x:double):integer; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
  {berekent de x positie op het scherm}
 var pos : double;
 begin
+   if xshape then x := xinv(x);
    if xlog then if (x<=0) then x := min(xmi,xma)/2;
    if xlog then pos := xorg + ln(x/xmi)/dxlog*xlen
            else pos := xorg + (x-xmi)/(xma-xmi)*xlen;
@@ -513,6 +555,7 @@ function posx2(x:double):integer; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
  {berekent de x positie op het scherm}
 var pos : double;
 begin
+   if xshape then x := xinv(x);
    with graphs[igraph].as_[0] do pos := org + (x-mi)/(ma-mi)*len;
    if (pos<-32768) then pos := -32768 else if (pos>32767) then pos := 32767;
    posx2 := round(pos);
@@ -522,6 +565,7 @@ function posy(y:single):integer; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
  {berekent de y positie op het scherm}
 var pos : double;
 begin
+   if yshape then y := yinv(y);
    if ylog then if (y<=0) then y := ymi/2;
    if ylog then pos := yorg - ln(y/ymi)/dylog*ylen
            else pos := yorg - (y-ymi)/(yma-ymi)*ylen;
@@ -533,6 +577,7 @@ function posy2(y:single;n:integer):integer; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
  {berekent de y positie op het scherm}
 var pos : double;
 begin
+   if yshape then y := yinv(y);
    with graphs[igraph].as_[n] do pos := org - (y-mi)/(ma-mi)*len;
    if (pos<-32768) then pos := -32768 else if (pos>32767) then pos := 32767;
    posy2 := round(pos);
@@ -554,26 +599,35 @@ end;
 
 function xwaarde(x:integer):double; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
  {berekent x waarde bij een bepaalde positie scherm}
+var xw : double;
 begin
    if (x<xoff) then x := xoff else if (x>cwidth+xoff) then x := cwidth+xoff;
    with graphs[igraph].as_[0] do
-   if log then xwaarde := mi * exp((x-org)/len*dlog)
-          else xwaarde := mi + (x-org)/len*(ma-mi);
+     begin
+       if log then xw := mi * exp((x-org)/len*dlog)
+              else xw := mi + (x-org)/len*(ma-mi);
+       if shpe then result := cnv(xw) else result := xw;
+     end;
 end;
 
 function ywaarde(y,n:integer):single; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
  {berekent y waarde bij een bepaalde positie scherm voor xyyaxis n}
+var yw : single;
 begin
    if (y<yoff) then y := yoff else if (y>cheight+yoff) then y := cheight+yoff;
    if (n=0) then {actuele yas}
      begin
-       if ylog then ywaarde := ymi * exp((yorg-y)/ylen*dylog)
-               else ywaarde := ymi + (yorg-y)/ylen*(yma-ymi);
+       if ylog then yw := ymi * exp((yorg-y)/ylen*dylog)
+               else yw := ymi + (yorg-y)/ylen*(yma-ymi);
+       if yshape then result := yconv(yw) else result := yw;
      end
    else
      with graphs[igraph].as_[n] do
-       if log then ywaarde := mi * exp((org-y)/len*dlog)
-              else ywaarde := mi + (org-y)/len*(ma-mi);
+      begin
+       if log then yw := mi * exp((org-y)/len*dlog)
+              else yw := mi + (org-y)/len*(ma-mi);
+       if shpe then result := cnv(yw) else result := yw;
+      end;
 end;
 
 procedure polarwaarde(xp,yp:integer;var x,h : single;var r:integer); {XXXXXXXXX}
@@ -662,7 +716,7 @@ begin
 end;
 
 procedure setformat(f:single); {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
-var i,n : integer;
+var n : integer;
     w : single;
 begin
   efac := 0; eexp := ''; endec := 0; if (f=0) then exit;
@@ -672,7 +726,7 @@ begin
   endec := round(frac(abs(f))*10);
   efac := w;
   if (prmi(4)>0) then eexp := 'e'+inttostr(n)
-    else eexp := 'E'+inttostr(n)
+    else eexp := 'E'+inttostr(n);
 end;
 
 function lintext(w:single;ndec:integer):string; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
@@ -723,6 +777,16 @@ begin
    logtxt := s;
 end;
 
+function formtext(w:single):string; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+var s : string;
+begin
+  with fscale do begin
+    if fix then str(w:1:ndec,s) else
+    begin w := w * fac; str(w:1:ndec,s); s := s + exp; end;
+  end;
+  result := s;
+end;
+
 function ndecim(f:single):integer; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
   {bepaalt hoeveel decimalen nodig zijn voor getal f}
 begin
@@ -732,11 +796,11 @@ begin
   {if (f<1) then} ndecim := -trunc(log10(f*1.001))+1;
 end;
 
-function signif(t:single;n : integer):string; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+function signif(t:extended;n : integer):string; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
   {geeft getal met n sign cijfers in sci notatie}
 var s,ss : string;
     l,i : integer;
-    tt : single;
+    tt : extended;
 begin
    if (t=0) then begin signif:= '0'; exit; end;
    tt := t; t := abs(t);
@@ -748,11 +812,11 @@ begin
      end
    else
      begin
-      str(t:20:-1,ss); s := copy(ss,2,n+1);
+      str(t:24:-1,ss); s := copy(ss,2,n+1);
       if (prmi(4)>0) then s := s + 'e' else s := s + 'E';
-      if (ss[16]='-') then s := s + '-';
-      if (ss[19]<>'0') then s := s + ss[19];
-      s := s + ss[20];
+      i := pos('E',ss);
+      ss := copy(ss,i+1,9); ss := inttostr(strtoint(ss));
+      s := s + ss;
     end;
    if (tt<0) then s := '-' + s;
    result := s;
@@ -760,44 +824,50 @@ end;
 
 {------------------------------------------------------------------------------}
 
-procedure xgrid(xp:integer; fine:boolean); {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+procedure xgrid(xp:integer; fine:boolean; clr:Tcolor); {XXXXXXXXXXXXXXXXXXXXXXX}
  {tekent gridline voor x-as}
-var i,y,mode : integer;
+var i,y,mode : integer; pcol : Tcolor;
 begin
+  pcol := xypen.color;
   if (xp=xorg) then exit;
   if fine then mode := graphs[igraph].xgridf{ * res}
           else mode := graphs[igraph].xgridc{ * res};
   if (mode<0) then exit;
 
   if (mode=0) then
-    begin xypen.style := pssolid; xyline(-1,xp,yorg,xp,yorg-ylen); end
+    begin xypen.style := pssolid; xypen.color := clr;
+      xyline(-1,xp,yorg,xp,yorg-ylen); end
   else
     begin
       if dowmf then if fine then addfine(xp) else addcoarse(xp)
       else
        for i := 0 to (ylen div res) do if (i and mode = 0) then
-           begin y := yorg-i*res; xypixel(xp,y,xypen.color); end;
+           begin y := yorg-i*res; xypixel(xp,y,clr); end;
     end;
+  xypen.color := pcol;
 end;
 
-procedure ygrid(yp:integer; fine:boolean); {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+procedure ygrid(yp:integer; fine:boolean; clr:Tcolor); {XXXXXXXXXXXXXXXXXXXXXXX}
  {tekent gridline voor x-as}
-var i,x,mode : integer;
+var i,x,mode : integer; pcol : Tcolor;
 begin
+  pcol := xypen.color;
   if (yp=yorg) then exit;
   if fine then mode := graphs[igraph].ygridf{ * res}
           else mode := graphs[igraph].ygridc{ * res};
   if (mode<0) then exit;
 
   if (mode=0) then
-    begin xypen.style := pssolid; xyline(-1,xorg,yp,xorg+xlen,yp); end
+    begin xypen.style := pssolid; xypen.color := clr;
+      xyline(-1,xorg,yp,xorg+xlen,yp); end
   else
     begin
       if dowmf then if fine then addfine(yp) else addcoarse(yp)
       else
       for i := 0 to (xlen div res) do if (i and mode = 0) then
-        begin x := xorg+i*res; xypixel(x,yp,xypen.color) end;
+        begin x := xorg+i*res; xypixel(x,yp,clr) end;
     end;
+  xypen.color := pcol;
 end;
 
 procedure drawlastpoint; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
@@ -1485,7 +1555,9 @@ begin
 end;
 
 procedure initcanvas(bcolor,fcolor:Tcolor;scale:single;clear:boolean); {XXXXXXXX}
-var i,j : integer;
+var i,j,t : integer;
+    comp : Tcomponent;
+const stop = 10;
 const labels : array[0..4] of string = ('X','Y1','Y2','Y3','Y4');
 begin
   screen.cursor := crdefault; crossx := 0; crossy := 0; cinit := true;
@@ -1516,15 +1588,26 @@ begin
   ngraph := 0; igraph := 0; grafoky := false; zgraph := 0;
   nsymbols := 0; lastsymok := false; istracking := 0; track := 0;
   lastpoint := false; pblabel := 0; rul3d := false; status := 1;
-  xylegendclear; xysetusercoordinates(0,0);
+  xylegendclear; xysetusercoordinates(0,0); gridcolor := -1;
   if not (doprint or dowmf) then
-  with xybuffers[0] do
-     begin lbl := 0; ngr := 0; cw := cwidth; ch := cheight;
-     cvm := cvmode; bmp := false; str := false; b4d := false;
-     if cvm then form := screen.activeform.name
-       else if xypaintbox.owner is Tform then form := xypaintbox.owner.name
-       else form := screen.activeform.name;
-     init3d; end;
+  with xybuffers[0] do begin
+    lbl := 0; ngr := 0; cw := cwidth; ch := cheight; form := '';
+    cvm := cvmode; bmp := false; str := false; b4d := false;
+ (* NOTE: the following try .. except statement determines the active form;
+    in some cases this may present problems. In that case you can simply
+    discard the whole statement and leave form empty; this does not affect
+    the functioning of XYGRAH. *)
+{}  try
+{}    if cvm then form := screen.activeform.name
+{}    else
+{}      begin
+{}        comp := xypaintbox; t := 0;
+{}        repeat comp := comp.owner; inc(t);
+{}        until (comp is Tform) or (t>=stop);
+{}        if (t<stop) then form := comp.name;
+{}      end;
+{}  except end;
+    init3d; end;
   for i := 0 to 4 do xylabels[i] := labels[i];
   deleteobject(clip0);
   clip0 := createrectrgn(1,1,cwidth-1,cheight-1);
@@ -1535,9 +1618,11 @@ procedure xycanvasgraph(canvas:Tcanvas;width,height:integer; {XXXXXXXXXXXXXXXXX}
    bcolor,fcolor:Tcolor; scale:single; clear:boolean);
 begin
   if init then initxygraph;
-  xycanvas := canvas; res := 1; cvmode := true;
-  cwidth := width; cheight := height;
-  initcanvas(bcolor,fcolor,scale,clear);
+  xycanvas := canvas; cvmode := true;
+  if not dowmf then res := 1;
+  cwidth := width*res; cheight := height*res;
+  initcanvas(bcolor,fcolor,scale,clear and not dowmf);
+  if dowmf then initwmf;
 end;
 
 procedure restorefromprint; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
@@ -1627,7 +1712,9 @@ begin
                   and (graphs[igraph].yf0<=0) and (graphs[igraph].yf1>=1);
   graphs[igraph].nclip := noclip; grafoky := false;
   graphs[igraph].dat := nil; graphs[igraph].trck := 0;
-  for i := 0 to 4 do graphs[igraph].as_[i].on := false; coordas := 0;
+  for i := 0 to 4 do with graphs[igraph].as_[i] do
+    begin on := false; grcolr := -2; end;
+  coordas := 0; gridcolor := -1; graphs[igraph].gridcol := -2;
   with graphs[igraph].as_[0] do begin org := xorg; len := xlen; end;
   xylinewidth(1); xypen.style := pssolid;
   xybrush.color := backcolor; xybrush.style := bssolid;
@@ -1642,10 +1729,11 @@ begin
   if dowmf then rop2wmf(r2_copypen) else setrop2(xycanvas.handle,r2_copypen);
   start3d; status := 2; useroff := true; dolabels := false;
   xygraphdata[0] := xygraphdata[igraph];
-  autoreset(2);
+  autoreset(2); xzeropos := -1; yzeropos := -1; xdelayed := false;
+  setscale := false; shape := false; xshape := false; yshape := false;
 end;
 
-procedure xysetgridlines(xcoarse,xfine,ycoarse,yfine:integer); {XXXXXXXXXXXXXXX}
+procedure xysetgridlines(xcoarse,xfine,ycoarse,yfine:integer); overload; {XXXXX}
  {set de parameter voor de raster lijnen}
 var i : integer;
 begin
@@ -1657,6 +1745,10 @@ begin
           ygridc := ycoarse; ygridf := yfine; end
 end;
 
+procedure xysetgridlines(color:Tcolor); overload; {XXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+ {set de kleur van de rasterlijnen}
+begin if (color<0) then color := -1; gridcolor := color; end;
+
 procedure xysetreduction(xr,yr:integer); {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
 begin
   xred := xr; yred := yr; nored := (xr<0) and (yr<0);
@@ -1665,12 +1757,41 @@ end;
 procedure xysetratio(r:single); {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
 begin if (r<0) then yxratio := 0 else yxratio := r; end;
 
+procedure xyaxisscale(min,max:single;nc,nf:integer;fm:single;fix:boolean); {XXX}
+ {set as met vaste indeling}
+var n : integer;
+    w : single;
+begin
+  setscale := true;
+  if abs(max-min)<=(abs(max)+abs(min))*1e-6 then
+    begin min := min-1; max := min+2; end;
+  if (nc<1) then nc := 1; if (nf<1) then nf := 1;
+  fscale.min := min; fscale.max := max; fscale.fix := fix;
+  fscale.nc := nc; fscale.nf := nf; fscale.fm := fm;
+
+  n := trunc(abs(fm)); w := 1;
+  w := power(10,n); if (fm>0) then w := 1/w;
+  if (fm<0) then n := -n;
+  fscale.ndec := round(frac(abs(fm))*10);
+  fscale.fac := w;
+  if (prmi(4)>0) then fscale.exp := 'e'+inttostr(n)
+    else fscale.exp := 'E'+inttostr(n);
+end;
+
+procedure xyaxisshape(conv,inv : Tsimplefunctiontype; f : single); {XXXXXXXXXXX}
+begin
+  shape := true; fconv := conv; finv := inv;
+  if (f<=0) then f := 1; fsf := f;
+end;
+
 procedure xyxaxis(cl:Tcolor;x1,x2,incr,zmx:single;txt:string;code:integer;grid,log,fix:boolean;fit:integer);
   {tekent x-as}
 var grof,fijn,p,pf,lf,tp,t : single;
-    i,l,xp,n1,n2,n3,yp,ypp,nf,rf,lext,n,bi,d,ang,dy,htxt : integer;
+    x11,x22 : double;
+    i,l,xp,n1,n2,n3,yp,ypp,nf,rf,rff,lext,n,bi,d,ang,dy,htxt : integer;
     s,ext : string;
-    draw,reverse : boolean;
+    draw,reverse,onzero,del : boolean;
+    gcol : Tcolor;
 procedure dologtic(p:single);
 var i,px : integer;
     pp : single;
@@ -1684,13 +1805,13 @@ begin
           if i in logtics[n2] then
           begin
             if draw and (tsize>0) then xyline(-1,px,yp,px,yp+tsize*bi);
-            if grid then xgrid(px,false);
+            if grid then xgrid(px,false,gcol);
           end
         else
         if i in logtics[n3] then
           begin
             if draw and (hsize>0) then xyline(-1,px,yp,px,yp+hsize*bi);
-            if grid then xgrid(px,true);
+            if grid then xgrid(px,true,gcol);
           end;
         if draw then
           if (i in logtics[n1]) and not (i in [70,90]) then
@@ -1705,16 +1826,34 @@ begin
     end;
 end;
 begin {------------------------------------------------------------------------}
-   xyfinish; useroff := false;
-   grafokx := (x1<>x2) and grafok and (code in [0..4]);
-   if (not grafokx) or (status>3) then exit;
-   reverse := (x1>x2); if reverse then rf := -1 else rf := 1;
+   xyfinish; useroff := false; del := (fit and 1024>0); fit := fit and 3;
+   xshape := shape and not log; if xshape then
+     begin xconv := fconv; xinv := finv; xsf := fsf; end;
+   if not del then
+   begin
+     grafokx := ((x1<>x2) or setscale) and grafok and (abs(code) in [0..4]);
+     if (not grafokx) or (status>3) then exit;
+     if xshape then setscale := false;
+     xas.cl := cl; xas.x1 :=x1; xas.x2 := x2; xas.incr := incr; xas.zmx := zmx;
+     xas.txt := txt; xas.code := code; xas.grid := grid; xas.log := log; xas.fix := fix;
+     xas.fit := fit; for i := 1 to 39 do xas.sets[i]:= getn(i);
+     storefont(xas.fnt); xas.scale := setscale;
+     xas.mi := fscale.min; xas.ma := fscale.max; xas.fm := fscale.fm;
+     xas.nc := fscale.nc;  xas.nf := fscale.nf; xas.fx := fscale.fix;
+     xas.shape := xshape; xas.cnv := xconv; xas.inv := xinv; xas.sf := xsf;
+   end;
+   if setscale then begin x1 := fscale.min; x2 := fscale.max; end;
+   reverse := (x1>x2); if reverse then rf := -1 else rf := 1; rff := 1;
    if mode3d then log := false; status := 3; yascount := 0;
-   if (x1<=0) or (x2<=0) then log := false;
+   if (x1<=0) or (x2<=0) or setscale then log := false;
    if (cl=-255) then begin draw := true; cl := backcolor; end
      else draw := (colortorgb(cl)<>colortorgb(backcolor));
    if not draw then cl := frontcolor;
    xypen.color := cl; xyfont.color := cl;
+   with graphs[igraph].as_[0] do begin
+     if (grcolr=-2) then grcolr := gridcolor;
+     if (grcolr=-1) then gcol := cl else gcol := grcolr; end;
+   onzero := (code<0) and not (log or del); code := abs(code);
    xybrush.Style := bsclear; if (code=0) then code :=1;
    if dowmf then
      begin checkwmfpen; checkwmffont; initgrid; end;
@@ -1724,8 +1863,8 @@ begin {------------------------------------------------------------------------}
      3 : begin yp := yorg-ylen; bi := 1; end;
      4 : begin yp := yorg-ylen; bi := -1; end;
     end;
+   if del and (xzeropos>=0) then yp := xzeropos;
    xlog := log; xincr := incr; xfix := fix;
-   xyzoomx := graphs[igraph].xf1-graphs[igraph].xf0;
    l := pos('|',txt); if (l=0) then ext := '' else
       begin ext := copy(txt,l+1,length(txt)); txt := copy(txt,1,l-1); end;
    if (ext='') then lext := 0 else lext := xycanvas.textwidth(ext);
@@ -1734,6 +1873,8 @@ begin {------------------------------------------------------------------------}
    hsize := round(prm(24)*tsize);
    zmax := 1/prm(10); lmax := prm(11);
    ang := prmi(25); htxt := 0;
+   if onzero then draw := false;
+   if del then xdelayed := false else xdelayed := onzero;
 
    if draw then xyline(-1,xorg,yp,xorg+xlen+1,yp);
 
@@ -1741,8 +1882,12 @@ begin {------------------------------------------------------------------------}
      begin
        x1 := x1*rf; x2 := x2*rf;
        if dolabels then yspan := 0 else yspan := (x2-x1)/aspect;
-       xmi := x1 + graphs[igraph].as_[0].zf0*(x2-x1);
-       xma := x1 + graphs[igraph].as_[0].zf1*(x2-x1);
+       if setscale then begin xmi := x1; xma := x2; end
+       else
+         begin
+          xmi := x1 + graphs[igraph].as_[0].zf0*(x2-x1);
+          xma := x1 + graphs[igraph].as_[0].zf1*(x2-x1);
+         end;
      end
    else
      begin
@@ -1794,12 +1939,33 @@ begin {------------------------------------------------------------------------}
    else{lin}
 
      begin
-       if not fix then setformat(prm(26));
+       if not setscale then if not fix then setformat(prm(26));
        zmaxx := zmx/(x2-x1);
        if (zmaxx<zmax) then zmaxx := zmax;
        if fix then t := prm(20){5} else t := prm(21){8};
-       if dolabels then begin grof := 1; fijn := 0.5; end else
-       verdeling(xmi,xma,incr,xlen,round(t*xycharwidth)+lext,grof,fijn,ndecx,fit);
+       if dolabels then begin grof := 1; fijn := 0.5; x11 := xmi; x22 := xma; end else
+       if setscale then with fscale do
+         begin grof := abs(max-min)/nc; fijn := grof/nf;
+           x11 := xmi; x22 := xma; end
+       else
+         begin
+           verdeling(xmi,xma,incr,xlen,round(t*xycharwidth)+lext,grof,fijn,ndecx,fit);
+           if xshape then
+             begin
+               xmi := xmi * rf; xma := xma * rf; rf := 1;
+               x11 := xconv(xmi); x22 := xconv(xma);
+               if (x11>x22) then rff := -1;
+               x11 := x11 * rff; x22 := x22 * rff;
+               verdeling(x11,x22,incr,xlen,round(t/xsf*xycharwidth)+lext,
+                 grof,fijn,ndecx,0);
+             end
+           else begin x11 := xmi; x22 := xma; end;
+         end;
+       if ( (x11>=0) and (x22>=0) ) then
+          if (x22<x11) then yzeropos := xorg+xlen else yzeropos := xorg else
+       if ( (x11<=0) and (x22<=0) ) then
+          if (x22>x11) then yzeropos := xorg+xlen else yzeropos := xorg else
+       yzeropos := posx(0);
        with graphs[igraph].as_[0] do if (fit>0) then
          begin zf0x := (xmi-x1)/(x2-x1); zf1x := (xma-x1)/(x2-x1); end
        else begin zf0x := zf0; zf1x := zf1; end;
@@ -1809,10 +1975,10 @@ begin {------------------------------------------------------------------------}
        if (ndecx>nincx) then ndecx := nincx; nf := round(grof/fijn);
 
        d := trunc(1/xypixx)-(xycharwidth div 3);
-       p := grof*trunc(xmi/grof-1);
-       while (posx(p)<=xorg+xlen) do
+       if setscale then p := xmi else p := grof*trunc(x11{xmi}/grof-1);
+       while (posx(p*rff)<=xorg+xlen) do
          begin
-           xp := posx(p);
+           xp := posx(p*rff);
            if (xp>=xorg) then
            if (not dolabels) or ( (p>0.5) and (pf<nlabels+0.5) ) then
              begin
@@ -1827,58 +1993,84 @@ begin {------------------------------------------------------------------------}
                      end
                    else
                      begin
-                       if fix then str(p*rf:1:plus(ndecx),s) else
-                       begin if (abs(p)<grof/2) then p := 0; s := lintext(p*rf,ndecx); end;
+                       if setscale then s := formtext(p*rf*rff) else
+                       if fix then str(p*rf*rff:1:plus(ndecx),s) else
+                       begin
+                         if (abs(p)<grof/2) then p := 0;
+                         s := lintext(p*rf*rff,ndecx); end;
                        s := s + ext;
+                       if (prmi(27)=1) then if (abs(p)<grof/2) then s := '';
                      end;
                    dy := xycharheight; ypp := yp+(tsize+res-1)*bi;
                    if (ang<>0) then labelangle(cl,s,1,bi,xp,ypp,ang,dy)
                    else simpletext(cl,s,xp,ypp,0,bi);
                    if (dy>htxt) then htxt := dy;
                  end;
-               if grid then xgrid(xp,false);
+               if grid then xgrid(xp,false,gcol);
              end;
            for i := 1 to nf-1 do
              begin
-               pf := p+i*fijn; xp := posx(pf);
+               pf := p+i*fijn; xp := posx(pf*rff);
                if (xp>=xorg) and (xp<=xorg+xlen) then
                if (not dolabels) or ( (pf>1) and (pf<nlabels) ) then
                  begin
                    if draw and (hsize>0) then xyline(-1,xp,yp,xp,yp+hsize*bi);
-                   if grid then xgrid(xp,true);
+                   if grid then xgrid(xp,true,gcol);
                  end;
              end;
            p := p+grof;
          end;
        ndecx := ndecim(xypixx);
      end;
-   if dowmf then checkwmffont;
+   setscale := false; shape := false;
 
+   if dowmf then checkwmffont;
    if (txt<>'') and draw then
      begin
        xp := xorg+xlen div 2; yp := yp+(tsize+htxt)*bi;
        simpletext(cl,txt,xp,yp,0,bi);
      end;
-   if dowmf and draw then dogrid(yorg,yorg-ylen,true);
+   if dowmf and draw then dogrid(yorg,yorg-ylen,true,gcol);
 
    if stil then exit;
    if not xlog then begin xmi := xmi*rf; xma := xma*rf; end;
+   x11 := x11 * rff; x22 := x22 * rff;
+   xzeropos := -1; if del then exit;
 
-   with graphs[igraph] do begin xf0 := as_[0].zf0x; xf1 := as_[0].zf1x; end;
+   with graphs[igraph] do
+     begin xf0 := as_[0].zf0x; xf1 := as_[0].zf1x; xyzoomx := xf1-xf0; end;
    with graphs[igraph].as_[0] do begin on := true; log := xlog; col := cl;
      mi := xmi; ma := xma; dlog := dxlog; org := xorg; len := xlen; side := false;
      ndec := ndecx; ninc := nincx; pix := xypixx; typ := 0;
      graphs[igraph].zmxx := zmaxx;
      if xlog then incr := 0 else incr := xincr;
+     shpe := xshape; cnv := xconv;
      end;
    with xygraphdata[igraph].xaxis do
-     begin on := true; min := xmi; max := xma; log := xlog; end;
+     begin on := true; min := x11; max := x22; log := xlog; end;
    xygraphdata[0] := xygraphdata[igraph];
    autoreset(3);
 end;
 
 procedure xyxaxis(cl:Tcolor;x1,x2,incr,zmx:single;txt:string;grid,log,fix:boolean);
 begin xyxaxis(cl,x1,x2,incr,zmx,txt,0,grid,log,fix,0); end;
+
+procedure plotxdelayed; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+var sets : array[1..39] of single;
+    i : integer;
+    ft : fonttype;
+begin
+  for i := 1 to 39 do begin sets[i] := getn(i); setn(i,xas.sets[i]); end;
+  storefont(ft); recallfont(xas.fnt);
+  with xas do
+    begin
+      if scale then xyaxisscale(mi,ma,nc,nf,fm,fx);
+      if shape then xyaxisshape(cnv,inv,sf);
+      xyxaxis(cl,x1,x2,incr,zmx,txt,abs(code),grid,log,fix,fit+1024);
+    end;
+  recallfont(ft);
+  for i := 1 to 39 do setn(i,sets[i]);
+end;
 
 procedure xyxlabelaxis(cl:Tcolor;labls:array of string;txt:string;code,mode:integer;grid:boolean);
 var i,n,n1,n2 : integer;
@@ -1887,6 +2079,7 @@ begin
   n1 := 0; if (labls[0]='') then n1 := 1;
   n2 := length(labls)-1;
   n := n2-n1 + 1; if (n=0) then exit;
+  setscale := false; xshape := false; yshape := false; shape := false; 
   dolabels := true; nlabels := n; yxratio := 0;
   setlength(labels,n+1); ts := getn(24); setn(24,0);
   for i := 1 to n do labels[i] := labls[i-1+n1];
@@ -1908,6 +2101,7 @@ var i,xp,yp,{l,}t,n,eerste,xsize: integer;
     draw : boolean;
     ofst : TFontStyles;
     mlabels : array of string;
+    gcol : Tcolor;
 begin
   xyfinish; useroff := false;
   grafokx := grafok and (code in [1..3]); if not grafokx then exit;
@@ -1918,7 +2112,6 @@ begin
   ofst := xyfont.style;
   if dowmf then begin checkwmfpen; initgrid; end;
   xlog := false; xfix := true; nincx := 0; xincr := 1; status := 3; yascount := 0;
-  xyzoomx := graphs[igraph].xf1-graphs[igraph].xf0;
 
   if (jaar=0) then
     begin datetimetosystemtime(date,st); jaar := st.wyear; end;
@@ -1927,15 +2120,20 @@ begin
   dag[1] := 0; dag[2] := maanddagen[1];
   dag[3] := dag[2]+maanddagen[2]; if isleapyear(jaar) then inc(dag[3]);
   for i := 4 to 13 do dag[i] := dag[i-1] + maanddagen[i-1];
-  yxratio := 0; yspan := 0;
+  yxratio := 0; yspan := 0; setscale := false;
+  xshape := false; yshape := false; shape := false; 
 
   case code of
   1 : begin
         tsize := round(prm(23)*xycharwidth+0.5);
         hsize := round(prm(24)*tsize);
         xsize := xycharwidth div 2 + 1;
-        xmi := graphs[igraph].xf0*(dag[13]+1);
-        xma := graphs[igraph].xf1*(dag[13]+1);
+        xmi := graphs[igraph].as_[0].zf0*(dag[13]+1);
+        xma := graphs[igraph].as_[0].zf1*(dag[13]+1);
+        with graphs[igraph].as_[0] do begin
+           zf0x := zf0; zf1x := zf1;
+           if (grcolr=-2) then grcolr := gridcolor;
+           if (grcolr=-1) then gcol := cl else gcol := grcolr; end;
         xypixx := (xma-xmi)/xlen; zmaxx := 2/365;
         if draw then
           begin
@@ -1957,13 +2155,13 @@ begin
           begin xp := posx(dag[i]+0.5); if (xp>=xorg) and (xp<=xorg+xlen) then
             begin
               if draw and (tsize>0) then xyline(-1,xp,yorg,xp,yorg+tsize);
-              if grid then xgrid(xp,false);
+              if grid then xgrid(xp,false,gcol);
             end;
           end;
         n := 2-eerste-7;
         if grid then repeat
            n := n + 7; xp := posx(n);
-           if (xp>=xorg) and (xp<=xorg+xlen) then xgrid(xp,true);
+           if (xp>=xorg) and (xp<=xorg+xlen) then xgrid(xp,true,gcol);
         until (n>366);
 
         if draw then begin
@@ -1983,9 +2181,11 @@ begin
          xypen.color := cl; xyfont.style := [];
          ndecx := ndecim(xypixx);
 
-        if dowmf then dogrid(yorg,yorg-ylen,true);
+        if dowmf then dogrid(yorg,yorg-ylen,true,gcol);
         grafokx := true; xyfont.style := ofst;
 
+         with graphs[igraph] do
+           begin xf0 := as_[0].zf0x; xf1 := as_[0].zf1x; xyzoomx := xf1-xf0; end;
          with graphs[igraph].as_[0] do begin on := true; log := xlog; col := cl;
            mi := xmi; ma := xma; dlog := dxlog; org := xorg; len := xlen; side := false;
            ndec := ndecx; ninc := nincx; pix := xypixx; typ := code; incr := xincr;
@@ -2038,7 +2238,7 @@ var l,xp,yp,yp1,yp2,yp3,lw,lw1,lw2,lw3,xend,i,dow,dx,
     d,m,y,h,n,s,ms:word;
     dt,dt0,step1,step2,f : double;
     dl,dl1,dl2,dl3,ff : single;
-    color1 : Tcolor;
+    color1,gcol : Tcolor;
 const hrs : double = 24;         ihrs : double = 1/24;
       mins : double = 24*60;     imins : double = 1/24/60;
       secs : double = 24*60*60;  isecs : double = 1/24/60/60;
@@ -2058,15 +2258,16 @@ procedure tic; {---------------------------------------------------------------}
 begin
   if (xp<xorg) or (xp>xend) then exit;
   if draw and (hsize>0) then xyline(-1,xp,yorg,xp,yorg+hsize);
-  if grid then xgrid(xp,false);
+  if grid then xgrid(xp,false,gcol);
 end;
 procedure ticplus(dt:double); {------------------------------------------------}
 var s : string; {l,}yp,dh : integer;
 begin
   if (xp<xorg) or (xp>xend) then exit;
   xypen.color := color1; xyfont.color := color1;
-  if grid then xgrid(xp,false);
+  if grid then xgrid(xp,false,gcol);
   if not draw then exit;
+  setscale := false; xshape := false; yshape := false; shape := false; 
 
   if (hsize>0) then xyline(-1,xp,yorg,xp,yorg+hsize);
 
@@ -2087,7 +2288,7 @@ var s,sd,sm,sy,s1,s2,s3:string;
 begin
   if (xp<xorg) or (xp>xend) then exit;
 
-  if grid then xgrid(xp,true);
+  if grid then xgrid(xp,true,gcol);
   if not draw then exit;
 
   if (tsize>0) then xyline(-1,xp,yorg,xp,yorg+tsize);
@@ -2246,6 +2447,9 @@ begin {++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
    else draw := (colortorgb(cl)<>colortorgb(backcolor));
    if not draw then cl := frontcolor;
    xypen.color := cl; xyfont.color := cl;
+   with graphs[igraph].as_[0] do begin
+     if (grcolr=-2) then grcolr := gridcolor;
+     if (grcolr=-1) then gcol := cl else gcol := grcolr; end;
    color1 := mixcolor(cl,backcolor,1,2);
    xybrush.Style := bsclear; lines := 0; status := 3; yascount := 0;
    nd := (dcode and 4 > 0); dcode := dcode and 3; nodate := false;
@@ -2260,7 +2464,6 @@ begin {++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
 
    if dowmf then begin checkwmfpen; initgrid; end;
    xlog := false; xincr := 0; xfix := true;
-   xyzoomx := graphs[igraph].xf1-graphs[igraph].xf0;
    if (x1<dtmin) then x1 := dtmin;
    if (x2<dtmin) then x2 := dtmin;
    if (mode>=0) then f := 2 else f := isecs+isecs;
@@ -2276,8 +2479,10 @@ begin {++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
    if draw then xyline(-1,xorg,yorg,xorg+xlen+1,yorg);
 
    yspan := 0; xend := xorg+xlen;
-   xmi := x1 + graphs[igraph].xf0*(x2-x1);
-   xma := x1 + graphs[igraph].xf1*(x2-x1);
+   xmi := x1 + graphs[igraph].as_[0].zf0*(x2-x1);
+   xma := x1 + graphs[igraph].as_[0].zf1*(x2-x1);
+   with graphs[igraph].as_[0] do
+      begin zf0x := zf0; zf1x := zf1; end;
 
    zmaxx := 2/(x2-x1); if (Mode<0) then zmaxx := zmaxx/24/60/60;
    ff := 1/prm(22); {correctiefactor}
@@ -2337,16 +2542,18 @@ begin {++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
        p := pos('|',txt); if (p>0) then
          if tmode then txt := copy(txt,p+1,length(txt)-p)
                   else txt := copy(txt,1,p-1);
-       if (htxt>0) then yp := yp1+htxt-xycharheight else           
+       if (htxt>0) then yp := yp1+htxt-xycharheight else
        if (lines<2) then yp := yp1 else
        if (lines=2) then yp := yp2 else yp := yp3;
        xp := xorg+xlen div 2; yp := yp+xycharheight;
        simpletext(cl,txt,xp,yp,0,1);
      end;
-   if dowmf and draw then dogrid(yorg,yorg-ylen,true);
+   if dowmf and draw then dogrid(yorg,yorg-ylen,true,gcol);
 
    if stil then exit;
 
+   with graphs[igraph] do
+     begin xf0 := as_[0].zf0x; xf1 := as_[0].zf1x; xyzoomx := xf1-xf0; end;
    with graphs[igraph].as_[0] do begin on := true; log := xlog; col := cl;
      mi := xmi; ma := xma; dlog := dxlog; org := xorg; len := xlen; side := false;
      ndec := ndecx; ninc := nincx; pix := xypixx; typ := 4; incr := xincr;
@@ -2365,21 +2572,24 @@ begin
   n1 := 0; if (labls[0]='') then n1 := 1;
   n2 := length(labls)-1;
   n := n2-n1 + 1; if (n=0) then exit;
+  setscale := false; yshape := false; shape := false; 
   dolabels := true; nlabels := n;
   setlength(labels,n+1); yxratio := 0; ts := getn(44); setn(44,0);
   for i := 1 to n do labels[i] := labls[i-1+n1];
   if (mode=0) then y1 := 0.5 else y1 := 0; y2 := n+1-y1;
   xyyaxis(cl,y1,y2,1,2,txt,code,grid,false,false,0);
   dolabels := false; setn(44,ts);
+  if xdelayed then plotxdelayed;
 end;
 
 procedure xyyaxis(cl:Tcolor;y1,y2,incr,zmx:single;txt:string;code:integer;grid,log,fix:boolean;fit:integer);
  {tekent y-as, code =positie}
-var grof,fijn,p,pf,z,dy,yc,rf,lf,tp : single;
-    xp,bi,ltxt,i,l,h,n1,n2,n3,yp,xp2,xpp,ypp,nf,xsize,ang,dx : integer;
+var grof,fijn,p,pf,z,dy,yc,rf,lf,tp,y11,y22 : single;
+    xp,bi,ltxt,i,l,h,n1,n2,n3,yp,xp2,xpp,ypp,nf,xsize,ang,dx,rff : integer;
     s : string;
-    draw,reverse,sidew : boolean;
-const asnr : array[1..8] of integer = (1,2,3,4,1,1,4,4);
+    draw,reverse,sidew,onzero : boolean;
+    gcol : Tcolor;
+const asnr : array[0..10] of integer = (1,1,2,3,4,1,1,4,4,1,4);
 procedure dologtic(p:single); {------------------------------------------------}
 var i,py : integer;
     pp : single;
@@ -2393,13 +2603,13 @@ begin
            if i in logtics[n2] then
              begin
               if draw and (tsize>0) then xyline(-1,xp,py,xp+tsize*bi,py);
-              if grid then ygrid(py,false);
+              if grid then ygrid(py,false,gcol);
              end
            else
            if i in logtics[n3] then
              begin
               if draw and (hsize>0) then xyline(-1,xp,py,xp+hsize*bi,py);
-              if grid then ygrid(py,true);
+              if grid then ygrid(py,true,gcol);
              end;
            if draw then if i in logtics[n1] then
              begin
@@ -2415,12 +2625,17 @@ begin
 end;
 begin {------------------------------------------------------------------------}
    xyfinish; useroff := false;
-   grafoky := (y1<>y2) and grafok and (code in [0..8]);
+   grafoky := ((y1<>y2) or setscale) and grafok and (abs(code) in [0..8]);
    if not grafoky then exit;
-   reverse := (y1>y2); if reverse then rf := -1 else rf := 1;
-   {if mode3d then log := false;} status := 4; if (code=0) then code := 1;
-   if (y1<=0) or (y2<=0) then log := false;
-   xyzoomy := graphs[igraph].yf1-graphs[igraph].yf0;
+   yshape := shape and not log; if yshape then
+      begin yconv := fconv; yinv := finv; ysf := fsf; end;
+   if yshape then setscale := false;
+   if setscale then begin y1 := fscale.min; y2 := fscale.max; end;
+   reverse := (y1>y2); if reverse then rf := -1 else rf := 1; rff := 1;
+   {if mode3d then log := false;} status := 4;
+   onzero := (code<0); code := abs(code);
+   if (code=0) then code := 1;
+   if (y1<=0) or (y2<=0) or setscale then log := false;
    tsize := round(prm(43)*xycharwidth+0.5);
    hsize := round(prm(44)*tsize); xsize := round(xycharwidth*1.0);
    zmax := 1/prm(10); lmax := prm(11);
@@ -2434,6 +2649,9 @@ begin {------------------------------------------------------------------------}
    if not draw then cl := frontcolor;
    xypen.color := cl; xyfont.color := cl;
    xybrush.Style := bsclear;
+   with graphs[igraph].as_[asnr[code]] do begin
+     if (grcolr=-2) then grcolr := gridcolor;
+     if (grcolr=-1) then gcol := cl else gcol := grcolr; end;
    if dowmf then begin checkwmfpen; initgrid; end;
    ylog := log; sidew := (code>4);
    case code of
@@ -2442,6 +2660,7 @@ begin {------------------------------------------------------------------------}
      3 :    begin xp := xorg+xlen-res; bi := -1; end;
     4,7,8,10 : begin xp := xorg+xlen; bi := 1; end;
     end;
+   if onzero then if (yzeropos>=0) then xp := yzeropos;
    if draw then xyline(-1,xp,yorg,xp,yorg-ylen-1);
 
    if not ylog then
@@ -2455,8 +2674,12 @@ begin {------------------------------------------------------------------------}
            dy := (xf1-xf0); yc := (yf1+yf0)/2;
            yf0 := yc - dy/2; yf1 := yc + dy/2;
          end; end;
-       ymi := y1 + graphs[igraph].as_[asnr[code]].zf0*(y2-y1);
-       yma := y1 + graphs[igraph].as_[asnr[code]].zf1*(y2-y1);
+       if setscale then begin ymi := y1; yma := y2; end
+       else
+         begin
+           ymi := y1 + graphs[igraph].as_[asnr[code]].zf0*(y2-y1);
+           yma := y1 + graphs[igraph].as_[asnr[code]].zf1*(y2-y1);
+         end;
      end
    else
      begin
@@ -2508,12 +2731,31 @@ begin {------------------------------------------------------------------------}
    else {lin}
 
      begin
-       if not fix then setformat(prm(46));
+       if not setscale then if not fix then setformat(prm(46));
        if (zmaxy=0) then zmaxy := zmx/(y2-y1);
        if (zmaxy<zmax) then zmaxy := zmax;
        l := round(prm(40)*xycharheight);
        if dolabels then begin grof := 1; fijn := 0.5; end else
-       verdelings(ymi,yma,incr,ylen,l,grof,fijn,ndecy,fit);
+       if setscale then with fscale do
+         begin grof := abs(max-min)/nc; fijn := grof/nf; y11 := ymi; y22 := yma; end
+       else
+         begin
+           verdelings(ymi,yma,incr,ylen,l,grof,fijn,ndecy,fit);
+           if yshape then
+             begin
+               ymi := ymi * rf; yma := yma * rf; rf := 1;
+               y11 := yconv(ymi); y22 := yconv(yma);
+               if (y11>y22) then rff := -1;
+               y11 := y11 * rff; y22 := y22 * rff;
+               verdelings(y11,y22,incr,ylen,round(l/ysf),grof,fijn,ndecy,0);
+             end
+           else begin y11 := ymi; y22 := yma; end;
+       end;
+       if ( (y11>=0) and (y22>=0) ) then
+          if (y22<y11) then xzeropos := yorg-ylen else xzeropos := yorg else
+       if ( (y11<=0) and (y22<=0) ) then
+          if (y22>y11) then xzeropos := yorg-ylen else xzeropos := yorg else
+       xzeropos := posy(0);
        with graphs[igraph].as_[asnr[code]] do if (fit>0) then
          begin zf0x := (ymi-y1)/(y2-y1); zf1x := (yma-y1)/(y2-y1); end
        else begin zf0x := zf0; zf1x := zf1; end;
@@ -2521,42 +2763,47 @@ begin {------------------------------------------------------------------------}
        if dolabels then nincy := 0 else nincy := ndecim(incr);
        if (ndecy>nincy) then ndecy := nincy; nf := round(grof/fijn);
 
-       p := grof*trunc(ymi/grof-1);
-       while (posy(p)>=yorg-ylen) do
+       if setscale then p := ymi else p := grof*trunc(y11/grof-1);
+       while (posy(p*rff)>=yorg-ylen) do
          begin
-           if (posy(p)<=yorg) then
+           if (posy(p*rff)<=yorg) then
            if (not dolabels) or ( (p>0.5) and (pf<nlabels+0.5) ) then
              begin
                if draw then
                  begin
-                   yp := posy(p);
+                   yp := posy(p*rff);
                    if (tsize>0) then xyline(-1,xp,yp,xp+tsize*bi,yp);
                    if dolabels then s := labels[round(p)]
                    else
-                     if fix then str(p*rf:1:plus(ndecy),s) else
-                       begin if (abs(p)<grof/2) then p := 0; s := lintext(p*rf,ndecy); end;
+                     if setscale then s := formtext(p*rf*rff) else
+                     if (prmi(47)=1) and (abs(p)<grof/2) then s := '' else
+                     if fix then str(p*rf*rff:1:plus(ndecy),s) else
+                       begin
+                         if (abs(p)<grof/2) then p := 0;
+                         s := lintext(p*rf*rff,ndecy); end;
                    l := xycanvas.textwidth(s);
                    ypp := yp; yp := yp-xycharheight div 2; xpp := xp+(tsize+res)*bi;
                    if (ang<>0) then labelangle(cl,s,2,bi,xpp,ypp,ang,l)
                    else simpletext(cl,s,xpp+res*bi,ypp,bi,0);
                    if (l>ltxt) then ltxt := l;
                  end;
-               if grid or ( (p=0) and not mode3d ) then ygrid(posy(p),false);
+               if grid or ( (p=0) and not mode3d ) then ygrid(posy(p),false,gcol);
              end;
            for i := 1 to nf-1 do
              begin
-               pf := p+i*fijn; yp := posy(pf);
+               pf := p+i*fijn; yp := posy(pf*rff);
                if (yp>=yorg-ylen) and (yp<=yorg) then
                if (not dolabels) or ( (pf>1) and (pf<nlabels) ) then
                  begin
                    if draw and (hsize>0) then xyline(-1,xp,yp,xp+hsize*bi,yp);
-                   if grid then ygrid(yp,true);
+                   if grid then ygrid(yp,true,gcol);
                  end;
              end;
            p := p+grof;
          end;
        ndecy := ndecim(xypixy);
      end;
+   setscale := false; shape := false;
 
    if (txt<>'') and draw then
    begin
@@ -2565,43 +2812,48 @@ begin {------------------------------------------------------------------------}
    if (txt[1]='@') then begin h := h - xycharheight; txt := copy(txt,2,length(txt)); end;
    if (prmi(41)=1) then if code in [5,7] then code := -code;
    case code of
-     1 : simpletext(cl,txt,max(xorg-ltxt-tsize,xoff),h,1,-1);
-     2 : simpletext(cl,txt,xorg,                     h,1,-1);
-     3 : simpletext(cl,txt,xorg+xlen,                h,-1,-1);
-     4 : simpletext(cl,txt,min(xorg+xlen+ltxt+tsize,cwidth+xoff),h,-1,-1);
-     5 : bigtext(cl,txt,xorg     -ltxt-tsize,      yorg-(ylen div 2),0,-1,0, 90,0);
-    -5 : bigtext(cl,txt,xorg     -ltxt-tsize,      yorg-(ylen div 2),0, 1,0,-90,0);
-     6 : vtext  (cl,txt,xorg     -ltxt-tsize-xsize,yorg-(ylen div 2),0, 0);
-     7 : bigtext(cl,txt,xorg+xlen+ltxt+tsize,      yorg-(ylen div 2),0, 1,0, 90,0);
-    -7 : bigtext(cl,txt,xorg+xlen+ltxt+tsize,      yorg-(ylen div 2),0,-1,0,-90,0);
-     8 : vtext  (cl,txt,xorg+xlen+ltxt+tsize+xsize,yorg-(ylen div 2),0, 0);
+     1 : simpletext(cl,txt,max(xp-ltxt-tsize,xoff),h,1,-1);
+     2 : simpletext(cl,txt,xp-res,                 h,1,-1);
+     3 : simpletext(cl,txt,xp+res,                 h,-1,-1);
+     4 : simpletext(cl,txt,min(xp+ltxt+tsize,cwidth+xoff),h,-1,-1);
+     5 : bigtext(cl,txt,xp-ltxt-tsize,      yorg-(ylen div 2),0,-1,0, 90,0);
+    -5 : bigtext(cl,txt,xp-ltxt-tsize,      yorg-(ylen div 2),0, 1,0,-90,0);
+     6 : vtext  (cl,txt,xp-ltxt-tsize-xsize,yorg-(ylen div 2),0, 0);
+     7 : bigtext(cl,txt,xp+ltxt+tsize,      yorg-(ylen div 2),0, 1,0, 90,0);
+    -7 : bigtext(cl,txt,xp+ltxt+tsize,      yorg-(ylen div 2),0,-1,0,-90,0);
+     8 : vtext  (cl,txt,xp+ltxt+tsize+xsize,yorg-(ylen div 2),0, 0);
    end;
 
    end;
 
-   if dowmf then dogrid(xorg,xorg+xlen,false);
+   if dowmf then dogrid(xorg,xorg+xlen,false,gcol);
    xypen.mode := pmcopy;
 
    if stil then begin graphs[igraph].ndecy := ndecy; exit; end;
    code := asnr[abs(code)];
 
    if not ylog then begin ymi := ymi*rf; yma := yma*rf; end;
+   y11 := y11 * rff; y22 := y22 * rff;
 
    inc(yascount); with graphs[igraph] do begin
      yf0 := (yf0*(yascount-1)+as_[code].zf0x)/yascount;
-     yf1 := (yf1*(yascount-1)+as_[code].zf1x)/yascount; end;
+     yf1 := (yf1*(yascount-1)+as_[code].zf1x)/yascount;
+     xyzoomy := yf1-yf0; end;
    with graphs[igraph].as_[code] do begin on := true; log := ylog; col := cl;
      mi := ymi; ma := yma; dlog := dylog; org := yorg; len := ylen;
      ndec := ndecy; ninc := nincy; pix := xypixy; typ := 0;
      if ylog then incr := 0 else incr := yincr;
-     graphs[igraph].zmxy := zmaxy; side := sidew; end;
+     graphs[igraph].zmxy := zmaxy; side := sidew;
+     shpe := yshape; cnv := yconv;
+     end;
    with xygraphdata[igraph].yaxis[code] do
-     begin on := true; min := ymi; max := yma; log := xlog; end;
+     begin on := true; min := y11; max := y22; log := xlog; end;
    xygraphdata[0] := xygraphdata[igraph];
    coordas := code;
    if (zgraph=0) then zgraph := igraph else
      if (zgraph>0) and (zgraph<>igraph) then zgraph := -1;
-   autoreset(3);
+   autoreset(3); yzeropos := -1;
+   if xdelayed then plotxdelayed;
 end;
 
 procedure xyyaxis(cl:Tcolor;y1,y2,incr,zmx:single;txt:string;code:integer;grid,log,fix:boolean);
@@ -2639,7 +2891,7 @@ var n1,n2,ny,i,y,n,sst,ssz,sfi : integer;
     ysst : array[1..4] of integer;
 const ycol : array[1..4] of Tcolor = (clblack,clred,clblue,clgreen);
 procedure plotkolom(k,st,a:integer);
-var i,xst : integer;
+var i,xst,st0 : integer;
     s : string;
 begin
   if adv then {set parameters}
@@ -2648,12 +2900,13 @@ begin
       xylinewidth(round(data[3,k])); xysetlinestyle(round(data[4,k]),0,0);
       sst := round(data[5,k]); ssz := round(data[6,k]); sfi := round(data[7,k]);
     end;
-  if st in [0,1] then {teken lijn}
+  st0 := st; if (status=9) and (st0 in [3..5]) then st0 := 1;
+  if st0 in [0,1] then {teken lijn}
     begin
        xymove(data[n1,0],data[n1,k]);
        for i := n1+1 to n2 do xydraw(data[i,0],data[i,k]);
     end;
-  if st in [0,2] then {teken punten}
+  if st0 in [0,2] then {teken punten}
     begin
       if (a=0) or adv then xst := sst else
         begin xst := ysst[a]; inc(ysst[a]); end;
@@ -2662,15 +2915,15 @@ begin
         xysymbolp(xst,ssz,sfi,data[i,0],data[i,k]);
       xyfinish;
     end;
-  if st in [3..5] then {teken bar}
+  if st0 in [3..5] then {teken bar}
     begin
       if (n1=n2) then w := 1 else w := data[n1+1,0]-data[n1,0];
-      if (st=4) then w := w * 0.7 else
-      if (st=5) then w := w * 0.4;
+      if (st0=4) then w := w * 0.7 else
+      if (st0=5) then w := w * 0.4;
       for i := n1 to n2 do xybar(xypen.color,data[i,0],w,data[i,k],0);
     end;
   s := #255+inttostr(k); {maak vast legend entries}
-  case st of
+  case st0 of
     1 : xylegendentry(0,s); {line}
     0,2 : xylegendentry(2,s); {symbol}
     3..5 : xylegendentry(1,s); {bar}
@@ -2688,6 +2941,8 @@ begin
   singley := true; if (ny>1) then for y := 1 to ny do
     if (round(data[0,y]) in [1..4]) then singley := false;
   if singley and (dt=3) then dt := 2;
+  setscale := false; xshape := false; yshape := false; shape := false;
+  if (status=9) then singley := true;
 
   if (status=1) then {maak plotveld}
     begin
@@ -2789,7 +3044,7 @@ procedure xypolargraph(cl:Tcolor;r1,r2,zero:single;yjust:integer; {XXXXXXXXXXXX}
        rev,ang,grid,fix:boolean);
 var i,t,ndecy,nf,rp,rf : integer;
     incr,grof,fijn,p,x1,x2 : single;
-    cl4,cl2 : Tcolor;
+    cl4,cl2,gcl : Tcolor;
     d15,d5,xg,xf,yg,yf,draw : boolean;
     s : string;
 procedure stralen;
@@ -2814,15 +3069,20 @@ end;
 function posr(x:single):integer; begin posr := round((x-xmi)/(xma-xmi)*polrad); end;
 begin
   xyfinish; useroff := false;
-  grafoky := (r1<>r2) and grafok; if not grafoky then exit;
+  grafoky := ((r1<>r2) or setscale) and grafok; if not grafoky then exit;
   polxc := xorg + xlen div 2; polyc := yorg - ylen div 2;
   polrad := min(xlen div 2,ylen div 2); polzero := zero; polrev := rev;
   if (polrad=0) then begin grafoky := false; exit; end;
 
+  if setscale then begin r1 := fscale.min; r2 := fscale.max; end;
   if (r1>r2) then rf := -1 else rf := 1;
-  x1 := r1*rf; x2 := r2*rf; status := 0;
-  xmi := x1 + graphs[igraph].xf0*(x2-x1);
-  xma := x1 + graphs[igraph].xf1*(x2-x1);
+  x1 := r1*rf; x2 := r2*rf; status := 9;
+  if setscale then begin xmi := x1; xma := x2; end
+  else
+    begin
+     xmi := x1 + graphs[igraph].xf0*(x2-x1);
+     xma := x1 + graphs[igraph].xf1*(x2-x1);
+    end;
   xg := (graphs[igraph].xgridc>=0) and grid;
   xf := (graphs[igraph].xgridf>=0) and grid;
   yg := (graphs[igraph].ygridc>=0) and grid;
@@ -2833,25 +3093,31 @@ begin
   if not draw then cl := frontcolor;
   d15 := true; d5 := true; incr := 0;
   t := round(prm(60)*xycharheight);
-  verdeling(xmi,xma,incr,polrad,t,grof,fijn,ndecy,0);
+
+  if setscale then with fscale do
+    begin grof := abs(max-min)/nc; fijn := grof/nf; end
+  else verdeling(xmi,xma,incr,polrad,t,grof,fijn,ndecy,0);
+  with graphs[igraph] do begin
+     if (gridcol=-2) then gridcol := gridcolor;
+     if (gridcol=-1) then gcl := cl else gcl := gridcol; end;
   nf := round(grof/fijn); xypixx := (xmi-xma)/polrad;
-  cl4 := mixcolor(cl,backcolor,1,3);
-  cl2 := mixcolor(cl,backcolor,1,1);
+  cl4 := mixcolor(gcl,backcolor,1,3);
+  cl2 := mixcolor(gcl,backcolor,1,1);
   xybrush.style := bsclear; xypen.style := pssolid;
 
   if draw then begin
 
   if not yg then xyline(cl2,polxc,polyc,polxc,polyc-polrad-1);
 
-  if not fix then setformat(prm(66));
-  p := grof*trunc(xmi/grof-1); rp := posr(p);
+  if not setscale then if not fix then setformat(prm(66));
+  if setscale then p := xmi else p := grof*trunc(xmi/grof-1); rp := posr(p);
   while (rp<=polrad) do
     begin
       if (rp>0) then
         begin
           t := xycharwidth;
-          if yg then xycircle(cl,-1,polxc,polyc,rp)
-            else xyline(cl,polxc-t,polyc-rp,polxc+t+1,polyc-rp);
+          if yg then xycircle(gcl,-1,polxc,polyc,rp)
+            else xyline(gcl,polxc-t,polyc-rp,polxc+t+1,polyc-rp);
           stralen;
         end;
       for i := 1 to nf-1 do
@@ -2869,21 +3135,25 @@ begin
     end;
 
   xycircle(cl,-1,polxc,polyc,polrad);
-  for i := 0 to 7 do straal(cl,cl,0,polrad,i*45,inttostr(i*45),ang);
+  for i := 0 to 7 do straal(gcl,cl,0,polrad,i*45,inttostr(i*45),ang);
 
-  p := grof*trunc(xmi/grof-1); rp := posr(p);
+  if setscale then p := xmi else p := grof*trunc(xmi/grof-1); rp := posr(p);
   while (rp<=polrad) do
     begin
       if (rp>=0) then
         begin
+          if setscale then s := formtext(p*rf) else
           if fix then str(p*rf:1:plus(ndecy),s) else
-            begin if (abs(p)<grof/2) then p := 0; s := lintext(p*rf,ndecy); end;
+            begin
+              if (abs(p)<grof/2) then p := 0;
+              s := lintext(p*rf,ndecy); end;
           bigtext(cl,s,polxc+1,polyc-rp,yjust,0,2,0,0);
         end;
       p := p+grof; rp := posr(p);
     end;
 
   end;
+  setscale := false; xshape := false; yshape := false; shape := false;
 
   xypen.color := cl; 
   polartype := 1; xmi := xmi*rf; xma := xma*rf;
@@ -2914,7 +3184,7 @@ procedure xyradargraph(cl:Tcolor;axes:array of Tradar;style:integer; {XXXXXXXXX}
         3 : idem ronde lijnen
   opt 1 = alle schalen; 2 = wel midden waarde;
       4 = ook fijne lijnen; 8 = geen buiten lijn}
-var nax,cll,cl4,cl2,i,j,n,rf,t,rp,nf,t1,t2 : integer;
+var nax,cll,cl4,cl2,i,j,n,rf,t,rp,nf,t1,t2,gcl,gcl2,gcl4 : integer;
     x1,x2,xmi,xma,incr,grof,fijn,p,h,si,co,x,y : single;
     s,ss : string;
     draw,all,centre,coarse,fine : boolean;
@@ -2935,7 +3205,8 @@ begin
 end;
 function posr(r:single):integer; begin posr := round((r-xmi)/(xma-xmi)*polrad); end;
 begin
-  xyfinish; useroff := false;
+  xyfinish; useroff := false; setscale := false;
+  xshape := false; yshape := false; shape := false;
   nax := length(axes); if (nax>maxrad) then nax := maxrad;
   grafoky := (nax>0) and grafok; if not grafoky then exit;
   polxc := xorg + xlen div 2; polyc := yorg - ylen div 2;
@@ -2944,8 +3215,11 @@ begin
 
   draw := (colortorgb(cl)<>colortorgb(backcolor));
   if not draw then cl := frontcolor;
-  cl4 := mixcolor(cl,backcolor,1,2);
-  cl2 := mixcolor(cl,backcolor,1,1);
+  with graphs[igraph] do begin
+     if (gridcol=-2) then gridcol := gridcolor;
+     if (gridcol=-1) then gcl := cl else gcl := gridcol; end;
+  cl4 := mixcolor(cl,backcolor,1,2); gcl4 := mixcolor(gcl,backcolor,1,2);
+  cl2 := mixcolor(cl,backcolor,1,1); gcl2 := mixcolor(gcl,backcolor,1,1);
   xybrush.style := bsclear; xypen.style := pssolid; status := 0;
 
   t1 := round(prm(63)*xycharwidth);
@@ -2990,11 +3264,11 @@ begin
   p := grof*trunc(xmi/grof-1); rp := posr(p);
   if coarse then while (rp<=polrad) do
     begin
-      if (rp>0) then draad(cl,rp);
+      if (rp>0) then draad(gcl,rp);
       if fine then for j := 1 to nf-1 do
         begin
           rp := posr(p+j*fijn);
-          if (rp>0) and (rp<=polrad) then draad(cl4,rp);
+          if (rp>0) and (rp<=polrad) then draad(gcl4,rp);
         end;
       p := p+grof; rp := posr(p);
    end;
@@ -3245,7 +3519,7 @@ var i,n,pw,x1,x2,y1,y2 : integer;
 begin
   if (not grafoky) or (polartype>0) then exit;
   n := length(data); if (n=0) then exit;
-  if (frcol<0) then begin pw := xypen.width; xypen.width := 1; end;
+  pw := xypen.width; if (frcol<0) then xypen.width := 1; 
 
   if (just<0) then begin x1 := posx(pos-wi); x2 := posx(pos); end else
   if (just=0) then begin x1 := posx(pos-wi/2); x2 := posx(pos+wi/2); end
@@ -3563,9 +3837,12 @@ begin
   crossxp := xp; crossyp := yp; crossj := j;
   coordok := (xp>=0) or (yp>=0);
   crossx := 0; crossy := 0; if mode3d then mode := 0;
-  coordcolor := cl; crossmode := mode and 7;
+  coordcolor := cl;
+  crossmode := mode and 7; schuin := false;
+  if (crossmode=5) then begin crossmode := 0; schuin := true; end;
+  if (crossmode=6) then begin crossmode := 3; schuin := true; end;
   snapxok := mode and 8 > 0; snapyok := mode and 16 > 0;
-  crossnorel := (mode and 32>0) or (crossmode>2);
+  crossnorel := (mode and 32>0) or ((crossmode>2) and not schuin);
   trackok := (mode and 64=0);
 end;
 
@@ -3632,6 +3909,7 @@ begin
      with as_[coordas] do if (y>org) then y := org else if (y<org-len) then y := org-len;
      if crossmode in [0,1] then with as_[coordas] do drawline(x,org,x,org-len);
      if crossmode in [0,2] then with as_[0] do drawline(org,y,org+len,y);
+     if crossrel and schuin then drawline(crossx0,crossy0,x,y);
     end
    else
     begin
@@ -3648,12 +3926,14 @@ begin
 end;
 
 procedure showcoord(x,y:integer;show:boolean); {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
-var s,ss,s3d : string;
+var s,ss,s3d,s1,s2,s3,s4 : string;
     l,n,n2,r : integer;
-    xw,yw,h : single;
+    xw,yw,h,dx,dy,f : single;
     xwd : double;
     dd,ad : double;
 const sx = ' / ';
+function power(a,b:single):extended;
+begin result := exp(b*ln(a)); end;
 function dosnapx(var x:single;incr:single):single;
 begin
   if (incr=0) then result := x else
@@ -3700,6 +3980,53 @@ begin
 
   xwd := xwaarde(x); yw := ywaarde(y,coordas);
   with graphs[igraph] do
+   begin
+
+    if (meetmode=2) then
+      begin
+        if as_[0].log then
+          begin
+            dx := ln(xwd/cross0w[0]); dy := ln(yw/cross0w[coordas]);
+            dd := sqrt(sqr(dx)+sqr(dy)); s := 'L= '+signif(dd,3);
+            if (dx=0) then ss := 'S= INF' else ss := 'S= '+signif(dy/dx,3);
+          end
+        else
+          begin
+            dx := xwd-cross0w[0]; dy := yw-cross0w[coordas];
+            dd := sqrt(sqr(dx)+sqr(dy)); s := 'L= '+showdec(dd,as_[0].ndec);
+            if (dx=0) then ss := 'S= INF' else ss := 'S= ' + signif(dy/dx,3);
+            ss := ss + ' (' + showdec(arctan2(dy,dx)*180/3.1416,1)+#176+')';
+          end;
+        s3d := '';
+      end
+    else
+    if (meetmode=3) then
+      begin
+        try
+        if as_[0].log then
+          begin
+            dx := ln(xwd/cross0w[0]); dy := ln(yw/cross0w[coordas]);
+            if (dy=0) then s := 'Y = '+signif(yw,3) else
+            if (dx=0) then s := 'X = '+signif(xwd,3) else
+            begin
+              f := dy/dx; s := 'Y = ' + signif(yw/power(xwd,f),3)
+              + ' * X^' + signif(f,3); end;
+            ss := '';
+          end
+        else
+          begin
+            dx := xwd-cross0w[0]; dy := yw-cross0w[coordas];
+            if (dy=0) then s := 'Y = ' + showdec(yw,as_[coordas].ndec) else
+            if (dx=0) then s := 'X = ' + showdec(xwd,as_[0].ndec) else
+            begin f := dy/dx; s := 'Y = ' + showdec(yw-f*xwd,as_[coordas].ndec);
+              if (f>0) then s := s +  ' + ' + signif(f,3) + '*X'
+              else s := s +  ' - ' + signif(-f,3) + '*X'; end;
+            ss := '';
+          end;
+        except s := '(overflow error)'; ss := ''; end;  
+        s3d := '';
+      end
+    else
      begin
        with as_[0] do
          if crossrel then
@@ -3748,11 +4075,15 @@ begin
                 begin s3d := sx+showdec(h,ndecy); hoogte3d := h; end
             end
          else begin hoogte3d := 0; s3d := ''; end;
+      end;
 
-       case crossj of
-         -1 : l := xycanvas.textwidth(s+sx+ss+s3d);
-         0 : if rul3d then l := xycanvas.textwidth(s+sx+ss+s3d) div 2
-             else l := xycanvas.textwidth(s+sx+s) div 2;
+      if (ss='') then begin s1 := s; s2 := s; end
+        else begin  s1 := s + sx; s2 := s1 + s; end;
+      s3 := ss + s3d; s4 := s1 + s3;
+      case crossj of
+         -1 : l := xycanvas.textwidth({s+sx+ss+s3d}s4);
+         0 : if rul3d then l := xycanvas.textwidth({s+sx+ss+s3d}s4) div 2
+             else l := xycanvas.textwidth({s+sx+s}s2) div 2;
          1 : l := 0;
        end;
 
@@ -3761,14 +4092,14 @@ begin
        if not show then
          begin
            xyfont.color := backcolor;
-           xycanvas.textout(crossxp-l,crossyp,s+sx+ss+s3d);
+           xycanvas.textout(crossxp-l,crossyp,{s+sx+ss+s3d}s4);
          end
        else
          begin
            xyfont.color := as_[0].col;
-           xycanvas.textout(crossxp-l,crossyp,s+sx);
+           xycanvas.textout(crossxp-l,crossyp,{s+sx}s1);
            xyfont.color := as_[coordas].col;
-           xycanvas.textout(xycanvas.penpos.x,crossyp,ss+s3d);
+           xycanvas.textout(xycanvas.penpos.x,crossyp,{ss+s3d}s3);
          end;
      end;
 end;
@@ -3954,6 +4285,11 @@ begin
       for i := 1 to 4 do with as_[i] do if on then
       if crossmode in [0,2] then cross0w[i] := ywaarde(crossy0,i)
         else if log then cross0w[i] := 1 else cross0w[i] := 0;
+      if (meetmode>0) then begin meetmode := 1; meten := true; end;
+    end
+  else
+    begin
+      meten := false; meetmode := 0;
     end;
   tekencross(crossx0,crossy0);
   cross(crossx,crossy,true);
@@ -4187,32 +4523,53 @@ begin
    end;
 end;
 
-procedure initprinter; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
-var asp, pasp : single;
-    pw,ph,prw,prh,fx,fy,f : integer;
+procedure initprinter(scale:single; posn:integer); {XXXXXXXXXXXXXXXXXXXXXXXXXXX}
+  {scale = schaalfactor; posn = positie  1 2 3
+                                         4 5 6
+                                         7 8 9 }
+var asp : single;
+    pw,ph,prw,prh,fx,fy,f,xoff,yoff,m : integer;
 const fillfac = 0.9;
 begin
    asp := cheight/cwidth; prfac := 0;
-   if (asp>1) then printer.orientation := poportrait
-              else printer.orientation := polandscape;
-   pw := printer.pagewidth; ph := printer.pageheight; pasp := ph/pw;
-   if (pasp>asp) then
-     begin prw := round(pw * fillfac); prh := round(prw * asp); end
-   else
-     begin prh := round(ph * fillfac); prw := round(prh / asp); end;
+
+   if (scale=0) then scale := 0.9 else
+   if (scale<0.1) then scale := 0.1 else
+   if (scale>1) then scale := 1;
+
+   m := posn div 10; posn := posn mod 10;
+   case m of
+    0: if (asp>1) then printer.orientation := poportrait
+           else printer.orientation := polandscape;
+    2: printer.orientation := poportrait;
+    3: printer.orientation := polandscape;
+   end;
+   if (posn=0) then posn := 5;
+
+   pw := printer.pagewidth; ph := printer.pageheight;
+   if (pw=0) or (ph=0) then exit;
+   prw := trunc(pw*scale); prh := trunc(ph*scale);
    fx := prw div cwidth; fy := prh div cheight; f := min(fx,fy);
    if (f=0) then exit;
+   
    prw := cwidth * f; prh := cheight * f;
-   prxoff := (pw-prw) div 2; pryoff := (ph-prh) div 2;
+   xoff := (pw-prw); yoff := (ph-prh);
+   case posn of
+    1,4,7 : prxoff := 0; 3,6,9 : prxoff := xoff; else prxoff := xoff div 2; end;
+   case posn of
+    1,2,3 : pryoff := 0; 7,8,9 : pryoff := yoff; else pryoff := yoff div 2; end;
    prfac := f;
 end;
 
-procedure xyprint2(corr:single); {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+procedure xyprint2(corr,scale:single;posn:integer); {XXXXXXXXXXXXXXXXXXXXXXXXXX}
 { documentproperties getprinter openprinter }
 var hasbmp : boolean;                 {grafiek heeft bmp}
 begin
-   if cvmode then exit;
-   initprinter; if (prfac=0) then begin beep; exit; end;
+   if cvmode then begin xyprint(true,scale,posn); exit; end;
+
+   screen.cursor := crhourglass;
+   initprinter(scale,posn); if (prfac=0) then
+     begin beep; screen.cursor := crdefault; exit; end;
 
    hasbmp := xybuffers[0].bmp;
    with printer do ffac := sqrt(pagewidth*pageheight)/1000;
@@ -4221,9 +4578,9 @@ begin
 
    prshow := false;
 
-   screen.cursor := crhourglass;
    if hasbmp then copyscreen(2);
-   xoff := prxoff; yoff := pryoff; res := prfac; doprint := true;
+   xoff := prxoff; yoff := pryoff;
+   res := prfac; doprint := true;
    try
      printer.begindoc;
      restorefont; xypaintbox.repaint;
@@ -4238,11 +4595,15 @@ begin
    screen.cursor := crdefault;
 end;
 
-procedure xyprint(show:boolean); {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+procedure xyprint2(corr:single); begin xyprint2(corr,0,0); end;
+procedure xyprint2; begin xyprint2(0,0,0); end;
+
+procedure xyprint(show:boolean;scale:single;posn:integer); {XXXXXXXXXXXXXXXXXX}
 {print grafiek}
 begin
-  initprinter; if (prfac=0) then begin beep; exit; end;
   screen.cursor := crhourglass;
+  initprinter(scale,posn); if (prfac=0) then
+    begin beep; screen.cursor := crdefault; exit; end;
   copyscreen(2); prshow := show;
 
   try
@@ -4255,14 +4616,16 @@ begin
   screen.cursor := crdefault;
 end;
 
-procedure xysaveasmetafile2(s:string; showtxt:boolean; var ok:boolean; {XXXXXXX}
-  scale : integer); {maakt metafile aan}
+procedure xyprint(show:boolean); begin xyprint(show,0,0); end;
+
+procedure saveasmetafile(s:string; cvm,showtxt:boolean; var ok:boolean; {XXXXXXX}
+  scale:integer;plotgraph:Tprocedure); {maakt metafile aan}
 var hasbmp : boolean;                 {grafiek heeft bmp}
 begin
-  if cvmode {or xybuffers[0].str} then exit;
+  if cvm xor cvmode then exit;
   wmfbk := ok;
   if (scale<1) then scale := 1;
-  hasbmp := xybuffers[0].bmp; openwmf(s,ok);
+  hasbmp := xybuffers[0].bmp and not cvm; openwmf(s,ok);
   if not ok then
    begin
      beep;
@@ -4274,10 +4637,11 @@ begin
 
   screen.cursor := crhourglass;
   if hasbmp then copyscreen(0);
-  res := scale; restorefont; xypaintbox.repaint;
+  res := scale; restorefont;
+  if cvm then plotgraph else xypaintbox.repaint;
   closewmf(ok);
   res := 1; restorefont;
-  if hasbmp then restorescreen else xypaintbox.repaint;
+  if hasbmp then restorescreen else if not cvm then xypaintbox.repaint;
   screen.cursor := crdefault;
 
   if not ok then
@@ -4293,10 +4657,18 @@ begin
   if showtxt then showmessage(s);
 end;
 
-procedure xysaveasmetafile(s:string; showtxt:boolean; var ok:boolean); {XXXXXXX}
-begin xysaveasmetafile2(s,showtxt,ok,1); end;
+procedure dummy; begin end;
+
 procedure xysaveasmetafile(s:string; showtxt:boolean; var ok:boolean; scale:integer);
-begin xysaveasmetafile2(s,showtxt,ok,scale); end;
+begin saveasmetafile(s,false,showtxt,ok,scale,dummy); end;
+procedure xysaveasmetafile(s:string; showtxt:boolean; var ok:boolean; scale:integer;
+  plot:Tprocedure);
+begin saveasmetafile(s,true,showtxt,ok,scale,plot); end;
+
+procedure xysaveasmetafile2(s:string; showtxt:boolean; var ok:boolean;scale : integer);
+begin saveasmetafile(s,false,showtxt,ok,scale,dummy); end;
+procedure xysaveasmetafile(s:string; showtxt:boolean; var ok:boolean);
+begin saveasmetafile(s,false,showtxt,ok,1    ,dummy); end;
 
 {MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM}
 
@@ -4311,16 +4683,18 @@ begin
   if (button=mbleft) then begin ndata := 0; track := 0; end;
   if not (crosson or blokon or lineon) then {zoek welke grafiek en yas}
     begin
-      igraph := 0;
+      igraph := 0; meten := false;
       for i := 1 to ngraph do with graphs[i] do if ok then
         if (x>=x1) and (x<=x2) and (y>=y1) and (y<=y2) then igraph := i;
       if (igraph=0) then exit;
       coordas := 0; crossrel := false; doshowtrack := false;
+      meetmode := 0;
       if (graphs[igraph].polar=0) then
       with graphs[igraph] do begin
-        for i := 4 downto 1 do if graphs[igraph].as_[i].on
-           then coordas := i;
+        for i := 4 downto 1 do if {graphs[igraph].}as_[i].on then coordas := i;
         if (coordas=0) or not as_[0].on then exit;
+        if schuin and (as_[0].typ=0) then
+          if not (as_[0].log xor as_[coordas].log) then meetmode := 1;
         if (dat<>nil) and trackok then
           begin ndata := length(dat^)-1; nkol := length(dat^[0])-1;
        track := trck; trackas := tras; trackkl := trkl; end;
@@ -4381,7 +4755,17 @@ begin
     begin fillexport(x,y,xyexporta); fillexport(x,y,xyexportb);
      fillexport(x,y,xyexportc); fillexport(x,y,xyexportd); end;
 
-  if (button=mbright) and coordok and (crosson or blokon or lineon) then
+  if (button=mbright) then
+  if meten then
+    begin
+      cross(crossx,crossy,false);
+      inc(meetmode); if (meetmode=4) then meetmode := 1;
+      cross(crossx,crossy,true);
+    end
+  else
+  if coordok and (crosson or blokon or lineon)
+   and not (crosson and crossrel and schuin)
+   and (graphs[igraph].polar=0) then
     begin
       if lineon then line(linex1,liney1,false) else
       if crosson then cross(crossx,crossy,false)
@@ -4389,10 +4773,16 @@ begin
       repeat
        inc(coordas);
        if (coordas=5) then coordas := 1;
-       until graphs[igraph].as_[coordas].on;
+      until graphs[igraph].as_[coordas].on;
       if lineon then line(linex1,liney1,true) else
       if crosson then cross(crossx,crossy,true)
                  else blok(blokx1,bloky1,true);
+      meetmode := 0;
+      if crosson and crossrel then with graphs[igraph] do
+        if schuin and (as_[0].typ=0) then
+          if not (as_[0].log xor as_[coordas].log)
+            then meetmode := 1;
+      meten := (meetmode>0);
     end;
 
   if (button=mbmiddle) and crosson and (graphs[igraph].polar=0)
@@ -4532,10 +4922,29 @@ begin
   end;
 end;
 
-procedure xyclearbuffer; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+procedure xyclearbuffer; overload; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
 begin
-  bufcount := 0; xyclearbuffer3d;
-  setlength(xybuffers,1); setlength(buffer,1);
+  if (doprint or dowmf) then exit;
+  bufcount := 0; xyclearbuffer3d(-1);
+  setlength(xybuffers,1); setlength(buffer,0);
+end;
+
+procedure xyclearbuffer(n:integer); overload; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+var i,t : integer;
+begin
+  if (doprint or dowmf) then exit;
+  t := -1;
+  for i := 0 to bufcount-1 do if (buffer[i].labl=n) then t := i;
+  if (t=-1) then exit;
+
+  for i := t to bufcount-2 do
+    begin
+      buffer[i] := buffer[i+1];
+      xybuffers[i+1] := xybuffers[i+2];
+    end;
+  dec(bufcount);
+  setlength(buffer,bufcount); setlength(xybuffers,bufcount+1);
+  xyclearbuffer3d(t);
 end;
 
 procedure xyputbuffer(n:integer); {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
@@ -4617,21 +5026,24 @@ begin
   track := 0; istracking := 0; init := false;
   res := 1; xoff := 0; yoff := 0; status := 0;
   fontfix := 0; fontname := ''; fontsize := 0;
-  FreeAndNil(oldpen);
-  oldpen := Tpen.create;
-  FreeAndNil(oldbrush);
-  oldbrush := Tbrush.create;
+  oldpen := Tpen.create; oldbrush := Tbrush.create;
   versioninfo.dwOSVersionInfoSize := sizeof(osversioninfo);
   if getversionex(VersionInfo) then winnt :=
     (VersionInfo.dwPlatformId = VER_PLATFORM_WIN32_NT) {=2}
     else winnt := false;
+  closing := dummy; schuin := false;
   xyclearbuffer; initdate;
   initxycommon;  initxygraph3d;
 end;
 
-begin                    { <--- }
+procedure shutdownxygraph; {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}
+begin oldbrush.free; oldpen.free; closing; end;
+
+initialization           { <--- }
   initxygraph;           { <--- }
-  {for C++ users: discard these two lines and call initxygraph from your
-   application at program start-up}
+finalization             { <--- }
+  shutdownxygraph;       { <--- }
+  {for C++ users: discard these four lines and call initxygraph from your
+   application at program start-up and shutdownxygraph at closure}
 end.
 

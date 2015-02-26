@@ -2257,9 +2257,8 @@ begin
       begin
         result := StrClickOnGridLineA;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         case ViewDirection of
           vdTop: result := StrClickOnGridLineA;
@@ -2607,9 +2606,8 @@ begin
       begin
         result := StrClickOnGridBounda;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         case ViewDirection of
           vdTop: result := StrClickOnGridBounda;
@@ -3179,6 +3177,8 @@ end;
 procedure TCustomCellSelectionTool.DrawSelectedFrontCells(FirstCol,
   LastCol, FirstLayer, LastLayer: integer; const BitMap: TBitmap32;
   Direction: TViewDirection; Color: TColor = SelectedCellsColor);
+const
+  Opacity = 125;
 var
   APoint: T3DRealPoint;
   L1, L2, C1, C2: integer;
@@ -3256,13 +3256,12 @@ begin
           Polygon[3].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
         end;
         SelectColor32 := Color32(Color);
-        SelectColor32 := SetAlpha(SelectColor32, 128);
+        SelectColor32 := SetAlpha(SelectColor32, Opacity);
         DrawBigPolygon32(BitMap, SelectColor32,
           SelectColor32, 0, Polygon, P, MultiplePolygons, True);
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         FrontPoints := frmGoPhast.PhastModel.SelectedModel.ModflowGrid.FrontCellPoints(
           frmGoPhast.PhastModel.SelectedModel.ModflowGrid.SelectedRow);
@@ -3295,7 +3294,7 @@ begin
             Polygon[5] := View(Direction).ConvertPoint(APoint2D);
 
             SelectColor32 := Color32(Color);
-            SelectColor32 := SetAlpha(SelectColor32, 128);
+            SelectColor32 := SetAlpha(SelectColor32, Opacity);
             DrawBigPolygon32(BitMap, SelectColor32,
               SelectColor32, 0, Polygon, P, MultiplePolygons, True);
           end;
@@ -3310,6 +3309,8 @@ end;
 procedure TCustomCellSelectionTool.DrawSelectedSideCells(FirstRow, LastRow,
   FirstLayer, LastLayer: integer; const BitMap: TBitmap32;
   Direction: TViewDirection; Color: TColor = SelectedCellsColor);
+const
+  Opacity = 125;
 var
   APoint: T3DRealPoint;
   L1, L2, R1, R2: integer;
@@ -3389,14 +3390,13 @@ begin
         end;
 
         SelectColor32 := Color32(Color);
-        SelectColor32 := SetAlpha(SelectColor32, 128);
+        SelectColor32 := SetAlpha(SelectColor32, Opacity);
 
         DrawBigPolygon32(BitMap, SelectColor32,
           SelectColor32, 0, Polygon, P, MultiplePolygons, True);
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         SidePoints := frmGoPhast.PhastModel.SelectedModel.ModflowGrid.SideCellPoints(
           frmGoPhast.PhastModel.SelectedModel.ModflowGrid.SelectedColumn);
@@ -3430,9 +3430,7 @@ begin
             Polygon[5] := View(Direction).ConvertPoint(APoint2D);
 
             SelectColor32 := Color32(Color);
-            SelectColor32 := SetAlpha(SelectColor32, 128);
-            DrawBigPolygon32(BitMap, SelectColor32,
-              SelectColor32, 0, Polygon, P, MultiplePolygons, True);
+            SelectColor32 := SetAlpha(SelectColor32, Opacity);
           end;
         end;
       end
@@ -3444,6 +3442,8 @@ end;
 procedure TCustomCellSelectionTool.DrawSelectedTopCells(FirstCol, LastCol,
   FirstRow, LastRow: integer; const BitMap: TBitmap32;
   Direction: TViewDirection; Color: TColor = SelectedCellsColor);
+const
+  Opacity = 125;
 var
   APoint: TPoint2D;
   R1, R2, C1, C2: integer;
@@ -3508,7 +3508,7 @@ begin
   end;
 
   SelectColor32 := Color32(Color);
-  SelectColor32 := SetAlpha(SelectColor32, 128);
+  SelectColor32 := SetAlpha(SelectColor32, Opacity);
   DrawBigPolygon32(BitMap, SelectColor32,
     SelectColor32, 0, Polygon, P, MultiplePolygons, True);
 end;
@@ -7199,6 +7199,10 @@ begin
             AnElement := ANode.Elements[ElementIndex];
             NodePosition := AnElement.Nodes.IndexOfNode(ANode);
             AnElement.Nodes.Delete(NodePosition);
+            if AnElement.Nodes.Count = 0 then
+            begin
+              AnElement.Free;
+            end;
           end;
           ANode.Free;
         end;
@@ -7208,10 +7212,12 @@ begin
           if Mesh.Mesh2D.Elements[ElementIndex].Nodes.Count < 4 then
           begin
             AnElement := Mesh.Mesh2D.Elements[ElementIndex];
-            for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+            for NodeIndex := AnElement.Nodes.Count - 1 downto 0 do
             begin
               ANode := AnElement.Nodes[NodeIndex].Node;
               ANode.RemoveElement(AnElement);
+
+//              AnElement.Nodes.Delete(NodeIndex);
               if ANode.ElementCount = 0 then
               begin
                 ANode.Free;

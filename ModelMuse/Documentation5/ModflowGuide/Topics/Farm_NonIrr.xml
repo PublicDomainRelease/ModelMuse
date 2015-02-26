@@ -11,7 +11,7 @@
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><anchor id="NONIRR" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Non-irrigation flag:</text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">0 = crop type is irrigated (zero value can be omitted)</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">0 = crop type is irrigated </text><text styleclass=" " style="font-family:&apos;Courier New&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:line-through; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">(zero value can be omitted)</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">1 = crop type is not irrigated</text></para>
         </td>
       </tr>

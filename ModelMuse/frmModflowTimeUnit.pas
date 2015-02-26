@@ -7,7 +7,8 @@ uses
   Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ExtCtrls, Grids,
   RbwDataGrid4, ComCtrls, Mask, JvExMask, JvSpin, JvExStdCtrls, JvCombobox,
   JvListComb, ArgusDataEntry, ModflowTimeUnit, UndoItems,
-  RequiredDataSetsUndoUnit, Mt3dmsTimesUnit, frameGridUnit;
+  RequiredDataSetsUndoUnit, Mt3dmsTimesUnit, frameGridUnit,
+  Generics.Collections, ScreenObjectUnit;
 
 type
   TMt3dmsTimeColumns = (mtStressPeriod, mtcStartTime, mtcEndTime, mtcStepSize,
@@ -64,9 +65,11 @@ type
       var CanSelect: Boolean);
     procedure pgcMainChange(Sender: TObject);
     procedure frameGridGridBeforeDrawCell(Sender: TObject; ACol, ARow: Integer);
+    procedure comboTimeUnitChange(Sender: TObject);
   private
     FModflowStressPeriods: TModflowStressPeriods;
     FDeleting: Boolean;
+    FGettingData: Boolean;
     procedure GetData;
     procedure SetData;
     procedure FillEmptyCells;
@@ -88,6 +91,10 @@ type
     FOldTimeUnit: integer;
     FOldMt3dmsTimes: TMt3dmsTimeCollection;
     FNewMt3dmsTimes: TMt3dmsTimeCollection;
+    FOldTimes: TList<Double>;
+    FNewTimes: TList<Double>;
+    FOldScreenObjects: TObjectList<TScreenObject>;
+    FExistingScreenObjects: TList<TScreenObject>;
   protected
     function Description: string; override;
   public
@@ -146,6 +153,12 @@ resourcestring
   StrTheValuesYouSpeci = 'The values you specified for the lenth of a stress' +
   ' period, maximum time step length and time step multiplier in stress peri' +
   'od %d result in too large a number of time steps.';
+  StrYouMustSetTheLen = 'You must set the length of the first time step in e' +
+  'very stress period to a value greater than zero. Check for an error in st' +
+  'ress period %d';
+  StrTimeUnitsOfSWil = 'Time units of %s will be used throughout the model. '
+    + 'Be sure that hydraulic conductivity and any other affected variables '
+    + 'use the correct units.';
 
 var
   MaxSteps: integer = 100;
@@ -159,8 +172,21 @@ var
   TotalSteps: integer;
   ShowUzfLakWarning: boolean;
   UzfLakUsed: boolean;
+  LengthFirstTimeStep: Extended;
 begin
   inherited;
+  for Index := 1 to dgTime.RowCount - 1 do
+  begin
+    LengthFirstTimeStep := dgTime.RealValue[Ord(tcTimeFirstStep), Index];
+    if LengthFirstTimeStep <= 0 then
+    begin
+      Beep;
+      MessageDlg(Format(StrYouMustSetTheLen, [Index]), mtError, [mbOK], 0);
+      ModalResult := mrNone;
+      Exit;
+    end;
+  end;
+
   SetData;
   StressPeriods := frmGoPhast.PhastModel.ModflowStressPeriods;
   Steps := 0;
@@ -374,6 +400,15 @@ begin
   ChangeSelectedCellsInColumn(dgTime, Ord(tcSteady), comboSteadyTransient.Text);
 end;
 
+procedure TfrmModflowTime.comboTimeUnitChange(Sender: TObject);
+begin
+  inherited;
+  if not FGettingData then
+  begin
+    MessageDlg(Format(StrTimeUnitsOfSWil, [comboTimeUnit.Text]), mtInformation, [mbOK], 0);
+  end;
+end;
+
 procedure TfrmModflowTime.rdeMultiplierChange(Sender: TObject);
 begin
   inherited;
@@ -569,64 +604,69 @@ var
   Index: Integer;
   TimeItem: TMt3dmsTimeItem;
 begin
-  comboTimeUnit.ItemIndex := frmGoPhast.PhastModel.ModflowOptions.TimeUnit;
-  seNumPeriods.AsInteger := frmGoPhast.PhastModel.ModflowStressPeriods.Count;
-  FillEmptyCells;
-  dgTime.BeginUpdate;
+  FGettingData := True;
   try
-    for RowIndex := 1 to dgTime.RowCount - 1 do
-    begin
-      StressPeriod := frmGoPhast.PhastModel.ModflowStressPeriods[RowIndex-1];
-      dgTime.Cells[ord(tcStartTime), RowIndex]
-        := FloatToStr(StressPeriod.StartTime);
-      dgTime.Cells[ord(tcEndTime), RowIndex]
-        := FloatToStr(StressPeriod.EndTime);
-      dgTime.Cells[ord(tcLength), RowIndex]
-        := FloatToStr(StressPeriod.PeriodLength);
-      dgTime.Cells[ord(tcTimeFirstStep), RowIndex]
-        := FloatToStr(StressPeriod.MaxLengthOfFirstTimeStep);
-      dgTime.Cells[ord(tcMultiplier), RowIndex]
-        := FloatToStr(StressPeriod.TimeStepMultiplier);
-      dgTime.Cells[ord(tcSteady), RowIndex]
-        := dgTime.Columns[Ord(tcSteady)].
-        PickList[Ord(StressPeriod.StressPeriodType)];
-      dgTime.Checked[ord(tcDrawDownReference), RowIndex]
-        := StressPeriod.DrawDownReference;
-      UpdateNumberOfTimeSteps(RowIndex);
-    end;
-  finally
-    dgTime.EndUpdate
-  end;
-
-  if frmGoPhast.PhastModel.Mt3dmsIsSelected then
-  begin
-    frameGrid.Grid.BeginUpdate;
+    comboTimeUnit.ItemIndex := frmGoPhast.PhastModel.ModflowOptions.TimeUnit;
+    seNumPeriods.AsInteger := frmGoPhast.PhastModel.ModflowStressPeriods.Count;
+    FillEmptyCells;
+    dgTime.BeginUpdate;
     try
-      Mt3dmsTimes := frmGoPhast.PhastModel.Mt3dmsTimes;
-      frameGrid.seNumber.AsInteger := Mt3dmsTimes.Count;
-      for Index := 0 to Mt3dmsTimes.Count - 1 do
+      for RowIndex := 1 to dgTime.RowCount - 1 do
       begin
-        TimeItem := Mt3dmsTimes[Index];
-        frameGrid.Grid.Cells[Ord(mtStressPeriod), Index+1] := IntToStr(Index+1);
-        frameGrid.Grid.Cells[Ord(mtcStartTime), Index+1] := FloatToStr(TimeItem.StartTime);
-        frameGrid.Grid.Cells[Ord(mtcEndTime), Index+1] := FloatToStr(TimeItem.EndTime);
-        frameGrid.Grid.Cells[Ord(mtcStepSize), Index+1] := FloatToStr(TimeItem.StepSize);
-        frameGrid.Grid.Cells[Ord(mtcMaxSteps), Index+1] := IntToStr(TimeItem.MaxSteps);
-        frameGrid.Grid.Cells[Ord(mtcMultiplier), Index+1] := FloatToStr(TimeItem.TimeStepMultiplier);
-        frameGrid.Grid.Cells[Ord(mtcMaxStepSize), Index+1] := FloatToStr(TimeItem.MaxStepSize);
-        frameGrid.Grid.Checked[Ord(mtcSteadyState), Index+1] := TimeItem.SteadyState;
+        StressPeriod := frmGoPhast.PhastModel.ModflowStressPeriods[RowIndex-1];
+        dgTime.Cells[ord(tcStartTime), RowIndex]
+          := FloatToStr(StressPeriod.StartTime);
+        dgTime.Cells[ord(tcEndTime), RowIndex]
+          := FloatToStr(StressPeriod.EndTime);
+        dgTime.Cells[ord(tcLength), RowIndex]
+          := FloatToStr(StressPeriod.PeriodLength);
+        dgTime.Cells[ord(tcTimeFirstStep), RowIndex]
+          := FloatToStr(StressPeriod.MaxLengthOfFirstTimeStep);
+        dgTime.Cells[ord(tcMultiplier), RowIndex]
+          := FloatToStr(StressPeriod.TimeStepMultiplier);
+        dgTime.Cells[ord(tcSteady), RowIndex]
+          := dgTime.Columns[Ord(tcSteady)].
+          PickList[Ord(StressPeriod.StressPeriodType)];
+        dgTime.Checked[ord(tcDrawDownReference), RowIndex]
+          := StressPeriod.DrawDownReference;
+        UpdateNumberOfTimeSteps(RowIndex);
       end;
     finally
-      frameGrid.Grid.EndUpdate;
+      dgTime.EndUpdate
     end;
-    frameGrid.seNumber.MinValue := 1;
-  end
-  else
-  begin
-    tabModflow.TabVisible := False;
-    tabMt3dms.TabVisible := False;
+
+    if frmGoPhast.PhastModel.Mt3dmsIsSelected then
+    begin
+      frameGrid.Grid.BeginUpdate;
+      try
+        Mt3dmsTimes := frmGoPhast.PhastModel.Mt3dmsTimes;
+        frameGrid.seNumber.AsInteger := Mt3dmsTimes.Count;
+        for Index := 0 to Mt3dmsTimes.Count - 1 do
+        begin
+          TimeItem := Mt3dmsTimes[Index];
+          frameGrid.Grid.Cells[Ord(mtStressPeriod), Index+1] := IntToStr(Index+1);
+          frameGrid.Grid.Cells[Ord(mtcStartTime), Index+1] := FloatToStr(TimeItem.StartTime);
+          frameGrid.Grid.Cells[Ord(mtcEndTime), Index+1] := FloatToStr(TimeItem.EndTime);
+          frameGrid.Grid.Cells[Ord(mtcStepSize), Index+1] := FloatToStr(TimeItem.StepSize);
+          frameGrid.Grid.Cells[Ord(mtcMaxSteps), Index+1] := IntToStr(TimeItem.MaxSteps);
+          frameGrid.Grid.Cells[Ord(mtcMultiplier), Index+1] := FloatToStr(TimeItem.TimeStepMultiplier);
+          frameGrid.Grid.Cells[Ord(mtcMaxStepSize), Index+1] := FloatToStr(TimeItem.MaxStepSize);
+          frameGrid.Grid.Checked[Ord(mtcSteadyState), Index+1] := TimeItem.SteadyState;
+        end;
+      finally
+        frameGrid.Grid.EndUpdate;
+      end;
+      frameGrid.seNumber.MinValue := 1;
+    end
+    else
+    begin
+      tabModflow.TabVisible := False;
+      tabMt3dms.TabVisible := False;
+    end;
+    pgcMain.ActivePage := tabModflow;
+  finally
+    FGettingData := False;
   end;
-  pgcMain.ActivePage := tabModflow;
 end;
 
 procedure TfrmModflowTime.SetData;
@@ -977,6 +1017,13 @@ end;
 constructor TUndoModflowStressPeriods.Create(
   var NewStressPeriods: TModflowStressPeriods; NewTimeUnit: integer;
   var NewMt3dmsTimes: TMt3dmsTimeCollection);
+var
+  TimeIndex: Integer;
+  OldSP: TModflowStressPeriod;
+  NewSP: TModflowStressPeriod;
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  NewScreenObject: TScreenObject;
 begin
   inherited Create;
   FNewStressPeriods := NewStressPeriods;
@@ -993,6 +1040,47 @@ begin
   FNewMt3dmsTimes := NewMt3dmsTimes;
   NewMt3dmsTimes := nil;
 
+  FOldTimes := TList<Double>.Create;
+  FNewTimes := TList<Double>.Create;
+
+  for TimeIndex := 0 to
+    Min(FNewStressPeriods.Count, FOldStressPeriods.Count) -1 do
+  begin
+    OldSP := FOldStressPeriods[TimeIndex];
+    NewSP := FNewStressPeriods[TimeIndex];
+    if (OldSP.StartTime <> NewSP.StartTime)
+      and (FOldTimes.IndexOf(OldSP.StartTime) < 0) then
+    begin
+      FOldTimes.Add(OldSP.StartTime);
+      FNewTimes.Add(NewSP.StartTime);
+    end;
+    if (OldSP.EndTime <> NewSP.EndTime)
+      and (FOldTimes.IndexOf(OldSP.EndTime) < 0) then
+    begin
+      FOldTimes.Add(OldSP.EndTime);
+      FNewTimes.Add(NewSP.EndTime);
+    end;
+  end;
+
+  FOldScreenObjects := TObjectList<TScreenObject>.Create;
+  FExistingScreenObjects := TList<TScreenObject>.Create;
+
+  for ScreenObjectIndex := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
+  begin
+    AScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
+    for TimeIndex := 0 to FOldTimes.Count - 1 do
+    begin
+      if AScreenObject.UsesATime(FOldTimes[TimeIndex]) then
+      begin
+        FExistingScreenObjects.Add(AScreenObject);
+        NewScreenObject := TScreenObjectClass(AScreenObject.ClassType).Create(nil);
+        NewScreenObject.Assign(AScreenObject);
+        FOldScreenObjects.Add(NewScreenObject);
+        break;
+      end;
+    end;
+  end;
+
 end;
 
 function TUndoModflowStressPeriods.Description: string;
@@ -1002,6 +1090,10 @@ end;
 
 destructor TUndoModflowStressPeriods.Destroy;
 begin
+  FExistingScreenObjects.Free;
+  FOldScreenObjects.Free;
+  FOldTimes.Free;
+  FNewTimes.Free;
   FNewStressPeriods.Free;
   FOldStressPeriods.Free;
   FOldMt3dmsTimes.Free;
@@ -1010,21 +1102,52 @@ begin
 end;
 
 procedure TUndoModflowStressPeriods.DoCommand;
+var
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  TimeIndex: Integer;
 begin
   inherited;
   frmGoPhast.PhastModel.ModflowStressPeriods := FNewStressPeriods;
   frmGoPhast.PhastModel.ModflowOptions.TimeUnit := FNewTimeUnit;
   frmGoPhast.PhastModel.Mt3dmsTimes := FNewMt3dmsTimes;
   UpdatedRequiredDataSets;
+
+  for ScreenObjectIndex := 0 to FExistingScreenObjects.Count - 1 do
+  begin
+    AScreenObject := FExistingScreenObjects[ScreenObjectIndex];
+    for TimeIndex := FOldTimes.Count - 1 downto 0 do
+    begin
+      if FOldTimes[TimeIndex] < FNewTimes[TimeIndex] then
+      begin
+        AScreenObject.ReplaceATime(FOldTimes[TimeIndex], FNewTimes[TimeIndex]);
+      end;
+    end;
+    for TimeIndex := 0 to FOldTimes.Count - 1 do
+    begin
+      if FOldTimes[TimeIndex] > FNewTimes[TimeIndex] then
+      begin
+        AScreenObject.ReplaceATime(FOldTimes[TimeIndex], FNewTimes[TimeIndex]);
+      end;
+    end;
+  end;
 end;
 
 procedure TUndoModflowStressPeriods.Undo;
+var
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
 begin
   inherited;
   frmGoPhast.PhastModel.ModflowStressPeriods.Assign(FOldStressPeriods);
   frmGoPhast.PhastModel.ModflowOptions.TimeUnit := FOldTimeUnit;
   frmGoPhast.PhastModel.Mt3dmsTimes := FOldMt3dmsTimes;
   UpdatedRequiredDataSets;
+  for ScreenObjectIndex := 0 to FExistingScreenObjects.Count - 1 do
+  begin
+    AScreenObject := FExistingScreenObjects[ScreenObjectIndex];
+    AScreenObject.Assign(FOldScreenObjects[ScreenObjectIndex]);
+  end;
 end;
 
 end.

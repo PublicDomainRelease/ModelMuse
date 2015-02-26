@@ -201,6 +201,8 @@ type
     constructor Create(Boundary: TModflowBoundary;
       Model: TBaseModel; ScreenObject: TObject); virtual;
     function Used: boolean;
+    function UsesATime(ATime: Double): Boolean;
+    procedure ReplaceATime(OldTime, NewTime: Double);
   end;
 
   TCustomMF_BoundColl = class;
@@ -675,6 +677,8 @@ type
     { TODO -cRefactor : Consider replacing Model with an interface. }
     //
     function DataSetUsed(DataArray: TDataArray; AModel: TBaseModel): boolean; virtual;
+    function UsesATime(ATime: Double): Boolean;
+    procedure ReplaceATime(OldTime, NewTime: Double);
   end;
 
   TModflowParametersClass = class of TModflowParameters;
@@ -937,7 +941,7 @@ implementation
 uses Math, Contnrs, ScreenObjectUnit, PhastModelUnit, ModflowGridUnit,
   frmFormulaErrorsUnit, frmGoPhastUnit, SparseArrayUnit, GlobalVariablesUnit,
   GIS_Functions, IntListUnit, ModflowCellUnit, frmProgressUnit, Dialogs,
-  EdgeDisplayUnit;
+  EdgeDisplayUnit, SolidGeom;
 
 resourcestring
   StrInvalidResultType = 'Invalid result type';
@@ -1356,10 +1360,10 @@ begin
     if (AnItem.StartTime <= Time) and (AnItem.EndTime >= Time) then
     begin
       result := AnItem;
-      if AnItem.StartTime > Time then
-      begin
-        Break;
-      end;
+    end;
+    if AnItem.StartTime > Time then
+    begin
+      Break;
     end;
   end;
 end;
@@ -1820,6 +1824,18 @@ begin
   result := inherited Insert(Index) as TModflowParamItem;
 end;
 
+procedure TModflowParameters.ReplaceATime(OldTime, NewTime: Double);
+var
+  Pindex: Integer;
+  PItem: TModflowParamItem;
+begin
+  for Pindex := 0 to Count - 1 do
+  begin
+    PItem := Items[Pindex];
+    PItem.FParam.ReplaceATime(OldTime, NewTime);
+  end;
+end;
+
 procedure TModflowParameters.SetItem(Index: Integer;
   const Value: TModflowParamItem);
 begin
@@ -1836,6 +1852,23 @@ begin
   begin
     Item := Items[Index];
     result := Item.Used;
+    if result then
+    begin
+      Exit;
+    end;
+  end;
+end;
+
+function TModflowParameters.UsesATime(ATime: Double): Boolean;
+var
+  Pindex: Integer;
+  PItem: TModflowParamItem;
+begin
+  result := False;
+  for Pindex := 0 to Count - 1 do
+  begin
+    PItem := Items[Pindex];
+    result := PItem.FParam.UsesATime(ATime);
     if result then
     begin
       Exit;
@@ -2203,6 +2236,33 @@ begin
   result := Count > 0;
 end;
 
+function TCustomNonSpatialBoundColl.UsesATime(ATime: Double): Boolean;
+var
+  TimeIndex: Integer;
+  AnItem: TCustomBoundaryItem;
+  MFItem: TCustomModflowBoundaryItem;
+begin
+  result := False;
+  for TimeIndex := 0 to Count - 1 do
+  begin
+    AnItem := Items[TimeIndex];
+    if AnItem.FStartTime = ATime then
+    begin
+      result := True;
+      Exit;
+    end;
+    if AnItem is TCustomModflowBoundaryItem then
+    begin
+      MFItem := TCustomModflowBoundaryItem(AnItem);
+      if MFItem.FEndTime = ATime then
+      begin
+        result := True;
+        Exit;
+      end;
+    end;
+  end;
+end;
+
 procedure TCustomNonSpatialBoundColl.DeleteItemsWithZeroDuration;
 var
   Item1: TCustomBoundaryItem;
@@ -2241,6 +2301,32 @@ function TCustomNonSpatialBoundColl.GetItem(
   Index: Integer): TCustomBoundaryItem;
 begin
   result := inherited Items[Index] as TCustomBoundaryItem
+end;
+
+procedure TCustomNonSpatialBoundColl.ReplaceATime(OldTime, NewTime: Double);
+const
+  Epsilon = 1e-12;
+var
+  TimeIndex: Integer;
+  AnItem: TCustomBoundaryItem;
+  MFItem: TCustomModflowBoundaryItem;
+begin
+  for TimeIndex := 0 to Count - 1 do
+  begin
+    AnItem := Items[TimeIndex];
+    if NearlyTheSame(AnItem.FStartTime, OldTime, Epsilon) then
+    begin
+      AnItem.FStartTime := NewTime
+    end;
+    if AnItem is TCustomModflowBoundaryItem then
+    begin
+      MFItem := TCustomModflowBoundaryItem(AnItem);
+      if NearlyTheSame(MFItem.FEndTime, OldTime, Epsilon) then
+      begin
+        MFItem.FEndTime := NewTime
+      end;
+    end;
+  end;
 end;
 
 constructor TCustomBoundaryItem.Create(Collection: TCollection);
@@ -2282,7 +2368,6 @@ begin
 //    2
     if (PhastModel <> nil) and not PhastModel.Clearing
       and not (csDestroying in PhastModel.ComponentState) then
-//    if not PhastModel.Clearing and not (csDestroying in PhastModel.ComponentState) then
     begin
       for Index := 0 to FObserverList.Count - 1 do
       begin
@@ -2445,7 +2530,8 @@ begin
     end;
     InvalidateModel;
 
-    if not (csDestroying in frmGoPhast.PhastModel.ComponentState) then
+    if not (csDestroying in frmGoPhast.PhastModel.ComponentState)
+      and not frmGoPhast.PhastModel.Clearing then
     begin
       frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
         FormulaObject, Value, frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
@@ -2593,7 +2679,8 @@ begin
   begin
     PhastModel := FModel as TPhastModel;
     if (PhastModel <> nil) and not PhastModel.Clearing
-      and not (csDestroying in PhastModel.ComponentState) then
+      and not (csDestroying in PhastModel.ComponentState)
+      and not frmGoPhast.PhastModel.Clearing then
     begin
       for Index := 0 to FObserverList.Count - 1 do
       begin
@@ -3176,6 +3263,9 @@ var
   ErrorFormula: string;
   StoredCount: Integer;
   OKTypes: TRbwDataTypes;
+  NumberOfLayers: Integer;
+  NumberOfRows: Integer;
+  NumberOfColumns: Integer;
 begin
   if Count = 0 then
   begin
@@ -3232,7 +3322,10 @@ begin
       end;
       for SectionIndex := 0 to MaxArrays - 1 do
       begin
-        SparseArray := T3DSparseBooleanArray.Create(SPASmall);
+        AScreenObject.GetModelDimensions(LocalModel, NumberOfLayers,
+          NumberOfRows, NumberOfColumns);
+        SparseArray := T3DSparseBooleanArray.Create(GetQuantum(NumberOfLayers),
+          GetQuantum(NumberOfRows), GetQuantum(NumberOfColumns));
         SparseArrays.Add(SparseArray)
       end;
       SparseArray := SparseArrays[0];
@@ -3687,7 +3780,8 @@ begin
         Compiler);
     end;
     InvalidateModel;
-    if not(csDestroying in frmGoPhast.PhastModel.ComponentState) then
+    if not (csDestroying in frmGoPhast.PhastModel.ComponentState)
+      and not frmGoPhast.PhastModel.Clearing then
     begin
       frmGoPhast.PhastModel.FormulaManager.ChangeFormula(FormulaObject, Value,
         frmGoPhast.PhastModel.rpThreeDFormulaCompiler,

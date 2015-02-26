@@ -454,6 +454,9 @@ inherited frmDataSets: TfrmDataSets
           WordWrap = True
           OnClick = framePhastInterpolationcbPhastInterpolationClick
           AutoSize = False
+          HotTrackFont.Charset = ANSI_CHARSET
+          HotTrackFont.Height = 19
+          HotTrackFont.Name = 'Arial'
           HotTrackFont.Pitch = fpVariable
           ExplicitLeft = 4
           ExplicitTop = 3

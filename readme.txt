@@ -142,44 +142,28 @@ Add the following JCL directories to the Library path if they are not added
 automatically when installing the JCL.
 source\common
 source\windows
-The following changes need to be made to JvxCheckListBox.pas in the JVCL
-1. Change
-    function TJvxCustomListBox.GetItemData(Index: Integer): longint; dynamic;
-to
-    function TJvxCustomListBox.GetItemData(Index: Integer): {$IFDEF DELPHI16_UP} NativeInt  {$ELSE} Longint {$ENDIF}; dynamic;
+Version 3.48 was used in compiling ModelMuse. The following changes were made prior to installing. These changes may not be strictly neccessary for installing on Delphi XE1 and XE2 but are helpful for installing in Delphi 7 and 2006
 
-2. Change
-    procedure TJvxCustomListBox.SetItemData(Index: Integer; AData: longint); dynamic;
+JvRichEdit.pas
+line 6013
+Change
+    dwCookie := DWORD_PTR(AConverter);
 to
-    procedure TJvxCustomListBox.SetItemData(Index: Integer; AData: {$IFDEF DELPHI16_UP} NativeInt  {$ELSE} Longint {$ENDIF}); dynamic;
+    dwCookie := {$IFDEF COMPILER19_UP}DWORD_PTR{$ELSE}Longint{$ENDIF}(AConverter);
 
-3. Change
-    function TJvxCheckListBox.GetItemData(Index: Integer): longint; override;
+line 6065
+Change
+      dwCookie := DWORD_PTR(Cookie);
 to
-    function TJvxCheckListBox.GetItemData(Index: Integer): {$IFDEF DELPHI16_UP} NativeInt  {$ELSE} Longint {$ENDIF}; override;
+      dwCookie := {$IFDEF COMPILER19_UP}DWORD_PTR{$ELSE}Longint{$ENDIF}(Cookie);
 
-4. Change
-    procedure TJvxCheckListBox.SetItemData(Index: Integer; AData: {$IFDEF DELPHI16_UP} NativeInt  {$ELSE} Longint {$ENDIF}); override;
-to 
-    procedure TJvxCheckListBox.SetItemData(Index: Integer; AData: NativeInt); override;
-
-5 In TJvxCheckListBox.FindCheckObject change
-  ItemData: longint;
+JvAppIniStorage.pas
+Line 277
+Change
+{$IFDEF DELPHI8_UP}
 to
-  {$IFDEF DELPHI16_UP}
-  ItemData: NativeInt;
-  {$ELSE}
-  ItemData: Longint;
-  {$ENDIF}
+{$IFDEF DELPHI2007_UP}
 
-6 in TJvCheckListBoxItem change
-    FData: Longint;
-to
-    {$IFDEF DELPHI16_UP}
-    FData: NativeInt;
-    {$ELSE}
-    FData: Longint;
-    {$ENDIF}
 
 
 Installing Graphics32

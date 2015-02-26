@@ -437,7 +437,7 @@ begin
                 LayerBottom := UnitTop - UnitThickness/LayerGroup.LayerCount
                   * (Discretization.BottomLayerInUnit+1);
 
-                if (Model.ModelSelection <> msModflowLGR2) then
+                if (Model.ModelSelection = msModflowLGR) then
                 begin
                   CellElevation[ColIndex,RowIndex,UnitBottomIndex] :=
                     (LayerTop + LayerBottom)/2;
@@ -805,7 +805,11 @@ begin
   if frmGoPhast.PhastModel <> nil then
   begin
     if (frmGoPhast.PhastModel <> nil)
-      and (csDestroying in frmGoPhast.PhastModel.ComponentState) then Exit;
+      and ((csDestroying in frmGoPhast.PhastModel.ComponentState)
+      or frmGoPhast.PhastModel.Clearing) then
+    begin
+      Exit;
+    end;
 
     frmGoPhast.PhastModel.InvalidateSegments;
   end;
@@ -1658,7 +1662,8 @@ begin
   if Model is TPhastModel then
   begin
     LocalModel := TPhastModel(Model);
-    if LocalModel.ModelSelection in [msModflowLGR , msModflowLGR2] then
+    if LocalModel.ModelSelection in [msModflowLGR , msModflowLGR2,
+       msModflowFmp] then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
       begin
@@ -1824,7 +1829,8 @@ begin
   if Model is TPhastModel then
   begin
     LocalModel := TPhastModel(Model);
-    if LocalModel.ModelSelection in [msModflowLGR, msModflowLGR2] then
+    if LocalModel.ModelSelection in [msModflowLGR, msModflowLGR2,
+       msModflowFmp] then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
       begin
@@ -1851,7 +1857,8 @@ begin
   if Model is TPhastModel then
   begin
     LocalModel := TPhastModel(Model);
-    if LocalModel.ModelSelection in [msModflowLGR, msModflowLGR2] then
+    if LocalModel.ModelSelection in [msModflowLGR, msModflowLGR2,
+      msModflowFmp] then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
       begin

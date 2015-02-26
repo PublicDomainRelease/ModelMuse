@@ -44,19 +44,13 @@ end;
 procedure TframeScreenObjectFmpEvap.CreateScreenObjectBoundary(
   AScreenObject: TScreenObject);
 begin
-{$IFDEF FMP}
   AScreenObject.CreateFarmRefEvap;
-{$ENDIF}
 end;
 
 function TframeScreenObjectFmpEvap.GetBoundary(
   AScreenObject: TScreenObject): TModflowBoundary;
 begin
-{$IFDEF FMP}
   result := AScreenObject.ModflowFmpRefEvap;
-{$ELSE}
-  result := nil;
-{$ENDIF}
 end;
 
 procedure TframeScreenObjectFmpEvap.InitializeControls;

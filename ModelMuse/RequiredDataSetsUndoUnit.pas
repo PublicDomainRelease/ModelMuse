@@ -263,7 +263,7 @@ begin
   FNewChildModels.Capacity := frmGoPhast.PhastModel.ChildModels.Count;
   FNewChildModels.Assign(frmGoPhast.PhastModel.ChildModels);
 
-  if NewModelSelection = msModflowLGR then
+  if NewModelSelection in [msModflowLGR] then
   begin
     for ChildIndex := 0 to FNewChildModels.Count - 1 do
     begin

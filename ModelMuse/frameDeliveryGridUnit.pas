@@ -6,10 +6,10 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics,
   Controls, Forms, Dialogs, frameFormulaGridUnit, ExtCtrls,
   Grids, RbwDataGrid4, StdCtrls, Mask, JvExMask, JvSpin, Buttons,
-  UndoItemsScreenObjects, Math;
+  UndoItemsScreenObjects, Math, ModflowFmpFarmUnit;
 
 type
-  // @name is used for editing data set 33 in the Farm Process of MODFLOW-FMP
+  // @name is used for editing data set 33 in the Farm Process of MODFLOW-OWHM
   TframeDeliveryGrid = class(TframeFormulaGrid)
     lblNumberOfDeliveryTypes: TLabel;
     seNumberOfDeliveryTypes: TJvSpinEdit;
@@ -31,21 +31,18 @@ type
   private
     FChanged: boolean;
     FOnChange: TNotifyEvent;
-{$IFDEF FMP}
     FChanging: Boolean;
-//    procedure ClearGrid(Grid: TRbwDataGrid4);
     property Changing: Boolean read FChanging write FChanging;
     procedure CheckValidCell(Sender: TObject; ACol, ARow: Integer; var ValidCell: Boolean);
     procedure GetValidHowUsed(ColIndex, RowIndex: Integer; var ValidCell: Boolean);
-{$ENDIF}
     procedure DoChange;
     { Private declarations }
   public
     property DataChanged: Boolean read FChanged;
     procedure InitializeControls;
     // ScreenObjectList contains only objects that define farms.
-    procedure GetData(ScreenObjectList: TScreenObjectEditCollection);
-    procedure SetData(List: TScreenObjectEditCollection);
+    procedure GetData(FarmList: TFarmList);
+    procedure SetData(FarmList: TFarmList);
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     procedure LayoutMultiRowEditControls; override;
     { Public declarations }
@@ -61,7 +58,7 @@ var
 implementation
 
 uses
-  GoPhastTypes, ModflowTimeUnit, frmGoPhastUnit, ModflowFmpFarmUnit,
+  GoPhastTypes, ModflowTimeUnit, frmGoPhastUnit,
   Generics.Collections, frmCustomGoPhastUnit;
 
 resourcestring
@@ -79,7 +76,6 @@ const
 
 {$R *.dfm}
 
-{$IFDEF FMP}
 procedure TframeDeliveryGrid.CheckValidCell(Sender: TObject; ACol,
   ARow: Integer; var ValidCell: Boolean);
 begin
@@ -87,32 +83,13 @@ begin
     and (((ACol-2) mod DeliveryColumns) <> Ord(dcHowUsed));
 end;
 
-//procedure TframeDeliveryGrid.ClearGrid(Grid: TRbwDataGrid4);
-//var
-//  RowIndex: Integer;
-//  ColIndex: Integer;
-//begin
-//  for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
-//  begin
-//    for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
-//    begin
-//      Grid.Cells[ColIndex,RowIndex] := ''
-//    end;
-//  end;
-//end;
-
-{$ENDIF}
-
 procedure TframeDeliveryGrid.comboHowUsedChange(Sender: TObject);
-{$IFDEF FMP}
 var
   ColIndex: Integer;
   RowIndex: Integer;
   TempOptions: TGridOptions;
   ValidCell: Boolean;
-{$ENDIF}
 begin
-{$IFDEF FMP}
   for RowIndex := Grid.FixedRows to
     Grid.RowCount - 1 do
   begin
@@ -140,12 +117,10 @@ begin
   finally
     Grid.Options := TempOptions;
   end;
-{$ENDIF}
 end;
 
 procedure TframeDeliveryGrid.DoChange;
 begin
-{$IFDEF FMP}
   if Changing then
   begin
     Exit;
@@ -155,24 +130,18 @@ begin
     OnChange(Self);
   end;
   FChanged := True;
-{$ENDIF}
 end;
 
 procedure TframeDeliveryGrid.edFormulaChange(Sender: TObject);
 begin
   inherited;
-{$IFDEF FMP}
   DoChange;
-{$ENDIF}
 end;
 
 
-procedure TframeDeliveryGrid.GetData(
-  ScreenObjectList: TScreenObjectEditCollection);
-{$IFDEF FMP}
+procedure TframeDeliveryGrid.GetData(FarmList: TFarmList);
 var
   ObjectIndex: Integer;
-  AFarmItem: TScreenObjectEditItem;
   AFarm: TFarm;
   MaxCount: Integer;
   FirstFarm: TFarm;
@@ -180,25 +149,22 @@ var
   OuterIndex: Integer;
   TimeIndex: Integer;
   TimeItem: TNonRoutedDeliveryParameterItem;
-{$ENDIF}
 begin
-{$IFDEF FMP}
   Changing := True;
   try
-    Assert(ScreenObjectList.Count > 0);
+    Assert(FarmList.Count > 0);
     MaxCount := 0;
-    AFarmItem := ScreenObjectList[0];
-    FirstFarm := AFarmItem.ScreenObject.ModflowFmpFarm;
-    for ObjectIndex := 1 to ScreenObjectList.Count - 1 do
+    FirstFarm := FarmList[0];
+    for ObjectIndex := 1 to FarmList.Count - 1 do
     begin
-      AFarmItem := ScreenObjectList[ObjectIndex];
-      AFarm := AFarmItem.ScreenObject.ModflowFmpFarm;
+      AFarm := FarmList[ObjectIndex];
       if not FirstFarm.DeliveryParamCollection.IsSame(
         AFarm.DeliveryParamCollection) then
       begin
         ClearGrid;
         seNumberOfDeliveryTypes.AsInteger := 0;
         seNumberOfDeliveryTypes.OnChange(seNumberOfDeliveryTypes);
+        Grid.RowCount := 2;
         seNumber.AsInteger := 0;
         seNumber.OnChange(seNumber);
         Exit;
@@ -210,6 +176,7 @@ begin
       ClearGrid;
       seNumberOfDeliveryTypes.AsInteger := 0;
       seNumberOfDeliveryTypes.OnChange(seNumberOfDeliveryTypes);
+      Grid.RowCount := 2;
       seNumber.AsInteger := 0;
       seNumber.OnChange(seNumber);
       Exit;
@@ -218,8 +185,10 @@ begin
     seNumberOfDeliveryTypes.AsInteger := MaxCount;
     Grid.BeginUpdate;
     try
+      ClearGrid;
       DelivItem := FirstFarm.DeliveryParamCollection[0];
 
+      Grid.RowCount := Max(2, DelivItem.DeliveryParam.Count);
       seNumber.AsInteger := DelivItem.DeliveryParam.Count;
       seNumber.OnChange(seNumber);
       for OuterIndex := 0 to FirstFarm.DeliveryParamCollection.Count - 1 do
@@ -243,19 +212,15 @@ begin
     FChanged := False;
     Changing := False;
   end;
-{$ENDIF}
 end;
 
 procedure TframeDeliveryGrid.GridMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
-{$IFDEF FMP}
 var
   ShouldEnable: boolean;
   ColIndex, RowIndex: Integer;
-{$ENDIF}
 begin
   inherited;
-{$IFDEF FMP}
   ShouldEnable := False;
   for RowIndex := Grid.FixedRows to Grid.RowCount -1 do
   begin
@@ -278,7 +243,6 @@ begin
   end;
   comboHowUsed.Enabled := ShouldEnable;
   lblHowUsed.Enabled := ShouldEnable;
-{$ENDIF}
 end;
 
 procedure TframeDeliveryGrid.GridSelectCell(Sender: TObject; ACol,
@@ -415,11 +379,9 @@ begin
 //  FChanged := True;
 end;
 
-procedure TframeDeliveryGrid.SetData(List: TScreenObjectEditCollection);
-{$IFDEF FMP}
+procedure TframeDeliveryGrid.SetData(FarmList: TFarmList);
 var
   index: Integer;
-  Item: TScreenObjectEditItem;
   Farm: TFarm;
   Delivery: TDeliveryParamCollection;
   StartTimes: TList<Double>;
@@ -433,13 +395,10 @@ var
   ARow: Integer;
   ColStart: Integer;
   DeliveryTimeItem: TNonRoutedDeliveryParameterItem;
-{$ENDIF}
 begin
-{$IFDEF FMP}
-  for index := 0 to List.Count - 1 do
+  for index := 0 to FarmList.Count - 1 do
   begin
-    Item := List[index];
-    Farm := Item.ScreenObject.ModflowFmpFarm;
+    Farm := FarmList[index];
     if Farm <> nil then
     begin
       Delivery := Farm.DeliveryParamCollection;
@@ -485,7 +444,7 @@ begin
             DeliveryTimeItem.Volume := Grid.Cells[ColStart + Ord(dcVolume),ARow];
             DeliveryTimeItem.Rank := Grid.Cells[ColStart + Ord(dcRank),ARow];
             DeliveryTimeItem.NonRoutedDeliveryType :=
-              TNonRoutedDeliveryType(Grid.ItemIndex[ColStart + Ord(dcHowUsed),ARow]);
+              TNonRoutedDeliveryType(Max(0, Grid.ItemIndex[ColStart + Ord(dcHowUsed),ARow]));
             if DeliveryTimeItem.NonRoutedDeliveryType = nrdtVirtualFarm then
             begin
               DeliveryTimeItem.VirtualFarm := Grid.Cells[ColStart + Ord(dcVirtualFarm),ARow];
@@ -495,8 +454,6 @@ begin
           begin
             DeliveryItem.DeliveryParam.Last.Free;
           end;
-//  TDeliveryTimeColumns = (dtcStart, dtcEnd);
-//  TDeliveryColumns = (dcVolume, dcRank, dcHowUsed);
         end;
       finally
         StartTimes.Free;
@@ -506,25 +463,19 @@ begin
 
     end;
   end;
-{$ENDIF}
 end;
 
-{$IFDEF FMP}
-procedure TframeDeliveryGrid.GetValidHowUsed(ColIndex, RowIndex: Integer; 
+procedure TframeDeliveryGrid.GetValidHowUsed(ColIndex, RowIndex: Integer;
   var ValidCell: Boolean);
 begin
   ValidCell := (RowIndex >= 1) and (ColIndex > Ord(dtcEnd))
     and (((ColIndex - 2) mod DeliveryColumns) = Ord(dcHowUsed));
 end;
-{$ENDIF}
 
 procedure TframeDeliveryGrid.InitializeControls;
-{$IFDEF FMP}
 var
   StressPeriods: TModflowStressPeriods;
-{$ENDIF}
 begin
-{$IFDEF FMP}
   FirstFormulaColumn := Succ(Ord(dtcEnd));
   ClearGrid;
   OnValidCell := CheckValidCell;
@@ -536,21 +487,15 @@ begin
   seNumberOfDeliveryTypes.AsInteger := 0;
   seNumber.AsInteger := 0;
   LayoutMultiRowEditControls;
-{$ENDIF}
-
 end;
 
 procedure TframeDeliveryGrid.LayoutMultiRowEditControls;
-{$IFDEF FMP}
 var
   Column: integer;
-//  Row: Integer;
   ColIndex: Integer;
   ValidCell: Boolean;
-{$ENDIF}
 begin
   inherited;
-{$IFDEF FMP}
   if [csLoading, csReading] * ComponentState <> [] then
   begin
     Exit
@@ -559,8 +504,6 @@ begin
   for ColIndex := Column to Grid.ColCount - 1 do
   begin
     GetValidHowUsed(ColIndex,1,ValidCell);
-//    ValidCell := (ARow >= 1) and (ACol > Ord(dtcEnd))
-//      and (((ACol-2) mod 3) = Ord(dcHowUsed));
     if ValidCell then
     begin
       Column := ColIndex;
@@ -569,7 +512,6 @@ begin
   end;
   LayoutControls(Grid, comboHowUsed, lblHowUsed,
     Column);
-{$ENDIF}
 end;
 
 end.

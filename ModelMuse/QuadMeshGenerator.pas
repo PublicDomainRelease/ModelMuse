@@ -588,6 +588,9 @@ Type
   public
     function Center: TPoint2D;
 {$ENDIF}
+  {$IFDEF DEBUG}
+    function NodeLocations: string;
+  {$ENDIF}
     // @name removes itself from all of the @link(TNode)s that have it.
     procedure RemoveSelfFromOwnNodes;
     // See @link(SubPartCount).
@@ -4471,6 +4474,30 @@ begin
   ConvexHull2(InputPoints, result, OutputPoints);
 end;
 
+{$IFDEF DEBUG}
+function TBoundary.NodeLocations: string;
+var
+  AStringList: TStringBuilder;
+  NodeIndex: Integer;
+  ANode: TNode;
+begin
+  AStringList := TStringBuilder.Create;
+  try
+    for NodeIndex := 0 to FNodes.Count - 1 do
+    begin
+      ANode := FNodes[NodeIndex];
+      AStringList.Append(ANode.Location.x);
+      AStringList.Append(#9);
+      AStringList.Append(ANode.Location.y);
+      AStringList.Append(#13#10);
+    end;
+    result := AStringList.ToString
+  finally
+    AStringList.Free;
+  end;
+end;
+{$ENDIF}
+
 function TBoundary.NodeOrientation: Integer;
 var
   InputPoints: TPolygon2D;
@@ -6058,12 +6085,15 @@ var
   ABoundary: TBoundary;
   ANode: TNode;
   ExternalBoundary: TPolygon2D;
+//  ReverseExternalBoundary: TPolygon2D;
   NodeIndex: Integer;
   TestNode: TNode;
   PriorNode: TNode;
   HasInsidePoint: Boolean;
   TestPoint: TPoint2D;
   OuterBoundary: TBoundary;
+  Index1: integer;
+  Index2: integer;
 begin
   if FBoundaries.Count = 1 then
   begin
@@ -6080,9 +6110,9 @@ begin
       Continue;
     end;
 
+    OuterBoundary := FBoundaries[0];
     if Length(ExternalBoundary) = 0 then
     begin
-      OuterBoundary := FBoundaries[0];
       Assert(OuterBoundary.FNodes.First = OuterBoundary.FNodes.Last);
       SetLength(ExternalBoundary, OuterBoundary.FNodes.Count-1);
       for NodeIndex := 0 to Length(ExternalBoundary) - 1 do
@@ -6103,6 +6133,13 @@ begin
           TestPoint.X := (PriorNode.X + ANode.X)/2;
           TestPoint.Y := (PriorNode.Y + ANode.Y)/2;
           HasInsidePoint := PointInConcavePolygon(TestPoint, ExternalBoundary);
+          if not HasInsidePoint then
+          begin
+            Index1 := OuterBoundary.FNodes.IndexOf(ANode);
+            Index2 := OuterBoundary.FNodes.IndexOf(PriorNode);
+            HasInsidePoint := (Index1 >= 0) and (Index2 >= 0)
+              and (Abs(Index1-Index2) = 1);
+          end;
         end;
       end
       else
@@ -6784,6 +6821,107 @@ var
   MidPoint: TPoint2D;
   IntersectsBoundary: boolean;
   MoveNodeIndex: Integer;
+  Test1: Boolean;
+  Test2: Boolean;
+  PreviouslyInserted: boolean;
+  NodePosition: integer;
+  NodeToDelete: TNode;
+  procedure HandleIntersectionInsertion;
+  begin
+    PreviouslyInserted := False;
+    IntersectsBoundary := True;
+    APoint := IntersectionPoint(OuterSegment, InnerSegment);
+    X := APoint.X;
+    Y := APoint.Y;
+    NodesTree.FindClosestPointsData(X,Y, DataArray);
+    InsertOuter := True;
+    InsertInner := True;
+    IntesectNode := nil;
+    if NearlyTheSame(X, APoint.X, XEpsilon)
+      and NearlyTheSame(Y, APoint.Y, YEpsilon) then
+    begin
+      if NearlyTheSame(APoint, Node1.Location) then
+      begin
+        Node1.FIntersection := True;
+        IntesectNode := Node1;
+        InsertOuter := False;
+      end;
+      if NearlyTheSame(APoint, Node2.Location) then
+      begin
+        Node2.FIntersection := True;
+        IntesectNode := Node2;
+        InsertOuter := False;
+      end;
+      if NearlyTheSame(APoint, Node3.Location) then
+      begin
+        Node3.FIntersection := True;
+        IntesectNode := Node3;
+        InsertInner := False;
+      end;
+      if NearlyTheSame(APoint, Node4.Location) then
+      begin
+        Node4.FIntersection := True;
+        IntesectNode := Node4;
+        InsertInner := False;
+      end;
+    end;
+
+    ANode := nil;
+    if InsertOuter or InsertInner then
+    begin
+      if InsertOuter and InsertInner then
+      begin
+        DesiredSpacing := Min(OuterBoundary.DesiredSpacing,
+          ABoundary.DesiredSpacing);
+      end
+      else if InsertOuter then
+      begin
+        DesiredSpacing := OuterBoundary.DesiredSpacing;
+      end
+      else
+      begin
+        DesiredSpacing := ABoundary.DesiredSpacing;
+      end;
+      if IntesectNode = nil then
+      begin
+        ANode := TNode.Create(self, DesiredSpacing);
+        ANode.Location := APoint;
+        if BoundaryIndex = 0 then
+        begin
+          FBNodes.Add(ANode);
+          // FBNodes are now no longer in order.
+        end;
+      end
+      else
+      begin
+        ANode := IntesectNode;
+      end;
+      ANode.FIntersection := True;
+      ANode.FDesiredSpacing := DesiredSpacing;
+      if InsertOuter then
+      begin
+        if OuterBoundary.FNodes[OuterNodeIndex+1] <> ANode then
+        begin
+          OuterBoundary.FNodes.Insert(OuterNodeIndex+1,ANode);
+        end;
+        OuterSegment[2] := ANode.Location;
+      end;
+      if InsertInner then
+      begin
+        if ABoundary.FNodes[InnerNodeIndex+1] <> ANode then
+        begin
+          ABoundary.FNodes.Insert(InnerNodeIndex+1,ANode);
+        end;
+        InnerSegment[2] := ANode.Location;
+      end;
+      NodesTree.AddPoint(ANode.X, ANode.Y, ANode);
+    end
+    else
+    begin
+      ANode := IntesectNode;
+      PreviouslyInserted := True;
+    end;
+  end;
 begin
   NodesTree := TRbwQuadTree.Create(nil);
   try
@@ -6791,14 +6929,18 @@ begin
     NodesTree.XMin := FMinX;
     NodesTree.YMax := FMaxY;
     NodesTree.YMin := FMinY;
-    YEpsilon := (NodesTree.YMax - NodesTree.YMin)/1e7;
-    XEpsilon := (NodesTree.XMax - NodesTree.XMin)/1e7;
+    YEpsilon := (NodesTree.YMax - NodesTree.YMin)/1e9;
+    XEpsilon := (NodesTree.XMax - NodesTree.XMin)/1e9;
     for NodeIndex := 1 to FNodes.Count - 1 do
     begin
       ANode := FNodes[NodeIndex];
       NodesTree.AddPoint(ANode.X, ANode.Y, ANode);
     end;
     OuterBoundary:= FBoundaries[0];
+  {$IFDEF DEBUG}
+    // Force inclusion of
+    OuterBoundary.NodeLocations;
+  {$ENDIF}
 
     SetLength(OuterPolygon, OuterBoundary.FNodes.Count-1);
     for OuterNodeIndex := 0 to OuterBoundary.FNodes.Count - 2 do
@@ -6814,6 +6956,60 @@ begin
         and (ABoundary.FNodes[0] = ABoundary.FNodes[ABoundary.FNodes.Count-1]) then
       begin
         IntersectsBoundary := False;
+        if ABoundary.FNodes.Count > 2 then
+        begin
+          Test1 := False;
+          Test2 := False;
+          InnerNodeIndex := 0;
+          Node3 := ABoundary.FNodes[InnerNodeIndex];
+          Node4 := ABoundary.FNodes[InnerNodeIndex+1];
+          InnerSegment[1] := Node3.Location;
+          InnerSegment[2] := Node4.Location;
+          for OuterNodeIndex := OuterBoundary.FNodes.Count - 2 downto 0 do
+          begin
+            Node1 := OuterBoundary.FNodes[OuterNodeIndex];
+            Node2 := OuterBoundary.FNodes[OuterNodeIndex+1];
+            OuterSegment[1] := Node1.Location;
+            OuterSegment[2] := Node2.Location;
+            if Intersect(OuterSegment, InnerSegment) then
+            begin
+              HandleIntersectionInsertion;
+              Test1 := True;
+            end;
+          end;
+          InnerNodeIndex := ABoundary.FNodes.Count - 2;
+          Node3 := ABoundary.FNodes[InnerNodeIndex];
+          Node4 := ABoundary.FNodes[InnerNodeIndex+1];
+          InnerSegment[1] := Node3.Location;
+          InnerSegment[2] := Node4.Location;
+          for OuterNodeIndex := OuterBoundary.FNodes.Count - 2 downto 0 do
+          begin
+            Node1 := OuterBoundary.FNodes[OuterNodeIndex];
+            Node2 := OuterBoundary.FNodes[OuterNodeIndex+1];
+            OuterSegment[1] := Node1.Location;
+            OuterSegment[2] := Node2.Location;
+            if Intersect(OuterSegment, InnerSegment) then
+            begin
+              HandleIntersectionInsertion;
+              Test2 := True;
+            end;
+          end;
+          if Test1 and Test2 then
+          begin
+            ABoundary.FNodes.Delete(ABoundary.FNodes.Count-1);
+            ABoundary.FNodes.Delete(0);
+            Continue;
+          end
+          else
+          begin
+            IntersectsBoundary := False;
+          end;
+//            if Intersect(OuterSegment, InnerSegment) then
+//            begin
+//              HandleIntersectionInsertion;
+//            end;
+        end;
+//        end;
         for OuterNodeIndex := OuterBoundary.FNodes.Count - 2 downto 0 do
         begin
           Node1 := OuterBoundary.FNodes[OuterNodeIndex];
@@ -6828,95 +7024,57 @@ begin
             InnerSegment[2] := Node4.Location;
             if Intersect(OuterSegment, InnerSegment) then
             begin
-              IntersectsBoundary := True;
-              APoint := IntersectionPoint(OuterSegment, InnerSegment);
-              X := APoint.X;
-              Y := APoint.Y;
-              NodesTree.FindClosestPointsData(X,Y, DataArray);
-              InsertOuter := True;
-              InsertInner := True;
-              IntesectNode := nil;
-              if NearlyTheSame(X, APoint.X, XEpsilon)
-                and NearlyTheSame(Y, APoint.Y, YEpsilon) then
-              begin
-                if NearlyTheSame(APoint, Node1.Location) then
-                begin
-                  Node1.FIntersection := True;
-                  IntesectNode := Node1;
-                  InsertOuter := False;
-                end;
-                if NearlyTheSame(APoint, Node2.Location) then
-                begin
-                  Node2.FIntersection := True;
-                  IntesectNode := Node2;
-                  InsertOuter := False;
-                end;
-                if NearlyTheSame(APoint, Node3.Location) then
-                begin
-                  Node3.FIntersection := True;
-                  IntesectNode := Node3;
-                  InsertInner := False;
-                end;
-                if NearlyTheSame(APoint, Node4.Location) then
-                begin
-                  Node4.FIntersection := True;
-                  IntesectNode := Node4;
-                  InsertInner := False;
-                end;
-              end;
+              HandleIntersectionInsertion;
 
-              ANode := nil;
-              if InsertOuter or InsertInner then
+              if PreviouslyInserted then
               begin
-                if InsertOuter and InsertInner then
+                NodePosition := ABoundary.FNodes.IndexOf(ANode);
+                Assert(NodePosition >= 0);
+                if NodePosition > 0 then
                 begin
-                  DesiredSpacing := Min(OuterBoundary.DesiredSpacing,
-                    ABoundary.DesiredSpacing);
-                end
-                else if InsertOuter then
-                begin
-                  DesiredSpacing := OuterBoundary.DesiredSpacing;
+                  Dec(NodePosition);
                 end
                 else
                 begin
-                  DesiredSpacing := ABoundary.DesiredSpacing;
+                  NodePosition := ABoundary.FNodes.Count - 2;
                 end;
-                if IntesectNode = nil then
+                NodeToDelete := ABoundary.FNodes[NodePosition];
+                if PointInConcavePolygon(NodeToDelete.Location, OuterPolygon) then
                 begin
-                  ANode := TNode.Create(self, DesiredSpacing);
-                  ANode.Location := APoint;
-                  if BoundaryIndex = 0 then
+                  NodePosition := ABoundary.FNodes.IndexOf(ANode);
+                  Assert(NodePosition >= 0);
+                  if NodePosition < ABoundary.FNodes.Count-1 then
                   begin
-                    FBNodes.Add(ANode);
-                    // FBNodes are now no longer in order.
+                    Inc(NodePosition)
+                  end
+                  else
+                  begin
+                    NodePosition := 1;
+                  end;
+                  NodeToDelete := ABoundary.FNodes[NodePosition];
+                  if PointInConcavePolygon(NodeToDelete.Location, OuterPolygon) then
+                  begin
+                    Assert(False);
+                  end
+                  else
+                  begin
+                    ABoundary.FNodes.Delete(NodePosition);
+                    if NodePosition = ABoundary.FNodes.Count then
+                    begin
+                      ABoundary.FNodes.Delete(0);
+                    end;
                   end;
                 end
                 else
                 begin
-                  ANode := IntesectNode;
-                end;
-                ANode.FIntersection := True;
-                ANode.FDesiredSpacing := DesiredSpacing;
-                if InsertOuter then
-                begin
-                  if OuterBoundary.FNodes[OuterNodeIndex+1] <> ANode then
+                  ABoundary.FNodes.Delete(NodePosition);
+                  if NodePosition = 0 then
                   begin
-                    OuterBoundary.FNodes.Insert(OuterNodeIndex+1,ANode);
+                    ABoundary.FNodes.Delete(ABoundary.FNodes.Count-1);
                   end;
-                  OuterSegment[2] := ANode.Location;
                 end;
-                if InsertInner then
-                begin
-                  if ABoundary.FNodes[InnerNodeIndex+1] <> ANode then
-                  begin
-                    ABoundary.FNodes.Insert(InnerNodeIndex+1,ANode);
-                  end;
-                  InnerSegment[2] := ANode.Location;
-                end;
-                NodesTree.AddPoint(ANode.X, ANode.Y, ANode);
-              end;
-
-              if Node3 <> ANode then
+              end
+              else if (Node3 <> ANode) then
               begin
                 MidPoint := SegmentMidPoint(Node3.Location, ANode.Location);
                 if PointInConcavePolygon(MidPoint, OuterPolygon) then
@@ -6978,10 +7136,10 @@ begin
           end;
 
         end;
-        if IntersectsBoundary then
-        begin
-          Break;
-        end;
+//        if IntersectsBoundary then
+//        begin
+//          Break;
+//        end;
 
       end;
     end;

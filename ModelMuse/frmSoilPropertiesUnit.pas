@@ -332,9 +332,7 @@ var
 begin
   GetGlobalVariables;
   FSoils := TSoilCollection.Create(nil);
-{$IFDEF FMP}
   FSoils.Assign(frmGoPhast.PhastModel.FmpSoils);
-{$ENDIF}
 
   frameSoils.seNumber.AsInteger := FSoils.Count;
   frameSoils.seNumber.OnChange(frameSoils.seNumber);
@@ -478,12 +476,10 @@ end;
 
 constructor TUndoSoils.Create(var NewSoils: TSoilCollection);
 begin
-{$IFDEF FMP}
   FNewSoils := NewSoils;
   NewSoils := nil;
   FOldSoils := TSoilCollection.Create(nil);
   FOldSoils.Assign(frmGoPhast.PhastModel.FmpSoils);
-{$ENDIF}
 end;
 
 function TUndoSoils.Description: string;
@@ -500,16 +496,12 @@ end;
 
 procedure TUndoSoils.DoCommand;
 begin
-{$IFDEF FMP}
   frmGoPhast.PhastModel.FmpSoils := FNewSoils;
-{$ENDIF}
 end;
 
 procedure TUndoSoils.Undo;
 begin
-{$IFDEF FMP}
   frmGoPhast.PhastModel.FmpSoils := FOldSoils;
-{$ENDIF}
 end;
 
 end.

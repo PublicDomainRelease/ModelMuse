@@ -660,7 +660,15 @@ var
 begin
   Model := DataArray.Model as TCustomModel;
 
-  Model.Grid.GetMinMax(MinMax, DataArray, StringValues);
+  if Model.Grid <> nil then
+  begin
+    Model.Grid.GetMinMax(MinMax, DataArray, StringValues);
+  end
+  else
+  begin
+    Model.Mesh.GetMinMax(MinMax, DataArray, StringValues);
+  end;
+
 
 //  DataArray.Initialize;
 

@@ -324,9 +324,8 @@ begin
   Grid := nil;
   Mesh := nil;
   case LocalModel.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         Grid := LocalModel.Grid;
         if (Grid.ColumnCount = 0)

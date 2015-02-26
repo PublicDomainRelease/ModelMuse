@@ -182,9 +182,9 @@ inherited frmDataSetValues: TfrmDataSetValues
     end
     object lbLayers: TJvListBox
       Left = 1
-      Top = 25
+      Top = 22
       Width = 95
-      Height = 134
+      Height = 137
       Align = alClient
       ItemHeight = 18
       Background.FillMode = bfmTile

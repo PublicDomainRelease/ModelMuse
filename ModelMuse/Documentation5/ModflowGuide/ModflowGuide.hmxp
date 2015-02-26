@@ -132,7 +132,7 @@
       <config-value name="usesecondarywindows">1</config-value>
       <config-value name="outputfile">ModflowGuide.chm</config-value>
       <config-value name="deletetemp">1</config-value>
-      <config-value name="skin">C:\Program Files (x86)\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.53 Skins\Skins Horizontal Tabs\sky_blue_horiz.hmskin</config-value>
+      <config-value name="skin">..\..\..\..\..\Program Files (x86)\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.53 Skins\Skins Horizontal Tabs\sky_blue_horiz.hmskin</config-value>
     </config-group>
     <config-group name="hxs">
       <config-value name="namespace"></config-value>
@@ -470,6 +470,7 @@
       <file-mod href="Tabfile4.xml"/>
       <file-mod href="RIP_Riparian_Evapotranspiratio.xml" build="ALLMODELS,MODFLOW-FMP2"/>
       <file-mod href="STOB.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/>
+      <file-mod href="Farm_20_25.xml"/>
     </file>
     <file href="Topics/Invisible/*.xml" build="ALL" filetype="topic">
       <file-mod href="Daflow_linkage.xml" build="ALLMODELS,MODFLOW-2000"/>

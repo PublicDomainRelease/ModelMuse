@@ -71,7 +71,7 @@ procedure DSiTrimWorkingSet;
 
 function QuoteFileName(AName: string): string;
 
-function FixShapeFileFieldName(FieldName: AnsiString): AnsiString;
+function FixShapeFileFieldName(FieldName: AnsiString; Fields: TStringList): AnsiString;
 
 procedure RunAProgram(const CommandLine: string);
 
@@ -88,7 +88,8 @@ function CompareNames(List: TStringList; Index1, Index2: Integer): Integer;
 
 implementation
 
-uses JvCreateProcess, AnsiStrings, StrUtils, Dialogs, Math, frmGoPhastUnit;
+uses JvCreateProcess, AnsiStrings, StrUtils, Dialogs, Math, frmGoPhastUnit,
+  IdGlobal, IOUtils;
 
 resourcestring
   StrBadProcessHandle = 'Bad process handle';
@@ -185,6 +186,11 @@ var
 begin
   if ColorSchemeIndex <= MaxColorScheme then
   begin
+    if ColorSchemeIndex < 0 then
+    begin
+      result := clWhite;
+      Exit;
+    end;
     if Fraction <> 1 then
     begin
       Fraction := Frac(Fraction*Cycles);
@@ -360,25 +366,87 @@ begin
 end;
 
 function QuoteFileName(AName: string): string;
+var
+  AlphaNumeric: Boolean;
+  AChar: Char;
+  TempFile: TFileStream;
 begin
-  if (Length(AName) > 0)
-    and (AName[1] <> '"')
-    and (Pos(' ', AName) > 0) then
+  if AName = '' then
   begin
-    result := '"' + AName + '"';
+    result := AName;
+    Exit;
+  end;
+
+  AlphaNumeric := True;
+  for AChar in AName do
+  begin
+    if not CharInSet(AChar, ['.', ':', '\', ' ']) and not IsAlphaNumeric(AChar) then
+    begin
+      AlphaNumeric := False;
+    end;
+  end;
+  if AlphaNumeric then
+  begin
+    if (AName[1] <> '"')
+      and (Pos(' ', AName) > 0) then
+    begin
+      result := '"' + AName + '"';
+    end
+    else
+    begin
+      result := AName;
+    end;
   end
   else
   begin
+    if not FileExists(AName) then
+    begin
+      TempFile := TFile.Create(AName);
+      try
+        AName := ExtractShortPathName(AName);
+      finally
+        TempFile.Free;
+      end;
+      DeleteFile(AName)
+    end
+    else
+    begin
+      AName := ExtractShortPathName(AName);
+    end;
     result := AName;
   end;
 end;
 
-function FixShapeFileFieldName(FieldName: AnsiString): AnsiString;
+function FixShapeFileFieldName(FieldName: AnsiString; Fields: TStringList): AnsiString;
+const
+  MaximumFieldNameLength = 10;
+var
+//  SuffixIndex: Integer;
+  Root: AnsiString;
+  SuffixValue: Integer;
+  Suffix: AnsiString;
 begin
   While (Length(FieldName) > 0) and (FieldName[Length(FieldName)] = '_') do
   begin
     SetLength(FieldName, Length(FieldName) -1);
   end;
+
+  if Fields.IndexOf(string(FieldName)) >= 0 then
+  begin
+    Root := FieldName;
+    SuffixValue := 0;
+    repeat
+      Inc(SuffixValue);
+      Suffix := AnsiString(IntToStr(SuffixValue));
+      if Length(Root) + Length(Suffix) > MaximumFieldNameLength then
+      begin
+        SetLength(Root, MaximumFieldNameLength - Length(Suffix));
+      end;
+      FieldName := Root + Suffix;
+//      FieldName := FixShapeFileFieldName(FieldName);
+    until (Fields.IndexOf(string(FieldName)) < 0);
+  end;
+
   result := FieldName;
 end;
 

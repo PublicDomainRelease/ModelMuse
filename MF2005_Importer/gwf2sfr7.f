@@ -2108,6 +2108,8 @@ C6------READ DATA SET 4C.
      +                     (SEG(jj, nseg), jj=18, 21)
 	        WRITE(IOUT, *) 'HCOND1, THICKM1, ELEVUP, WIDTH1,
      +THTS1, THTI1, EPS1, UHC1:'
+              WRITE (IOUT, *) (SEG(jj, nseg), jj=6, 9), 
+     +                     (SEG(jj, nseg), jj=18, 21)
             ELSE
               READ (In, *) SEG(6, nseg)
 	        WRITE(IOUT, *) 'HCOND1:'

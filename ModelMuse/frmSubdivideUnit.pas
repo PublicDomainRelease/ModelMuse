@@ -570,9 +570,8 @@ begin
       begin
         result := StrClickOnGridAndDr;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msModflowCfp:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp:
       begin
         result := StrClickOnGridAndDrCell;
       end;

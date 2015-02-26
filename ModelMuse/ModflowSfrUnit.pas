@@ -99,7 +99,7 @@ type
   // @seealso(TSfrCollection)
   TSfrBoundary = class(TModflowBoundary)
   private
-    FSegementNumber: integer;
+    FSegmentNumber: integer;
     FChannelValues: TSfrChannelCollection;
     FUpstreamSegmentValues: TSfrSegmentCollection;
     FDownstreamSegmentValues: TSfrSegmentCollection;
@@ -119,7 +119,7 @@ type
     FGage7: boolean;
     FGageLocation: TGageLocation;
     FExternalFlow: TExternalFlowProperties;
-    procedure SetSegementNumber(const Value: integer);
+    procedure SetSegmentNumber(const Value: integer);
     procedure SetChannelValues(const Value: TSfrChannelCollection);
     procedure SetUpstreamSegmentValues(const Value: TSfrSegmentCollection);
     procedure SetDownstreamSegmentValues(const Value: TSfrSegmentCollection);
@@ -180,8 +180,11 @@ type
     property OutTypes: TByteSet read GetOutTypes;
     procedure FixCollections;
   published
-    property SegementNumber: integer read FSegementNumber
-      write SetSegementNumber;
+    // @name was mispelled. It is now @link(SegmentNumber).
+    property SegementNumber: integer read FSegmentNumber
+      write SetSegmentNumber stored False;
+    property SegmentNumber: integer read FSegmentNumber
+      write SetSegmentNumber;
     property ChannelValues: TSfrChannelCollection read FChannelValues
       write SetChannelValues;
     property UpstreamSegmentValues: TSfrSegmentCollection
@@ -209,7 +212,8 @@ type
     property Gage7: boolean read FGage7 write SetGage7;
     property GageLocation: TGageLocation read FGageLocation
       write SetGageLocation;
-    property ExternalFlow: TExternalFlowProperties read FExternalFlow write SetExternalFlow;
+    property ExternalFlow: TExternalFlowProperties read FExternalFlow
+      write SetExternalFlow;
   end;
 
 resourcestring
@@ -238,7 +242,7 @@ begin
       end;
     end;
     ISFROPT := Sfr.ISFROPT;
-    SegementNumber := Sfr.SegementNumber;
+    SegmentNumber := Sfr.SegmentNumber;
 
     ChannelValues := Sfr.ChannelValues;
     UpstreamSegmentValues := Sfr.UpstreamSegmentValues;
@@ -702,13 +706,13 @@ begin
   FParamIcalc.Assign(Value);
 end;
 
-procedure TSfrBoundary.SetSegementNumber(const Value: integer);
+procedure TSfrBoundary.SetSegmentNumber(const Value: integer);
 begin
-  if FSegementNumber <> Value then
+  if FSegmentNumber <> Value then
   begin
     InvalidateModel;
     InvalidateSegmentNumberArray;
-    FSegementNumber := Value;
+    FSegmentNumber := Value;
     if (ScreenObject <> nil)
         and (ScreenObject as TScreenObject).CanInvalidateModel
         and (ParentModel <> nil) then

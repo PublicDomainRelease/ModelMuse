@@ -129,7 +129,7 @@
     <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Normal"><anchor id="PCLOSE" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">User specified closure criterion for simulated diversions into diversion segments if prior appropriation is chosen [L</text><text styleclass="Normal" style="font-size:8pt; vertical-align:super;" translate="true">3</text><text styleclass="Normal" translate="true">/T] (only to specify if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="IALLOT" styleclass="Normal" translate="true">IALLOT</link><text styleclass="Normal" translate="true"> &gt; 1)</text></para>
+          <para styleclass="Normal"><anchor id="PCLOSE" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">User specified closure criterion for simulated diversions into diversion segments if prior appropriation is chosen [L</text><text styleclass="Normal" style="font-size:8pt; vertical-align:super;" translate="true">3</text><text styleclass="Normal" translate="true">/T] (only to specify if &#160;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="IALLOTSW" styleclass="Normal" translate="true">IALLOTSW</link><text styleclass="Normal" translate="true">&gt; 1)</text></para>
         </td>
       </tr>
     </table></para>

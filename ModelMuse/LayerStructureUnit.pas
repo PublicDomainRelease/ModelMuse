@@ -480,7 +480,7 @@ begin
   if Collection.Model <> nil then
   begin
     Model := Collection.Model as TPhastModel;
-    if not (csDestroying in Model.ComponentState) then
+    if not (csDestroying in Model.ComponentState) and not Model.Clearing then
     begin
       DataArray := Model.DataArrayManager.GetDataSetByName(DataArrayName);
       if DataArray <> nil then

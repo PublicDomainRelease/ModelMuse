@@ -28,6 +28,7 @@ type
     miEdit: TMenuItem;
     ilAngles: TImageList;
     ilDifferentAngle: TImageList;
+    miGoto1: TMenuItem;
     // @name calls Release and sets frmShowHideObjects to nil.
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     // @name is the event handler for the OnCreate event of @classname.
@@ -55,6 +56,7 @@ type
       Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
       var Ghosted: Boolean; var ImageIndex: Integer;
       var ImageList: TCustomImageList);
+    procedure miGoto1Click(Sender: TObject);
   private
     FUndoShowHide: TUndoShowHideScreenObject;
     FCount: integer;
@@ -87,7 +89,7 @@ var
 implementation
 
 uses StrUtils, frmGoPhastUnit, DataSetUnit, GoPhastTypes, ModelMuseUtilities,
-  ModflowPackagesUnit, InteractiveTools, FastGEO, UndoItems;
+  ModflowPackagesUnit, InteractiveTools, FastGEO, UndoItems, frmGoToUnit;
 
 {$R *.dfm}
 
@@ -486,6 +488,26 @@ begin
     end;
   finally
     CanEdit := True;
+  end;
+end;
+
+procedure TfrmShowHideObjects.miGoto1Click(Sender: TObject);
+var
+  ScreenObject: TScreenObject;
+  UndoShowHide: TUndoShowHideScreenObject;
+begin
+  inherited;
+  ScreenObject := GetSelectedScreenObject;
+  if ScreenObject <> nil then
+  begin
+    if not ScreenObject.Visible then
+    begin
+      UndoShowHide := TUndoShowHideScreenObject.Create;
+      UndoShowHide.AddScreenObjectToChange(ScreenObject);
+      frmGoPhast.UndoStack.Submit(UndoShowHide);
+    end;
+
+    GoToObject(ScreenObject);
   end;
 end;
 

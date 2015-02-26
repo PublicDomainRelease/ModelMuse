@@ -429,6 +429,7 @@ var
   AContourLine: TLine;
 //  ContourIndex: Integer;
   Location: TLocation;
+  FieldNames: TStringList;
   procedure MakeShapesFromContourLines;
   var
     ContourIndex: integer;
@@ -592,9 +593,11 @@ begin
     ShapeDataBase := TXBase.Create(nil);
     try
       Fields := TStringList.Create;
+      FieldNames := TStringList.Create;
       try
         FieldName := AnsiString(UpperCase(Copy(DataArray.Name, 1, 10)));
-        FieldName := FixShapeFileFieldName(FieldName);
+        FieldName := FixShapeFileFieldName(FieldName, FieldNames);
+        FieldNames.Add(string(FieldName));
         case DataArray.DataType of
           rdtDouble:
             FieldFormat := 'N18,10';
@@ -612,6 +615,7 @@ begin
         InitializeDataBase(FileName, ShapeDataBase, Fields);
       finally
         Fields.Free;
+        FieldNames.Free;
       end;
 
       ShapeFileWriter := TShapefileGeometryWriter.Create(stPolyLine, True);

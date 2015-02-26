@@ -27,6 +27,12 @@ It is possible to set default names for .BMP or .WMF files with the variables
   xybmpname and xywmfname.
 The variable xywmfback determines if a frame and background is to be
   created in metafiles (default = false).
+
+The variable xycvplot is only required for creating metafiles in canvas mode.
+It has to be set to the procedure that plots the entire graph like:
+  xycvplot := myplottingprocedure;
+this will be detected automatically and the metafile creation will be
+  enabled accordingly.
 *)
 
 interface
@@ -64,6 +70,8 @@ var
   xywmfname : string = '';
   xywmfback : boolean = false;
 
+  xycvplot : Tprocedure;
+
 procedure xycopystart;
 
 implementation
@@ -72,7 +80,7 @@ uses xygraph;
 
 {$R *.DFM}
 
-var buf : boolean;
+var buf,cvmode : boolean;
     bufl : integer;
     frm : string;
     oldindex : integer;
@@ -99,9 +107,12 @@ begin
    1 : begin xyprint(true); end;
    2 : begin xyprint2(0); end;
    3 : begin xysaveasbitmap(xybmpname,msgon,ok); end;
-   4 : begin xysaveasmetafile(xywmfname,msgon,ok,1); end;
-   5 : begin xysaveasmetafile(xywmfname,msgon,ok,2); end;
-   6 : begin xysaveasmetafile(xywmfname,msgon,ok,4); end;
+   4 : begin if not cvmode then xysaveasmetafile(xywmfname,msgon,ok,1)
+        else xysaveasmetafile(xywmfname,msgon,ok,1,xycvplot); end;
+   5 : begin if not cvmode then xysaveasmetafile(xywmfname,msgon,ok,2)
+        else xysaveasmetafile(xywmfname,msgon,ok,2,xycvplot); end;
+   6 : begin if not cvmode then xysaveasmetafile(xywmfname,msgon,ok,4)
+        else xysaveasmetafile(xywmfname,msgon,ok,4,xycvplot); end;
   end;
 end;
 
@@ -132,24 +143,30 @@ begin
  if ok then timer1.enabled := true;
 end;
 
+procedure dummy; begin end;
+
 procedure TCopyForm.FormCreate(Sender: TObject);
 begin
   radiogroup1.itemindex := 0;
   oldindex := 0;
+  xycvplot := dummy;
 end;
 
 procedure setmode(n : integer);
+var metaok : boolean;
 {this disables some options for graphs in canvas mode}
 begin
-  with copyform.RadioGroup1 do with xybuffers[n] do
+  cvmode := xybuffers[n].cvm;
+  with copyform.RadioGroup1 do
   begin
-  Tradiobutton(components[2]).enabled := not cvm;
-  Tradiobutton(components[4]).enabled := not (cvm);
-  Tradiobutton(components[5]).enabled := not (cvm);
-  Tradiobutton(components[6]).enabled := not (cvm);
-  if (cvm) then
+  metaok := (not cvmode) or (@xycvplot <> @dummy);
+  Tradiobutton(components[2]).enabled := not cvmode;
+  Tradiobutton(components[4]).enabled := metaok;
+  Tradiobutton(components[5]).enabled := metaok;
+  Tradiobutton(components[6]).enabled := metaok;
+  if (not metaok) then
    if itemindex in [4,5,6] then itemindex := 3;
-  if cvm then
+  if cvmode then
    if (itemindex=2) then itemindex := 1;
   end;
 end;

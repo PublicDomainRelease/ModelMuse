@@ -180,7 +180,14 @@ begin
     if AnItem.StartTime <= ATime then
     begin
       result := AnItem;
-      Break;
+
+      if AnItem is TCustomModflowBoundaryItem then
+      begin
+        if TCustomModflowBoundaryItem(AnItem).EndTime > ATime then
+        begin
+          Break;
+        end;
+      end;
     end;
   end;
 end;
