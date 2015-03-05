@@ -50,6 +50,8 @@ type
     spinMt3dMsPrintMassBalance: TJvSpinEdit;
     cbSummarizeMassBalance: TCheckBox;
     cbPrintObservations: TCheckBox;
+    comboOutputSuppression: TJvImageComboBox;
+    lblOutputSuppression: TLabel;
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
     procedure jvPagesChange(Sender: TObject);
@@ -88,7 +90,7 @@ var
 
 implementation
 
-uses frmGoPhastUnit, Mt3dmsTimesUnit, frmErrorsAndWarningsUnit;
+uses frmGoPhastUnit, Mt3dmsTimesUnit, frmErrorsAndWarningsUnit, GoPhastTypes;
 
 resourcestring
   StrChangeOutputContro = 'change output control';
@@ -165,6 +167,9 @@ begin
   comboFrequency.ItemIndex := Ord(OutputControl.BudgetFrequencyChoice);
   spN.AsInteger := OutputControl.BudgetFrequency;
 
+  comboOutputSuppression.ItemIndex := Ord(OutputControl.OutputSuppression);
+  comboOutputSuppression.Enabled := frmGoPhast.ModelSelection = msModflowFmp;
+
   // MT3DMS
   Mt3dmsOutputControl := frmGoPhast.PhastModel.Mt3dmsOutputControl;
   cbMt3dSaveConc.Checked := Mt3dmsOutputControl.SaveConcentrations;
@@ -220,6 +225,8 @@ begin
   FOutputControl.BudgetFrequencyChoice :=
     TFrequencyChoice(comboFrequency.ItemIndex);
   FOutputControl.BudgetFrequency := spN.AsInteger;
+  FOutputControl.OutputSuppression :=
+    TOutputSuppression(comboOutputSuppression.ItemIndex);
 
   FMt3dmsOutputControl:= TMt3dmsOutputControl.Create(nil);
   FMt3dmsOutputControl.SaveConcentrations := cbMt3dSaveConc.Checked;

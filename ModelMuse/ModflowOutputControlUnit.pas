@@ -17,6 +17,8 @@ type
     nf15F_7_4, nf20F_5_0, nf20F_5_1, nf20F_5_2, nf20F_5_3, nf20F_5_4,
     nf10G_11_4, nf10F_6_0, nf10F_6_1, nf10F_6_2, nf10F_6_3, nf10F_6_4);
 
+  TOutputSuppression = (osNoOutput, osShowError, osShowErrorWarning, osShowAll);
+
   TExternalFormat = class(TGoPhastPersistent)
   private
     FNumberFormat: TNumberFormat;
@@ -94,6 +96,7 @@ type
     FBudgetFrequencyChoice: TFrequencyChoice;
     FBudgetFrequency: integer;
     FPrintObservations: boolean;
+    FOutputSuppression: TOutputSuppression;
     procedure SetPrintInputArrays(const Value: boolean);
     procedure SetSaveCellFlows(const Value: TCellSaveFormat);
     procedure SetPrintInputCellLists(const Value: boolean);
@@ -104,6 +107,7 @@ type
     procedure SetBudgetFrequency(const Value: integer);
     procedure SetBudgetFrequencyChoice(const Value: TFrequencyChoice);
     procedure SetPrintObservations(const Value: boolean);
+    procedure SetOutputSuppression(const Value: TOutputSuppression);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(InvalidateModelEvent: TNotifyEvent);
@@ -127,6 +131,8 @@ type
       write SetBudgetFrequency;
     property BudgetFrequencyChoice: TFrequencyChoice read FBudgetFrequencyChoice
       write SetBudgetFrequencyChoice;
+    property OutputSuppression: TOutputSuppression read FOutputSuppression
+      write SetOutputSuppression default osShowAll;
   end;
 
   TMt3dmsOutputFreq = (mofSpecifiedTimes, mofEndOfSimulation, mofPeriodic);
@@ -202,6 +208,7 @@ begin
     BudgetFrequency := SourceOutputControl.BudgetFrequency;
     BudgetFrequencyChoice := SourceOutputControl.BudgetFrequencyChoice;
     PrintInputCellLists := SourceOutputControl.PrintInputCellLists;
+    OutputSuppression := SourceOutputControl.OutputSuppression;
   end
   else
   begin
@@ -234,6 +241,7 @@ begin
   FPrintInputCellLists := True;
   FPrintObservations := True;
   FSaveCellFlows := csfBinary;
+  FOutputSuppression := osShowAll;
   FCompact := True;
   FComments.Clear;
   HeadOc.Initialize;
@@ -303,6 +311,16 @@ procedure TModflowOutputControl.SetHeadOC(
   const Value: THeadDrawdownOutputControl);
 begin
   FHeadOC.Assign(Value);
+end;
+
+procedure TModflowOutputControl.SetOutputSuppression(
+  const Value: TOutputSuppression);
+begin
+  if FOutputSuppression <> Value then
+  begin
+    FOutputSuppression := Value;
+    InvalidateModel;
+  end;
 end;
 
 procedure TModflowOutputControl.SetPrintInputArrays(const Value: boolean);

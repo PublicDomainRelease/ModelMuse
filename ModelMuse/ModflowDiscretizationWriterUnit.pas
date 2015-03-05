@@ -22,9 +22,9 @@ resourcestring
 
 implementation
 
-uses ModflowUnitNumbers, frmProgressUnit, Forms, FastGEO, ModelMuseUtilities,
+uses ModflowUnitNumbers, frmProgressUnit, Forms, ModelMuseUtilities,
   frmGoPhastUnit, ModflowOptionsUnit, GoPhastTypes, ModflowPackageSelectionUnit,
-  frmErrorsAndWarningsUnit;
+  frmErrorsAndWarningsUnit, FastGEO;
 
 resourcestring
   StrWritingDiscretizati = 'Writing Discretization Package input.';
@@ -161,6 +161,7 @@ begin
   end;
 end;
 
+
 procedure TModflowDiscretizationWriter.WriteDataSet0;
 var
   GridAngle: Real;
@@ -190,6 +191,8 @@ procedure TModflowDiscretizationWriter.WriteDataSet1;
 var
   ModflowOptions: TModflowOptions;
   FarmProcess: TFarmProcess;
+  GridAngle: double;
+  APoint: TPoint2D;
 begin
   WriteInteger(Model.ModflowLayerCount);
   WriteInteger(Model.ModflowGrid.RowCount);
@@ -212,7 +215,26 @@ begin
   end;
   WriteInteger(ModflowOptions.TimeUnit);
   WriteInteger(ModflowOptions.LengthUnit);
+  if (Model.ModelSelection = msModflowFmp) then
+  begin
+    APoint := Model.Grid.TwoDElementCorner(0,0);
+    WriteFloat(APoint.x);
+    WriteFloat(APoint.y);
+    GridAngle := Model.Grid.GridAngle * 180 / Pi;
+    WriteFloat(GridAngle);
+    WriteString(' CORNERCOORD');
+    if Model.ModflowOutputControl.PrintInputArrays then
+    begin
+      WriteString(' PRINTCOORD');
+    end;
+  end;
+
   WriteString(' # NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI');
+  if (Model.ModelSelection = msModflowFmp) then
+  begin
+    WriteString(' XFIRSTCORD YFIRSTCORD GRIDROTATION COORD_OPTIONS');
+  end;
+
   NewLine;
 end;
 

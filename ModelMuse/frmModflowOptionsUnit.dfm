@@ -4,16 +4,16 @@ inherited frmModflowOptions: TfrmModflowOptions
   Caption = 'MODFLOW Options'
   ClientHeight = 486
   ClientWidth = 543
-  ExplicitWidth = 561
-  ExplicitHeight = 531
-  PixelsPerInch = 120
+  ExplicitWidth = 559
+  ExplicitHeight = 524
+  PixelsPerInch = 96
   TextHeight = 18
   object pcOptions: TPageControl
     Left = 0
     Top = 0
     Width = 543
     Height = 404
-    ActivePage = tabWetting
+    ActivePage = TabSheet2
     Align = alClient
     TabOrder = 0
     OnChange = pcOptionsChange
@@ -21,6 +21,10 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpType = htKeyword
       HelpKeyword = 'Description_Tab'
       Caption = 'Description'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         535
         371)
@@ -153,8 +157,8 @@ inherited frmModflowOptions: TfrmModflowOptions
         object cbPRINTTIME: TJvCheckBox
           Left = 3
           Top = 43
-          Width = 440
-          Height = 20
+          Width = 437
+          Height = 18
           Caption = 'Print the start time, end time, and elapsed time (PRINTTIME)'
           Checked = True
           State = cbChecked
@@ -170,8 +174,8 @@ inherited frmModflowOptions: TfrmModflowOptions
         object cbCHTOCH: TJvCheckBox
           Left = 3
           Top = 19
-          Width = 464
-          Height = 20
+          Width = 461
+          Height = 18
           Caption = 'Calculate flow between adjacent constant-head cells (CHTOCH)'
           Checked = True
           State = cbChecked
@@ -329,7 +333,7 @@ inherited frmModflowOptions: TfrmModflowOptions
       object lblWetFact: TLabel
         Left = 3
         Top = 35
-        Width = 262
+        Width = 241
         Height = 36
         Caption = 'Wetting Factor (WETFCT) (usually between zero and one)'
         Enabled = False

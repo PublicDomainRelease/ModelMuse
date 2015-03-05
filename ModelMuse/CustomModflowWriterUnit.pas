@@ -218,7 +218,11 @@ type
     // @name writes a line to the name file.
     class procedure WriteToNameFile(const Ftype: string;
       const UnitNumber: integer; FileName: string;
-      const Option: TFileOption; RelativeFileName: boolean = False);
+      const Option: TFileOption; RelativeFileName: boolean = False); overload;
+    class procedure WriteToNameFile(const Ftype: string;
+      UnitNumber: integer; FileName: string;
+      const Option: TFileOption; OutputSuppression: TOutputSuppression;
+      RelativeFileName: boolean = False); overload;
     class procedure WriteToMt3dMsNameFile(const Ftype: string;
       const UnitNumber: integer; FileName: string;
       RelativeFileName: boolean = False);
@@ -1771,8 +1775,8 @@ begin
 end;
 
 class procedure TCustomModflowWriter.WriteToNameFile(const Ftype: string;
-  const UnitNumber: integer; FileName: string; const Option: TFileOption;
-  RelativeFileName: boolean = False);
+  UnitNumber: integer; FileName: string; const Option: TFileOption;
+  OutputSuppression: TOutputSuppression; RelativeFileName: boolean);
 var
   Line: string;
 begin
@@ -1801,21 +1805,82 @@ begin
     FileName := ExtractShortPathName(FileName);
   end;
 
+  if OutputSuppression <> osShowAll then
+  begin
+    UnitNumber := -UnitNumber;
+  end;
+
   Line := Ftype + ' ' + IntToStr(UnitNumber) + ' ' + FileName;
-  case Option of
-    foNone: ;// do nothing
-    foInput, foInputAlreadyExists:
-      begin
-        Line := Line + ' ' + 'OLD';
-      end;
-    foOutput:
-      begin
-        Line := Line + ' ' + 'REPLACE';
-      end;
-    else
-      Assert(False);
+  if OutputSuppression <> osShowAll then
+  begin
+    Line := Line + ' ' + IntToStr(Ord(OutputSuppression) + 1);
+  end;
+  if OutputSuppression <> osNoOutput then
+  begin
+    case Option of
+      foNone: ;// do nothing
+      foInput, foInputAlreadyExists:
+        begin
+          Line := Line + ' ' + 'OLD';
+        end;
+      foOutput:
+        begin
+          Line := Line + ' ' + 'REPLACE';
+        end;
+      else
+        Assert(False);
+    end;
   end;
   CurrentNameFileWriter.NameFile.Add(Line);
+end;
+
+class procedure TCustomModflowWriter.WriteToNameFile(const Ftype: string;
+  const UnitNumber: integer; FileName: string; const Option: TFileOption;
+  RelativeFileName: boolean = False);
+//var
+//  Line: string;
+begin
+  WriteToNameFile(Ftype, UnitNumber, FileName, Option, osShowAll, RelativeFileName);
+//  Assert(CurrentNameFileWriter <> nil);
+//  if (Option = foInputAlreadyExists) and not FileExists(FileName) then
+//  begin
+//    frmErrorsAndWarnings.AddError(CurrentNameFileWriter.Model,
+//      StrInputFileDoesNot,
+//      Format(StrTheRequiredInputF, [FileName]));
+//  end;
+//  if UnitNumber > MaxUnitNumber then
+//  begin
+//    MaxUnitNumber := UnitNumber;
+//  end;
+//  frmGoPhast.PhastModel.AddModelInputFile(FileName);
+//  if not RelativeFileName then
+//  begin
+//    FileName := ExtractFileName(FileName);
+//  end;
+//  if Pos(' ', FileName) > 0 then
+//  begin
+//    if not FileExists(FileName) and (Option <> foInputAlreadyExists) then
+//    begin
+//      TFile.Create(FileName).Free;
+//    end;
+//    FileName := ExtractShortPathName(FileName);
+//  end;
+//
+//  Line := Ftype + ' ' + IntToStr(UnitNumber) + ' ' + FileName;
+//  case Option of
+//    foNone: ;// do nothing
+//    foInput, foInputAlreadyExists:
+//      begin
+//        Line := Line + ' ' + 'OLD';
+//      end;
+//    foOutput:
+//      begin
+//        Line := Line + ' ' + 'REPLACE';
+//      end;
+//    else
+//      Assert(False);
+//  end;
+//  CurrentNameFileWriter.NameFile.Add(Line);
 end;
 
 function TCustomModflowWriter.IPRN_Real: integer;
@@ -2022,8 +2087,17 @@ begin
   AddNameFileComment(Format(StrNameFileForMODFLO,
     [DateToStr(Now), Model.ProgramName]));
   OutputListFileName := ChangeFileExt(FileName, '.lst');
-  WriteToNameFile(StrLIST, Model.UnitNumbers.UnitNumber(StrLIST),
-    OutputListFileName, foOutput);
+  if Model.ModelSelection = msModflowFmp then
+  begin
+    WriteToNameFile(StrLIST, Model.UnitNumbers.UnitNumber(StrLIST),
+      OutputListFileName, foOutput,
+      Model.ModflowOutputControl.OutputSuppression);
+  end
+  else
+  begin
+    WriteToNameFile(StrLIST, Model.UnitNumbers.UnitNumber(StrLIST),
+      OutputListFileName, foOutput);
+  end;
 
   case Model.ModflowOutputControl.SaveCellFlows of
     csfNone:

@@ -5366,13 +5366,14 @@ begin
         case DataSet.Orientation of
           dsoTop:
             begin
-              { TODO : This is a clumsy hack. It should be updated. }
-              if (DataSet = frmGoPhast.PhastModel.DataArrayManager.
+              {if (DataSet = frmGoPhast.PhastModel.DataArrayManager.
                 GetDataSetByName(rsInitial_Water_Table)) then
               begin
-                LayerCount := ThreeDDataSet.LayerCount;
+//             This is a clumsy hack. It should be updated.
+                LayerCount := frmGoPhast.PhastModel.PhastGrid.LayerCount + 1;
+//                LayerCount := ThreeDDataSet.LayerCount;
               end
-              else if
+              else} if
                 ((DataSet is TSparseArrayPhastInterpolationDataSet) and
                 ((frmGoPhast.PhastModel.RiverHead.
                 IndexOfDataSet(TSparseArrayPhastInterpolationDataSet(

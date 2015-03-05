@@ -3,10 +3,10 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
   HelpKeyword = 'MODFLOW_Output_Control_Dialog_Box'
   Caption = 'MODFLOW Output Control'
   ClientHeight = 403
-  ClientWidth = 576
-  ExplicitWidth = 594
-  ExplicitHeight = 448
-  PixelsPerInch = 120
+  ClientWidth = 604
+  ExplicitWidth = 620
+  ExplicitHeight = 441
+  PixelsPerInch = 96
   TextHeight = 18
   object JvNetscapeSplitter1: TJvNetscapeSplitter
     Left = 121
@@ -23,16 +23,16 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
   object pnlBottom: TPanel
     Left = 0
     Top = 362
-    Width = 576
+    Width = 604
     Height = 41
     Align = alBottom
     TabOrder = 2
-    ExplicitWidth = 549
+    ExplicitWidth = 576
     DesignSize = (
-      576
+      604
       41)
     object btnHelp: TBitBtn
-      Left = 312
+      Left = 340
       Top = 6
       Width = 82
       Height = 27
@@ -41,10 +41,10 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       NumGlyphs = 2
       TabOrder = 0
       OnClick = btnHelpClick
-      ExplicitLeft = 285
+      ExplicitLeft = 312
     end
     object btnOK: TBitBtn
-      Left = 400
+      Left = 428
       Top = 6
       Width = 82
       Height = 27
@@ -53,10 +53,10 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       NumGlyphs = 2
       TabOrder = 1
       OnClick = btnOKClick
-      ExplicitLeft = 373
+      ExplicitLeft = 400
     end
     object btnCancel: TBitBtn
-      Left = 488
+      Left = 516
       Top = 6
       Width = 83
       Height = 27
@@ -64,7 +64,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       Kind = bkCancel
       NumGlyphs = 2
       TabOrder = 2
-      ExplicitLeft = 461
+      ExplicitLeft = 488
     end
   end
   object pltrPageNavigator: TJvPageListTreeView
@@ -96,37 +96,44 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
   object jvPages: TJvPageList
     Left = 131
     Top = 0
-    Width = 445
+    Width = 473
     Height = 362
-    ActivePage = jvspDrawdown
+    ActivePage = jvspGeneral
     PropagateEnable = False
     Align = alClient
     OnChange = jvPagesChange
-    ExplicitWidth = 418
+    ExplicitWidth = 445
     object jvspGeneral: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 445
+      Width = 473
       Height = 362
       HelpType = htKeyword
       HelpKeyword = 'General_Pane'
       Caption = 'jvspGeneral'
-      ExplicitWidth = 418
+      ExplicitWidth = 445
       DesignSize = (
-        445
+        473
         362)
       object Comments: TLabel
         Left = 6
-        Top = 80
+        Top = 144
         Width = 76
         Height = 18
         Caption = 'Comments'
       end
+      object lblOutputSuppression: TLabel
+        Left = 6
+        Top = 78
+        Width = 351
+        Height = 18
+        Caption = 'Output suppression (LSTLVL MODFLOW-OWHM) '
+      end
       object cbPrintInputArrays: TJvCheckBox
         Left = 6
         Top = 3
-        Width = 140
-        Height = 20
+        Width = 137
+        Height = 18
         Caption = 'Print input arrays'
         Checked = True
         State = cbChecked
@@ -142,8 +149,8 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       object cbPrintInputCellLists: TJvCheckBox
         Left = 6
         Top = 26
-        Width = 151
-        Height = 20
+        Width = 148
+        Height = 18
         Caption = 'Print input cell lists'
         Checked = True
         State = cbChecked
@@ -158,12 +165,11 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       end
       object memoComments: TMemo
         Left = 6
-        Top = 104
-        Width = 436
-        Height = 252
+        Top = 168
+        Width = 464
+        Height = 188
         Anchors = [akLeft, akTop, akRight, akBottom]
-        TabOrder = 3
-        ExplicitWidth = 409
+        TabOrder = 4
       end
       object cbPrintObservations: TCheckBox
         Left = 6
@@ -173,20 +179,55 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
         Caption = 'Print observation data (inverse of NOPRINT option)'
         TabOrder = 2
       end
+      object comboOutputSuppression: TJvImageComboBox
+        Left = 6
+        Top = 102
+        Width = 345
+        Height = 28
+        Style = csOwnerDrawVariable
+        ButtonStyle = fsLighter
+        DroppedWidth = 345
+        ImageHeight = 0
+        ImageWidth = 0
+        ItemHeight = 22
+        ItemIndex = -1
+        TabOrder = 3
+        Items = <
+          item
+            Brush.Style = bsClear
+            Indent = 0
+            Text = 'No list file (1)'
+          end
+          item
+            Brush.Style = bsClear
+            Indent = 0
+            Text = 'Only show errors (2)'
+          end
+          item
+            Brush.Style = bsClear
+            Indent = 0
+            Text = 'Only show errors and warnings (3)'
+          end
+          item
+            Brush.Style = bsClear
+            Indent = 0
+            Text = 'Show all (4)'
+          end>
+      end
     end
     object jvspHeads: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 445
+      Width = 473
       Height = 362
       HelpType = htKeyword
       HelpKeyword = 'Head_and_Drawdown_Panes'
       Caption = 'jvspHead'
-      ExplicitWidth = 418
+      ExplicitWidth = 445
       inline frameHead: TframeOutputControl
         Left = 0
         Top = 0
-        Width = 445
+        Width = 473
         Height = 362
         Align = alClient
         Font.Charset = ANSI_CHARSET
@@ -198,7 +239,6 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
         ParentFont = False
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 418
         ExplicitHeight = 362
         inherited lblOutputType: TLabel
           Width = 38
@@ -218,10 +258,27 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
           Caption = 'Listing file format (IHEDFM)'
           ExplicitWidth = 192
         end
+        inherited comboP: TJvImageComboBox
+          ItemIndex = -1
+        end
+        inherited comboREdit: TJvImageComboBox
+          ItemIndex = -1
+        end
         inherited comboFrequency: TJvImageComboBox
-          Width = 420
+          Width = 448
           Anchors = [akLeft, akTop, akRight]
-          DroppedWidth = 420
+          DroppedWidth = 448
+          ItemIndex = -1
+          ExplicitWidth = 448
+        end
+        inherited comboPrintStyle: TJvImageComboBox
+          ItemIndex = -1
+        end
+        inherited comboPrintFormat: TJvImageComboBox
+          ItemIndex = -1
+        end
+        inherited comboSaveType: TJvImageComboBox
+          ItemIndex = -1
         end
         inherited rcExternalFormat: TRbwController
           ControlList = <
@@ -258,16 +315,16 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
     object jvspDrawdown: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 445
+      Width = 473
       Height = 362
       HelpType = htKeyword
       HelpKeyword = 'Head_and_Drawdown_Panes'
       Caption = 'jvspDrawdown'
-      ExplicitWidth = 418
+      ExplicitWidth = 445
       inline frameDrawdown: TframeOutputControl
         Left = 0
         Top = 0
-        Width = 445
+        Width = 473
         Height = 362
         Align = alClient
         Font.Charset = ANSI_CHARSET
@@ -279,7 +336,6 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
         ParentFont = False
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 418
         ExplicitHeight = 362
         inherited lblOutputType: TLabel
           Width = 74
@@ -299,10 +355,27 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
           Caption = 'Listing file format (IDDNFM)'
           ExplicitWidth = 193
         end
+        inherited comboP: TJvImageComboBox
+          ItemIndex = -1
+        end
+        inherited comboREdit: TJvImageComboBox
+          ItemIndex = -1
+        end
         inherited comboFrequency: TJvImageComboBox
-          Width = 420
+          Width = 448
           Anchors = [akLeft, akTop, akRight]
-          DroppedWidth = 420
+          DroppedWidth = 448
+          ItemIndex = -1
+          ExplicitWidth = 448
+        end
+        inherited comboPrintStyle: TJvImageComboBox
+          ItemIndex = -1
+        end
+        inherited comboPrintFormat: TJvImageComboBox
+          ItemIndex = -1
+        end
+        inherited comboSaveType: TJvImageComboBox
+          ItemIndex = -1
         end
         inherited rcExternalFormat: TRbwController
           ControlList = <
@@ -339,14 +412,14 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
     object jvspBudget: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 445
+      Width = 473
       Height = 362
       HelpType = htKeyword
       HelpKeyword = 'Budget_Pane'
       Caption = 'jvspBudget'
-      ExplicitWidth = 418
+      ExplicitWidth = 445
       DesignSize = (
-        445
+        473
         362)
       object lblN: TLabel
         Left = 16
@@ -372,8 +445,8 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       object cbCompact: TJvCheckBox
         Left = 16
         Top = 31
-        Width = 140
-        Height = 20
+        Width = 137
+        Height = 18
         Caption = 'Compact budget'
         Checked = True
         State = cbChecked
@@ -403,12 +476,12 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       object comboFrequency: TJvImageComboBox
         Left = 16
         Top = 77
-        Width = 420
+        Width = 448
         Height = 28
         Style = csOwnerDrawVariable
         Anchors = [akLeft, akTop, akRight]
         ButtonStyle = fsLighter
-        DroppedWidth = 420
+        DroppedWidth = 448
         ImageHeight = 0
         ImageWidth = 0
         ItemHeight = 22
@@ -425,7 +498,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
             Indent = 0
             Text = 'Last time step of each N'#39'th stress period'
           end>
-        ExplicitWidth = 393
+        ExplicitWidth = 420
       end
       object spN: TJvSpinEdit
         Left = 44
@@ -442,12 +515,12 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
     object jvspMT3DMS: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 445
+      Width = 473
       Height = 362
       HelpType = htKeyword
       HelpKeyword = 'MT3DMS_Pane'
       Caption = 'jvspMT3DMS'
-      ExplicitWidth = 418
+      ExplicitWidth = 445
       object lblMt3dmsPrintN: TLabel
         Left = 255
         Top = 59
@@ -538,19 +611,19 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       inline frameMt3dmsTimes: TframeGrid
         Left = 0
         Top = 200
-        Width = 445
+        Width = 473
         Height = 162
         Align = alBottom
         Anchors = [akLeft, akTop, akRight, akBottom]
         TabOrder = 6
         ExplicitTop = 200
-        ExplicitWidth = 418
+        ExplicitWidth = 445
         ExplicitHeight = 162
         inherited Panel: TPanel
           Top = 121
-          Width = 445
+          Width = 473
           ExplicitTop = 121
-          ExplicitWidth = 418
+          ExplicitWidth = 445
           inherited lbNumber: TLabel
             Width = 218
             Height = 18
@@ -559,15 +632,15 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
             ExplicitHeight = 18
           end
           inherited sbAdd: TSpeedButton
-            Left = 331
+            Left = 353
             ExplicitLeft = 310
           end
           inherited sbInsert: TSpeedButton
-            Left = 362
+            Left = 385
             ExplicitLeft = 339
           end
           inherited sbDelete: TSpeedButton
-            Left = 392
+            Left = 417
             ExplicitLeft = 368
           end
           inherited seNumber: TJvSpinEdit
@@ -576,7 +649,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
           end
         end
         inherited Grid: TRbwDataGrid4
-          Width = 445
+          Width = 473
           Height = 121
           Columns = <
             item
@@ -602,7 +675,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
               CheckStyle = csCheck
               AutoAdjustColWidths = True
             end>
-          ExplicitWidth = 418
+          ExplicitWidth = 445
           ExplicitHeight = 121
         end
       end

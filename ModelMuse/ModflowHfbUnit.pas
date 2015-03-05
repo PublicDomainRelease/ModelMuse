@@ -18,6 +18,9 @@ type
     FThicknessObserver: TObserver;
     FParameterNameObserver: TObserver;
     FAdjustmentMethodObserver: TObserver;
+    FVerticalBoundary: boolean;
+    FLayerOffsetFormula: TFormulaObject;
+    FLayerOffsetObserver: TObserver;
     procedure SetAdjustmentMethod(const Value: TAdjustmentMethod);
     procedure SetHydraulicConductivity(Value: string);
     procedure SetParameterName(const Value: string);
@@ -28,6 +31,10 @@ type
     function GetAdjustmentMethodObserver: TObserver;
     function GetHydraulicConductivity: string;
     function GetThickness: string;
+    function GetLayerOffsetFormula: string;
+    procedure SetLayerOffsetFormula(const Value: string);
+    procedure SetVerticalBoundary(const Value: boolean);
+    function GetLayerOffsetObserver: TObserver;
   protected
     procedure HandleChangedValue(Observer: TObserver); override;
     function GetUsedObserver: TObserver; override;
@@ -38,6 +45,7 @@ type
     property ThicknessObserver: TObserver read GetThicknessObserver;
     property ParameterNameObserver: TObserver read GetParameterNameObserver;
     property AdjustmentMethodObserver: TObserver read GetAdjustmentMethodObserver;
+    property LayerOffsetObserver: TObserver read GetLayerOffsetObserver;
     function BoundaryObserverPrefix: string; override;
     procedure CreateObservers; override;
   public
@@ -53,6 +61,9 @@ type
     property ThicknessFormula: string read GetThickness write SetThickness;
     property AdjustmentMethod: TAdjustmentMethod read FAdjustmentMethod
       write SetAdjustmentMethod;
+    property VerticalBoundary: boolean read FVerticalBoundary write SetVerticalBoundary;
+    property LayerOffsetFormula: string read GetLayerOffsetFormula
+      write SetLayerOffsetFormula;
   end;
 
 implementation
@@ -62,6 +73,7 @@ uses PhastModelUnit, ScreenObjectUnit, frmGoPhastUnit;
 const
   ThicknessPosition = 0;
   HydraulicConductivityPosition = 1;
+  LayerOffsetPosition = 2;
 
 //procedure RemoveHfbModflowBoundarySubscription(Sender: TObject; Subject: TObject;
 //  const AName: string);
@@ -89,6 +101,8 @@ begin
     HydraulicConductivityFormula := SourecHFB.HydraulicConductivityFormula;
     ThicknessFormula := SourecHFB.ThicknessFormula;
     AdjustmentMethod := SourecHFB.AdjustmentMethod;
+    VerticalBoundary := SourecHFB.VerticalBoundary;
+    LayerOffsetFormula := SourecHFB.LayerOffsetFormula;
     IsUsed := SourecHFB.IsUsed;
   end
   else
@@ -108,18 +122,21 @@ begin
 
   ThicknessFormula := '1';
   HydraulicConductivityFormula := '1e-8';
+  LayerOffsetFormula := '0';
 end;
 
 procedure THfbBoundary.CreateFormulaObjects;
 begin
   FThicknessFormula := CreateFormulaObject(dso3D);
   FHydraulicConductivityFormula := CreateFormulaObject(dso3D);
+  FLayerOffsetFormula := CreateFormulaObject(dso3D);
 end;
 
 destructor THfbBoundary.Destroy;
 begin
   HydraulicConductivityFormula := '0';
   ThicknessFormula := '0';
+  LayerOffsetFormula := '0';
 
   FParameterNameObserver.Free;
   FAdjustmentMethodObserver.Free;
@@ -154,6 +171,24 @@ begin
   result := FHydraulicConductivityObserver;
 end;
 
+function THfbBoundary.GetLayerOffsetFormula: string;
+begin
+  Result := FLayerOffsetFormula.Formula;
+  if ScreenObject <> nil then
+  begin
+    ResetItemObserver(LayerOffsetPosition);
+  end;
+end;
+
+function THfbBoundary.GetLayerOffsetObserver: TObserver;
+begin
+  if FLayerOffsetObserver = nil then
+  begin
+    CreateObserver('HFB_Layer_Offset_', FLayerOffsetObserver);
+  end;
+  result := FLayerOffsetObserver;
+end;
+
 function THfbBoundary.GetParameterNameObserver: TObserver;
 begin
   if FParameterNameObserver = nil then
@@ -172,6 +207,10 @@ begin
   if Sender = FHydraulicConductivityFormula then
   begin
     List.Add(FObserverList[HydraulicConductivityPosition]);
+  end;
+  if Sender = FLayerOffsetFormula then
+  begin
+    List.Add(FObserverList[LayerOffsetPosition]);
   end;
 end;
 
@@ -226,6 +265,11 @@ begin
   UpdateFormula(Value, HydraulicConductivityPosition, FHydraulicConductivityFormula);
 end;
 
+procedure THfbBoundary.SetLayerOffsetFormula(const Value: string);
+begin
+  UpdateFormula(Value, LayerOffsetPosition, FLayerOffsetFormula);
+end;
+
 procedure THfbBoundary.SetParameterName(const Value: string);
 var
   ScreenObject: TScreenObject;
@@ -249,6 +293,15 @@ end;
 procedure THfbBoundary.SetThickness(const Value: string);
 begin
   UpdateFormula(Value, ThicknessPosition, FThicknessFormula);
+end;
+
+procedure THfbBoundary.SetVerticalBoundary(const Value: boolean);
+begin
+  if FVerticalBoundary <> Value then
+  begin
+    FVerticalBoundary := Value;
+    InvalidateModel;
+  end;
 end;
 
 procedure THfbBoundary.HandleChangedValue(Observer: TObserver);
@@ -277,6 +330,7 @@ begin
   begin
     HandleChangedValue(HydraulicConductivityObserver);
     HandleChangedValue(ThicknessObserver);
+    HandleChangedValue(LayerOffsetObserver);
   end;
 end;
 
@@ -286,6 +340,7 @@ begin
   begin
     FObserverList.Add(ThicknessObserver);
     FObserverList.Add(HydraulicConductivityObserver);
+    FObserverList.Add(LayerOffsetObserver);
   end;
 end;
 

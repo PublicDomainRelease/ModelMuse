@@ -8299,6 +8299,7 @@ begin
   if Mesh2D.SelectedLayer <> Value then
   begin
     Mesh2D.SelectedLayer := Value;
+    (Model as TPhastModel).CombinedDisplayLayer := Value;
     FNeedToRecordLayer := True;
     FNeedToRedraw3d := True;
 //    if not (csLoading in frmGoPhast.PhastModel.ComponentState) then

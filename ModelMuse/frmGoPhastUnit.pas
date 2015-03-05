@@ -2864,6 +2864,7 @@ begin
     Height := 600 ;
   end;
 
+{
   acFarmCrops.Visible := False;
   acFarmSoils.Visible := False;
   acFarmClimate.Visible := False;
@@ -2871,6 +2872,7 @@ begin
   acFarmAllotment.Visible := False;
   acEditFarms.Visible := False;
   miFarmProcessDialogBoxes.Visible := False;
+}
 
 //  {$IFNDEF ModflowLGR2}
 //  acModflowLgr2Active.Visible := False;
@@ -7170,26 +7172,39 @@ begin
   case Key of
     Key_Left, Key_Right:
       begin
-        case Grid.ColumnDirection of
-          cdWestToEast: ReverseFactor := 1;
-          cdEastToWest: ReverseFactor := -1;
-          else Assert(False);
+        if Grid <> nil then
+        begin
+          case Grid.ColumnDirection of
+            cdWestToEast: ReverseFactor := 1;
+            cdEastToWest: ReverseFactor := -1;
+            else Assert(False);
+          end;
         end;
       end;
     Key_Up, Key_Down:
       begin
-        case Grid.RowDirection of
-          rdSouthToNorth: ReverseFactor := 1;
-          rdNorthToSouth: ReverseFactor := -1;
-          else Assert(False);
+        if Grid <> nil then
+        begin
+          case Grid.RowDirection of
+            rdSouthToNorth: ReverseFactor := 1;
+            rdNorthToSouth: ReverseFactor := -1;
+            else Assert(False);
+          end;
         end;
       end;
     Key_PageUp, Key_PageDown:
       begin
-        case Grid.LayerDirection of
-          ldBottomToTop: ReverseFactor := 1;
-          ldTopToBottom: ReverseFactor := -1;
-          else Assert(False);
+        if Grid <> nil then
+        begin
+          case Grid.LayerDirection of
+            ldBottomToTop: ReverseFactor := 1;
+            ldTopToBottom: ReverseFactor := -1;
+            else Assert(False);
+          end;
+        end
+        else
+        begin
+            ReverseFactor := -1;
         end;
       end;
     // else ignore it.

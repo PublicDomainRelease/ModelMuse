@@ -6872,11 +6872,22 @@ const
   //        not used.
   //    '3.4.0.17' Bug fix: Fixed bug that would sometimes cause data set
   //        values not to be updated when they needed to be.
-  //    '3.5.0.0' Enhancement: Support for the Farm Process in MODFLOW-OWHM added.
+  //    '3.5.0.0' Enhancement: Support for the Farm Process in MODFLOW-OWHM
+  //        added.
+  //    '3.5.1.0' Bug fix: Support for the Farm Process in MODFLOW-OWHM
+  //        activated.
+  //      Enhancement: LSTLVL option in MODFLOW-OWHM added.
+  //      Enhancement: PROPPRINT option in MODFLOW-OWHM added.
+  //      Enhancement: Support for Internal Coordinate System" option
+  //        in MODFLOW-OWHM added.
+  //      Bug fix: Fixed access violation that occurred when coloring the
+  //        initial water table data set in PHAST.
+  //      Bug fix: Fixed access violation that occurred with SUTRA models when
+  //        changing the selected layer with the keyboard.
 
 const
   // version number of ModelMuse.
-  IModelVersion = '3.5.0.0';
+  IModelVersion = '3.5.1.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -22919,11 +22930,19 @@ var
   TemplateFileName: string;
   PValFileName: string;
   Comment: string;
+  FirstLine: string;
 begin
   if FPValFile.Count > 0 then
   begin
-    FPValFile.Insert(0, IntToStr(FPValFile.Count));
-    FTemplate.Insert(0, IntToStr(FTemplate.Count));
+    FirstLine := IntToStr(FPValFile.Count);
+    if (ModelSelection = msModflowFmp)
+      and ModflowOutputControl.PrintInputArrays then
+    begin
+      FirstLine := FirstLine + ' PROPPRINT”';
+    end;
+
+    FPValFile.Insert(0, FirstLine);
+    FTemplate.Insert(0, FirstLine);
 
     Comment := '# PVAL file created on ' + DateToStr(Now) + ' by '
       + ProgramName + ' version ' + IModelVersion + '.';
