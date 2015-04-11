@@ -529,7 +529,7 @@ begin
 //    ErrorMessage := 'Object = ' + ScreenObjectName
 //      + '; Time = ' + FloatToStr(StartTime);
     frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
-      StrIncompleteSFRData, ErrorMessage);
+      StrIncompleteSFRData, ErrorMessage, ScreenObject);
   end;
 end;
 

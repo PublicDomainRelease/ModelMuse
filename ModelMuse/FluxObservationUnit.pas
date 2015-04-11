@@ -427,7 +427,7 @@ begin
           ErrorMessage := Format(Str0gIsNotUsedIn,
             [Time, ScreenObject.Name, BoundaryPackageID]);
           ErrorRoots.Add(ErrorRoot);
-          ErrorMessages.Add(ErrorMessage);
+          ErrorMessages.AddObject(ErrorMessage, ScreenObject);
         end;
       end;
     end
@@ -437,7 +437,7 @@ begin
       ErrorMessage := Format(StrThe0sPackageIs,
         [BoundaryPackageID, ScreenObject.Name]);
       ErrorRoots.Add(ErrorRoot);
-      ErrorMessages.Add(ErrorMessage);
+      ErrorMessages.AddObject(ErrorMessage, ScreenObject);
     end;
   end;
 end;

@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ExtCtrls, VirtualTrees,
-  GoPhastTypes;
+  GoPhastTypes, Menus, ScreenObjectUnit;
 
 type
   TModelMessages = class(TObject)
@@ -55,6 +55,10 @@ type
     sdSaveFileDlg: TSaveDialog;
     btnClear: TButton;
     btnCopy: TButton;
+    pmSelectEdit: TPopupMenu;
+    miSelect: TMenuItem;
+    miGoto: TMenuItem;
+    miEdit: TMenuItem;
     // @name creates the lists that hold the errors and warnings.
     // It also initializes the size of the record associated with
     // nodes in @link(vstWarningsAndErrors).
@@ -78,6 +82,11 @@ type
     procedure btnClearClick(Sender: TObject);
     procedure btnCopyClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure vstWarningsAndErrorsContextPopup(Sender: TObject;
+      MousePos: TPoint; var Handled: Boolean);
+    procedure miSelectClick(Sender: TObject);
+    procedure miEditClick(Sender: TObject);
+    procedure miGotoClick(Sender: TObject);
   private
     // @name is a list of the PVirtualNodes beneath @link(FErrorNode).
     FErrorChildNodes: TList;
@@ -115,7 +124,7 @@ type
     procedure AddErrorOrWarning(Model: TBaseModel; RootList: TStringList;
       const TypeOfErrorOrWarning, ErrorOrWarning: string;
       var RootNode: PVirtualNode; Children: TList;
-      ModelMessageList: TModelMessageList);
+      ModelMessageList: TModelMessageList; AnObject: TObject);
     { TODO -cRefactor : Consider replacing Model with an interface. }
     //
     procedure RemoveWarningOrErrorGroup(Model: TBaseModel;
@@ -131,6 +140,7 @@ type
     // @name creates a new root node (PVirtualNode) and associates List
     // with it. @seealso(FErrorNode) @seealso(FWarningNode)
     procedure InitializeRootNode(var Node: PVirtualNode; List: TStringList);
+    procedure GetSelectedScreenObjects(ScreenObjects: TScreenObjectList);
     { Private declarations }
   public
     function HasMessages: boolean;
@@ -138,12 +148,14 @@ type
     // @name is used to add a new error message to @classname.
     // Root is the type of error, Error is the specific cell to which the
     // error applies.
-    Procedure AddError(Model: TBaseModel; const Root, Error: string);
+    Procedure AddError(Model: TBaseModel; const Root, Error: string;
+      AnObject: TObject = nil);
     { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name is used to add a new warning message to @classname.
     // Root is the type of warning, Warning is the specific cell to which the
     // warning applies.
-    Procedure AddWarning(Model: TBaseModel; const Root, Warning: string);
+    Procedure AddWarning(Model: TBaseModel; const Root, Warning: string;
+      AnObject: TObject = nil);
     // @name deletes the warning and error messages and clears
     // @link(vstWarningsAndErrors).
     Procedure Clear;
@@ -165,7 +177,8 @@ procedure FreefrmErrorsAndWarnings;
 
 implementation
 
-uses Math, frmProgressUnit, Clipbrd, contnrs;
+uses Math, frmProgressUnit, Clipbrd, contnrs, UndoItemsScreenObjects,
+  frmGoPhastUnit, frmGoToUnit;
 
 resourcestring
   StrErrors = 'Errors';
@@ -202,7 +215,7 @@ procedure TfrmErrorsAndWarnings.AddErrorOrWarning(Model: TBaseModel;
   RootList: TStringList;
   const TypeOfErrorOrWarning, ErrorOrWarning: string;
   var RootNode: PVirtualNode; Children: TList;
-  ModelMessageList: TModelMessageList);
+  ModelMessageList: TModelMessageList; AnObject: TObject);
 var
   ChildNode: PVirtualNode;
   RootIndex: integer;
@@ -263,7 +276,13 @@ begin
   begin
     Exit;
   end;
-  ErrorMessages.Add(ErrorOrWarning);
+  if AnObject <> nil then
+  begin
+    // Only TScreenObjects are handled here. To change this, the code
+    // that handles enabling the popup menu must also be changed.
+    Assert(AnObject is TScreenObject);
+  end;
+  ErrorMessages.AddObject(ErrorOrWarning, AnObject);
   vstWarningsAndErrors.ChildCount[ChildNode] :=
     vstWarningsAndErrors.ChildCount[ChildNode] + 1;
   if (frmProgressMM <> nil) and frmProgressMM.Visible then
@@ -291,6 +310,75 @@ begin
   Data.List := List;
   vstWarningsAndErrors.HasChildren[Node] := True;
 //  vstWarningsAndErrors.Expanded[Node] := True;
+end;
+
+procedure TfrmErrorsAndWarnings.miEditClick(Sender: TObject);
+var
+  ScreenObjects: TScreenObjectList;
+  ScreenObject: TScreenObject;
+begin
+  inherited;
+  ScreenObjects := TScreenObjectList.Create;
+  try
+    GetSelectedScreenObjects(ScreenObjects);
+    if ScreenObjects.Count >= 1 then
+    begin
+      ScreenObject := ScreenObjects[0];
+      SelectAScreenObject(ScreenObject);
+      frmGoPhast.EditScreenObjects;
+    end;
+  finally
+    ScreenObjects.Free;
+  end;
+
+end;
+
+procedure TfrmErrorsAndWarnings.miGotoClick(Sender: TObject);
+var
+  ScreenObjects: TScreenObjectList;
+  ScreenObject: TScreenObject;
+  UndoShowHide: TUndoShowHideScreenObject;
+begin
+  inherited;
+  ScreenObjects := TScreenObjectList.Create;
+  try
+    GetSelectedScreenObjects(ScreenObjects);
+    if ScreenObjects.Count >= 1 then
+    begin
+      ScreenObject := ScreenObjects[0];
+      if not ScreenObject.Visible then
+      begin
+        UndoShowHide := TUndoShowHideScreenObject.Create;
+        UndoShowHide.AddScreenObjectToChange(ScreenObject);
+        frmGoPhast.UndoStack.Submit(UndoShowHide);
+      end;
+
+      GoToObject(ScreenObject);
+    end;
+  finally
+    ScreenObjects.Free;
+  end;
+
+end;
+
+procedure TfrmErrorsAndWarnings.miSelectClick(Sender: TObject);
+var
+  ScreenObjects: TScreenObjectList;
+begin
+  inherited;
+
+
+  ScreenObjects := TScreenObjectList.Create;
+  try
+    GetSelectedScreenObjects(ScreenObjects);
+    if ScreenObjects.Count > 0 then
+    begin
+      SelectMultipleScreenObjects(ScreenObjects);
+    end;
+  finally
+    ScreenObjects.Free;
+  end;
+
 end;
 
 procedure TfrmErrorsAndWarnings.RemoveWarningOrErrorGroup(Model: TBaseModel;
@@ -414,17 +502,17 @@ begin
 end;
 
 procedure TfrmErrorsAndWarnings.AddError(Model: TBaseModel;
-  const Root, Error: string);
+  const Root, Error: string; AnObject: TObject = nil);
 begin
   AddErrorOrWarning(Model, FErrorModels, Root, Error, FErrorNode,
-    FErrorChildNodes, FErrorModelMessageList);
+    FErrorChildNodes, FErrorModelMessageList, AnObject);
 end;
 
 procedure TfrmErrorsAndWarnings.AddWarning(Model: TBaseModel;
-  const Root, Warning: string);
+  const Root, Warning: string; AnObject: TObject = nil);
 begin
   AddErrorOrWarning(Model, FWarningModels, Root, Warning,
-    FWarningNode, FWarningChildNodes, FWarningModelMessageList);
+    FWarningNode, FWarningChildNodes, FWarningModelMessageList, AnObject);
 end;
 
 procedure TfrmErrorsAndWarnings.BeginUpdate;
@@ -498,6 +586,66 @@ begin
   vstWarningsAndErrors.EndUpdate;
 end;
 
+procedure TfrmErrorsAndWarnings.GetSelectedScreenObjects(
+  ScreenObjects: TScreenObjectList);
+var
+  FirstScreenObject: TScreenObject;
+  AScreenObject: TObject;
+  Node: PVirtualNode;
+  ParentNode: PVirtualNode;
+  Data: PErrorWarningRec;
+  ObjectIndex: Integer;
+  CurrentScreenObject: TScreenObject;
+begin
+  Node := vstWarningsAndErrors.FocusedNode;
+  if Node <> nil then
+//  begin
+//    Data := nil;
+//  end
+//  else
+  begin
+    Data := vstWarningsAndErrors.GetNodeData(Node);
+    if Assigned(Data) and (Data.List <> nil) then
+    begin
+      FirstScreenObject := nil;
+      for ObjectIndex := 0 to Data.List.Count - 1 do
+      begin
+        AScreenObject := Data.List.Objects[ObjectIndex];
+        if AScreenObject <> nil then
+        begin
+          CurrentScreenObject := AScreenObject as TScreenObject;
+          if FirstScreenObject <> nil then
+          begin
+            if FirstScreenObject.ViewDirection <> CurrentScreenObject.ViewDirection then
+            begin
+              Continue;
+            end;
+          end
+          else
+          begin
+            FirstScreenObject := CurrentScreenObject;
+          end;
+          if ScreenObjects.IndexOf(CurrentScreenObject) >= 0 then
+          begin
+            Continue;
+          end;
+          ScreenObjects.Add(CurrentScreenObject);
+        end;
+      end;
+    end
+    else
+    begin
+      ParentNode := Node.Parent;
+      Data := vstWarningsAndErrors.GetNodeData(ParentNode);
+      CurrentScreenObject := Data.List.Objects[Node.Index] as TScreenObject;
+      if CurrentScreenObject <> nil then
+      begin
+        ScreenObjects.Add(CurrentScreenObject);
+      end;
+    end;
+  end;
+end;
+
 procedure TfrmErrorsAndWarnings.FormCreate(Sender: TObject);
 begin
   inherited;
@@ -566,6 +714,29 @@ end;
 function TfrmErrorsAndWarnings.HasMessages: boolean;
 begin
   result := (FErrorModels.Count > 0) or (FWarningModels.Count > 0)
+end;
+
+procedure TfrmErrorsAndWarnings.vstWarningsAndErrorsContextPopup(
+  Sender: TObject; MousePos: TPoint; var Handled: Boolean);
+var
+//  Node: PVirtualNode;
+//  Data: PErrorWarningRec;
+//  ParentNode: PVirtualNode;
+//  ObjectIndex: integer;
+//  AnObject: TObject;
+  ScreenObjects: TScreenObjectList;
+begin
+  inherited;
+
+  ScreenObjects := TScreenObjectList.Create;
+  try
+    GetSelectedScreenObjects(ScreenObjects);
+    miSelect.Enabled := ScreenObjects.Count > 0;
+    miEdit.Enabled := ScreenObjects.Count = 1;
+    miGoto.Enabled := miEdit.Enabled;
+  finally
+    ScreenObjects.Free;
+  end;
 end;
 
 procedure TfrmErrorsAndWarnings.vstWarningsAndErrorsGetText(

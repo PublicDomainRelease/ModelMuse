@@ -528,7 +528,8 @@ begin
         if Observations.CellListCount = 0 then
         begin
           ErrorMessage := Format(StrObjectS, [ScreenObject.Name]);
-          frmErrorsAndWarnings.AddWarning(Model, ConcOffGrid, ErrorMessage);
+          frmErrorsAndWarnings.AddWarning(Model, ConcOffGrid, ErrorMessage,
+            ScreenObject);
           Continue;
         end;
 
@@ -536,7 +537,8 @@ begin
         if CellList.Count = 0 then
         begin
           ErrorMessage := Format(StrObjectS, [ScreenObject.Name]);
-          frmErrorsAndWarnings.AddWarning(Model, ConcOffGrid, ErrorMessage);
+          frmErrorsAndWarnings.AddWarning(Model, ConcOffGrid, ErrorMessage,
+            ScreenObject);
           Continue;
         end;
 
@@ -554,14 +556,14 @@ begin
               ErrorMessage := Format(StrObjectSTimeG,
                 [ScreenObject.Name, Item.Time]);
               frmErrorsAndWarnings.AddError(Model,
-                InvalidConcEndObsTime, ErrorMessage);
+                InvalidConcEndObsTime, ErrorMessage, ScreenObject);
             end;
             if (Item.Time < FStartTime) and (FEvaluationType = etExport) then
             begin
               ErrorMessage := Format(StrObjectSTimeG,
                 [ScreenObject.Name, Item.Time]);
               frmErrorsAndWarnings.AddError(Model,
-                InvalidConcStartObsTime, ErrorMessage);
+                InvalidConcStartObsTime, ErrorMessage, ScreenObject);
             end;
           end;
         end
@@ -710,13 +712,13 @@ begin
   begin
     ScreenObject := Observations.ScreenObject as TScreenObject;
     frmErrorsAndWarnings.AddError(Model,
-      MissingConcObsNameError, ScreenObject.Name);
+      MissingConcObsNameError, ScreenObject.Name, ScreenObject);
   end;
   if not UcodeObsNameOK(COBSNAM) then
   begin
     ScreenObject := Observations.ScreenObject as TScreenObject;
     frmErrorsAndWarnings.AddWarning(Model, ConcObsNameWarning,
-      Format(Str0sDefinedByObje, [COBSNAM, ScreenObject.Name]));
+      Format(Str0sDefinedByObje, [COBSNAM, ScreenObject.Name]), ScreenObject);
   end;
   if CellList.Count > 1 then
   begin
@@ -967,7 +969,7 @@ begin
             [(Observations.ScreenObject as TScreenObject).Name,
             LayerSort.Layer+1]);
           frmErrorsAndWarnings.AddWarning(Model, StrConcObservationLay,
-            WarningMessage);
+            WarningMessage, Observations.ScreenObject);
         end;
 
         WriteInteger(LayerSort.Layer+1);
@@ -992,7 +994,7 @@ begin
           WarningMessage := Format(StrInTheConcObservatMult,
             [(Observations.ScreenObject as TScreenObject).Name, Item.Layer]);
           frmErrorsAndWarnings.AddWarning(Model, StrConcObservationLayAssigned,
-            WarningMessage);
+            WarningMessage, Observations.ScreenObject);
         end;
       end;
     finally

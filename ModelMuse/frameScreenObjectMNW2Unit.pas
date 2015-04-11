@@ -1642,13 +1642,13 @@ begin
         begin
           ShowError := True;
           frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, StrInvalidMnwTable,
-            ScreenObject.Name);
+            ScreenObject.Name, ScreenObject);
         end;
         if LiftError2 then
         begin
           ShowError := True;
           frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, StrInvalidMnwTable2,
-            ScreenObject.Name);
+            ScreenObject.Name, ScreenObject);
         end;
       end;
 

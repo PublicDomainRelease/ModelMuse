@@ -1128,7 +1128,7 @@ begin
           if (WellRadius <= 0) and (VerticalScreenCount = 0) then
           begin
             frmErrorsAndWarnings.AddError(LocalModel, StrOneOrMoreMNW2Wel,
-              LocalScreenObject.Name);
+              LocalScreenObject.Name, LocalScreenObject);
           end;
         end;
 
@@ -1141,13 +1141,13 @@ begin
           if (SkinRadius <= 0) and (VerticalScreenCount = 0) then
           begin
             frmErrorsAndWarnings.AddError(LocalModel, MnwSkinError,
-              LocalScreenObject.Name);
+              LocalScreenObject.Name, LocalScreenObject);
           end;
           Assert(WellRadiusArray <> nil);
           if (SkinRadius < WellRadius) and (VerticalScreenCount = 0) then
           begin
             frmErrorsAndWarnings.AddError(LocalModel, MnwSkinToThinError,
-              LocalScreenObject.Name);
+              LocalScreenObject.Name, LocalScreenObject);
           end;
         end;
         if SkinKArray <> nil then
@@ -1159,7 +1159,7 @@ begin
           if (SkinK <= 0) and (VerticalScreenCount = 0) then
           begin
             frmErrorsAndWarnings.AddError(LocalModel, MnwSkinKError,
-              LocalScreenObject.Name);
+              LocalScreenObject.Name, LocalScreenObject);
           end;
         end;
 

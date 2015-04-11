@@ -78,7 +78,7 @@ type
       ShapeDataBase: TXBase; EvaluatedAt: TEvaluatedAt);
     procedure Assign2DDataSetValuesToDataBase(DataSets: TList;
         DataSetIndex: Integer; Names: TStringList; LayerLimit, ColIndex,
-        RowIndex: integer; ShapeDataBase: TXBase);
+        RowIndex: integer; ShapeDataBase: TXBase; NameIndexStart: integer);
     procedure Export2DNodeShapes(DataSets: TList);
     procedure Export3DNodeShapes(DataSets: TList);
     procedure Assign3DShapeGeometry(Shape: TShapeObject; ColIndex,
@@ -282,9 +282,28 @@ var
   NewFileName: string;
 begin
   NewFileName := ChangeFileExt(frmGoPhast.sdSaveDialog.FileName, '');
-  jfeElements.FileName := NewFileName + '_E.shp';
-  jfeNodes.FileName := NewFileName + '_N.shp';
-  jfeHorizontalFlowBarrier.FileName := NewFileName + '_HFB.shp';
+  try
+    jfeElements.FileName := NewFileName + '_E.shp';
+  except on EComboEditError do
+    begin
+      // do nothing.
+    end;
+  end;
+  try
+    jfeNodes.FileName := NewFileName + '_N.shp';
+  except on EComboEditError do
+    begin
+      // do nothing.
+    end;
+  end;
+  try
+    jfeHorizontalFlowBarrier.FileName := NewFileName + '_HFB.shp';
+  except on EComboEditError do
+    begin
+      // do nothing.
+    end;
+
+  end;
 end;
 
 procedure TfrmExportShapefile.ReadSelectedTimes;
@@ -1706,6 +1725,7 @@ var
   ElementIndex: Integer;
   RowCount: integer;
   ColumnCount: integer;
+  NameIndexStart: Integer;
 begin
   FShapeFileWriter := TShapefileGeometryWriter.Create(FShapeType, True);
   try
@@ -1752,6 +1772,7 @@ begin
       RowCount := 1;
       ColumnCount := FLocalMesh.Mesh2D.Nodes.Count - 1;
     end;
+    NameIndexStart := 0;
     for DataSetIndex := 0 to DataSets.Count - 1 do
     begin
       FShapeDataBase.GotoBOF;
@@ -1760,7 +1781,7 @@ begin
         for ColIndex := 0 to ColumnCount - 1 do
         begin
           Assign2DDataSetValuesToDataBase(DataSets, DataSetIndex, FNames,
-            FLayerLimit, ColIndex, RowIndex, FShapeDataBase);
+            FLayerLimit, ColIndex, RowIndex, FShapeDataBase, NameIndexStart);
           FShapeDataBase.PostChanges;
           if (RowIndex < RowCount - 1)
             or (ColIndex < ColumnCount - 1) then
@@ -1771,6 +1792,7 @@ begin
       end;
       frmGoPhast.PhastModel.DataArrayManager.CacheDataArrays;
       DataArray := DataSets[DataSetIndex];
+      NameIndexStart := NameIndexStart + DataArray.LayerCount;
       DataArray.CacheData;
     end;
     IndexFileName := ChangeFileExt(FShapeFileName, '.shx');
@@ -1782,7 +1804,7 @@ end;
 
 procedure TfrmExportShapefile.Assign2DDataSetValuesToDataBase(DataSets: TList;
   DataSetIndex: Integer; Names: TStringList; LayerLimit, ColIndex,
-  RowIndex: integer; ShapeDataBase: TXBase);
+  RowIndex: integer; ShapeDataBase: TXBase; NameIndexStart: integer);
 var
   DataArray: TDataArray;
   RootName: AnsiString;
@@ -1823,7 +1845,7 @@ begin
 //      FieldName := RootName + 'L' + AnsiString(IntToStr(Layer+1));
 //    end;
 //    FieldName := FixShapeFileFieldName(FieldName);
-    FieldName := AnsiString(FNames[DataSetIndex]);
+    FieldName := AnsiString(FNames[NameIndexStart+LayerIndex]);
     if DataArray.IsValue[Layer, Row, Col] then
     begin
       case DataArray.DataType of
@@ -1985,6 +2007,7 @@ var
   NodeIndex: Integer;
   RowCount: Integer;
   ColumnCount: Integer;
+  NameIndexStart: Integer;
 begin
   FShapeFileWriter := TShapefileGeometryWriter.Create(FShapeType, True);
   try
@@ -2032,6 +2055,7 @@ begin
       RowCount := 1;
       ColumnCount := FLocalMesh.Mesh2D.Nodes.Count - 1;
     end;
+    NameIndexStart := 0;
     for DataSetIndex := 0 to DataSets.Count - 1 do
     begin
       FShapeDataBase.GotoBOF;
@@ -2040,7 +2064,7 @@ begin
         for ColIndex := 0 to ColumnCount do
         begin
           Assign2DDataSetValuesToDataBase(DataSets, DataSetIndex, FNames,
-            FLayerLimit, ColIndex, RowIndex, FShapeDataBase);
+            FLayerLimit, ColIndex, RowIndex, FShapeDataBase, NameIndexStart);
           FShapeDataBase.PostChanges;
           if (RowIndex < RowCount)
             or (ColIndex < ColumnCount) then
@@ -2051,6 +2075,7 @@ begin
       end;
       frmGoPhast.PhastModel.DataArrayManager.CacheDataArrays;
       DataArray := DataSets[DataSetIndex];
+      NameIndexStart := NameIndexStart + DataArray.LayerCount;
       DataArray.CacheData;
     end;
     IndexFileName := ChangeFileExt(FShapeFileName, '.shx');

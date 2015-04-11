@@ -55,6 +55,12 @@ resourcestring
   StrAStartingTimeFor = 'A starting time for the MODPATH particles defined '
     + 'with the following objects are not valid. Adjust the beginning and '
     + 'ending time for MODPATH or adjust the release time.';
+  StrInvalidMODPATHRefe = 'Invalid MODPATH reference time';
+  StrTheReferenceTimeF = 'The reference time for a MODPATH simulation must b' +
+  'e %s of the simulation specified in the MODFLOW Time dialog box. The refe' +
+  'rence time is specified in the MODFLOW Packages and Programs dialog box.';
+  StrGreaterOrEqualTo = 'greater or equal to than the initial time';
+  StrLessThanOrEqualT = 'less than or equal to the final time';
 //  StrNoMODPATHStarting = 'No MODPATH starting locations defined';
 //  StrNoObjectsDefineSt = 'No objects define starting locations for MODPATH';
 
@@ -165,6 +171,7 @@ var
   ParticleCount: Integer;
   StressPeriods: TModflowStressPeriods;
 begin
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidMODPATHRefe);
 //  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoMODPATHStarting);
   StressPeriods := Model.ModflowStressPeriods;
   FStartTime := StressPeriods[0].StartTime;
@@ -182,8 +189,20 @@ begin
     WriteString(' # Data Set 1: InputStyle');
     NewLine;
 
+    if FOptions.ReferenceTime < Model.ModflowStressPeriods.First.StartTime then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrInvalidMODPATHRefe,
+        Format(StrTheReferenceTimeF, [StrGreaterOrEqualTo]));
+    end;
+    if FOptions.ReferenceTime > Model.ModflowStressPeriods.Last.EndTime then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrInvalidMODPATHRefe,
+        Format(StrTheReferenceTimeF, [StrLessThanOrEqualT]));
+    end;
+
     ReferenceTime := FOptions.ReferenceTime
       - Model.ModflowStressPeriods[0].StartTime;
+
     UsedObjects := TList.Create;
     try
       for Index := 0 to LocalModel.ScreenObjectCount - 1 do
@@ -438,7 +457,7 @@ begin
       ((TimeItem.Time < 0) or (TimeItem.Time > EndTime-StartTime)) then
     begin
       frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, StrAStartingTimeFor,
-        ScreenObject.Name);
+        ScreenObject.Name, ScreenObject);
       ReleaseTimeErrorDetected := True;
     end;
     FReleaseTimes.Add(FortranFloatToStr(TimeItem.Time));

@@ -721,7 +721,8 @@ begin
   if (AssignmentLocation <> alAll)
     and (not ScreenObject.SetValuesOfIntersectedCells) then
   begin
-    frmErrorsAndWarnings.AddError(AModel, StrSfrInvalid, ScreenObject.Name);
+    frmErrorsAndWarnings.AddError(AModel, StrSfrInvalid, ScreenObject.Name,
+      ScreenObject);
     Exit;
   end;
   for Index := 0 to Count - 1 do

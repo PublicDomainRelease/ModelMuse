@@ -49,7 +49,7 @@ implementation
 uses
   ModflowUnitNumbers, frmProgressUnit, SysUtils, GoPhastTypes,
   DataSetUnit, Mt3dmsChemSpeciesUnit, ModflowOutputControlUnit, Mt3dmsTimesUnit,
-  frmErrorsAndWarningsUnit, ReadModflowArrayUnit;
+  frmErrorsAndWarningsUnit, ReadModflowArrayUnit, Dialogs;
 
 resourcestring
   StrSInTheMT3DMSBTN = '%s in the MT3DMS BTN package';
@@ -100,6 +100,9 @@ resourcestring
   StrIncorrectNumberOf = 'Incorrect number of rows or columns in initial con' +
   'centration file.';
   StrDataSet13SCONC = 'Data Set 13: SCONC: %0:s, Layer: %1:d';
+  StrSomethingIsWrongW = 'Something is wrong with the file you specied for t' +
+  'he initial concentration. Please check that you used the right version of' +
+  ' MT3DMS to create the file. The file is namead %s.';
 
 { TMt3dmsBtnWriter }
 
@@ -206,7 +209,23 @@ var
         NTRANS := -1;
         AFileStream := TFileStream.Create(FileName, fmOpenRead or fmShareCompat);
         try
-          APrecision := CheckArrayPrecision(AFileStream);
+          if AFileStream.Size = 0 then
+          begin
+            Beep;
+            ErrorMessage := Format('The initial concentration file that you specified, "%s" can not be used because it is empty.', [FileName]);
+            MessageDlg(ErrorMessage, mtError, [mbOK], 0);
+            Exit;
+          end;
+
+          try
+            APrecision := CheckArrayPrecision(AFileStream);
+          except on EPrecisionReadError do
+            begin
+              Beep;
+              MessageDlg(Format(StrSomethingIsWrongW, [FileName]), mtError, [mbOK], 0);
+              Exit;
+            end;
+          end;
 
           While AFileStream.Position < AFileStream.Size do
           begin
@@ -304,8 +323,6 @@ var
                     else Assert(False);
                   end;
                 end
-
-
               end;
             end;
             DataWritten := True;

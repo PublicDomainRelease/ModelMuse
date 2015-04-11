@@ -293,7 +293,8 @@ begin
         if not ScreenObject.SetValuesOfEnclosedCells
           and not ScreenObject.SetValuesOfIntersectedCells then
         begin
-          frmErrorsAndWarnings.AddError(Model, ErrorRoot, ScreenObject.Name);
+          frmErrorsAndWarnings.AddError(Model, ErrorRoot, ScreenObject.Name,
+            ScreenObject);
         end;
         ABoundary.GetCellValues(FDirectRunoffValues, nil, Model);
       end;
@@ -490,7 +491,8 @@ begin
         if not ScreenObject.SetValuesOfEnclosedCells
           and not ScreenObject.SetValuesOfIntersectedCells then
         begin
-          frmErrorsAndWarnings.AddError(Model, ErrorRoot, ScreenObject.Name);
+          frmErrorsAndWarnings.AddError(Model, ErrorRoot, ScreenObject.Name,
+            ScreenObject);
         end;
         EvapBoundary.GetCellValues(FEvapValues, nil, Model);
       end;
@@ -535,7 +537,8 @@ begin
         if not ScreenObject.SetValuesOfEnclosedCells
           and not ScreenObject.SetValuesOfIntersectedCells then
         begin
-          frmErrorsAndWarnings.AddError(Model, ErrorRoot, ScreenObject.Name);
+          frmErrorsAndWarnings.AddError(Model, ErrorRoot, ScreenObject.Name,
+            ScreenObject);
         end;
         ABoundary.GetCellValues(FLatInflowValues, nil, Model);
       end;
@@ -580,7 +583,8 @@ begin
         if not ScreenObject.SetValuesOfEnclosedCells
           and not ScreenObject.SetValuesOfIntersectedCells then
         begin
-          frmErrorsAndWarnings.AddError(Model, ErrorRoot, ScreenObject.Name);
+          frmErrorsAndWarnings.AddError(Model, ErrorRoot, ScreenObject.Name,
+            ScreenObject);
         end;
         RainBoundary.GetCellValues(Values, nil, Model);
       end;
@@ -620,7 +624,7 @@ begin
         and not ScreenObject.SetValuesOfIntersectedCells then
       begin
         frmErrorsAndWarnings.AddError(Model, NoAssignmentErrorRoot,
-          ScreenObject.Name);
+          ScreenObject.Name, ScreenObject);
       end;
       frmProgressMM.AddMessage(Format(StrEvaluatingS,
         [ScreenObject.Name]));
@@ -661,7 +665,8 @@ begin
           if not ScreenObject.SetValuesOfEnclosedCells
             and not ScreenObject.SetValuesOfIntersectedCells then
           begin
-            frmErrorsAndWarnings.AddError(Model, ErrorRoot, ScreenObject.Name);
+            frmErrorsAndWarnings.AddError(Model, ErrorRoot, ScreenObject.Name,
+              ScreenObject);
           end;
           ABoundary.GetCellValues(FStageValues, nil, Model);
         end;

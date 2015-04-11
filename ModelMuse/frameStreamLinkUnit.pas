@@ -6,7 +6,8 @@ uses
   {$IF CompilerVersion >= 23} System.UITypes, {$IFEND} Windows, Messages,
   SysUtils, Variants, Classes, Graphics,
   Controls, Forms, Dialogs, StdCtrls, ExtCtrls, JvExStdCtrls, JvCombobox,
-  JvListComb, PhastModelUnit, UndoItems, DisplaySettingsUnit;
+  JvListComb, PhastModelUnit, UndoItems, DisplaySettingsUnit, Mask,
+  JvExMask, JvSpin;
 
 type
   TStreamType = (stSFR, stSTR);
@@ -25,6 +26,8 @@ type
     cbPlotUnconnected: TCheckBox;
     btnUnconnectedColor: TButton;
     shpUnconnectedColor: TShape;
+    seSquareSize: TJvSpinEdit;
+    lblSquareSize: TLabel;
     procedure btnStreamColorClick(Sender: TObject);
     procedure btnDiversionColorClick(Sender: TObject);
     procedure cbStreamsClick(Sender: TObject);
@@ -136,6 +139,7 @@ begin
   shpUnconnectedColor.Brush.Color := FSfrStreamLinkPlot.UnconnectedColor;
   rgItemsToPlot.ItemIndex := Ord(FSfrStreamLinkPlot.StreamsToPlot);
   comboTimeToPlot.Text := FloatToStr(FSfrStreamLinkPlot.TimeToPlot);
+  seSquareSize.AsInteger := FSfrStreamLinkPlot.SquareSize;
 end;
 
 procedure TframeStreamLink.SetData;
@@ -158,6 +162,7 @@ begin
   FSfrStreamLinkPlot.UnconnectedColor := shpUnconnectedColor.Brush.Color;
   FSfrStreamLinkPlot.StreamsToPlot := TStreamsToPlot(rgItemsToPlot.ItemIndex);
   FSfrStreamLinkPlot.TimeToPlot := StrToFloat(comboTimeToPlot.Text);
+  FSfrStreamLinkPlot.SquareSize := seSquareSize.AsInteger;
   Undo := TUndoStreamLinks.Create(FSfrStreamLinkPlot, FStreamType);
   frmGoPhast.UndoStack.Submit(Undo);
 end;

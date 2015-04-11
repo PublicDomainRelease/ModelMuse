@@ -557,7 +557,7 @@ begin
             except on EConvertError do
               begin
                 frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
-                  StrTheFollowingLines, IntToStr(LineIndex+1));
+                  StrTheFollowingLines, IntToStr(LineIndex+1), ScreenObject);
                 ShowErrors := True;
                 Continue;
               end;

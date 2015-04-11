@@ -85,13 +85,15 @@ begin
     begin
       frmErrorsAndWarnings.AddError(Model, StrGHBBoundaryHeadIs,
         Format(StrLayerRowColObject, [
-        Ghb_Cell.Layer+1, Ghb_Cell.Row+1, Ghb_Cell.Column+1, ScreenObject.Name]));
+        Ghb_Cell.Layer+1, Ghb_Cell.Row+1, Ghb_Cell.Column+1, ScreenObject.Name]),
+        ScreenObject);
     end
     else
     begin
       frmErrorsAndWarnings.AddWarning(Model, StrGHBBoundaryHeadIs,
         Format(StrLayerRowColObject, [
-        Ghb_Cell.Layer+1, Ghb_Cell.Row+1, Ghb_Cell.Column+1, ScreenObject.Name]));
+        Ghb_Cell.Layer+1, Ghb_Cell.Row+1, Ghb_Cell.Column+1, ScreenObject.Name]),
+        ScreenObject);
     end;
   end;
 end;

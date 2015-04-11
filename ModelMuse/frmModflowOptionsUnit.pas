@@ -411,7 +411,13 @@ begin
     begin
       cbCHTOCH.Checked := FCurrentOptions.CalculateFlow;
       cbPRINTTIME.Checked := FCurrentOptions.PrintTime;
-      feInitialHeads.FileName := FCurrentOptions.InitialHeadsFile;
+      try
+        feInitialHeads.FileName := FCurrentOptions.InitialHeadsFile;
+      except on EComboEditError do
+        begin
+          // do nothing.
+        end;
+      end;
       cbWetting.Checked := FCurrentOptions.WettingActive;
       cbWettingClick(nil);
       rdeWettingFact.Text := FloatToStr(FCurrentOptions.WettingFactor);

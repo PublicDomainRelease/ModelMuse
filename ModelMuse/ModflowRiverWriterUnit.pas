@@ -88,13 +88,15 @@ begin
     begin
       frmErrorsAndWarnings.AddError(Model, StrRiverStageIsBelow,
         Format(StrLayerRowColObject, [
-        Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]));
+        Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]),
+        ScreenObject);
     end
     else
     begin
       frmErrorsAndWarnings.AddWarning(Model, StrRiverStageIsBelow,
         Format(StrLayerRowColObject, [
-        Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]));
+        Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]),
+        ScreenObject);
     end;
   end;
 end;
@@ -152,6 +154,7 @@ procedure TModflowRIV_Writer.WriteCell(Cell: TValueCell;
 var
   Riv_Cell: TRiv_Cell;
   LocalLayer: integer;
+  ScreenObject: TScreenObject;
 begin
   Riv_Cell := Cell as TRiv_Cell;
   LocalLayer := Model.
@@ -169,15 +172,18 @@ begin
   NewLine;
   if Riv_Cell.RiverStage <= Riv_Cell.RiverBottom then
   begin
+    ScreenObject := Riv_Cell.ScreenObject as TScreenObject;
     if Model.ModelSelection = msModflowNWT then
     begin
       frmErrorsAndWarnings.AddError(Model, StrInTheFollowingRiv,
-        Format(StrLayerDRowDC, [Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1]));
+        Format(StrLayerDRowDC, [Riv_Cell.Layer+1, Riv_Cell.Row+1,
+        Riv_Cell.Column+1]), ScreenObject);
     end
     else
     begin
       frmErrorsAndWarnings.AddWarning(Model, StrInTheFollowingRiv,
-        Format(StrLayerDRowDC, [Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1]));
+        Format(StrLayerDRowDC, [Riv_Cell.Layer+1, Riv_Cell.Row+1,
+        Riv_Cell.Column+1]), ScreenObject);
     end;
   end;
 end;

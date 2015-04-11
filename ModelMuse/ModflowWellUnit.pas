@@ -366,7 +366,7 @@ begin
         frmErrorsAndWarnings.AddError(AModel, StrWellFormulaError,
           Format(StrObject0sLayerError,
           [LocalScreenObject.Name, ACell.Layer+1, ACell.Row+1,
-          ACell.Column+1, E.Message]));
+          ACell.Column+1, E.Message]), LocalScreenObject);
       end;
     end;
   end;

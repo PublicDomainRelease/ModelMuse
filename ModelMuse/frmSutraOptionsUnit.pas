@@ -353,11 +353,24 @@ begin
     rgSimulationType.ItemIndex := Ord(SutraOptions.SimulationType);
 
     rgStartType.ItemIndex := Ord(SutraOptions.StartType);
-    fedRestartFile.FileName := SutraOptions.FullRestartFileName;
+    try
+      fedRestartFile.FileName := SutraOptions.FullRestartFileName;
+    except on EComboEditError do
+      begin
+        // do nothing.
+      end;
+    end;
     fedRestartFileChange(nil);
 
     rgInitialValues.ItemIndex := Ord(SutraOptions.ReadStart);
-    fedRestartInitialConditions.FileName := SutraOptions.FullReadStartRestartFileName;
+    try
+      fedRestartInitialConditions.FileName
+        := SutraOptions.FullReadStartRestartFileName;
+    except on EComboEditError do
+      begin
+        // do nothing.
+      end;
+    end;
     fedRestartInitialConditionsChange(nil);
 
     seRestartFrequency.AsInteger := SutraOptions.RestartFrequency;
@@ -572,8 +585,14 @@ begin
   begin
     if fedRestartFile.Dialog.Execute then
     begin
-      fedRestartFile.FileName :=
-        fedRestartFile.Dialog.FileName
+      try
+        fedRestartFile.FileName :=
+          fedRestartFile.Dialog.FileName
+      except on EComboEditError do
+        begin
+          // do nothing.
+        end;
+      end;
     end;
   end;
 end;

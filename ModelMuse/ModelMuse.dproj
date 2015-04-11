@@ -59,12 +59,13 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<VerInfo_Build>9</VerInfo_Build>
 			<VerInfo_Release>1</VerInfo_Release>
 			<VerInfo_MajorVer>3</VerInfo_MajorVer>
 			<VerInfo_MinorVer>5</VerInfo_MinorVer>
 			<DCC_ExeOutput>.\$(Config)\$(Platform)</DCC_ExeOutput>
 			<VerInfo_Locale>1033</VerInfo_Locale>
-			<VerInfo_Keys>FileVersion=3.5.1.0;ProductVersion=3.5.1.0</VerInfo_Keys>
+			<VerInfo_Keys>FileVersion=3.5.1.9;ProductVersion=3.5.1.9</VerInfo_Keys>
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 			<Manifest_File>None</Manifest_File>
 			<DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>
@@ -97,6 +98,10 @@
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
+			<VerInfo_Build>0</VerInfo_Build>
+			<VerInfo_MinorVer>6</VerInfo_MinorVer>
+			<VerInfo_Keys>FileVersion=3.6.0.0;ProductVersion=3.6.0.0</VerInfo_Keys>
+			<VerInfo_Release>0</VerInfo_Release>
 			<BRCC_IncludePath>D:\jedi\jcl\jcl\lib\d16\win64;$(BRCC_IncludePath)</BRCC_IncludePath>
 			<DCC_DebugInformation>true</DCC_DebugInformation>
 			<DCC_LocalDebugSymbols>true</DCC_LocalDebugSymbols>
@@ -1260,6 +1265,10 @@
 			<DCCReference Include="frameScreenObjectFarmIDUnit.pas">
 				<Form>frameScreenObjectFarmID</Form>
 				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frmBudgetPrecisionQueryUnit.pas">
+				<Form>frmBudgetPrecisionQuery</Form>
+				<FormType>dfm</FormType>
 			</DCCReference>
 			<None Include="ModelMuse.todo"/>
 			<BuildConfiguration Include="Debug">

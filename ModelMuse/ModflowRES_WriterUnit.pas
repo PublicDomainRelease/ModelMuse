@@ -97,7 +97,8 @@ begin
     end;
     if NRES = 0 then
     begin
-      frmErrorsAndWarnings.AddError(Model, StrNoReservoirsDefine, StrTheReservoirPackag);
+      frmErrorsAndWarnings.AddError(Model, StrNoReservoirsDefine,
+        StrTheReservoirPackag);
     end;
     inherited;
   finally

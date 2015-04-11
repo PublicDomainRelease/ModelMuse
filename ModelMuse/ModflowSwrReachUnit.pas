@@ -1020,7 +1020,7 @@ begin
       if GeoItem = nil then
       begin
         frmErrorsAndWarnings.AddError(AModel, StrSWRGeometryNotDef,
-          Format(StrInSTheSWRGeome, [LocalScreenObject.Name]));
+          Format(StrInSTheSWRGeome, [LocalScreenObject.Name]), LocalScreenObject);
         Exit;
       end;
       if Cells.Capacity < Cells.Count + Length(LocalBoundaryStorage.Transient) then

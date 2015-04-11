@@ -3875,6 +3875,7 @@ SectionStarts.}
     property ObjectLabel: TObjectLabel read FObjectLabel write SetObjectLabel;
   end;
 
+  // @name does not own its @link(TScreenObject)s.
   TScreenObjectList = class(TObject)
   private
     FList: TList;
@@ -4915,6 +4916,7 @@ procedure GetLayerFromZ(Z: Double; var CellLocation: TCellLocation;
   Grid: TModflowGrid; Model: TBaseModel);
 
 procedure SelectAScreenObject(ScreenObject: TScreenObject);
+procedure SelectMultipleScreenObjects(ScreenObjects: TScreenObjectList);
 
 function FindIntersectionPoints(Poly1, Poly2: TSubPolygon;
   var Intersections: TIntersectionArray; 
@@ -15552,13 +15554,13 @@ begin
             begin
               frmErrorsAndWarnings.AddError(DataSet.Model,
                 Format(ErrorMessageFormulaUnNamed, [Name]),
-                Format(ErrorString, [LayerIndex+1,RowIndex+1,ColIndex+1] ));
+                Format(ErrorString, [LayerIndex+1,RowIndex+1,ColIndex+1] ), self);
             end
             else
             begin
               frmErrorsAndWarnings.AddError(DataSet.Model,
                 Format(ErrorMessageFormulaNamed, [DataSet.Name,Name]),
-                Format(ErrorString, [LayerIndex+1,RowIndex+1,ColIndex+1]));
+                Format(ErrorString, [LayerIndex+1,RowIndex+1,ColIndex+1]), self);
             end;
             DataSet.RealData[LayerIndex, RowIndex, ColIndex] := MaxReal
           end
@@ -21562,13 +21564,14 @@ begin
           begin
             frmErrorsAndWarnings.AddError(DataSet.Model,
               Format(ErrorMessageFormulaUnNamed, [FScreenObject.Name]),
-              Format(ErrorString, [LayerIndex+1,RowIndex+1,ColIndex+1] ));
+              Format(ErrorString, [LayerIndex+1,RowIndex+1,ColIndex+1] ),
+              FScreenObject);
           end
           else
           begin
             frmErrorsAndWarnings.AddError(DataSet.Model,
               Format(ErrorMessageFormulaNamed, [DataSet.Name,FScreenObject.Name]),
-              Format(ErrorString, [LayerIndex+1,RowIndex+1,ColIndex+1]));
+              Format(ErrorString, [LayerIndex+1,RowIndex+1,ColIndex+1]), FScreenObject);
           end;
           DataSet.RealData[LayerIndex, RowIndex, ColIndex] := MaxReal
         end
@@ -38347,6 +38350,34 @@ begin
   end;
 end;
 
+procedure SelectMultipleScreenObjects(ScreenObjects: TScreenObjectList);
+var
+  AScreenObject: TScreenObject;
+  Index: Integer;
+  UndoChangeSelection: TUndoChangeSelection;
+begin
+  UndoChangeSelection := TUndoChangeSelection.Create;
+  for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
+  begin
+    AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
+    AScreenObject.Selected := False;
+  end;
+  for Index := 0 to ScreenObjects.Count - 1 do
+  begin
+    AScreenObject := ScreenObjects[Index];
+    AScreenObject.Selected := True;
+  end;
+
+  UndoChangeSelection.SetPostSelection;
+  if UndoChangeSelection.SelectionChanged then
+  begin
+    frmGoPhast.UndoStack.Submit(UndoChangeSelection);
+  end
+  else
+  begin
+    UndoChangeSelection.Free;
+  end;
+end;
 { TScreenObjectClipboard }
 
 constructor TScreenObjectClipboard.Create(AOwner: TComponent);
@@ -40808,7 +40839,8 @@ begin
     else
       Assert(False);
     end;
-    frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, WarningMessage, FScreenObject.Name);
+    frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, WarningMessage,
+      FScreenObject.Name, FScreenObject);
   end;
 end;
 

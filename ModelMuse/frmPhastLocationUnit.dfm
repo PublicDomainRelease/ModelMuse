@@ -6,7 +6,7 @@ inherited frmPhastLocation: TfrmPhastLocation
   ClientWidth = 496
   ExplicitWidth = 512
   ExplicitHeight = 169
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0

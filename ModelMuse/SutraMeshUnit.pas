@@ -5079,20 +5079,26 @@ var
   PriorArea: double;
   PriorAreaFound: Boolean;
   PriorContourCount: Integer;
+  MinX, MinY, MaxX, MaxY: double;
 begin
   Assert(QP.Count > 0);
   Old_resultP := nil;
   P1 := TGpcPolygonClass.Create;
   try
-    P1.NumberOfContours := 1;
+    P1.NumberOfContours := 6;
     P1.VertexCount[0] := 4;
+    P1.VertexCount[1] := 4;
+    P1.VertexCount[2] := 4;
+    P1.VertexCount[3] := 4;
+    P1.VertexCount[4] := 4;
+    P1.VertexCount[5] := 4;
     Old_resultP := TGpcPolygonClass.Create;
     resultP := Old_resultP;
 
-//    MinX := 0;
-//    MaxX := 0;
-//    MinY := 0;
-//    MaxY := 0;
+    MinX := 0;
+    MaxX := 0;
+    MinY := 0;
+    MaxY := 0;
     FoundFirst := False;
     SetLength(Projection, QP.Count);
     for ListIndex := 0 to QP.Count - 1 do
@@ -5120,39 +5126,39 @@ begin
             begin
               PerpendicularLimit.LowerLimit := PerpendicularDistance;
             end;
-//            if MinX > Projection[ListIndex,QuadIndex,PointIndex].x then
-//            begin
-//              MinX := Projection[ListIndex,QuadIndex,PointIndex].x;
-//            end;
-//            if MaxX < Projection[ListIndex,QuadIndex,PointIndex].x then
-//            begin
-//              MaxX := Projection[ListIndex,QuadIndex,PointIndex].x;
-//            end;
-//            if MinY > Projection[ListIndex,QuadIndex,PointIndex].y then
-//            begin
-//              MinY := Projection[ListIndex,QuadIndex,PointIndex].y;
-//            end;
-//            if MaxY < Projection[ListIndex,QuadIndex,PointIndex].y then
-//            begin
-//              MaxY := Projection[ListIndex,QuadIndex,PointIndex].y;
-//            end;
+            if MinX > Projection[ListIndex,QuadIndex,PointIndex].x then
+            begin
+              MinX := Projection[ListIndex,QuadIndex,PointIndex].x;
+            end;
+            if MaxX < Projection[ListIndex,QuadIndex,PointIndex].x then
+            begin
+              MaxX := Projection[ListIndex,QuadIndex,PointIndex].x;
+            end;
+            if MinY > Projection[ListIndex,QuadIndex,PointIndex].y then
+            begin
+              MinY := Projection[ListIndex,QuadIndex,PointIndex].y;
+            end;
+            if MaxY < Projection[ListIndex,QuadIndex,PointIndex].y then
+            begin
+              MaxY := Projection[ListIndex,QuadIndex,PointIndex].y;
+            end;
           end
           else
           begin
             FoundFirst := True;
             PerpendicularLimit.UpperLimit := PerpendicularDistance;
             PerpendicularLimit.LowerLimit := PerpendicularDistance;
-//            MinX := Projection[ListIndex,QuadIndex,PointIndex].x;
-//            MaxX := Projection[ListIndex,QuadIndex,PointIndex].x;
-//            MinY := Projection[ListIndex,QuadIndex,PointIndex].y;
-//            MaxY := Projection[ListIndex,QuadIndex,PointIndex].y;
+            MinX := Projection[ListIndex,QuadIndex,PointIndex].x;
+            MaxX := Projection[ListIndex,QuadIndex,PointIndex].x;
+            MinY := Projection[ListIndex,QuadIndex,PointIndex].y;
+            MaxY := Projection[ListIndex,QuadIndex,PointIndex].y;
           end;
         end;
       end;
     end;
 
-//    Epsilon := Sqr(Max(MaxX-MinX, MaxY-MinY)/1000);
-    Epsilon := 0;
+    Epsilon := Sqr(Max(MaxX-MinX, MaxY-MinY)/10000000);
+//    Epsilon := 0;
 
     for ListIndex := 0 to QP.Count - 1 do
     begin
@@ -5162,67 +5168,93 @@ begin
       P1.Vertices[0,2] := Projection[ListIndex,0,3];
       P1.Vertices[0,3] := Projection[ListIndex,0,4];
 
-      if Abs(P1.ContourArea(0)) > Epsilon then
-      begin
-        resultP := TGpcPolygonClass.CreateFromOperation(GPC_UNION, P1, Old_resultP);
-        Old_resultP.Free;
-        Old_resultP := resultP;
-      end;
+//      if Abs(P1.ContourArea(0)) > Epsilon then
+//      begin
+//        resultP := TGpcPolygonClass.CreateFromOperation(GPC_UNION, P1, Old_resultP);
+//        Old_resultP.Free;
+//        Old_resultP := resultP;
+//      end;
 
-      P1.Vertices[0,0] := Projection[ListIndex,1,1];
-      P1.Vertices[0,1] := Projection[ListIndex,1,2];
-      P1.Vertices[0,2] := Projection[ListIndex,1,3];
-      P1.Vertices[0,3] := Projection[ListIndex,1,4];
+      P1.Vertices[1,0] := Projection[ListIndex,1,1];
+      P1.Vertices[1,1] := Projection[ListIndex,1,2];
+      P1.Vertices[1,2] := Projection[ListIndex,1,3];
+      P1.Vertices[1,3] := Projection[ListIndex,1,4];
+//      P1.Vertices[0,0] := Projection[ListIndex,1,1];
+//      P1.Vertices[0,1] := Projection[ListIndex,1,2];
+//      P1.Vertices[0,2] := Projection[ListIndex,1,3];
+//      P1.Vertices[0,3] := Projection[ListIndex,1,4];
 
-      if Abs(P1.ContourArea(0)) > Epsilon then
-      begin
-        resultP := TGpcPolygonClass.CreateFromOperation(GPC_UNION, P1, Old_resultP);
-        Old_resultP.Free;
-        Old_resultP := resultP;
-      end;
+//      if Abs(P1.ContourArea(0)) > Epsilon then
+//      begin
+//        resultP := TGpcPolygonClass.CreateFromOperation(GPC_UNION, P1, Old_resultP);
+//        Old_resultP.Free;
+//        Old_resultP := resultP;
+//      end;
 
-      P1.Vertices[0,0] := Projection[ListIndex,0,1];
-      P1.Vertices[0,1] := Projection[ListIndex,0,2];
-      P1.Vertices[0,2] := Projection[ListIndex,1,2];
-      P1.Vertices[0,3] := Projection[ListIndex,1,1];
+//      P1.Vertices[0,0] := Projection[ListIndex,0,1];
+//      P1.Vertices[0,1] := Projection[ListIndex,0,2];
+//      P1.Vertices[0,2] := Projection[ListIndex,1,2];
+//      P1.Vertices[0,3] := Projection[ListIndex,1,1];
+      P1.Vertices[2,0] := Projection[ListIndex,0,1];
+      P1.Vertices[2,1] := Projection[ListIndex,0,2];
+      P1.Vertices[2,2] := Projection[ListIndex,1,2];
+      P1.Vertices[2,3] := Projection[ListIndex,1,1];
 
-      if Abs(P1.ContourArea(0)) > Epsilon then
-      begin
-        resultP := TGpcPolygonClass.CreateFromOperation(GPC_UNION, P1, Old_resultP);
-        Old_resultP.Free;
-        Old_resultP := resultP;
-      end;
+//      if Abs(P1.ContourArea(0)) > Epsilon then
+//      begin
+//        resultP := TGpcPolygonClass.CreateFromOperation(GPC_UNION, P1, Old_resultP);
+//        Old_resultP.Free;
+//        Old_resultP := resultP;
+//      end;
 
-      P1.Vertices[0,0] := Projection[ListIndex,0,2];
-      P1.Vertices[0,1] := Projection[ListIndex,0,3];
-      P1.Vertices[0,2] := Projection[ListIndex,1,3];
-      P1.Vertices[0,3] := Projection[ListIndex,1,2];
+//      P1.Vertices[0,0] := Projection[ListIndex,0,2];
+//      P1.Vertices[0,1] := Projection[ListIndex,0,3];
+//      P1.Vertices[0,2] := Projection[ListIndex,1,3];
+//      P1.Vertices[0,3] := Projection[ListIndex,1,2];
+      P1.Vertices[3,0] := Projection[ListIndex,0,2];
+      P1.Vertices[3,1] := Projection[ListIndex,0,3];
+      P1.Vertices[3,2] := Projection[ListIndex,1,3];
+      P1.Vertices[3,3] := Projection[ListIndex,1,2];
 
-      if Abs(P1.ContourArea(0)) > Epsilon then
-      begin
-        resultP := TGpcPolygonClass.CreateFromOperation(GPC_UNION, P1, Old_resultP);
-        Old_resultP.Free;
-        Old_resultP := resultP;
-      end;
+//      if Abs((P1.ContourArea(0)) > Epsilon) then
+//      begin
+//        resultP := TGpcPolygonClass.CreateFromOperation(GPC_UNION, P1, Old_resultP);
+//        Old_resultP.Free;
+//        Old_resultP := resultP;
+//      end;
 
-      P1.Vertices[0,0] := Projection[ListIndex,0,3];
-      P1.Vertices[0,1] := Projection[ListIndex,0,4];
-      P1.Vertices[0,2] := Projection[ListIndex,1,4];
-      P1.Vertices[0,3] := Projection[ListIndex,1,3];
+      P1.Vertices[4,0] := Projection[ListIndex,0,3];
+      P1.Vertices[4,1] := Projection[ListIndex,0,4];
+      P1.Vertices[4,2] := Projection[ListIndex,1,4];
+      P1.Vertices[4,3] := Projection[ListIndex,1,3];
+//      P1.Vertices[0,0] := Projection[ListIndex,0,3];
+//      P1.Vertices[0,1] := Projection[ListIndex,0,4];
+//      P1.Vertices[0,2] := Projection[ListIndex,1,4];
+//      P1.Vertices[0,3] := Projection[ListIndex,1,3];
 
-      if Abs(P1.ContourArea(0)) > Epsilon then
-      begin
-        resultP := TGpcPolygonClass.CreateFromOperation(GPC_UNION, P1, Old_resultP);
-        Old_resultP.Free;
-        Old_resultP := resultP;
-      end;
+//      if Abs(P1.ContourArea(0)) > Epsilon then
+//      begin
+//        resultP := TGpcPolygonClass.CreateFromOperation(GPC_UNION, P1, Old_resultP);
+//        Old_resultP.Free;
+//        Old_resultP := resultP;
+//      end;
 
-      P1.Vertices[0,0] := Projection[ListIndex,0,4];
-      P1.Vertices[0,1] := Projection[ListIndex,0,1];
-      P1.Vertices[0,2] := Projection[ListIndex,1,1];
-      P1.Vertices[0,3] := Projection[ListIndex,1,4];
+      P1.Vertices[5,0] := Projection[ListIndex,0,4];
+      P1.Vertices[5,1] := Projection[ListIndex,0,1];
+      P1.Vertices[5,2] := Projection[ListIndex,1,1];
+      P1.Vertices[5,3] := Projection[ListIndex,1,4];
+//      P1.Vertices[0,0] := Projection[ListIndex,0,4];
+//      P1.Vertices[0,1] := Projection[ListIndex,0,1];
+//      P1.Vertices[0,2] := Projection[ListIndex,1,1];
+//      P1.Vertices[0,3] := Projection[ListIndex,1,4];
 
-      if Abs(P1.ContourArea(0)) > Epsilon then
+      if (Abs(P1.ContourArea(0)) > Epsilon)
+        or (Abs(P1.ContourArea(1)) > Epsilon)
+        or (Abs(P1.ContourArea(2)) > Epsilon)
+        or (Abs(P1.ContourArea(3)) > Epsilon)
+        or (Abs(P1.ContourArea(4)) > Epsilon)
+        or (Abs(P1.ContourArea(5)) > Epsilon)
+       then
       begin
         resultP := TGpcPolygonClass.CreateFromOperation(GPC_UNION, P1, Old_resultP);
         Old_resultP.Free;
@@ -5237,6 +5269,12 @@ begin
     while Old_resultP.NumberOfContours > 1 do
     begin
       resultP := TGpcPolygonClass.CreateFromOperation(GPC_UNION, P1, Old_resultP);
+      if resultP.NumberOfContours > Old_resultP.NumberOfContours  then
+      begin
+        resultP.Free;
+        resultP := Old_resultP;
+        break;
+      end;
       Old_resultP.Free;
       Old_resultP := resultP;
       Inc(Count);
@@ -7700,12 +7738,14 @@ begin
                   end;
                 end;
                 try
-                Result[LayerIndex,NodeIndex] :=
-                  QuadPairsToPolygon(QuadPairList, Angle,
-                  Limits[LayerIndex,NodeIndex]);
+                  Result[LayerIndex,NodeIndex] :=
+                    QuadPairsToPolygon(QuadPairList, Angle,
+                    Limits[LayerIndex,NodeIndex]);
                 except
-//                  showMessage(IntToStr(Node.Number));
-                  raise;
+                  begin
+                    showMessage(IntToStr(Node.Number));
+                    raise;
+                  end;
                 end;
               end
               else

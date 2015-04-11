@@ -921,7 +921,13 @@ begin
   FGettingDate := True;
   try
     Initialize(AHeadObsColl);
-    flnmedHeadObsResults.FileName := AHeadObsColl.FileName;
+    try
+      flnmedHeadObsResults.FileName := AHeadObsColl.FileName;
+    except on EComboEditError do
+      begin
+        // do nothing.
+      end;
+    end;
     DisplayValues(AModel, AHeadObsColl);
   finally
     FGettingDate := False;

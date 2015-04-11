@@ -599,7 +599,7 @@ begin
     if CurrentRecord.ChannelRoughness <= 0 then
     begin
       frmErrorsAndWarnings.AddError(AModel, ChannelRoughnessError,
-        Format(IDError, [ScrObj.Name, CurrentItem.StartTime]));
+        Format(IDError, [ScrObj.Name, CurrentItem.StartTime]), ScrObj);
 
     end;
     if ICALC = 2 then
@@ -630,7 +630,7 @@ begin
       if CurrentRecord.BankRoughness <= 0 then
       begin
         frmErrorsAndWarnings.AddError(AModel, BankRoughnessError,
-          Format(IDError, [ScrObj.Name, CurrentItem.StartTime]));
+          Format(IDError, [ScrObj.Name, CurrentItem.StartTime]), ScrObj);
       end;
 
       for XSIndex := 0 to 7 do
@@ -722,7 +722,8 @@ begin
   ErrorMessage := Format(IDError, [ScreenObjectName, StartTime]);
 //  ErrorMessage := 'Object = ' + ScreenObjectName
 //    + '; Time = ' + FloatToStr(StartTime);
-  frmErrorsAndWarnings.AddError(AModel, StrIncompleteSFRData, ErrorMessage);
+  frmErrorsAndWarnings.AddError(AModel, StrIncompleteSFRData, ErrorMessage,
+    ScreenObject);
 
 end;
 

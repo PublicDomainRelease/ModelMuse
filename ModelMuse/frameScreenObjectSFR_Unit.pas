@@ -1145,7 +1145,13 @@ begin
     rgExternalFlowChoice.ItemIndex := Ord(ExternalFlow.FlowFileChoice);
     rgExternalFlowChoiceClick(nil);
     rgReferenceTimeChoice.ItemIndex := Ord(ExternalFlow.ReferenceTimeChoice);
-    fedExternalFileName.FileName := ExternalFlow.FullFlowFileName;
+    try
+      fedExternalFileName.FileName := ExternalFlow.FullFlowFileName;
+    except on EComboEditError do
+      begin
+        // do nothing.
+      end;
+    end;
     frameExternalFileValues.seNumber.AsInteger := ExternalFlow.FlowFileData.Count;
     for FlowIndex := 0 to ExternalFlow.FlowFileData.Count - 1 do
     begin

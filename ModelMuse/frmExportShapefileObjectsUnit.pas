@@ -3017,7 +3017,7 @@ var
       begin
         frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
           StrFormulaTruncatedTo, Format(' Object Name; Object = %s',
-          [AScreenObject.Name]));
+          [AScreenObject.Name]), AScreenObject);
         FShowWarning := True;
       end;
       Inc(StartIndex);
@@ -3049,7 +3049,7 @@ var
             begin
               frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
                 StrFormulaTruncatedTo, Format(' Z Formula; Object = %s',
-                [AScreenObject.Name]));
+                [AScreenObject.Name]), AScreenObject);
               FShowWarning := True;
             end;
             Inc(StartIndex);
@@ -3077,7 +3077,7 @@ var
             begin
               frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
                 StrFormulaTruncatedTo, Format(' Higher Z Formula; Object = %s',
-                [AScreenObject.Name]));
+                [AScreenObject.Name]), AScreenObject);
               FShowWarning := True;
             end;
             Inc(StartIndex);
@@ -3089,7 +3089,7 @@ var
             begin
               frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
                 StrFormulaTruncatedTo, Format(' Lower Z Formula; Object = %s',
-                [AScreenObject.Name]));
+                [AScreenObject.Name]), AScreenObject);
               FShowWarning := True;
             end;
             Inc(StartIndex);
@@ -3258,7 +3258,7 @@ begin
                 begin
                   frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
                     StrFormulaTruncatedTo, Format(StrDataSet0sOb,
-                    [DataArray.Name, AScreenObject.Name]));
+                    [DataArray.Name, AScreenObject.Name]), AScreenObject);
                   FShowWarning := True;
                 end;
               end;
@@ -3378,7 +3378,7 @@ begin
               begin
                 frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
                   StrFormulaTruncatedTo, Format(StrDataSet0sOb,
-                  [DataArray.Name, AScreenObject.Name]));
+                  [DataArray.Name, AScreenObject.Name]), AScreenObject);
                 FShowWarning := True;
               end;
             end;

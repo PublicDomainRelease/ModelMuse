@@ -131,7 +131,7 @@ begin
           and not ScreenObject.SetValuesOfIntersectedCells then
         begin
           frmErrorsAndWarnings.AddError(Model,
-            NoAssignmentErrorRoot, ScreenObject.Name);
+            NoAssignmentErrorRoot, ScreenObject.Name, ScreenObject);
         end;
         Boundary.GetCellValues(Values, nil, Model);
         if Model.ModflowPackages.UzfPackage.SimulateET then

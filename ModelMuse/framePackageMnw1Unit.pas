@@ -69,9 +69,30 @@ begin
   seMaxIterations.AsInteger := Mnw1Package.MaxMnwIterations;
   comboLosstype.ItemIndex := Ord(Mnw1Package.LossType);
   rdeLossExponent.RealValue := Mnw1Package.LossExponent;
-  fedWellFileName.FileName := Mnw1Package.WellFileName;
-  fedByNode.FileName := Mnw1Package.ByNodeFileName;
-  fedQSum.FileName := Mnw1Package.QSumFileName;
+  try
+    fedWellFileName.FileName := Mnw1Package.WellFileName;
+  except on EComboEditError do
+    begin
+      // do nothing.
+    end;
+  end;
+
+  try
+    fedByNode.FileName := Mnw1Package.ByNodeFileName;
+  except on EComboEditError do
+    begin
+      // do nothing.
+    end;
+  end;
+
+  try
+    fedQSum.FileName := Mnw1Package.QSumFileName;
+  except on EComboEditError do
+    begin
+      // do nothing.
+    end;
+
+  end;
   comboByNodeFrequency.ItemIndex := Ord(Mnw1Package.ByNodePrintFrequency);
   comboQSumFrequency.ItemIndex := Ord(Mnw1Package.QSumPrintFrequency);
   comboLosstypeChange(nil);

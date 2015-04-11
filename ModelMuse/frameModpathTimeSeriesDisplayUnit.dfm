@@ -14,6 +14,10 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
     TabOrder = 0
     object tabBasic: TTabSheet
       Caption = 'Basic'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         457
         367)
@@ -194,6 +198,10 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         457
         367)
@@ -257,7 +265,6 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
         UnselectableColor = clBtnFace
         OnStateChange = rdgLimitsStateChange
         ColorRangeSelection = False
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = True
@@ -279,6 +286,7 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -303,6 +311,7 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -327,8 +336,10 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
+        WordWrapRowCaptions = False
       end
     end
   end

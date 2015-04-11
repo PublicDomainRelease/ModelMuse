@@ -3,7 +3,7 @@ unit PhastGridUnit;
 
 interface
 
-uses Types, Classes, Graphics, Forms,
+uses Types, Classes, SysUtils, Graphics, Forms,
   GR32, // TBitmap32 and TFloatRect are declared in GR32.
   FastGEO, GoPhastTypes, AbstractGridUnit,
   DataSetUnit, ZoomBox2;
@@ -216,7 +216,7 @@ function TPhastGrid.GetLayerElevation(const Layer: integer): real;
 begin
   if (Layer < 0) or (Layer > LayerCount) then
   begin
-    raise EInvalidGrid.Create(StrInvalidLayerNumber);
+    raise EInvalidGrid.Create(Format(StrInvalidLayerNumber, [Layer]));
   end;
   result := FLayerElevations[Layer];
 end;
@@ -339,7 +339,7 @@ procedure TPhastGrid.SetLayerElevation(const Layer: integer;
 begin
   if (Layer < 0) or (Layer > LayerCount) then
   begin
-    raise EInvalidGrid.Create(StrInvalidLayerNumber);
+    raise EInvalidGrid.Create(Format(StrInvalidLayerNumber, [Layer]));
   end;
   if FLayerElevations[Layer] <> Value then
   begin

@@ -12,8 +12,8 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
   Position = poScreenCenter
   OnActivate = ListClick
   OnResize = FormResize
-  ExplicitWidth = 810
-  ExplicitHeight = 436
+  ExplicitWidth = 808
+  ExplicitHeight = 429
   PixelsPerInch = 96
   TextHeight = 18
   object JvNetscapeSplitter1: TJvNetscapeSplitter
@@ -107,7 +107,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       Top = 65
       Width = 661
       Height = 285
-      ActivePage = tabObservationsTimes
+      ActivePage = tabObjects
       Align = alClient
       TabOrder = 1
       object tabObservationsTimes: TTabSheet
@@ -746,6 +746,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
           Background.Visible = False
           MultiSelect = True
           ParentShowHint = False
+          PopupMenu = pmSelectEditAvailable
           ShowHint = True
           Sorted = True
           TabOrder = 0
@@ -843,6 +844,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
           Background.Visible = False
           MultiSelect = True
           ParentShowHint = False
+          PopupMenu = pmSelectEditUsed
           ShowHint = True
           Sorted = True
           TabOrder = 1
@@ -938,5 +940,39 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
   object rparserThreeDFormulaElements: TRbwParser
     Left = 272
     Top = 24
+  end
+  object pmSelectEditAvailable: TPopupMenu
+    OnPopup = pmSelectEditAvailablePopup
+    Left = 568
+    Top = 168
+    object miSelectAvailable: TMenuItem
+      Caption = 'Select'
+      OnClick = miSelectAvailableClick
+    end
+    object miEditAvailable: TMenuItem
+      Caption = 'Edit...'
+      OnClick = miEditAvailableClick
+    end
+    object miGotoAvailable: TMenuItem
+      Caption = 'Go to'
+      OnClick = miGotoAvailableClick
+    end
+  end
+  object pmSelectEditUsed: TPopupMenu
+    OnPopup = pmSelectEditUsedPopup
+    Left = 568
+    Top = 232
+    object miSelectUsed: TMenuItem
+      Caption = 'Select'
+      OnClick = miSelectUsedClick
+    end
+    object miEditUsed: TMenuItem
+      Caption = 'Edit...'
+      OnClick = miEditUsedClick
+    end
+    object miGoToUsed: TMenuItem
+      Caption = 'Go to'
+      OnClick = miGoToUsedClick
+    end
   end
 end

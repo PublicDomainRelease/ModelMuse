@@ -77,9 +77,22 @@ end;
 
 procedure TfrmSutraProgramLocations.GetData;
 begin
-  fedSutra22.FileName := frmGoPhast.PhastModel.ProgramLocations.Sutra22Location;
+
+  try
+    fedSutra22.FileName := frmGoPhast.PhastModel.ProgramLocations.Sutra22Location;
+  except on EComboEditError do
+    begin
+      // do nothing.
+    end;
+  end;
   fedSutra22Change(nil);
-  fedTextEditor.FileName := frmGoPhast.PhastModel.ProgramLocations.TextEditorLocation;
+  try
+    fedTextEditor.FileName := frmGoPhast.PhastModel.ProgramLocations.TextEditorLocation;
+  except on EComboEditError do
+    begin
+      // do nothing.
+    end;
+  end;
   fedTextEditorChange(nil);
 end;
 

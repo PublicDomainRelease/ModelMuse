@@ -251,7 +251,13 @@ begin
 
   TimeSeries := FTimeSeriesList[comboModelSelection.ItemIndex];
 
-  fedModpathFile.FileName := TimeSeries.FileName;
+  try
+    fedModpathFile.FileName := TimeSeries.FileName;
+  except on EComboEditError do
+    begin
+      // do nothing.
+    end;
+  end;
   Times := TimeSeries.Times;
   AssignTimesToComboBox(Times);
   udTimeToPlot.Position := TimeSeries.TimeIndex;

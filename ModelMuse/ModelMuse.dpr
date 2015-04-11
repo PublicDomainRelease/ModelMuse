@@ -559,7 +559,8 @@ uses
   Export2DMeshUnit in 'Export2DMeshUnit.pas',
   frmFarmUnit in 'frmFarmUnit.pas' {frmFarm},
   ModflowFmpFarmIdUnit in 'ModflowFmpFarmIdUnit.pas',
-  frameScreenObjectFarmIDUnit in 'frameScreenObjectFarmIDUnit.pas' {frameScreenObjectFarmID: TFrame};
+  frameScreenObjectFarmIDUnit in 'frameScreenObjectFarmIDUnit.pas' {frameScreenObjectFarmID: TFrame},
+  frmBudgetPrecisionQueryUnit in 'frmBudgetPrecisionQueryUnit.pas' {frmBudgetPrecisionQuery};
 
 {$R *.res}
 {#BACKUP ModelMuse.cfg}

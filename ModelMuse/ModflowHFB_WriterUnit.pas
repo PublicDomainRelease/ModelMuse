@@ -430,7 +430,7 @@ begin
           if PriorCount = ScreenObjectList.BarrierCount then
           begin
             frmErrorsAndWarnings.AddWarning(Model, StrInTheHFBPackage,
-              Format(StrSIsSupposedToDe, [ScreenObject.Name]));
+              Format(StrSIsSupposedToDe, [ScreenObject.Name]), ScreenObject);
           end;
         end;
       end;
@@ -736,7 +736,8 @@ begin
       if ParamIndex < 0 then
       begin
         frmErrorsAndWarnings.AddWarning(Model, StrInTheHFBPackage1,
-          Format(StrIn0sTheHFBPara, [ScreenObject.Name, Boundary.ParameterName]));
+          Format(StrIn0sTheHFBPara, [ScreenObject.Name, Boundary.ParameterName]),
+          ScreenObject);
         ParamIndex := 0;
       end;
       List := FParameterScreenObjectList.Objects[ParamIndex] as TParamList;

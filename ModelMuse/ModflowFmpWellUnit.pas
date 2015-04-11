@@ -1117,7 +1117,7 @@ begin
       swaPriorWithoutCalls]) then
   begin
     frmErrorsAndWarnings.AddError(LocalModel, StrMultinodeWellsCan,
-      Format(StrObjectS, [(ScreenObject as TScreenObject).Name]));
+      Format(StrObjectS, [(ScreenObject as TScreenObject).Name]), ScreenObject);
   end;
 
   for TimeIndex := 0 to

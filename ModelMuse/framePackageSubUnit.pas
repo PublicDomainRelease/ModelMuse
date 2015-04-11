@@ -201,7 +201,13 @@ begin
   rdeAccel2.Text := FloatToStr(SubPackage.AccelerationParameter2);
   rdeMinIterations.Text := IntToStr(SubPackage.MinIterations);
   cbSaveRestart.Checked := SubPackage.SaveDelayRestart;
-  feReadRestart.FileName := SubPackage.ReadDelayRestartFileName;
+  try
+    feReadRestart.FileName := SubPackage.ReadDelayRestartFileName;
+  except on EComboEditError do
+    begin
+      // do nothing.
+    end;
+  end;
   comboOutputChoice.ItemIndex := Ord(SubPackage.BinaryOutputChoice);
 
   rdgOutput.BeginUpdate;

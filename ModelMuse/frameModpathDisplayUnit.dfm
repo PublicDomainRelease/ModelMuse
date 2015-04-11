@@ -14,21 +14,25 @@ object frameModpathDisplay: TframeModpathDisplay
     TabOrder = 0
     object tabBasic: TTabSheet
       Caption = 'Basic'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         457
-        322)
+        319)
       object lblModpathFile: TLabel
         Left = 8
         Top = 8
-        Width = 107
-        Height = 13
+        Width = 128
+        Height = 16
         Caption = 'MODPATH pathline file'
       end
       object lblColorScheme: TLabel
         Left = 8
         Top = 108
-        Width = 64
-        Height = 13
+        Width = 78
+        Height = 16
         Caption = 'Color scheme'
       end
       object pbColorScheme: TPaintBox
@@ -43,30 +47,30 @@ object frameModpathDisplay: TframeModpathDisplay
       object lblColorAdjustment: TLabel
         Left = 8
         Top = 211
-        Width = 82
-        Height = 13
+        Width = 98
+        Height = 16
         Caption = 'Color adjustment'
       end
       object lblCycles: TLabel
         Left = 345
         Top = 211
-        Width = 31
-        Height = 13
+        Width = 36
+        Height = 16
         Anchors = [akTop, akRight]
         Caption = 'Cycles'
       end
       object lblMaxTime: TLabel
         Left = 192
         Top = 8
-        Width = 52
-        Height = 13
+        Width = 65
+        Height = 16
         Caption = 'lblMaxTime'
       end
       object lblModelSelection: TLabel
         Left = 8
         Top = 273
-        Width = 73
-        Height = 13
+        Width = 88
+        Height = 16
         Caption = 'Model selection'
       end
       object fedModpathFile: TJvFilenameEdit
@@ -103,7 +107,7 @@ object frameModpathDisplay: TframeModpathDisplay
         Left = 8
         Top = 128
         Width = 438
-        Height = 21
+        Height = 24
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
         DropDownCount = 12
@@ -175,9 +179,13 @@ object frameModpathDisplay: TframeModpathDisplay
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         457
-        322)
+        319)
       object rgShow2D: TRadioGroup
         Left = 3
         Top = 3

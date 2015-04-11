@@ -239,7 +239,13 @@ begin
   end;
   PathLines := FPathLines[comboModelSelection.ItemIndex];
 
-  fedModpathFile.FileName := PathLines.FileName;
+  try
+    fedModpathFile.FileName := PathLines.FileName;
+  except on EComboEditError do
+    begin
+      // do nothing.
+    end;
+  end;
 
   if PathLines.Lines.Count > 0 then
   begin

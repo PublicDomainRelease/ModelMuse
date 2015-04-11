@@ -135,7 +135,8 @@ begin
           begin
             OtherObject := FLakeList[ScreenObject.ModflowLakBoundary.LakeID];
             frmErrorsAndWarnings.AddError(Model, DupNameErrorMessage,
-              Format(StrSAndS, [OtherObject.Name, ScreenObject.Name]));
+              Format(StrSAndS, [OtherObject.Name, ScreenObject.Name]),
+              ScreenObject);
           end;
           FLakeList[ScreenObject.ModflowLakBoundary.LakeID]
             := ScreenObject;
@@ -155,7 +156,8 @@ begin
             OtherObject := FLakeList[ScreenObject.ModflowLakBoundary.CenterLake];
             if OtherObject = nil then
             begin
-              frmErrorsAndWarnings.AddError(Model, InvalidCenterLake, ScreenObject.Name)
+              frmErrorsAndWarnings.AddError(Model, InvalidCenterLake,
+                ScreenObject.Name, ScreenObject)
             end
             else
             begin
@@ -166,7 +168,8 @@ begin
         end
         else
         begin
-          frmErrorsAndWarnings.AddError(Model, InvalidCenterLake, ScreenObject.Name)
+          frmErrorsAndWarnings.AddError(Model, InvalidCenterLake,
+            ScreenObject.Name, ScreenObject)
         end;
       end;
       FLakeList.Pack;
@@ -306,7 +309,7 @@ begin
             begin
               frmErrorsAndWarnings.AddError(Model,StrLakeBathymetryFile,
                 Format(StrTheLakeBathymetry2,
-                [LakeTableFileName, ScreenObject.Name]));
+                [LakeTableFileName, ScreenObject.Name]), ScreenObject);
             end;
             WriteToNameFile(StrData, IUNITLAKTAB, LakeTableFileName,
               foInputAlreadyExists, True);
@@ -728,7 +731,7 @@ begin
   if LakeTable.Count <> 151 then
   begin
     frmErrorsAndWarnings.AddError(Model, StrTheLakeBathymetry,
-      (FScreenObject as TScreenObject).Name);
+      (FScreenObject as TScreenObject).Name, FScreenObject);
   end;
   FFileName := FileName(AFileName) + IntToStr(FLakeID);
   OpenFile(FFileName);

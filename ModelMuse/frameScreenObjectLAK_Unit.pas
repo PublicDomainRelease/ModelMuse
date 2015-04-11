@@ -164,7 +164,13 @@ begin
   begin
     if feLakeBathymetry.Dialog.Execute then
     begin
-      feLakeBathymetry.FileName := feLakeBathymetry.Dialog.FileName
+      try
+        feLakeBathymetry.FileName := feLakeBathymetry.Dialog.FileName
+      except on EComboEditError do
+        begin
+          // do nothing.
+        end;
+      end;
     end;
   end;
   SetFeLakeBathymetryColor(feLakeBathymetry.FileName);

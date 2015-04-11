@@ -141,7 +141,13 @@ var
 begin
   MeshGenControls := frmGoPhast.PhastModel.SutraMesh.Mesh2D.MeshGenControls;
   AssignValues(MeshGenControls);
-  fedGmsh.FileName := frmGoPhast.PhastModel.ProgramLocations.GmshLocation;
+  try
+    fedGmsh.FileName := frmGoPhast.PhastModel.ProgramLocations.GmshLocation;
+  except on EComboEditError do
+    begin
+      // do nothing.
+    end;
+  end;
   fedGmshChange(nil);
   rgMethodClick(nil);
 end;

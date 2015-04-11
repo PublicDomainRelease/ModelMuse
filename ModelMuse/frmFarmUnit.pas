@@ -62,6 +62,25 @@ type
     procedure seFarmsChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure frameFarmpcMainChange(Sender: TObject);
+    procedure frameFormulaGridCostsGridSetEditText(Sender: TObject; ACol,
+      ARow: Integer; const Value: string);
+    procedure frameFormulaGridCropsGridSetEditText(Sender: TObject; ACol,
+      ARow: Integer; const Value: string);
+    procedure frameFormulaGridDiversionGridSetEditText(Sender: TObject; ACol,
+      ARow: Integer; const Value: string);
+    procedure frameFormulaGridReturnFlowGridSetEditText(Sender: TObject; ACol,
+      ARow: Integer; const Value: string);
+    procedure frameDeliveryGridSetEditText(Sender: TObject; ACol, ARow: Integer;
+      const Value: string);
+    procedure frameFormulaGridWaterRightsGridSetEditText(Sender: TObject; ACol,
+      ARow: Integer; const Value: string);
+    procedure frameGW_AllocationGridSetEditText(Sender: TObject; ACol,
+      ARow: Integer; const Value: string);
+    procedure frameFormulaGridCropsGridButtonClick(Sender: TObject; ACol,
+      ARow: Integer);
+    procedure frameFarmedFarmNameChange(Sender: TObject);
+    procedure frameFormulaGridCropsedFormulaChange(Sender: TObject);
+    procedure frameFarmseFarmIdChange(Sender: TObject);
   private
     FFarms: TFarmCollection;
     FSelectedFarms: TFarmList;
@@ -149,10 +168,98 @@ begin
 
 end;
 
+procedure TfrmFarm.frameDeliveryGridSetEditText(Sender: TObject; ACol,
+  ARow: Integer; const Value: string);
+begin
+  inherited;
+  frameFarm.frameDeliveryGridSetEditText(Sender, ACol, ARow, Value);
+
+end;
+
+procedure TfrmFarm.frameFarmedFarmNameChange(Sender: TObject);
+begin
+  inherited;
+  frameFarm.seFarmIdChange(Sender);
+
+end;
+
 procedure TfrmFarm.frameFarmpcMainChange(Sender: TObject);
 begin
   inherited;
   Self.HelpKeyword := frameFarm.pcMain.ActivePage.HelpKeyword;
+end;
+
+procedure TfrmFarm.frameFarmseFarmIdChange(Sender: TObject);
+begin
+  inherited;
+  frameFarm.seFarmIdChange(Sender);
+
+end;
+
+procedure TfrmFarm.frameFormulaGridCostsGridSetEditText(Sender: TObject; ACol,
+  ARow: Integer; const Value: string);
+begin
+  inherited;
+  frameFarm.frameFormulaGridCostsGridSetEditText(Sender, ACol, ARow, Value);
+
+end;
+
+procedure TfrmFarm.frameFormulaGridCropsedFormulaChange(Sender: TObject);
+begin
+  inherited;
+  frameFarm.frameFormulaGridCropsedFormulaChange(Sender);
+
+end;
+
+procedure TfrmFarm.frameFormulaGridCropsGridButtonClick(Sender: TObject; ACol,
+  ARow: Integer);
+begin
+  inherited;
+  frameFarm.frameFormulaGridCropsGridButtonClick(Sender, ACol, ARow);
+
+end;
+
+procedure TfrmFarm.frameFormulaGridCropsGridSetEditText(Sender: TObject; ACol,
+  ARow: Integer; const Value: string);
+begin
+  inherited;
+  frameFarm.frameFormulaGridCropsGridSetEditText(Sender, ACol, ARow, Value);
+
+end;
+
+procedure TfrmFarm.frameFormulaGridDiversionGridSetEditText(Sender: TObject;
+  ACol, ARow: Integer; const Value: string);
+begin
+  inherited;
+  frameFarm.frameFormulaGridDiversionGridSetEditText(Sender, ACol, ARow,
+    Value);
+
+end;
+
+procedure TfrmFarm.frameFormulaGridReturnFlowGridSetEditText(Sender: TObject;
+  ACol, ARow: Integer; const Value: string);
+begin
+  inherited;
+  frameFarm.frameFormulaGridReturnFlowGridSetEditText(Sender, ACol, ARow,
+    Value);
+
+end;
+
+procedure TfrmFarm.frameFormulaGridWaterRightsGridSetEditText(Sender: TObject;
+  ACol, ARow: Integer; const Value: string);
+begin
+  inherited;
+  frameFarm.frameFormulaGridWaterRightsGridSetEditText(Sender, ACol, ARow,
+    Value);
+
+end;
+
+procedure TfrmFarm.frameGW_AllocationGridSetEditText(Sender: TObject; ACol,
+  ARow: Integer; const Value: string);
+begin
+  inherited;
+  frameFarm.frameGW_AllocationGridSetEditText(Sender, ACol, ARow, Value);
+
 end;
 
 procedure TfrmFarm.GetData;
@@ -181,6 +288,7 @@ begin
   ANode := vstFarms.GetLastChild(vstFarms.RootNode);
   vstFarms.Selected[ANode] := True;
   seFarms.AsInteger := FFarms.Count;
+  frameFarm.Enabled := (vstFarms.SelectedCount > 0);
   vstFarms.Invalidate
 end;
 
@@ -211,6 +319,7 @@ begin
   finally
     FChangingSelection := False;
   end;
+  frameFarm.Enabled := (seFarms.AsInteger > 0) and (vstFarms.SelectedCount > 0);
   vstFarms.Invalidate;
 end;
 
@@ -247,6 +356,7 @@ begin
   end;
   vstFarms.Selected[SelectedNode] := True;
   seFarms.AsInteger := FFarms.Count;
+  frameFarm.Enabled := (vstFarms.SelectedCount > 0);
   vstFarms.Invalidate
 
 end;
@@ -271,6 +381,7 @@ begin
     vstFarms.HasChildren[vstFarms.RootNode] := FFarms.Count > 0;
     vstFarms.ChildCount[vstFarms.RootNode] := FFarms.Count;
   end;
+  frameFarm.Enabled := (seFarms.AsInteger > 0) and (vstFarms.SelectedCount > 0);
 
 end;
 

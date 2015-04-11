@@ -32,7 +32,7 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
         end
       end
       inherited Panel2: TPanel
-        Top = 144
+        Top = 147
         ExplicitTop = 144
         inherited lblNumberOfTimes: TLabel
           Left = 95
@@ -46,7 +46,7 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
         end
       end
       inherited rdgObservations: TRbwDataGrid4
-        Height = 109
+        Height = 112
         ColCount = 6
         DefaultColWidth = 40
         Columns = <
@@ -73,6 +73,7 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -95,6 +96,7 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -117,6 +119,7 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -139,6 +142,7 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -167,6 +171,7 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -189,6 +194,7 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
             WordWrapCaptions = False
             WordWrapCells = True
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end>
         ExplicitHeight = 109
@@ -207,7 +213,7 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
       ExplicitWidth = 560
       ExplicitHeight = 220
       inherited Panel4: TPanel
-        Top = 144
+        Top = 147
         ExplicitTop = 144
         inherited seLayers: TJvSpinEdit
           Height = 24
@@ -215,8 +221,8 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
         end
       end
       inherited rdgLayers: TRbwDataGrid4
-        Height = 109
-        ExplicitHeight = 109
+        Height = 112
+        ExplicitHeight = 112
       end
     end
   end
@@ -235,7 +241,6 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
       Height = 24
       EditLabel.ExplicitLeft = 11
       EditLabel.ExplicitTop = 11
-      EditLabel.ExplicitWidth = 88
       ExplicitLeft = 11
       ExplicitTop = 27
       ExplicitHeight = 24
@@ -245,7 +250,6 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
       Top = 27
       ExplicitLeft = 150
       ExplicitTop = 27
-      ExplicitHeight = 24
     end
   end
 end

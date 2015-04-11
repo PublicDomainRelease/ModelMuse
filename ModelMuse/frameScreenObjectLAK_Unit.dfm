@@ -16,29 +16,29 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
     object lblInitialStage: TLabel [1]
       Left = 79
       Top = 80
-      Width = 56
-      Height = 13
+      Width = 66
+      Height = 16
       Caption = 'Initial stage'
     end
     object lblCenterLake: TLabel [2]
       Left = 362
       Top = 48
-      Width = 55
-      Height = 13
+      Width = 65
+      Height = 16
       Caption = 'Center lake'
     end
     object lblSill: TLabel [3]
       Left = 362
       Top = 80
-      Width = 12
-      Height = 13
+      Width = 17
+      Height = 16
       Caption = 'Sill'
     end
     object lblLakeID: TLabel [4]
       Left = 79
       Top = 48
-      Width = 36
-      Height = 13
+      Width = 42
+      Height = 16
       Caption = 'Lake ID'
     end
     inherited btnDelete: TBitBtn
@@ -203,6 +203,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -225,6 +226,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -247,6 +249,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -269,6 +272,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           WordWrapCaptions = False
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end
         item
@@ -291,6 +295,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           WordWrapCaptions = False
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end
         item
@@ -313,6 +318,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           WordWrapCaptions = False
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end
         item
@@ -335,6 +341,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           WordWrapCaptions = False
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end
         item
@@ -357,6 +364,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           WordWrapCaptions = False
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end>
       ExplicitWidth = 461
@@ -373,15 +381,23 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
     TabOrder = 3
     object tabLakeProperties: TTabSheet
       Caption = 'Lake Properties'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabBathymetry: TTabSheet
       Caption = 'Bathymetry'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgLakeTable: TRbwDataGrid4
         Left = 0
         Top = 105
         Width = 455
-        Height = 56
+        Height = 53
         Align = alClient
         ColCount = 3
         FixedCols = 0
@@ -396,7 +412,6 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
         SelectedRowOrColumnColor = clAqua
         UnselectableColor = clBtnFace
         ColorRangeSelection = False
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = True
@@ -418,6 +433,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -440,6 +456,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -462,8 +479,11 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
+        WordWrapRowCaptions = False
+        ExplicitHeight = 56
       end
       object pnlBathChoice: TPanel
         Left = 0

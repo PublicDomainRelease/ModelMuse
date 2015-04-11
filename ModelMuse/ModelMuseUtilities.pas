@@ -401,13 +401,16 @@ begin
   begin
     if not FileExists(AName) then
     begin
-      TempFile := TFile.Create(AName);
-      try
-        AName := ExtractShortPathName(AName);
-      finally
-        TempFile.Free;
+      if DirectoryExists(ExtractFileDir(AName)) then
+      begin
+        TempFile := TFile.Create(AName);
+        try
+          AName := ExtractShortPathName(AName);
+        finally
+          TempFile.Free;
+        end;
+        DeleteFile(AName)
       end;
-      DeleteFile(AName)
     end
     else
     begin

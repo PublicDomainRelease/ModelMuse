@@ -449,7 +449,7 @@ begin
           ErrorMessage := Format(StrTobIsNotUsedIn,
             [Time, ScreenObject.Name, BoundaryPackageID]);
           ErrorRoots.Add(ErrorRoot);
-          ErrorMessages.Add(ErrorMessage);
+          ErrorMessages.AddObject(ErrorMessage, ScreenObject);
         end;
       end;
     end
@@ -459,7 +459,7 @@ begin
       ErrorMessage := Format(StrTheTobPackageIs,
         [BoundaryPackageID, ScreenObject.Name]);
       ErrorRoots.Add(ErrorRoot);
-      ErrorMessages.Add(ErrorMessage);
+      ErrorMessages.AddObject(ErrorMessage, ScreenObject);
     end;
   end;
 

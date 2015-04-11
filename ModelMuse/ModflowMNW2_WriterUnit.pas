@@ -423,7 +423,8 @@ begin
                 begin
                   frmErrorsAndWarnings.AddError(Model, SignError,
                     Format(StrObjectSStartin,
-                    [Well.FScreenObject.Name, TimeItem.StartTime]));
+                    [Well.FScreenObject.Name, TimeItem.StartTime]),
+                    Well.FScreenObject);
 //                  frmErrorsAndWarnings.AddError(Model, SignError,
 //                    'Object = ' + Well.FScreenObject.Name
 //                    + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
@@ -433,7 +434,8 @@ begin
                 begin
                   frmErrorsAndWarnings.AddError(Model, RelativeSizeError,
                     Format(StrObjectSStartin,
-                    [Well.FScreenObject.Name, TimeItem.StartTime]));
+                    [Well.FScreenObject.Name, TimeItem.StartTime]),
+                    Well.FScreenObject);
 //                  frmErrorsAndWarnings.AddError(Model, RelativeSizeError,
 //                    'Object = ' + Well.FScreenObject.Name
 //                    + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
@@ -445,7 +447,8 @@ begin
                 begin
                   frmErrorsAndWarnings.AddError(Model, SizeError,
                     Format(StrObjectSStartin,
-                    [Well.FScreenObject.Name, TimeItem.StartTime]));
+                    [Well.FScreenObject.Name, TimeItem.StartTime]),
+                    Well.FScreenObject);
 //                  frmErrorsAndWarnings.AddError(Model, SizeError,
 //                    'Object = ' + Well.FScreenObject.Name
 //                    + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
@@ -463,7 +466,8 @@ begin
                 begin
                   frmErrorsAndWarnings.AddError(Model, InvalidFractionError,
                     Format(StrObjectSStartin,
-                    [Well.FScreenObject.Name, TimeItem.StartTime]));
+                    [Well.FScreenObject.Name, TimeItem.StartTime]),
+                    Well.FScreenObject);
 //                  frmErrorsAndWarnings.AddError(Model, InvalidFractionError,
 //                    'Object = ' + Well.FScreenObject.Name
 //                    + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
@@ -473,7 +477,8 @@ begin
                 begin
                   frmErrorsAndWarnings.AddError(Model, RelativeSizeError,
                     Format(StrObjectSStartin,
-                    [Well.FScreenObject.Name, TimeItem.StartTime]));
+                    [Well.FScreenObject.Name, TimeItem.StartTime]),
+                    Well.FScreenObject);
 //                  frmErrorsAndWarnings.AddError(Model, RelativeSizeError,
 //                    'Object = ' + Well.FScreenObject.Name
 //                    + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
@@ -984,13 +989,13 @@ begin
     if LiftError1 then
     begin
       frmErrorsAndWarnings.AddError(Model, StrInvalidMnwTable,
-        ScreenObject.Name);
+        ScreenObject.Name, ScreenObject);
 
     end;
     if LiftError2 then
     begin
       frmErrorsAndWarnings.AddError(Model, StrInvalidMnwTable2,
-        ScreenObject.Name);
+        ScreenObject.Name, ScreenObject);
 
     end;
   end;
@@ -1463,7 +1468,7 @@ begin
     if NNODES <> 1 then
     begin
       frmErrorsAndWarnings.AddError(Model,
-        LossTypeError, Well.FScreenObject.Name);
+        LossTypeError, Well.FScreenObject.Name, Well.FScreenObject);
     end;
   end;
   LOSSTYPE := LossTypes[WellBoundary.LossType];
@@ -1535,7 +1540,7 @@ begin
         begin
           ScreenObject := WellBoundary.ScreenObject as TScreenObject;
           frmErrorsAndWarnings.AddError(Model, StrWhenPumpingCapacit,
-            ScreenObject.Name);
+            ScreenObject.Name, ScreenObject);
         end;
         break;
       end;
@@ -1552,7 +1557,8 @@ begin
   if FWellNames.IndexOf(WELLID) >= 0 then
   begin
     frmErrorsAndWarnings.AddError(Model, StrTheFollowingObject,
-      Format(StrObject0sWELLI, [Well.FScreenObject.Name, WELLID]));
+      Format(StrObject0sWELLI, [Well.FScreenObject.Name, WELLID]),
+      Well.FScreenObject);
 //    frmErrorsAndWarnings.AddError(Model, StrTheFollowingObject,
 //      'Object = ' + Well.FScreenObject.Name
 //      + '; ' + 'WELLID = ' + WELLID);
@@ -1567,7 +1573,8 @@ begin
       if WellBoundary.VerticalScreens.Count > 0 then
       begin
         frmErrorsAndWarnings.AddError(Model, StrVerticalScreensAre,
-          Format(StrObject0sWELLI, [Well.FScreenObject.Name, WELLID]));
+          Format(StrObject0sWELLI, [Well.FScreenObject.Name, WELLID]),
+          Well.FScreenObject);
       end;
     end;
     if WellBoundary.VerticalScreens.Count > 0 then

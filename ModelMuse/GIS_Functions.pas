@@ -1315,7 +1315,7 @@ begin
     begin
       frmErrorsAndWarnings.AddWarning(GlobalCurrentModel,Format(
         StrTheSFunctionDoes, [StrInterpolatedVertexValues]),
-        GlobalCurrentScreenObject.Name);
+        GlobalCurrentScreenObject.Name, GlobalCurrentScreenObject);
       frmErrorsAndWarnings.Show;
     end
     else
@@ -1323,7 +1323,7 @@ begin
       frmErrorsAndWarnings.AddWarning(GlobalCurrentModel,
         Format(StrThe0sFunctionIs, [StrInterpolatedVertexValues]),
         Format(StrObject0sInvali, [GlobalCurrentScreenObject.Name,
-        VertexValueName]));
+        VertexValueName]), GlobalCurrentScreenObject);
       frmErrorsAndWarnings.Show;
     end;
   end
@@ -1367,7 +1367,7 @@ begin
         frmErrorsAndWarnings.AddWarning(GlobalCurrentModel,
           Format(StrInvalidKeyIn0s, [StrInterpolatedVertexValues]),
           Format(StrObject0sInvali, [GlobalCurrentScreenObject.Name,
-          VertexValueName]));
+          VertexValueName]), GlobalCurrentScreenObject);
         frmErrorsAndWarnings.Show;
       end
       else
@@ -3057,7 +3057,7 @@ begin
         InvalidNames.Add(ImportedName);
         frmErrorsAndWarnings.AddError(GlobalCurrentModel,
           Format(StrNoImportedDataExi, [GlobalCurrentScreenObject.Name]),
-          ImportedName);
+          ImportedName, GlobalCurrentScreenObject);
       end;
     end
     else
@@ -3072,7 +3072,8 @@ begin
         frmErrorsAndWarnings.AddError(GlobalCurrentModel,
           Format(StrProblemEvaluating, [rsObjectImportedValuesR]),
           Format(StrThereAreTooFewIm,
-          [ImportedName, GlobalCurrentScreenObject.Name]));
+          [ImportedName, GlobalCurrentScreenObject.Name]),
+          GlobalCurrentScreenObject);
         Exit;
       end;
       Assert(Index < ImportedValues.Count);
@@ -3108,7 +3109,7 @@ begin
         InvalidNames.Add(ImportedName);
         frmErrorsAndWarnings.AddError(GlobalCurrentModel,
           Format(StrNoImportedDataExi, [GlobalCurrentScreenObject.Name]),
-          ImportedName);
+          ImportedName, GlobalCurrentScreenObject);
       end;
     end
     else
@@ -3123,7 +3124,7 @@ begin
         frmErrorsAndWarnings.AddError(GlobalCurrentModel,
           Format(StrProblemEvaluating, [rsObjectImportedValuesI]),
           Format(StrThereAreTooFewIm,
-          [ImportedName, GlobalCurrentScreenObject.Name]));
+          [ImportedName, GlobalCurrentScreenObject.Name]), GlobalCurrentScreenObject);
         Exit;
       end;
       Assert(Index < ImportedValues.Count);
@@ -3160,7 +3161,7 @@ begin
         InvalidNames.Add(ImportedName);
         frmErrorsAndWarnings.AddError(GlobalCurrentModel,
           Format(StrNoImportedDataExi, [GlobalCurrentScreenObject.Name]),
-          ImportedName);
+          ImportedName, GlobalCurrentScreenObject);
       end;
     end
     else
@@ -3175,7 +3176,7 @@ begin
         frmErrorsAndWarnings.AddError(GlobalCurrentModel,
           Format(StrProblemEvaluating, [rsObjectImportedValuesB]),
           Format(StrThereAreTooFewIm,
-          [ImportedName, GlobalCurrentScreenObject.Name]));
+          [ImportedName, GlobalCurrentScreenObject.Name]), GlobalCurrentScreenObject);
         Exit;
       end;
       Assert(Index < ImportedValues.Count);
@@ -3212,7 +3213,7 @@ begin
         InvalidNames.Add(ImportedName);
         frmErrorsAndWarnings.AddError(GlobalCurrentModel,
           Format(StrNoImportedDataExi, [GlobalCurrentScreenObject.Name]),
-          ImportedName);
+          ImportedName, GlobalCurrentScreenObject);
       end;
     end
     else
@@ -3227,7 +3228,7 @@ begin
         frmErrorsAndWarnings.AddError(GlobalCurrentModel,
           Format(StrProblemEvaluating, [rsObjectImportedValuesT]),
           Format(StrThereAreTooFewIm,
-          [ImportedName, GlobalCurrentScreenObject.Name]));
+          [ImportedName, GlobalCurrentScreenObject.Name]), GlobalCurrentScreenObject);
         Exit;
       end;
       Assert(Index < ImportedValues.Count);

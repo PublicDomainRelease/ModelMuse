@@ -9264,10 +9264,10 @@ inherited frmGoPhast: TfrmGoPhast
     Left = 240
     Top = 272
   end
-  object tmrSaveTimer: TTimer
+  object tmrSaveTimerDisabled: TTimer
     Enabled = False
     Interval = 60000
-    OnTimer = tmrSaveTimerTimer
+    OnTimer = tmrSaveTimerDisabledTimer
     Left = 104
     Top = 344
   end

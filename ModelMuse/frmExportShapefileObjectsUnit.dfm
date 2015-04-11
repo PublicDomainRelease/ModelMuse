@@ -7,7 +7,7 @@ inherited frmExportShapefileObjects: TfrmExportShapefileObjects
   OnResize = FormResize
   ExplicitWidth = 635
   ExplicitHeight = 467
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   object splLeft: TSplitter [0]
     Left = 257

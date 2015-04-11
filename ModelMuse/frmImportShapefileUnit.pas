@@ -1265,6 +1265,10 @@ var
   AComp: TMobileChemSpeciesItem;
   ConcIndex: Integer;
 begin
+  if not frmGoPhast.PhastModel.Mt3dmsSsmIsSelected then
+  begin
+    Exit;
+  end;
   rdgBoundaryConditions.BeginUpdate;
   try
     for ConcIndex := 0 to frmGoPhast.PhastModel.MobileComponents.Count - 1 do
@@ -1294,6 +1298,10 @@ var
   ConcIndex: Integer;
   AFormula: string;
 begin
+  if not frmGoPhast.PhastModel.Mt3dmsSsmIsSelected then
+  begin
+    Exit;
+  end;
   for ConcIndex := 0 to frmGoPhast.PhastModel.MobileComponents.Count - 1 do
   begin
     AComp := frmGoPhast.PhastModel.MobileComponents[ConcIndex];

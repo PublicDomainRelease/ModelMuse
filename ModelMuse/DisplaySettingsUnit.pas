@@ -218,6 +218,7 @@ type
     { TODO -cRefactor : Consider replacing Model with a TNotifyEvent or interface. }
     //
     FModel: TBaseModel;
+    FSquareSize: Integer;
     procedure SetDiversionColor(const Value: TColor);
     procedure SetPlotDiversions(const Value: boolean);
     procedure SetPlotStreamConnections(const Value: boolean);
@@ -226,6 +227,7 @@ type
     procedure SetTimeToPlot(const Value: TDateTime);
     procedure SetPlotUnconnected(const Value: Boolean);
     procedure SetUnconnectedColor(const Value: TColor);
+    procedure SetSquareSize(const Value: Integer);
   public
     procedure GetObjectsToPlot(SfrStreamList: TSfrStreamPlotList;
       LakeList: TLakePlotList); overload;
@@ -250,6 +252,7 @@ type
     property StreamsToPlot: TStreamsToPlot read FStreamsToPlot
       write SetStreamsToPlot;
     property TimeToPlot: TDateTime read FTimeToPlot write SetTimeToPlot;
+    property SquareSize: Integer read FSquareSize write SetSquareSize default 6;
   end;
 
   TSwrReachConnectionsPlot = class(TGoPhastPersistent)
@@ -1359,6 +1362,7 @@ begin
     TimeToPlot := SourceStreamLink.TimeToPlot;
     PlotUnconnected := SourceStreamLink.PlotUnconnected;
     UnconnectedColor := SourceStreamLink.UnconnectedColor;
+    SquareSize := SourceStreamLink.SquareSize;
   end
   else
   begin
@@ -1386,6 +1390,7 @@ begin
   FPlotStreamConnections := True;
   FPlotDiversions := True;
   FPlotUnconnected := True;
+  FSquareSize := 6;
 end;
 
 procedure TSfrStreamLinkPlot.GetObjectsToPlot(
@@ -1547,6 +1552,12 @@ end;
 procedure TSfrStreamLinkPlot.SetPlotUnconnected(const Value: Boolean);
 begin
   SetBooleanProperty(FPlotUnconnected, Value);
+end;
+
+procedure TSfrStreamLinkPlot.SetSquareSize(const Value: Integer);
+begin
+  SetIntegerProperty(FSquareSize, Value);
+//  FSquareSize := Value;
 end;
 
 procedure TSfrStreamLinkPlot.SetStreamColor(const Value: TColor);

@@ -29,6 +29,12 @@ const
   ISSTYPE_DRT = 28;
   ISSTYPE_ETS = 29;
 
+//  ISSTYPE_HSS = 50;
+//  ISSTYPE_SWT = 51;
+//  ISSTYPE_SFR = 52;
+//  ISSTYPE_UZF = 53;
+
+
 type
   {
     @longcode(
@@ -1231,6 +1237,14 @@ begin
         BoundaryTypes.Add(ISSTYPE_ETS);
       end;
     end;
+//    if Packages.SfrPackage.IsSelected then
+//    begin
+//      if (LocalScreenObject.ModflowSfrBoundary <> nil)
+//        and LocalScreenObject.ModflowSfrBoundary.Used then
+//      begin
+//        BoundaryTypes.Add(ISSTYPE_SFR);
+//      end;
+//    end;
     if BoundaryTypes.Count = 0 then
     begin
       Exit;

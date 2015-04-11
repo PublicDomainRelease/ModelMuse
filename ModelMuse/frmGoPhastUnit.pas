@@ -445,7 +445,7 @@ type
     acEditFarms: TAction;
     miFarmProcessDialogBoxes: TMenuItem;
     miEditFarms: TMenuItem;
-    tmrSaveTimer: TTimer;
+    tmrSaveTimerDisabled: TTimer;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -603,7 +603,7 @@ type
     procedure tmrImportErrorsTimer(Sender: TObject);
     procedure acExportSutra2DMeshExecute(Sender: TObject);
     procedure acEditFarmsExecute(Sender: TObject);
-    procedure tmrSaveTimerTimer(Sender: TObject);
+    procedure tmrSaveTimerDisabledTimer(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -1679,9 +1679,9 @@ type
     procedure CrossSectionChanged(Sender: TObject);
     procedure EnableSwrObs;
     procedure MeshExportProgress(Sender: TObject);
-    procedure NoClick(Sender: TObject);
-    procedure OnSaveFormClose(Sender: TObject; var Action: TCloseAction);
-    procedure YesClick(Sender: TObject);
+//    procedure NoClick(Sender: TObject);
+//    procedure OnSaveFormClose(Sender: TObject; var Action: TCloseAction);
+//    procedure YesClick(Sender: TObject);
     { Private declarations }
   protected
     // @name is used to specify the format of the files that
@@ -2048,6 +2048,8 @@ resourcestring
   StrYouRanOutOfMemor = 'You ran out of memory while trying to save your fil' +
   'e. Try saving the file as a .bin or .mmZlib instead of a %s file.';
   StrDoYouWantToSaveModelFileName = 'Do you want to save %s now?';
+  StrYouMustDefineAtL = 'You must define at least one crop before you can ed' +
+  'it farms.';
 
 
 {$R *.dfm}
@@ -2083,8 +2085,8 @@ var
 //  TAB_INDEX = -2;
 //  TAB_FIND = 1;
 
-var
-  frmSaveModelDialog: TForm = nil;
+//var
+//  frmSaveModelDialog: TForm = nil;
 
 
 procedure TfrmGoPhast.splitVertTopMoved(Sender: TObject);
@@ -5714,20 +5716,20 @@ begin
   inherited;
   if frameTopView.FHasDrawn then
   begin
+    tmrImportErrors.Enabled := False;
     if frmErrorsAndWarnings.HasMessages then
     begin
       frmErrorsAndWarnings.Show;
       frmErrorsAndWarnings.BringToFront;
     end;
-    tmrImportErrors.Enabled := False;
   end;
 end;
 
-procedure TfrmGoPhast.tmrSaveTimerTimer(Sender: TObject);
+procedure TfrmGoPhast.tmrSaveTimerDisabledTimer(Sender: TObject);
 begin
   inherited;
-  tmrSaveTimer.Enabled := False;
-  FreeAndNil(frmSaveModelDialog);
+//  tmrSaveTimer.Enabled := False;
+//  FreeAndNil(frmSaveModelDialog);
 end;
 
 function TfrmGoPhast.TestMt3dmsLocationOK(Model: TCustomModel): Boolean;
@@ -6090,32 +6092,32 @@ begin
   ShowAForm(TfrmExportShapefileObjects);
 end;
 
-procedure TfrmGoPhast.NoClick(Sender: TObject);
-begin
-  tmrSaveTimer.Enabled := False;
-  frmSaveModelDialog.Close;
-end;
+//procedure TfrmGoPhast.NoClick(Sender: TObject);
+//begin
+//  tmrSaveTimer.Enabled := False;
+//  frmSaveModelDialog.Close;
+//end;
 
-procedure TfrmGoPhast.OnSaveFormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  tmrSaveTimer.Enabled := False;
-  frmSaveModelDialog := nil;
-  Action := caFree;
-end;
+//procedure TfrmGoPhast.OnSaveFormClose(Sender: TObject; var Action: TCloseAction);
+//begin
+//  tmrSaveTimer.Enabled := False;
+//  frmSaveModelDialog := nil;
+//  Action := caFree;
+//end;
 
-procedure TfrmGoPhast.YesClick(Sender: TObject);
-begin
-  tmrSaveTimer.Enabled := False;
-  frmSaveModelDialog.Close;
-  acFileSaveExecute(nil);
-end;
+//procedure TfrmGoPhast.YesClick(Sender: TObject);
+//begin
+//  tmrSaveTimer.Enabled := False;
+//  frmSaveModelDialog.Close;
+//  acFileSaveExecute(nil);
+//end;
 
 procedure TfrmGoPhast.OnAppIdle(Sender: TObject; var Done: Boolean);
 const
   OneHour = 1/24;
-var
-  YesButton: TButton;
-  NoButton: TButton;
+//var
+//  YesButton: TButton;
+//  NoButton: TButton;
 begin
   // This assigns the event handlers to the undo/redo buttons and
   // undo/redo menu items.
@@ -6125,32 +6127,32 @@ begin
     UndoStack.SetUndoActions(acUndo, acRedo);
   end;
 
-  if (Now - FSaveTime > OneHour) and (frmDataSets = nil)
-    and (frmGlobalVariables = nil) and (frmScreenObjectProperties <> nil) and
-    not frmScreenObjectProperties.Visible and not ShowingForm then
-  begin
-    Beep;
-    FSaveTime := Now;
-    tmrSaveTimer.Enabled := True;
-
-    if PhastModel.ModelFileName <> '' then
-    begin
-      frmSaveModelDialog := CreateMessageDialog(Format(
-        StrDoYouWantToSaveModelFileName,
-        [PhastModel.ModelFileName]), mtInformation, [mbYes, mbNo], mbYes);
-    end
-    else
-    begin
-      frmSaveModelDialog := CreateMessageDialog(StrDoYouWantToSaveModel,
-        mtInformation, [mbYes, mbNo], mbYes);
-    end;
-    frmSaveModelDialog.OnClose := OnSaveFormClose;
-    YesButton := frmSaveModelDialog.FindComponent('Yes') as TButton;
-    YesButton.OnClick := YesClick;
-    NoButton := frmSaveModelDialog.FindComponent('No') as TButton;
-    NoButton.OnClick := NoClick;
-    frmSaveModelDialog.Show;
-  end;
+//  if (Now - FSaveTime > OneHour) and (frmDataSets = nil)
+//    and (frmGlobalVariables = nil) and (frmScreenObjectProperties <> nil) and
+//    not frmScreenObjectProperties.Visible and not ShowingForm then
+//  begin
+//    Beep;
+//    FSaveTime := Now;
+//    tmrSaveTimer.Enabled := True;
+//
+//    if PhastModel.ModelFileName <> '' then
+//    begin
+//      frmSaveModelDialog := CreateMessageDialog(Format(
+//        StrDoYouWantToSaveModelFileName,
+//        [PhastModel.ModelFileName]), mtInformation, [mbYes, mbNo], mbYes);
+//    end
+//    else
+//    begin
+//      frmSaveModelDialog := CreateMessageDialog(StrDoYouWantToSaveModel,
+//        mtInformation, [mbYes, mbNo], mbYes);
+//    end;
+//    frmSaveModelDialog.OnClose := OnSaveFormClose;
+//    YesButton := frmSaveModelDialog.FindComponent('Yes') as TButton;
+//    YesButton.OnClick := YesClick;
+//    NoButton := frmSaveModelDialog.FindComponent('No') as TButton;
+//    NoButton.OnClick := NoClick;
+//    frmSaveModelDialog.Show;
+//  end;
 end;
 
 procedure TfrmGoPhast.SaveModelMateProject;
@@ -7792,7 +7794,15 @@ end;
 procedure TfrmGoPhast.acEditFarmsExecute(Sender: TObject);
 begin
   inherited;
-  ShowAForm(TfrmFarm);
+  if PhastModel.FmpCrops.Count > 0 then
+  begin
+    ShowAForm(TfrmFarm);
+  end
+  else
+  begin
+    Beep;
+    MessageDlg(StrYouMustDefineAtL, mtError, [mbOK], 0);
+  end;
 end;
 
 procedure TfrmGoPhast.UpdateDataSetDimensions;
@@ -11263,6 +11273,7 @@ begin
     else
     begin
       Assert(ModelSelection in [msModflowLGR2, msModflowFmp]);
+      ModelFileExists := False;
       case ModelSelection of
         msModflowLGR2:
           begin

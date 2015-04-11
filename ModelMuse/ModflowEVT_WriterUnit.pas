@@ -240,7 +240,8 @@ begin
             begin
               DepthSurfaceCellList := nil;
               EvapSurfArray.UpToDate := True;
-              frmErrorsAndWarnings.AddError(Model, EtSurfaceError, EtSurfaceErrorMessage);
+              frmErrorsAndWarnings.AddError(Model, EtSurfaceError,
+                EtSurfaceErrorMessage);
             end;
             EvapSurfArray.CacheData;
 
@@ -267,7 +268,8 @@ begin
             else
             begin
               EvapDepthArray.UpToDate := True;
-              frmErrorsAndWarnings.AddError(Model, EtDepthError, EtDepthErrorMessage);
+              frmErrorsAndWarnings.AddError(Model, EtDepthError,
+                EtDepthErrorMessage);
             end;
             EvapDepthArray.CacheData;
 
@@ -634,7 +636,8 @@ begin
           else
           begin
 //            DepthSurfaceCellList := nil;
-            frmErrorsAndWarnings.AddError(Model, EtSurfaceError, EtSurfaceErrorMessage);
+            frmErrorsAndWarnings.AddError(Model, EtSurfaceError,
+              EtSurfaceErrorMessage);
           end;
 
         end;
@@ -687,7 +690,8 @@ begin
           end
           else
           begin
-            frmErrorsAndWarnings.AddError(Model, EtDepthError, EtDepthErrorMessage);
+            frmErrorsAndWarnings.AddError(Model, EtDepthError,
+              EtDepthErrorMessage);
           end;
         end;
 

@@ -11730,7 +11730,8 @@ var
   LocalModel: TCustomModel;
 begin
   LocalModel := FModel as TCustomModel;
-  if (LocalModel <> nil) and IsSelected then
+  if (LocalModel <> nil) and IsSelected
+    and (LocalModel.MobileComponents <> nil) then
   begin
     LocalModel.MobileComponents.UpdateDataArrays;
     // update diffusion data sets.

@@ -301,7 +301,8 @@ uses Math, frmGoPhastUnit, RbwParser,
   InterpolationUnit, HufDefinition, ModflowTimeUnit,
   frmGridValueUnit, shlobj, activex, AnsiStrings, frmDisplayDataUnit,
   Mt3dmsChemSpeciesUnit, frmExportImageUnit, IOUtils, 
-  SwrReachObjectUnit, frmProgressUnit, Generics.Collections;
+  SwrReachObjectUnit, frmProgressUnit, Generics.Collections,
+  frmBudgetPrecisionQueryUnit;
 
 resourcestring
   StrHead = 'Head';
@@ -410,6 +411,14 @@ resourcestring
   StrSWRReachGroupVolu = 'SWR Reach Group Volume';
   StrTheNumberOfReache = 'The number of reaches in the file isn''t the same ' +
   'as the number of reaches in the model.';
+  StrUsuallyTheFileWil = 'Usually the file will be single precision so that ' +
+  'is what we''ll try. However, if you encounter an error, the file may be ' +
+  'double precision.';
+  StrSinglePrecisionMea = 'Single precision means that each real number in t' +
+  'he file is stored using 4 bytes. Double precision means that each real nu' +
+  'mber is stored using 8 bytes. There are two versions of MODFLOW-2005 dist' +
+  'ributed by the USGS. Mf2005.exe saves results in single precision format. ' +
+  'Mf2005dbl.exe saves results in double precision format.';
 
 //resourcestring
 //  StrLayerData = StrModelResults + '|Layer Data';
@@ -3917,7 +3926,6 @@ var
   DESC: TModflowDesc;
   PERTIM: TModflowDouble;
   NCOL: Integer;
-
 begin
   NTRANS := 0;
   case FResultFormat of
@@ -3992,6 +4000,7 @@ function TfrmSelectResultToImport.OpenResultFile(AFileName: string;
   out Precision: TModflowPrecision; out HufFormat: boolean): boolean;
 var
   Extension: string;
+  frmBudgetPrecisionQuery: TfrmBudgetPrecisionQuery;
 begin
   result := True;
   Precision := mpSingle;
@@ -4159,7 +4168,38 @@ begin
     mrFlux, mrHufFlux:
       begin
         FFileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
-        Precision := CheckBudgetPrecision(FFileStream, HufFormat);
+        try
+          Precision := CheckBudgetPrecision(FFileStream, HufFormat);
+        except on EPrecisionReadError do
+          begin
+            frmBudgetPrecisionQuery := TfrmBudgetPrecisionQuery.Create(nil);
+            try
+              frmBudgetPrecisionQuery.ShowModal;
+              case frmBudgetPrecisionQuery.rgBudgetPrecision.ItemIndex of
+                0:
+                  begin
+                    Precision := mpSingle;
+                  end;
+                1:
+                  begin
+                    Precision := mpDouble;
+                  end;
+                2:
+                  begin
+                    MessageDlg(StrUsuallyTheFileWil, mtInformation, [mbOK], 0);
+                    Precision := mpSingle;
+                  end;
+                3:
+                  begin
+                    MessageDlg(StrSinglePrecisionMea + StrUsuallyTheFileWil, mtInformation, [mbOK], 0);
+                    Precision := mpSingle;
+                  end;
+              end;
+            finally
+              frmBudgetPrecisionQuery.Free;
+            end;
+          end;
+        end;
       end;
     mrAscii, mrHufAscii:
       begin

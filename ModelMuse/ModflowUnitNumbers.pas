@@ -103,6 +103,7 @@ const
   StrGCG                    = 'GCG';
   StrTOB                    = 'TOB';
   StrLMT6                   = 'LMT6';
+  StrLMT7                   = 'LMT7';
   StrFTL                    = 'FTL';
   StrCNF                    = 'CNF';
   StrPHIRAMPOut = 'PHIRAMP_Out';
@@ -613,6 +614,7 @@ begin
 
   AddItem(StrUPW ,UPW_Unit);
   AddItem(StrLMT6, LMT6_Unit);
+  AddItem(StrLMT7, LMT6_Unit);
   AddItem(StrFTL, FTL_Unit);
 
   AddItem(StrPHIRAMPOut, NwtPhrampOut);

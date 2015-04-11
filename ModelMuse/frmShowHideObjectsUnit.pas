@@ -28,7 +28,7 @@ type
     miEdit: TMenuItem;
     ilAngles: TImageList;
     ilDifferentAngle: TImageList;
-    miGoto1: TMenuItem;
+    miGoto: TMenuItem;
     // @name calls Release and sets frmShowHideObjects to nil.
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     // @name is the event handler for the OnCreate event of @classname.
@@ -56,7 +56,7 @@ type
       Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
       var Ghosted: Boolean; var ImageIndex: Integer;
       var ImageList: TCustomImageList);
-    procedure miGoto1Click(Sender: TObject);
+    procedure miGotoClick(Sender: TObject);
   private
     FUndoShowHide: TUndoShowHideScreenObject;
     FCount: integer;
@@ -205,6 +205,7 @@ begin
   end;
   miSelect.Enabled := (Data <> nil) and (Data.ScreenObjects <> nil);
   miEdit.Enabled := miSelect.Enabled;
+  miGoto.Enabled := miSelect.Enabled;
 end;
 
 procedure TfrmShowHideObjects.HandleChecked(AScreenObject: TScreenObject);
@@ -491,7 +492,7 @@ begin
   end;
 end;
 
-procedure TfrmShowHideObjects.miGoto1Click(Sender: TObject);
+procedure TfrmShowHideObjects.miGotoClick(Sender: TObject);
 var
   ScreenObject: TScreenObject;
   UndoShowHide: TUndoShowHideScreenObject;

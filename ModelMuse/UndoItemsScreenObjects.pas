@@ -929,7 +929,7 @@ begin
     begin
       ErrorFound := True;
       frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
-        WarningRootReachLength, AScreenObject.Name);
+        WarningRootReachLength, AScreenObject.Name, AScreenObject);
       Continue;
     end;
 
@@ -942,7 +942,7 @@ begin
     begin
       ErrorFound := True;
       frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
-        WarningRootReachLength, AScreenObject.Name);
+        WarningRootReachLength, AScreenObject.Name, AScreenObject);
     end;
   end;
   if ErrorFound then

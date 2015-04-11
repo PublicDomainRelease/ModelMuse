@@ -121,6 +121,7 @@ begin
   frmErrorsAndWarnings.RemoveWarningGroup(Model, NoHeads);
   frmErrorsAndWarnings.RemoveWarningGroup(Model, StrHeadObservationLay);
   frmErrorsAndWarnings.RemoveWarningGroup(Model, StrHeadObservationLayAssigned);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrOneOrMoreHeadObs);
 
   for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
   begin
@@ -140,7 +141,7 @@ begin
         if Observations.CellListCount = 0 then
         begin
           ErrorMessage := Format(StrObjectS, [ScreenObject.Name]);
-          frmErrorsAndWarnings.AddWarning(Model, HeadOffGrid, ErrorMessage);
+          frmErrorsAndWarnings.AddWarning(Model, HeadOffGrid, ErrorMessage, ScreenObject);
           Continue;
         end;
 
@@ -148,7 +149,7 @@ begin
         if CellList.Count = 0 then
         begin
           ErrorMessage := Format(StrObjectS, [ScreenObject.Name]);
-          frmErrorsAndWarnings.AddWarning(Model, HeadOffGrid, ErrorMessage);
+          frmErrorsAndWarnings.AddWarning(Model, HeadOffGrid, ErrorMessage, ScreenObject);
           Continue;
         end;
 
@@ -176,7 +177,7 @@ begin
 //              ErrorMessage := 'Object: ' + ScreenObject.Name
 //                + '; Time: ' + FloatToStr(Item.Time);
               frmErrorsAndWarnings.AddError(Model,
-                InvalidEndObsTime, ErrorMessage);
+                InvalidEndObsTime, ErrorMessage, ScreenObject);
             end;
             if (Item.Time < FStartTime) and (FEvaluationType = etExport) then
             begin
@@ -185,7 +186,7 @@ begin
 //              ErrorMessage := 'Object: ' + ScreenObject.Name
 //                + '; Time: ' + FloatToStr(Item.Time);
               frmErrorsAndWarnings.AddError(Model,
-                InvalidStartObsTime, ErrorMessage);
+                InvalidStartObsTime, ErrorMessage, ScreenObject);
             end;
           end;
         end;
@@ -703,7 +704,7 @@ begin
             [(Observations.ScreenObject as TScreenObject).Name,
             LayerSort.Layer+1]);
           frmErrorsAndWarnings.AddWarning(Model, StrHeadObservationLay,
-            WarningMessage);
+            WarningMessage, Observations.ScreenObject);
         end;
 
         LAYER := Model.
@@ -730,7 +731,7 @@ begin
           WarningMessage := Format(StrInTheHeadObservatMult,
             [(Observations.ScreenObject as TScreenObject).Name, Item.Layer]);
           frmErrorsAndWarnings.AddWarning(Model, StrHeadObservationLayAssigned,
-            WarningMessage);
+            WarningMessage, Observations.ScreenObject);
         end;
       end;
     finally
@@ -775,13 +776,13 @@ begin
   begin
     ScreenObject := Observations.ScreenObject as TScreenObject;
     frmErrorsAndWarnings.AddError(Model,
-      MissingObsNameError, ScreenObject.Name);
+      MissingObsNameError, ScreenObject.Name, ScreenObject);
   end;
   if not UcodeObsNameOK(OBSNAM) then
   begin
     ScreenObject := Observations.ScreenObject as TScreenObject;
     frmErrorsAndWarnings.AddWarning(Model, ObsNameWarning,
-      Format(Str0sDefinedByObje, [OBSNAM, ScreenObject.Name]));
+      Format(Str0sDefinedByObje, [OBSNAM, ScreenObject.Name]), ScreenObject);
   end;
   if CellList.Count > 1 then
   begin

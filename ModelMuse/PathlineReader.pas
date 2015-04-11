@@ -284,7 +284,7 @@ type
       write FVisible Stored False;
    end;
 
-  TPathlineVersion = (pv5, pv6_0);
+  TPathlineVersion = (pv5, pv6_0, pvUnknown);
   TTrackingDirection = (tdForward, tdBackward);
 
   TPathLineReader = class(TPathLineSettings)
@@ -1130,9 +1130,13 @@ begin
     begin
       result := pv6_0;
     end
-    else
+    else if (Length(AString) > 0) and (AString[1] = '@') then
     begin
       result := pv5;
+    end
+    else
+    begin
+      result := pvUnknown;
     end;
   finally
     AFile.Free;
@@ -1289,6 +1293,7 @@ begin
       begin
         DrawLines(Orientation,BitMap,LinesV6);
       end;
+    pvUnknown: ; // do nothing.
     else
       Assert(False);
   end;
@@ -1305,6 +1310,7 @@ begin
       begin
         DrawLines3D(LinesV6);
       end;
+    pvUnknown: ; // do nothing.
     else
       Assert(False);
   end;
@@ -1345,6 +1351,10 @@ begin
       begin
         result := LinesV6.count;
       end;
+    pvUnknown:
+      begin
+        result := 0;
+      end
     else
       Assert(False);
   end;
@@ -1493,6 +1503,11 @@ begin
       begin
         ReadFileV6;
       end;
+    pvUnknown:
+      begin
+        Beep;
+        MessageDlg('This does not appear to be a valid pathline file.', mtError, [mbOK], 0);
+      end
     else
       Assert(False);
   end;

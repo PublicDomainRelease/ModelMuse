@@ -19,8 +19,8 @@ object frameStreamLink: TframeStreamLink
   object lblTimeToPlot: TLabel
     Left = 112
     Top = 200
-    Width = 59
-    Height = 13
+    Width = 73
+    Height = 16
     Caption = ' Time to plot'
   end
   object shpUnconnectedColor: TShape
@@ -28,6 +28,13 @@ object frameStreamLink: TframeStreamLink
     Top = 65
     Width = 65
     Height = 25
+  end
+  object lblSquareSize: TLabel
+    Left = 112
+    Top = 227
+    Width = 115
+    Height = 16
+    Caption = 'Square Size (pixels)'
   end
   object btnStreamColor: TButton
     Left = 151
@@ -84,7 +91,6 @@ object frameStreamLink: TframeStreamLink
     Top = 197
     Width = 103
     Height = 21
-    ItemHeight = 13
     TabOrder = 7
     Text = 'comboTimeToPlot'
   end
@@ -105,6 +111,16 @@ object frameStreamLink: TframeStreamLink
     Caption = 'Change unconnected color'
     TabOrder = 4
     OnClick = btnUnconnectedColorClick
+  end
+  object seSquareSize: TJvSpinEdit
+    Left = 3
+    Top = 224
+    Width = 103
+    Height = 21
+    MaxValue = 2147483647.000000000000000000
+    MinValue = 1.000000000000000000
+    Value = 6.000000000000000000
+    TabOrder = 8
   end
   object dlgLinkColor: TColorDialog
     Left = 248

@@ -6,7 +6,57 @@
     <header>
       <para styleclass="Heading1"><text styleclass="Heading1" translate="true">Revision History</text></para>
     </header>
-    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 3.5.1 Mar. 6, 2015]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 3.6.0 April 12, 2015]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">In the Errors and Warnings dialog box, a context menu has been added allowing the user to select, edit or go to objects related to an error or warning message.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">In the Manage Flow Observations dialog box, a context menu has been added allowing the user to select, edit or go to objects related to a particular observation.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">In the two Stream links panes of the Data Visualization dialog box, a new control &quot;Square size&quot; has been added. It controls the sizes of squares used to represent links between segments when the two ends of the link are both in the same cell.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">When exporting the MODPATH data sets, and error message will be displayed if a reference is before the beginning of the model or after the end.</text></para>
+              </td>
+            </tr>
+          </table></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Change]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">When importing Cell-by-cell flow files, ModelMuse will ask the modeller what the precision is used in the files is if it can&apos;t determine that by itself.</text></para>
+              </td>
+            </tr>
+          </table></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">In steady-state PHAST models, the minimum and maximum step sizes can now be less than 1.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">When exporting 3D grid data to a Shapefile, data for the last layer was saved as the data for the first layer and no other data was saved. This has been fixed.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Renaming a child model caused an access violation if the child model used MT3DMS.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Use LMG7 instead of LMG6 for the link to MT3DMS in MODFLOW-LGR version 2.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed a bug setting the layer in a model in which a child model has been defined but the model selection is no longer one that includes child models.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug related to attempts to access directories that don&apos;t exist.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">ModelMuse no longer prompts the user to save the file once an hour because it was causing ModelMuse to hang.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">When importing the LPF or UPW package input, parameters that use multiple clusters for the same layer are now imported correctly.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">When importing Shapefiles of MODFLOW boundary conditions, there is no longer an access violation if there are solutes defined in Mt3DMS but the Source and Sink Mixing package has not been activated.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Attempting to read a MODPATH pathline file that lacks a proper heading line now results in an error message instead of causing ModelMuse to hang.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that would cause an assertion failure when generating a finite element mesh in SUTRA.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that would cause an access violation error in SUTRA models when attempting to edit multiple objects when captions should be visible for the objects.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that would allow the user to define a lake with a Lake ID of zero.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that caused an error when withdrawing water from a well.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Attempting to use an empty .ucn file to assign initial concentration will now result in an error message instead of a bug report.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">When importing an existing model, the import of diversions in the STR package has been fixed.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Attempting to edit farms in MODFLOW-OWHM before defining at least one crop is no longer allowed.</text></para>
+              </td>
+            </tr>
+          </table></para>
+        </td>
+      </tr>
+    </table></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 3.5.1 Mar. 6, 2015]]></caption></toggle></para>
     <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
@@ -33,7 +83,7 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 3.5.0 Feb 27, 2015]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 3.5.0 Feb 27, 2015]]></caption></toggle></para>
     <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
@@ -44,7 +94,7 @@
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Support for the Farm Process in MODFLOW-OWHM added.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Improved error checking in SFR and STR packages. Among other changes, when evaluating data for the Stream (STR) package, ModelMuse will now issue a warning if adjacent reaches in a segment are separated by more than one cell or if the last reach in a tributary segment is separated by more than one cell from the first reach in the segment into which it flows.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">When a data set value is assigned using the &quot;Nearest&quot; or &quot;Nearest Point&quot; interpolation methods, the explanation of the data set value will identify the object that is used to assign the value.</text></para>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">ModelMuse will prompt you to save your file once each hour.</text></para>
+                <para styleclass="Normal"><text style="font-family:&apos;Times New Roman&apos;; font-size:12pt; text-decoration:line-through; color:#000000;" translate="true">ModelMuse will prompt you to save your file once each hour.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">When the user edits the times in the MODFLOW Time dialog box, the times defined by MODFLOW boundary conditions will be modified to match those times.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">ModelMuse can now import MODFLOW models in which the U2DREL subroutine reads a value of NAN. The NAN is converted to zero.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">ModelMuse can now import some MODFLOW use models that include certain proprietary packages in the name file by commenting out those packages in a temporary version of the name file.</text></para>

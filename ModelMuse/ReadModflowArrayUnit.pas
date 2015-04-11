@@ -160,8 +160,6 @@ function CheckBudgetPrecision(AFile: TFileStream; out HufFormat: boolean): TModf
 
 implementation
 
-
-
 resourcestring
   StrUnableToReadFile = 'Unable to read file. Check that the file is an unstructured, non-formatted file. In MODFLOW-2005, this is determined in OPENSPEC.inc';
 
@@ -602,254 +600,263 @@ var
     end;
   end;
 begin
-  HufFormat := False;
-  result := mpSingle;
-  Assert(AFile.Position = 0);
-  if ReadDoubleArray then
-  begin
-    FirstDescription := Description;
-    if (AFile.Position < AFile.Size) and ReadDoubleArray then
+  try
+    HufFormat := False;
+    result := mpSingle;
+    Assert(AFile.Position = 0);
+    if ReadDoubleArray then
     begin
-      SecondDescription := Description;
-      if (FirstDescription = '         STORAGE')
-        and (SecondDescription = '   CONSTANT HEAD') then
+      FirstDescription := Description;
+      if (AFile.Position < AFile.Size) and ReadDoubleArray then
       begin
-        result := mpDouble;
-      end
-      else if (FirstDescription = '   CONSTANT HEAD')
-        and (SecondDescription = 'FLOW RIGHT FACE ') then
-      begin
-        result := mpDouble;
-      end
-      else if (FirstDescription = '   CONSTANT HEAD')
-        and (SecondDescription = 'FLOW FRONT FACE ') then
-      begin
-        result := mpDouble;
-      end
-      else if (FirstDescription = '   CONSTANT HEAD')
-        and (SecondDescription = 'FLOW LOWER FACE ') then
-      begin
-        result := mpDouble;
-      end
-      else if (FirstDescription = 'FLOW RIGHT FACE ')
-        and (SecondDescription = 'FLOW FRONT FACE ') then
-      begin
-        result := mpDouble;
-      end
-      else if (FirstDescription = 'FLOW RIGHT FACE ')
-        and (SecondDescription = 'FLOW LOWER FACE ') then
-      begin
-        result := mpDouble;
-      end
-      else if (FirstDescription = 'FLOW FRONT FACE ')
-        and (SecondDescription = 'FLOW LOWER FACE ') then
-      begin
-        result := mpDouble;
-      end
-      else if (FirstDescription = '      ZETASRF  1')
-        and (SecondDescription = '      ZETASRF  1') then
-      begin
-        result := mpDouble;
-      end
-      else if (FirstDescription = '      ZETASRF  1')
-        and (SecondDescription = '      ZETASRF  2') then
-      begin
-        result := mpDouble;
-      end
-      else
-      begin
-        result := mpSingle;
+        SecondDescription := Description;
+        if (FirstDescription = '         STORAGE')
+          and (SecondDescription = '   CONSTANT HEAD') then
+        begin
+          result := mpDouble;
+        end
+        else if (FirstDescription = '   CONSTANT HEAD')
+          and (SecondDescription = 'FLOW RIGHT FACE ') then
+        begin
+          result := mpDouble;
+        end
+        else if (FirstDescription = '   CONSTANT HEAD')
+          and (SecondDescription = 'FLOW FRONT FACE ') then
+        begin
+          result := mpDouble;
+        end
+        else if (FirstDescription = '   CONSTANT HEAD')
+          and (SecondDescription = 'FLOW LOWER FACE ') then
+        begin
+          result := mpDouble;
+        end
+        else if (FirstDescription = 'FLOW RIGHT FACE ')
+          and (SecondDescription = 'FLOW FRONT FACE ') then
+        begin
+          result := mpDouble;
+        end
+        else if (FirstDescription = 'FLOW RIGHT FACE ')
+          and (SecondDescription = 'FLOW LOWER FACE ') then
+        begin
+          result := mpDouble;
+        end
+        else if (FirstDescription = 'FLOW FRONT FACE ')
+          and (SecondDescription = 'FLOW LOWER FACE ') then
+        begin
+          result := mpDouble;
+        end
+        else if (FirstDescription = '      ZETASRF  1')
+          and (SecondDescription = '      ZETASRF  1') then
+        begin
+          result := mpDouble;
+        end
+        else if (FirstDescription = '      ZETASRF  1')
+          and (SecondDescription = '      ZETASRF  2') then
+        begin
+          result := mpDouble;
+        end
+        else
+        begin
+          result := mpSingle;
+        end;
       end;
     end;
-  end;
-  AFile.Position := 0;
-  if ReadSingleArray then
-  begin
-    FirstDescription := Description;
-    if (AFile.Position < AFile.Size) and ReadSingleArray then
+    AFile.Position := 0;
+    if ReadSingleArray then
     begin
-      SecondDescription := Description;
-      if (FirstDescription = '         STORAGE')
-        and (SecondDescription = '   CONSTANT HEAD') then
+      FirstDescription := Description;
+      if (AFile.Position < AFile.Size) and ReadSingleArray then
       begin
-        if (result <> mpSingle) then
+        SecondDescription := Description;
+        if (FirstDescription = '         STORAGE')
+          and (SecondDescription = '   CONSTANT HEAD') then
         begin
-          raise EPrecisionReadError.Create(StrUnableToReadFile);
-        end;
-      end
-      else if (FirstDescription = '   CONSTANT HEAD')
-        and (SecondDescription = 'FLOW RIGHT FACE ') then
-      begin
-        if (result <> mpSingle) then
+          if (result <> mpSingle) then
+          begin
+            raise EPrecisionReadError.Create(StrUnableToReadFile);
+          end;
+        end
+        else if (FirstDescription = '   CONSTANT HEAD')
+          and (SecondDescription = 'FLOW RIGHT FACE ') then
         begin
-          raise EPrecisionReadError.Create(StrUnableToReadFile);
-        end;
-      end
-      else if (FirstDescription = '   CONSTANT HEAD')
-        and (SecondDescription = 'FLOW FRONT FACE ') then
-      begin
-        if (result <> mpSingle) then
+          if (result <> mpSingle) then
+          begin
+            raise EPrecisionReadError.Create(StrUnableToReadFile);
+          end;
+        end
+        else if (FirstDescription = '   CONSTANT HEAD')
+          and (SecondDescription = 'FLOW FRONT FACE ') then
         begin
-          raise EPrecisionReadError.Create(StrUnableToReadFile);
-        end;
-      end
-      else if (FirstDescription = '   CONSTANT HEAD')
-        and (SecondDescription = 'FLOW LOWER FACE ') then
-      begin
-        if (result <> mpSingle) then
+          if (result <> mpSingle) then
+          begin
+            raise EPrecisionReadError.Create(StrUnableToReadFile);
+          end;
+        end
+        else if (FirstDescription = '   CONSTANT HEAD')
+          and (SecondDescription = 'FLOW LOWER FACE ') then
         begin
-          raise EPrecisionReadError.Create(StrUnableToReadFile);
-        end;
-      end
-      else if (FirstDescription = 'FLOW RIGHT FACE ')
-        and (SecondDescription = 'FLOW FRONT FACE ') then
-      begin
-        if (result <> mpSingle) then
+          if (result <> mpSingle) then
+          begin
+            raise EPrecisionReadError.Create(StrUnableToReadFile);
+          end;
+        end
+        else if (FirstDescription = 'FLOW RIGHT FACE ')
+          and (SecondDescription = 'FLOW FRONT FACE ') then
         begin
-          raise EPrecisionReadError.Create(StrUnableToReadFile);
-        end;
-      end
-      else if (FirstDescription = 'FLOW RIGHT FACE ')
-        and (SecondDescription = 'FLOW LOWER FACE ') then
-      begin
-        if (result <> mpSingle) then
+          if (result <> mpSingle) then
+          begin
+            raise EPrecisionReadError.Create(StrUnableToReadFile);
+          end;
+        end
+        else if (FirstDescription = 'FLOW RIGHT FACE ')
+          and (SecondDescription = 'FLOW LOWER FACE ') then
         begin
-          raise EPrecisionReadError.Create(StrUnableToReadFile);
-        end;
-      end
-      else if (FirstDescription = 'FLOW FRONT FACE ')
-        and (SecondDescription = 'FLOW LOWER FACE ') then
-      begin
-        if (result <> mpSingle) then
+          if (result <> mpSingle) then
+          begin
+            raise EPrecisionReadError.Create(StrUnableToReadFile);
+          end;
+        end
+        else if (FirstDescription = 'FLOW FRONT FACE ')
+          and (SecondDescription = 'FLOW LOWER FACE ') then
         begin
-          raise EPrecisionReadError.Create(StrUnableToReadFile);
-        end;
-      end
-      else if (FirstDescription = '      ZETASRF  1')
-        and (SecondDescription = '      ZETASRF  1') then
-      begin
-        if (result <> mpSingle) then
+          if (result <> mpSingle) then
+          begin
+            raise EPrecisionReadError.Create(StrUnableToReadFile);
+          end;
+        end
+        else if (FirstDescription = '      ZETASRF  1')
+          and (SecondDescription = '      ZETASRF  1') then
         begin
-          raise EPrecisionReadError.Create(StrUnableToReadFile);
-        end;
-      end
-      else if (FirstDescription = '      ZETASRF  1')
-        and (SecondDescription = '      ZETASRF  2') then
-      begin
-        if (result <> mpSingle) then
+          if (result <> mpSingle) then
+          begin
+            raise EPrecisionReadError.Create(StrUnableToReadFile);
+          end;
+        end
+        else if (FirstDescription = '      ZETASRF  1')
+          and (SecondDescription = '      ZETASRF  2') then
         begin
-          raise EPrecisionReadError.Create(StrUnableToReadFile);
+          if (result <> mpSingle) then
+          begin
+            raise EPrecisionReadError.Create(StrUnableToReadFile);
+          end;
+        end
+        else
+        begin
+          if (result <> mpDouble) then
+          begin
+            raise EPrecisionReadError.Create(StrUnableToReadFile);
+          end;
         end;
       end
       else
       begin
         if (result <> mpDouble) then
         begin
-          raise EPrecisionReadError.Create(StrUnableToReadFile);
-        end;
-      end;
-    end
-    else
-    begin
-      if (result <> mpDouble) then
-      begin
-        AFile.Position := 0;
-        HufFormat := True;
-        result := mpSingle;
-        if ReadDoubleArray then
-        begin
-          FirstDescription := Description;
-          if (AFile.Position < AFile.Size) and ReadDoubleArray then
+          AFile.Position := 0;
+          HufFormat := True;
+          result := mpSingle;
+          if ReadDoubleArray then
           begin
-            SecondDescription := Description;
-            if (FirstDescription = '         STORAGE')
-              and (SecondDescription = '   CONSTANT HEAD') then
+            FirstDescription := Description;
+            if (AFile.Position < AFile.Size) and ReadDoubleArray then
             begin
-              result := mpDouble;
-            end
-            else if (FirstDescription = '   CONSTANT HEAD')
-              and (SecondDescription = 'FLOW RIGHT FACE ') then
-            begin
-              if (result <> mpDouble) then
+              SecondDescription := Description;
+              if (FirstDescription = '         STORAGE')
+                and (SecondDescription = '   CONSTANT HEAD') then
               begin
-                raise EPrecisionReadError.Create(StrUnableToReadFile);
-              end;
-            end
-            else if (FirstDescription = 'FLOW RIGHT FACE ')
-              and (SecondDescription = 'FLOW FRONT FACE ') then
-            begin
-              if (result <> mpDouble) then
+                result := mpDouble;
+              end
+              else if (FirstDescription = '   CONSTANT HEAD')
+                and (SecondDescription = 'FLOW RIGHT FACE ') then
               begin
-                raise EPrecisionReadError.Create(StrUnableToReadFile);
-              end;
-            end
-            else if (FirstDescription = 'FLOW RIGHT FACE ')
-              and (SecondDescription = 'FLOW LOWER FACE ') then
-            begin
-              if (result <> mpDouble) then
+                if (result <> mpDouble) then
+                begin
+                  raise EPrecisionReadError.Create(StrUnableToReadFile);
+                end;
+              end
+              else if (FirstDescription = 'FLOW RIGHT FACE ')
+                and (SecondDescription = 'FLOW FRONT FACE ') then
               begin
-                raise EPrecisionReadError.Create(StrUnableToReadFile);
-              end;
-            end
-            else if (FirstDescription = 'FLOW FRONT FACE ')
-              and (SecondDescription = 'FLOW LOWER FACE ') then
-            begin
-              if (result <> mpDouble) then
+                if (result <> mpDouble) then
+                begin
+                  raise EPrecisionReadError.Create(StrUnableToReadFile);
+                end;
+              end
+              else if (FirstDescription = 'FLOW RIGHT FACE ')
+                and (SecondDescription = 'FLOW LOWER FACE ') then
               begin
-                raise EPrecisionReadError.Create(StrUnableToReadFile);
+                if (result <> mpDouble) then
+                begin
+                  raise EPrecisionReadError.Create(StrUnableToReadFile);
+                end;
+              end
+              else if (FirstDescription = 'FLOW FRONT FACE ')
+                and (SecondDescription = 'FLOW LOWER FACE ') then
+              begin
+                if (result <> mpDouble) then
+                begin
+                  raise EPrecisionReadError.Create(StrUnableToReadFile);
+                end;
+              end
+              else
+              begin
+                result := mpSingle;
               end;
-            end
-            else
-            begin
-              result := mpSingle;
             end;
           end;
-        end;
-        AFile.Position := 0;
-        if ReadSingleArray then
-        begin
-          FirstDescription := Description;
-          if (AFile.Position < AFile.Size) and ReadSingleArray then
+          AFile.Position := 0;
+          if ReadSingleArray then
           begin
-            SecondDescription := Description;
-            if (FirstDescription = '         STORAGE')
-              and (SecondDescription = '   CONSTANT HEAD') then
+            FirstDescription := Description;
+            if (AFile.Position < AFile.Size) and ReadSingleArray then
             begin
-              if (result <> mpSingle) then
+              SecondDescription := Description;
+              if (FirstDescription = '         STORAGE')
+                and (SecondDescription = '   CONSTANT HEAD') then
               begin
-                raise EPrecisionReadError.Create(StrUnableToReadFile);
-              end;
-            end
-            else if (FirstDescription = '   CONSTANT HEAD')
-              and (SecondDescription = 'FLOW RIGHT FACE ') then
-            begin
-              if (result <> mpSingle) then
+                if (result <> mpSingle) then
+                begin
+                  raise EPrecisionReadError.Create(StrUnableToReadFile);
+                end;
+              end
+              else if (FirstDescription = '   CONSTANT HEAD')
+                and (SecondDescription = 'FLOW RIGHT FACE ') then
               begin
-                raise EPrecisionReadError.Create(StrUnableToReadFile);
-              end;
-            end
-            else if (FirstDescription = 'FLOW RIGHT FACE ')
-              and (SecondDescription = 'FLOW FRONT FACE ') then
-            begin
-              if (result <> mpSingle) then
+                if (result <> mpSingle) then
+                begin
+                  raise EPrecisionReadError.Create(StrUnableToReadFile);
+                end;
+              end
+              else if (FirstDescription = 'FLOW RIGHT FACE ')
+                and (SecondDescription = 'FLOW FRONT FACE ') then
               begin
-                raise EPrecisionReadError.Create(StrUnableToReadFile);
-              end;
-            end
-            else if (FirstDescription = 'FLOW RIGHT FACE ')
-              and (SecondDescription = 'FLOW LOWER FACE ') then
-            begin
-              if (result <> mpSingle) then
+                if (result <> mpSingle) then
+                begin
+                  raise EPrecisionReadError.Create(StrUnableToReadFile);
+                end;
+              end
+              else if (FirstDescription = 'FLOW RIGHT FACE ')
+                and (SecondDescription = 'FLOW LOWER FACE ') then
               begin
-                raise EPrecisionReadError.Create(StrUnableToReadFile);
-              end;
-            end
-            else if (FirstDescription = 'FLOW FRONT FACE ')
-              and (SecondDescription = 'FLOW LOWER FACE ') then
-            begin
-              if (result <> mpSingle) then
+                if (result <> mpSingle) then
+                begin
+                  raise EPrecisionReadError.Create(StrUnableToReadFile);
+                end;
+              end
+              else if (FirstDescription = 'FLOW FRONT FACE ')
+                and (SecondDescription = 'FLOW LOWER FACE ') then
               begin
-                raise EPrecisionReadError.Create(StrUnableToReadFile);
+                if (result <> mpSingle) then
+                begin
+                  raise EPrecisionReadError.Create(StrUnableToReadFile);
+                end;
+              end
+              else
+              begin
+                if (result <> mpDouble) then
+                begin
+                  raise EPrecisionReadError.Create(StrUnableToReadFile);
+                end;
               end;
             end
             else
@@ -867,25 +874,19 @@ begin
               raise EPrecisionReadError.Create(StrUnableToReadFile);
             end;
           end;
-        end
-        else
-        begin
-          if (result <> mpDouble) then
-          begin
-            raise EPrecisionReadError.Create(StrUnableToReadFile);
-          end;
         end;
       end;
-    end;
-  end
-  else
-  begin
-    if (result <> mpDouble) then
+    end
+    else
     begin
-      raise EPrecisionReadError.Create(StrUnableToReadFile);
+      if (result <> mpDouble) then
+      begin
+        raise EPrecisionReadError.Create(StrUnableToReadFile);
+      end;
     end;
+  finally
+    AFile.Position := 0;
   end;
-  AFile.Position := 0;
 end;
 
 procedure ReadSinglePrecisionMt3dmsBinaryRealArray(AFile: TFileStream;

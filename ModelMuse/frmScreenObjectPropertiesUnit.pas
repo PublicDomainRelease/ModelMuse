@@ -4137,7 +4137,7 @@ begin
   if FUndoSetScreenObjectProperties <> nil then
   begin
     SetGages(FScreenObjectList);
-    SetAllFluxObservations(List);
+    SetAllFluxObservations(FScreenObjectList);
     FUndoSetScreenObjectProperties.UpdateObservations;
     frmGoPhast.UndoStack.Submit(FUndoSetScreenObjectProperties);
     FUndoSetScreenObjectProperties := nil;
@@ -16894,8 +16894,15 @@ procedure TfrmScreenObjectProperties.SetCheckBoxCaptions;
 var
   NodeElemString: string;
 begin
-  NodeElemString := EvalAtToString(TEvaluatedAt(rgEvaluatedAt.ItemIndex),
-       frmGoPhast.ModelSelection, True, False);
+  if rgEvaluatedAt.ItemIndex >= 0 then
+  begin
+    NodeElemString := EvalAtToString(TEvaluatedAt(rgEvaluatedAt.ItemIndex),
+         frmGoPhast.ModelSelection, True, False);
+  end
+  else
+  begin
+    NodeElemString := 'node or element';
+  end;
   cbEnclosedCells.Caption := rsSetValueOfEnclosed + NodeElemString;
   cbIntersectedCells.Caption := rsSetValueOfIntersected + NodeElemString;
   cbInterpolation.Caption := rsSetValueOf + NodeElemString + rsByInterpolation;
@@ -18870,6 +18877,10 @@ begin
         Boundary.Clear;
       end;
     end;
+
+    DataSetIndex := self.GetDataSetIndexByName(rsLakeID);
+    Edit := FDataEdits[DataSetIndex];
+    DataArray := Edit.DataArray;
     if TryStrToInt(frameLak.rdeLakeID.Text, IntValue) then
     begin
       for Index := 0 to FNewProperties.Count - 1 do
@@ -18884,9 +18895,45 @@ begin
         end;
 
         { TODO : See if UpdateScreenObjectData can be made to do this. }
-        DataSetIndex := self.GetDataSetIndexByName(rsLakeID);
-        Edit := FDataEdits[DataSetIndex];
-        DataArray := Edit.DataArray;
+//        DataSetIndex := self.GetDataSetIndexByName(rsLakeID);
+//        Edit := FDataEdits[DataSetIndex];
+//        DataArray := Edit.DataArray;
+        if ShouldStoreBoundary(FLAK_Node, Boundary) then
+        begin
+          if IntValue = 0 then
+          begin
+            Item.ScreenObject.RemoveDataSet(DataArray)
+          end
+          else
+          begin
+            DataSetIndex := Item.ScreenObject.AddDataSet(DataArray);
+            Item.ScreenObject.DataSetFormulas[DataSetIndex] := IntToStr(IntValue)
+          end;
+        end;
+      end;
+    end
+    else
+    begin
+      for Index := 0 to FNewProperties.Count - 1 do
+      begin
+        Item := FNewProperties[Index];
+        Boundary := Item.ScreenObject.ModflowLakBoundary;
+        Assert(Boundary <> nil);
+
+        if ShouldStoreBoundary(FLAK_Node, Boundary) then
+        begin
+          if  (Boundary.LakeID = 0) then
+          begin
+            Boundary.LakeID := 1;
+          end;
+          IntValue := Boundary.LakeID;
+        end
+        else
+        begin
+          IntValue := 0;
+        end;
+
+        { TODO : See if UpdateScreenObjectData can be made to do this. }
         if ShouldStoreBoundary(FLAK_Node, Boundary) then
         begin
           if IntValue = 0 then
@@ -18901,6 +18948,7 @@ begin
         end;
       end;
     end;
+
     if TryStrToInt(frameLak.rdeCenterLake.Text, IntValue) then
     begin
       for Index := 0 to FNewProperties.Count - 1 do

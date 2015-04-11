@@ -6,7 +6,7 @@ inherited frmModflowOptions: TfrmModflowOptions
   ClientWidth = 543
   ExplicitWidth = 559
   ExplicitHeight = 524
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pcOptions: TPageControl
     Left = 0
@@ -97,6 +97,10 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpKeyword = 'Options_Tab'
       Caption = 'Options'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         535
         371)
@@ -157,8 +161,8 @@ inherited frmModflowOptions: TfrmModflowOptions
         object cbPRINTTIME: TJvCheckBox
           Left = 3
           Top = 43
-          Width = 437
-          Height = 18
+          Width = 440
+          Height = 20
           Caption = 'Print the start time, end time, and elapsed time (PRINTTIME)'
           Checked = True
           State = cbChecked
@@ -174,8 +178,8 @@ inherited frmModflowOptions: TfrmModflowOptions
         object cbCHTOCH: TJvCheckBox
           Left = 3
           Top = 19
-          Width = 461
-          Height = 18
+          Width = 464
+          Height = 20
           Caption = 'Calculate flow between adjacent constant-head cells (CHTOCH)'
           Checked = True
           State = cbChecked
@@ -229,7 +233,6 @@ inherited frmModflowOptions: TfrmModflowOptions
         Width = 145
         Height = 26
         Style = csDropDownList
-        ItemHeight = 18
         TabOrder = 6
         Text = 'seconds (1)'
         OnChange = comboTimeUnitChange
@@ -248,7 +251,6 @@ inherited frmModflowOptions: TfrmModflowOptions
         Width = 145
         Height = 26
         Style = csDropDownList
-        ItemHeight = 18
         TabOrder = 5
         Text = 'meters (2)'
         OnChange = comboLengthUnitChange
@@ -330,6 +332,10 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpKeyword = 'Wetting_Tab'
       Caption = 'Wetting'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblWetFact: TLabel
         Left = 3
         Top = 35

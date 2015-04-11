@@ -27,6 +27,7 @@ inherited frmShowHideObjects: TfrmShowHideObjects
     OnPaintText = vstObjectsPaintText
     OnGetImageIndexEx = vstObjectsGetImageIndexEx
     OnMouseDown = vstObjectsMouseDown
+    ExplicitTop = -2
   end
   object pmSelectEdit: TPopupMenu
     Left = 144
@@ -41,9 +42,9 @@ inherited frmShowHideObjects: TfrmShowHideObjects
       Enabled = False
       OnClick = miEditClick
     end
-    object miGoto1: TMenuItem
+    object miGoto: TMenuItem
       Caption = 'Go to'
-      OnClick = miGoto1Click
+      OnClick = miGotoClick
     end
   end
   object ilAngles: TImageList

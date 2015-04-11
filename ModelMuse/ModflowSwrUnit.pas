@@ -616,7 +616,8 @@ begin
   LocalCell := ACell as TCellAssignment;
   frmErrorsAndWarnings.AddError(AModel, StrRainFormulaError,
     Format(StrObject0sLayerError, [LocalScreenObject.Name,
-    LocalCell.Layer + 1, LocalCell.Row + 1, LocalCell.Column + 1, E.Message]));
+    LocalCell.Layer + 1, LocalCell.Row + 1, LocalCell.Column + 1, E.Message]),
+    LocalScreenObject);
 end;
 
 function TSwrRainListCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
@@ -1141,7 +1142,8 @@ begin
   LocalCell := ACell as TCellAssignment;
   frmErrorsAndWarnings.AddError(AModel, StrEvapFormulaError,
     Format(StrObject0sLayerError, [LocalScreenObject.Name,
-    LocalCell.Layer + 1, LocalCell.Row + 1, LocalCell.Column + 1, E.Message]));
+    LocalCell.Layer + 1, LocalCell.Row + 1, LocalCell.Column + 1, E.Message]),
+    LocalScreenObject);
 end;
 
 procedure TSwrEvapListCollection.InvalidateModel;
@@ -1232,7 +1234,8 @@ begin
   LocalCell := ACell as TCellAssignment;
   frmErrorsAndWarnings.AddError(AModel, StrLatInflowFormulaError,
     Format(StrObject0sLayerError, [LocalScreenObject.Name,
-    LocalCell.Layer + 1, LocalCell.Row + 1, LocalCell.Column + 1, E.Message]));
+    LocalCell.Layer + 1, LocalCell.Row + 1, LocalCell.Column + 1, E.Message]),
+    LocalScreenObject);
 end;
 
 procedure TSwrLatInflowListCollection.InvalidateModel;
@@ -1323,7 +1326,8 @@ begin
   LocalCell := ACell as TCellAssignment;
   frmErrorsAndWarnings.AddError(AModel, StrStageFormulaError,
     Format(StrObject0sLayerError, [LocalScreenObject.Name,
-    LocalCell.Layer + 1, LocalCell.Row + 1, LocalCell.Column + 1, E.Message]));
+    LocalCell.Layer + 1, LocalCell.Row + 1, LocalCell.Column + 1, E.Message]),
+    LocalScreenObject);
 end;
 
 procedure TSwrStageListCollection.InvalidateModel;

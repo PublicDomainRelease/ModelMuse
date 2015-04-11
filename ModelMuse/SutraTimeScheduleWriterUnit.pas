@@ -588,7 +588,7 @@ begin
         if not UseScheduleTimes then
         begin
           frmErrorsAndWarnings.AddWarning(Model, StrTheFollowingObject,
-            AScreenObject.Name);
+            AScreenObject.Name, AScreenObject);
         end;
       end
       else

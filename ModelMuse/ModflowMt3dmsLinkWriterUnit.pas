@@ -17,10 +17,11 @@ type
 implementation
 
 uses
-  ModflowUnitNumbers, frmProgressUnit, SysUtils;
+  ModflowUnitNumbers, frmProgressUnit, SysUtils, GoPhastTypes;
 
 resourcestring
   StrWritingLMT6Package = 'Writing LMT6 Package input.';
+  StrWritingLMT7Package = 'Writing LMT7 Package input.';
 
 { TModflowMt3dmsLinkWriter }
 
@@ -47,16 +48,36 @@ begin
   begin
     Exit;
   end;
+  if Model.PackageGeneratedExternally(StrLMT7) then
+  begin
+    Exit;
+  end;
   NameOfFile := FileName(AFileName);
   FtlFileName := ChangeFileExt(NameOfFile, '.ftl');
-  WriteToNameFile(StrLMT6, Model.UnitNumbers.UnitNumber(StrLMT6),
-    NameOfFile, foInput);
+  if Model.ModelSelection = msModflowLGR2 then
+  begin
+    WriteToNameFile(StrLMT7, Model.UnitNumbers.UnitNumber(StrLMT7),
+      NameOfFile, foInput);
+  end
+  else
+  begin
+    WriteToNameFile(StrLMT6, Model.UnitNumbers.UnitNumber(StrLMT6),
+      NameOfFile, foInput);
+  end;
   WriteToNameFile(StrDATABINARY, Model.UnitNumbers.UnitNumber(StrFTL),
     FtlFileName, foOutput);
 
   OpenFile(NameOfFile);
   try
-    frmProgressMM.AddMessage(StrWritingLMT6Package);
+    if Model.ModelSelection = msModflowLGR2 then
+    begin
+      frmProgressMM.AddMessage(StrWritingLMT7Package);
+
+    end
+    else
+    begin
+      frmProgressMM.AddMessage(StrWritingLMT6Package);
+    end;
 
     WriteString('OUTPUT_FILE_NAME ');
     WriteString(ExtractFileName(FtlFileName));

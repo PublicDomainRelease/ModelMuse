@@ -6884,10 +6884,68 @@ const
   //        initial water table data set in PHAST.
   //      Bug fix: Fixed access violation that occurred with SUTRA models when
   //        changing the selected layer with the keyboard.
+  //    '3.5.1.1' Bug fix: In steady-state PHAST models, the minimum and
+  //        maximum step sizes can now be less than 1.
+  //      Bug fix: When exporting 3D grid data to a Shapefile, data for the
+  //        last layer was saved as the data for the first layer and no other
+  //        data was saved. This has been fixed.
+  //    '3.5.1.2' Bug fix: Renaming a child model caused an access violation
+  //        if the child model used MT3DMS.
+  //    '3.5.1.3' Bug fix: Use LMG7 instead of LMG6 for the link to MT3DMS in
+  //        MODFLOW-LGR version 2.
+  //    '3.5.1.4' Bug fix: Fixed a bug setting the layer in a model in which
+  //        a child model has been defined but the model selection is no longer
+  //       one that includes child models.
+  //    '3.5.1.5' Enhancement: When exporting the MODPATH data sets, and error
+  //        message will be displayed if a reference is before the beginning
+  //        of the model or after the end.
+  //      Enhancement: In the Errors and Warnings dialog box, a context menu
+  //        has been added allowing the user to select, edit or go to
+  //        objects related to an error or warning message.
+  //      Enhancement: In the Manage Flow Observations dialog box, a context
+  //        menu has been added allowing the user to select, edit or go to
+  //        objects related to a particular observation.
+  //    '3.5.1.6' Bug fix: Fixed bug related to attempts to access directories
+  //        that don't exist.
+  //      Bug fix: ModelMuse no longer prompts the user to save the
+  //        file once an hour because it was causing ModelMuse to hang.
+  //    '3.5.1.7' Bug fix: When importing the LPF or UPW package input,
+  //        parameters that use multiple clusters for the same layer are now
+  //        imported correctly.
+  //      Enhancement: In the two Stream links panes of the Data Visualization
+  //        dialog box, a new control "Square size" has been added. It controls
+  //        the sizes of squares used to represent links between segments when
+  //        the two ends of the link are both in the same cell.
+  //      Bug fix: When importing Shapefiles of MODFLOW boundary conditions,
+  //        there is no longer an access violation if there are solutes defined
+  //        in Mt3DMS but the Source and Sink Mixing package has not been
+  //        activated.
+  //    '3.5.1.8' Bug fix: Attempting to read a MODPATH pathline file that
+  //        lacks a proper heading line now results in an error message instead
+  //        of causing ModelMuse to hang.
+  //      Bug fix: Fixed bug that would cause an assertion failure when
+  //        generating a finite element mesh in SUTRA.
+  //      Bug fix: Fixed bug that would cause an access violation error in
+  //        SUTRA models when attempting to edit multiple objects when captions
+  //        should be visible for the objects.
+  //      Change: When importing Cell-by-cell flow files, ModelMuse will ask
+  //        the modeller what the precision is used in the files is if it can't
+  //        determine that by itself.
+  //    '3.5.1.9' Bug fix: Fixed bug that would allow the user to define a
+  //        lake with a Lake ID of zero.
+  //   '3.5.1.10' Bug fix: Fixed bug that caused an error when withdrawing
+  //        water from a well.
+  //   '3.6.0.0' Bug fix: Attempting to use an empty .ucn file to assign
+  //        initial concentration will now result in an error message instead
+  //        of a bug report.
+  //      Bug fix: When importing an existing model, the import of diversions
+  //        in the STR package has been fixed.
+  //      Bug fix: Attempting to edit farms in MODFLOW-OWHM before defining
+  //        at least one crop is no longer allowed.
 
 const
   // version number of ModelMuse.
-  IModelVersion = '3.5.1.0';
+  IModelVersion = '3.6.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -7135,6 +7193,8 @@ resourcestring
   StrFarmTmesLate = 'The specified times for farms include times after the e' +
   'nd of the last stress period.';
   StrMFOwhmDefaultPath64 = 'C:\WRDAPP\MF_OWHM_v1_0\bin\MF_OWHM.exe';
+  StrThereWasAnErrorG = 'There was an error generating the mesh. Please chec' +
+  'k the objects used to define the mesh element size.';
 
 const
   StatFlagStrings : array[Low(TStatFlag)..High(TStatFlag)] of string
@@ -16205,8 +16265,6 @@ end;
 
 procedure TCustomModel.DrawStrStreamLinkages(const BitMap: TBitmap32;
   const ZoomBox: TQRbwZoomBox2);
-const
-  SquareSize = 6;
 var
   StreamList: TSfrStreamPlotList;
   StreamNumbers: TIntegerList;
@@ -16223,6 +16281,7 @@ var
   DownstreamObject: TScreenObject;
   UpstreamObject: TScreenObject;
   StreamObject: TScreenObject;
+  SquareSize: integer;
 begin
   inherited;
   StreamList := TSfrStreamPlotList.Create;
@@ -16233,6 +16292,7 @@ begin
       StreamColor := Color32(StrStreamLinkPlot.StreamColor);
       DiversionColor := Color32(StrStreamLinkPlot.DiversionColor);
       UnconnectedColor := Color32(StrStreamLinkPlot.UnconnectedColor);
+      SquareSize := StrStreamLinkPlot.SquareSize;
 
       StreamNumbers := TIntegerList.Create;
       try
@@ -16603,8 +16663,8 @@ end;
 
 procedure TCustomModel.DrawSfrStreamLinkages(const BitMap: TBitmap32;
   const ZoomBox: TQRbwZoomBox2);
-const
-  SquareSize = 6;
+//const
+//  SquareSize = 6;
 var
   StreamList: TSfrStreamPlotList;
   LakeList: TLakePlotList;
@@ -16625,6 +16685,7 @@ var
   DownstreamObject: TScreenObject;
   UpstreamObject: TScreenObject;
   StreamObject: TScreenObject;
+  SquareSize: integer;
 begin
   inherited;
   StreamList := TSfrStreamPlotList.Create;
@@ -16636,6 +16697,7 @@ begin
       StreamColor := Color32(SfrStreamLinkPlot.StreamColor);
       DiversionColor := Color32(SfrStreamLinkPlot.DiversionColor);
       UnconnectedColor := Color32(SfrStreamLinkPlot.UnconnectedColor);
+      SquareSize := SfrStreamLinkPlot.SquareSize;
 
       StreamNumbers := TIntegerList.Create;
       LakeNumbers := TIntegerList.Create;
@@ -18743,7 +18805,6 @@ begin
   if (Grid <> nil) and (Grid.ColumnCount > 0)
     and (Grid.RowCount > 0)and (Grid.LayerCount > 0) then
   begin
-
     UpdateMapping;
     LocalCombinedCount := Length(FColumnMapping);
     if FCombinedDisplayColumn > LocalCombinedCount then
@@ -22086,13 +22147,16 @@ begin
 //      OutputDebugString('SAMPLING ON');
 
   {$ENDIF}
-//      try
+      try
       MeshCreator.GenerateMesh;
-//      except on E: EInvalidElement do
-//        begin
-//          InvalidMesh := True;
-//        end;
-//      end;
+      except on E: EAssertionFailed do
+        begin
+          InvalidMesh := True;
+          Beep;
+          MessageDlg(StrThereWasAnErrorG, mtError, [mbOK], 0);
+          Exit;
+        end;
+      end;
 
       for AdjustIndex := 1 to 5 do
       begin
@@ -27478,7 +27542,8 @@ begin
         end;
         if SpressPeriodCount <> TimeList.Count then
         begin
-          frmErrorsAndWarnings.AddWarning(self, StrAddedTimes, ScreenObject.Name);
+          frmErrorsAndWarnings.AddWarning(self, StrAddedTimes,
+            ScreenObject.Name, ScreenObject);
         end;
       end;
 
@@ -32072,7 +32137,10 @@ end;
 
 procedure TChildModel.UpdateMt3dmsChemDataSets;
 begin
-  ParentModel.UpdateMt3dmsChemDataSets
+  if ParentModel <> nil then
+  begin
+    ParentModel.UpdateMt3dmsChemDataSets
+  end;
 end;
 
 procedure TChildModel.WriteFluxClosureCriterion(Writer: TWriter);
@@ -32582,7 +32650,7 @@ begin
       msModflowLGR2, msModflowFmp:
         result.Last := (ChildCellsPerParentCell - 1);
       else
-        Assert(False);
+        result.Last := (ChildCellsPerParentCell div 2);
     end;
   end
   else if ACol = FLastCol then
@@ -32594,7 +32662,7 @@ begin
       msModflowLGR2, msModflowFmp:
         result.First := result.Last - (ChildCellsPerParentCell - 1);
       else
-        Assert(False);
+        result.First := result.Last - (ChildCellsPerParentCell div 2);
     end;
   end
   else
@@ -32606,7 +32674,8 @@ begin
       msModflowLGR2, msModflowFmp:
         result.Last := (ACol-FFirstCol+1)*ChildCellsPerParentCell - 1;
       else
-        Assert(False);
+        result.Last := (ACol-FFirstCol+1)*ChildCellsPerParentCell
+          - (ChildCellsPerParentCell div 2) - 1;
     end;
     result.First  := result.Last - ChildCellsPerParentCell + 1;
   end;
@@ -32692,7 +32761,7 @@ begin
       msModflowLGR2, msModflowFmp:
         result.Last := (ChildCellsPerParentCell -1);
       else
-        Assert(False);
+        result.Last := (ChildCellsPerParentCell div 2);
     end;
   end
   else if ARow = FLastRow then
@@ -32704,7 +32773,7 @@ begin
       msModflowLGR2, msModflowFmp:
         result.First := result.Last - (ChildCellsPerParentCell - 1);
       else
-        Assert(False);
+        result.First := result.Last - (ChildCellsPerParentCell div 2);
     end;
   end
   else
@@ -32716,7 +32785,8 @@ begin
       msModflowLGR2, msModflowFmp:
         result.Last := (ARow-FFirstRow+1)*ChildCellsPerParentCell - 1;
       else
-        Assert(False);
+        result.Last := (ARow-FFirstRow+1)*ChildCellsPerParentCell
+          - (ChildCellsPerParentCell div 2) - 1;
     end;
     result.First  := result.Last - ChildCellsPerParentCell + 1;
   end;

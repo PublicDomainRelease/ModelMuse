@@ -284,7 +284,7 @@ begin
           if (FixedHeads <> nil) and FixedHeads.Used then
           begin
             frmErrorsAndWarnings.AddWarning(Model,
-              StrTheFollowingObject, AScreenObject.Name);
+              StrTheFollowingObject, AScreenObject.Name, AScreenObject);
           end;
           TRealSparseDataSetCrack(Diameter).Clear;
           TRealSparseDataSetCrack(Tortuosity).Clear;
@@ -325,7 +325,8 @@ begin
                 if not Diameter.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]
                   or not Diameter.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column] then
                 begin
-                  frmErrorsAndWarnings.AddError(Model, StrCFPDiameterIsNot, AScreenObject.Name);
+                  frmErrorsAndWarnings.AddError(Model, StrCFPDiameterIsNot,
+                    AScreenObject.Name, AScreenObject);
                   Break;
                 end;
                 PipeDiameter := (Diameter.RealData[ACell1.Layer, ACell1.Row, ACell1.Column]
@@ -334,7 +335,8 @@ begin
                 if not Tortuosity.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]
                   or not Tortuosity.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column] then
                 begin
-                  frmErrorsAndWarnings.AddError(Model, StrCFPTortuosityIsNo, AScreenObject.Name);
+                  frmErrorsAndWarnings.AddError(Model, StrCFPTortuosityIsNo,
+                    AScreenObject.Name, AScreenObject);
                   Break;
                 end;
                 TortuosityValue := (Tortuosity.RealData[ACell1.Layer, ACell1.Row, ACell1.Column]
@@ -343,7 +345,8 @@ begin
                 if not RoughnessHeight.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]
                   or not RoughnessHeight.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column] then
                 begin
-                  frmErrorsAndWarnings.AddError(Model, StrCFPRoughnessHeight, AScreenObject.Name);
+                  frmErrorsAndWarnings.AddError(Model, StrCFPRoughnessHeight,
+                    AScreenObject.Name, AScreenObject);
                   Break;
                 end;
                 RoughnessHeightValue := (RoughnessHeight.RealData[ACell1.Layer, ACell1.Row, ACell1.Column]
@@ -352,7 +355,8 @@ begin
                 if not LowerCriticalR.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]
                   or not LowerCriticalR.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column] then
                 begin
-                  frmErrorsAndWarnings.AddError(Model, StrCFPLowerCriticalR, AScreenObject.Name);
+                  frmErrorsAndWarnings.AddError(Model, StrCFPLowerCriticalR,
+                    AScreenObject.Name, AScreenObject);
                   Break;
                 end;
                 LowerCriticalRValue := (LowerCriticalR.RealData[ACell1.Layer, ACell1.Row, ACell1.Column]
@@ -361,7 +365,8 @@ begin
                 if not UpperCriticalR.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]
                   or not UpperCriticalR.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column] then
                 begin
-                  frmErrorsAndWarnings.AddError(Model, StrCFPUpperCriticalR, AScreenObject.Name);
+                  frmErrorsAndWarnings.AddError(Model, StrCFPUpperCriticalR,
+                    AScreenObject.Name, AScreenObject);
                   Break;
                 end;
                 UpperCriticalRValue := (UpperCriticalR.RealData[ACell1.Layer, ACell1.Row, ACell1.Column]
@@ -525,7 +530,7 @@ begin
           and not ScreenObject.SetValuesOfIntersectedCells then
         begin
           frmErrorsAndWarnings.AddError(Model, NoAssignmentErrorRoot,
-            ScreenObject.Name);
+            ScreenObject.Name, ScreenObject);
         end;
         frmProgressMM.AddMessage(Format(StrEvaluatingS,
           [ScreenObject.Name]));

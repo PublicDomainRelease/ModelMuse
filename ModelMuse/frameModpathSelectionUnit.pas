@@ -243,10 +243,26 @@ begin
     EnableBeginAndEndTime;
 
     StressPeriod := frmGoPhast.PhastModel.ModflowStressPeriods.Items[0];
+    if rdeBeginningTime.RealValue < StressPeriod.StartTime then
+    begin
+      rdeBeginningTime.RealValue := StressPeriod.StartTime;
+    end;
+    if rdeEndingTime.RealValue < StressPeriod.StartTime then
+    begin
+      rdeEndingTime.RealValue := StressPeriod.StartTime;
+    end;
     rdeBeginningTime.Min := StressPeriod.StartTime;
     rdeEndingTime.Min := StressPeriod.StartTime;
     StressPeriod := frmGoPhast.PhastModel.ModflowStressPeriods.Items[
       frmGoPhast.PhastModel.ModflowStressPeriods.Count-1];
+    if rdeBeginningTime.RealValue > StressPeriod.EndTime then
+    begin
+      rdeBeginningTime.RealValue := StressPeriod.EndTime;
+    end;
+    if rdeEndingTime.RealValue > StressPeriod.EndTime then
+    begin
+      rdeEndingTime.RealValue := StressPeriod.EndTime;
+    end;
     rdeBeginningTime.Max := StressPeriod.EndTime;
     rdeEndingTime.Max := StressPeriod.EndTime;
 

@@ -257,20 +257,20 @@ var
   Packages: TModflowPackages;
   SfrPackage: TSfrPackageSelection;
 begin
-  if FarmList.count = 0 then
-  begin
-    seFarmId.AsInteger := 0;
-    ClearGrid(frameFormulaGridCrops.Grid);
-    ClearGrid(frameFormulaGridCosts.Grid);
-    ClearGrid(frameFormulaGridWaterRights.Grid);
-    ClearGrid(frameGW_Allocation.Grid);
-    Enabled := False;
-    Exit;
-  end;
-  Enabled := True;
   Changing := True;
   FrameLoaded := False;
   try
+    if FarmList.count = 0 then
+    begin
+      seFarmId.AsInteger := 0;
+      ClearGrid(frameFormulaGridCrops.Grid);
+      ClearGrid(frameFormulaGridCosts.Grid);
+      ClearGrid(frameFormulaGridWaterRights.Grid);
+      ClearGrid(frameGW_Allocation.Grid);
+      Enabled := False;
+      Exit;
+    end;
+    Enabled := True;
     Packages := frmGoPhast.PhastModel.ModflowPackages;
     FarmProcess := Packages.FarmProcess;
     tabCosts.TabVisible :=

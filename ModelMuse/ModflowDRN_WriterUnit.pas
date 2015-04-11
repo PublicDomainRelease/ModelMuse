@@ -87,13 +87,15 @@ begin
     begin
       frmErrorsAndWarnings.AddError(Model, StrDrainElevationIsB,
         Format(StrLayerRowColObject, [
-        Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name]));
+        Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name]),
+        ScreenObject);
     end
     else
     begin
       frmErrorsAndWarnings.AddWarning(Model, StrDrainElevationIsB,
         Format(StrLayerRowColObject, [
-        Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name]));
+        Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name]),
+        ScreenObject);
     end;
   end;
 end;

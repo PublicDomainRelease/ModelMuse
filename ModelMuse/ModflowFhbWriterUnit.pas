@@ -140,7 +140,7 @@ begin
       and not ScreenObject.SetValuesOfIntersectedCells then
     begin
       frmErrorsAndWarnings.AddError(Model, NoAssignmentErrorRoot,
-        ScreenObject.Name);
+        ScreenObject.Name, ScreenObject);
     end;
     frmProgressMM.AddMessage(Format(StrEvaluatingS,
       [ScreenObject.Name]));
@@ -163,7 +163,7 @@ begin
       and not ScreenObject.SetValuesOfIntersectedCells then
     begin
       frmErrorsAndWarnings.AddError(Model, NoAssignmentErrorRoot,
-        ScreenObject.Name);
+        ScreenObject.Name, ScreenObject);
     end;
     frmProgressMM.AddMessage(Format(StrEvaluatingS,
       [ScreenObject.Name]));

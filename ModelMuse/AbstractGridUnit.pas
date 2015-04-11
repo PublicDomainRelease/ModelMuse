@@ -1168,7 +1168,7 @@ var
   ExistingLayerSelectionCellColor: TColor;
 
 resourcestring
-  StrInvalidLayerNumber = 'Invalid layer number';
+  StrInvalidLayerNumber = 'Invalid layer number: %d';
 
 implementation
 
@@ -1177,8 +1177,8 @@ uses GR32_Polygons, Math, RealListUnit, frmGoPhastUnit, BigCanvasMethods,
   EdgeDisplayUnit, ZLib, IntListUnit, PathlineReader;
 
 resourcestring
-  StrInvalidColumnNumbe = 'Invalid column number';
-  StrInvalidRowNumber = 'Invalid row number';
+  StrInvalidColumnNumbe = 'Invalid column number: %d';
+  StrInvalidRowNumber = 'Invalid row number: %d';
   StrColumnWidthsMustB = 'Column widths must be greater than or equal to 0.';
   StrRowWidthsMustBeG = 'Row widths must be greater than or equal to 0.';
 
@@ -1971,7 +1971,7 @@ function TCustomModelGrid.GetColumnPosition(const Column: integer): real;
 begin
   if (Column < 0) or (Column > ColumnCount) then
   begin
-    raise EInvalidGrid.Create(StrInvalidColumnNumbe);
+    raise EInvalidGrid.Create(Format(StrInvalidColumnNumbe, [Column]));
   end;
   result := FColumnPositions[Column];
 end;
@@ -2668,7 +2668,7 @@ function TCustomModelGrid.GetRowPosition(const Row: integer): real;
 begin
   if (Row < 0) or (Row > RowCount) then
   begin
-    raise EInvalidGrid.Create(StrInvalidRowNumber);
+    raise EInvalidGrid.Create(Format(StrInvalidRowNumber, [Row]));
   end;
   result := FRowPositions[Row];
 end;
@@ -2728,11 +2728,11 @@ begin
   end;
   if (Column < 0) or (Column >= ColumnLimit) then
   begin
-    raise EInvalidGrid.Create(StrInvalidColumnNumbe);
+    raise EInvalidGrid.Create(Format(StrInvalidColumnNumbe, [Column]));
   end;
   if (Row < 0) or (Row >= RowLimit) then
   begin
-    raise EInvalidGrid.Create(StrInvalidRowNumber);
+    raise EInvalidGrid.Create(Format(StrInvalidRowNumber, [Row]));
   end;
   Result := FTopCellColors[Column, Row];
 
@@ -3021,7 +3021,7 @@ procedure TCustomModelGrid.SetColumnPosition(const Column: integer;
 begin
   if (Column < 0) or (Column > ColumnCount) then
   begin
-    raise EInvalidGrid.Create(StrInvalidColumnNumbe);
+    raise EInvalidGrid.Create(Format(StrInvalidColumnNumbe, [Column]));
   end;
   if FColumnPositions[Column] <> Value then
   begin
@@ -3466,7 +3466,7 @@ procedure TCustomModelGrid.SetRowPosition(const Row: integer;
 begin
   if (Row < 0) or (Row > RowCount) then
   begin
-    raise EInvalidGrid.Create(StrInvalidRowNumber);
+    raise EInvalidGrid.Create(Format(StrInvalidRowNumber, [Row]));
   end;
   if FRowPositions[Row] <> Value then
   begin
@@ -3582,11 +3582,11 @@ begin
   end;
   if (Column < 0) or (Column >= ColumnLimit) then
   begin
-    raise EInvalidGrid.Create(StrInvalidColumnNumbe);
+    raise EInvalidGrid.Create(Format(StrInvalidColumnNumbe, [Column]));
   end;
   if (Row < 0) or (Row >= RowLimit) then
   begin
-    raise EInvalidGrid.Create(StrInvalidRowNumber);
+    raise EInvalidGrid.Create(Format(StrInvalidRowNumber, [Row]));
   end;
   FTopCellColors[Column, Row] := Value;
 end;
@@ -4127,11 +4127,11 @@ begin
   end;
   if (Column < 0) or (Column >= ColumnLimit) then
   begin
-    raise EInvalidGrid.Create(StrInvalidColumnNumbe);
+    raise EInvalidGrid.Create(Format(StrInvalidColumnNumbe, [Column]));
   end;
   if (Layer < 0) or (Layer >= LayerLimit) then
   begin
-    raise EInvalidGrid.Create(StrInvalidLayerNumber);
+    raise EInvalidGrid.Create(Format(StrInvalidLayerNumber, [Layer]));
   end;
   Result := FFrontCellColors[Column, Layer];
 end;
@@ -4799,11 +4799,11 @@ begin
   end;
   if (Column < 0) or (Column >= ColumnLimit) then
   begin
-    raise EInvalidGrid.Create(StrInvalidColumnNumbe);
+    raise EInvalidGrid.Create(Format(StrInvalidColumnNumbe, [Column]));
   end;
   if (Layer < 0) or (Layer >= LayerLimit) then
   begin
-    raise EInvalidGrid.Create(StrInvalidLayerNumber);
+    raise EInvalidGrid.Create(Format(StrInvalidLayerNumber, [Layer]));
   end;
   FFrontCellColors[Column, Layer] := Value;
 end;
@@ -4995,11 +4995,11 @@ begin
   end;
   if (Row < 0) or (Row >= RowLimit) then
   begin
-    raise EInvalidGrid.Create(StrInvalidRowNumber);
+    raise EInvalidGrid.Create(Format(StrInvalidRowNumber, [Row]));
   end;
   if (Layer < 0) or (Layer >= LayerLimit) then
   begin
-    raise EInvalidGrid.Create(StrInvalidLayerNumber);
+    raise EInvalidGrid.Create(Format(StrInvalidLayerNumber, [Layer]));
   end;
   Result := FSideCellColors[Row, Layer];
 end;
@@ -5037,11 +5037,11 @@ begin
   end;
   if (Row < 0) or (Row >= RowLimit) then
   begin
-    raise EInvalidGrid.Create(StrInvalidRowNumber);
+    raise EInvalidGrid.Create(Format(StrInvalidRowNumber, [Row]));
   end;
   if (Layer < 0) or (Layer >= LayerLimit) then
   begin
-    raise EInvalidGrid.Create(StrInvalidLayerNumber);
+    raise EInvalidGrid.Create(Format(StrInvalidLayerNumber, [Layer]));
   end;
   FSideCellColors[Row, Layer] := Value;
 end;

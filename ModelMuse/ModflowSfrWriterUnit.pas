@@ -882,7 +882,7 @@ begin
         else
         begin
           frmErrorsAndWarnings.AddError(Model, StrDupParamInstances,
-            ScreenObject.Name);
+            ScreenObject.Name, ScreenObject);
         end;
       end;
     end;
@@ -1164,7 +1164,7 @@ begin
                   begin
                     NUMVAL := 0;
                     frmErrorsAndWarnings.AddError(Model, StrTheFollowingObject,
-                      ScreenObject.Name);
+                      ScreenObject.Name, ScreenObject);
                   end;
                 end;
               ffcSpecify:
@@ -1184,7 +1184,7 @@ begin
           else
           begin
             frmErrorsAndWarnings.AddWarning(Model,
-              NoSegmentsWarning, ScreenObject.Name);
+              NoSegmentsWarning, ScreenObject.Name, ScreenObject);
             Segment.Free;
           end;
         end;
@@ -1213,7 +1213,8 @@ begin
 
     if FSegments.Count = 0 then
     begin
-      frmErrorsAndWarnings.AddWarning(Model, StrNoStreamsDefined, StrTheSFRPackageHas);
+      frmErrorsAndWarnings.AddWarning(Model, StrNoStreamsDefined,
+        StrTheSFRPackageHas);
     end;
   finally
     frmErrorsAndWarnings.EndUpdate;
@@ -1307,7 +1308,8 @@ begin
     begin
       Error := Format(DupNumbersError, [Segment1.FScreenObject.Name,
         Segment2.FScreenObject.Name, Segment1.OriginalSegmentNumber]);
-      frmErrorsAndWarnings.AddError(Model, DupErrorCategory, Error);
+      frmErrorsAndWarnings.AddError(Model, DupErrorCategory, Error,
+      Segment1.FScreenObject);
     end;
   end;
 
@@ -1343,13 +1345,13 @@ begin
       begin
         AScreenObject := LakeDownstreamError[WarningIndex];
         frmErrorsAndWarnings.AddError(Model,
-          StrLakeDownstreamError, AScreenObject.Name);
+          StrLakeDownstreamError, AScreenObject.Name, AScreenObject);
       end;
       for WarningIndex := 0 to LakeDiversionError.Count - 1 do
       begin
         AScreenObject := LakeDiversionError[WarningIndex];
         frmErrorsAndWarnings.AddError(Model,
-          StrLakeDiversionError, AScreenObject.Name);
+          StrLakeDiversionError, AScreenObject.Name, AScreenObject);
       end;
     finally
       LakeDiversionError.Free;
@@ -1410,13 +1412,13 @@ begin
           begin
             AScreenObject := DownStreamOutOfOrder[WarningIndex];
             frmErrorsAndWarnings.AddWarning(Model,
-              StrDownstreamOutOfOrder, AScreenObject.Name);
+              StrDownstreamOutOfOrder, AScreenObject.Name, AScreenObject);
           end;
           for WarningIndex := 0 to DiversionOutOfOrder.Count - 1 do
           begin
             AScreenObject := DiversionOutOfOrder[WarningIndex];
             frmErrorsAndWarnings.AddWarning(Model,
-              StrDiversionOutOfOrder, AScreenObject.Name);
+              StrDiversionOutOfOrder, AScreenObject.Name, AScreenObject);
           end;
         finally
           DownStreamOutOfOrder.Free;
@@ -1490,7 +1492,8 @@ begin
       Segment := FSegments[Index];
       Error := Format(CircularError, [Segment.FScreenObject.Name,
         Segment.OriginalSegmentNumber]);
-      frmErrorsAndWarnings.AddError(Model, CircularCategory, Error);
+      frmErrorsAndWarnings.AddError(Model, CircularCategory, Error,
+        Segment.FScreenObject);
     end;
   end;
   (FSegments as TObjectList).OwnsObjects := True;
@@ -2073,7 +2076,7 @@ var
               begin
                 ErrorObject := Boundary.ScreenObject as TScreenObject;
                 frmErrorsAndWarnings.AddError(Model,
-                  StrInvalidStartingTime, ErrorObject.Name);
+                  StrInvalidStartingTime, ErrorObject.Name, ErrorObject);
                 Continue;
               end;
               if SubSeg = nil then
@@ -2128,7 +2131,7 @@ var
               begin
                 ErrorObject := Boundary.ScreenObject as TScreenObject;
                 frmErrorsAndWarnings.AddError(Model,
-                  StrInvalidStartingTimeStep1, ErrorObject.Name);
+                  StrInvalidStartingTimeStep1, ErrorObject.Name, ErrorObject);
                 Continue;
               end;
               if SubSeg = nil then
@@ -2179,7 +2182,7 @@ var
             begin
               ErrorObject := Boundary.ScreenObject as TScreenObject;
               frmErrorsAndWarnings.AddError(Model,
-                StrInvalidStartingTimeStep1, ErrorObject.Name);
+                StrInvalidStartingTimeStep1, ErrorObject.Name, ErrorObject);
               Continue;
             end;
             if SubSeg = nil then
@@ -2216,7 +2219,7 @@ var
             begin
               ErrorObject := Boundary.ScreenObject as TScreenObject;
               frmErrorsAndWarnings.AddError(Model,
-                StrInvalidStartingTimeStep1, ErrorObject.Name);
+                StrInvalidStartingTimeStep1, ErrorObject.Name, ErrorObject);
               Continue;
             end;
             if SubSeg = nil then
@@ -2256,7 +2259,7 @@ var
               begin
                 ErrorObject := Boundary.ScreenObject as TScreenObject;
                 frmErrorsAndWarnings.AddError(Model,
-                  StrInvalidStartingTimeStep1, ErrorObject.Name);
+                  StrInvalidStartingTimeStep1, ErrorObject.Name, ErrorObject);
                 Continue;
               end;
               if SubSeg = nil then
@@ -2294,7 +2297,7 @@ var
               begin
                 ErrorObject := Boundary.ScreenObject as TScreenObject;
                 frmErrorsAndWarnings.AddError(Model,
-                  StrInvalidStartingTimeStep1, ErrorObject.Name);
+                  StrInvalidStartingTimeStep1, ErrorObject.Name, ErrorObject);
                 Continue;
               end;
               if SubSeg = nil then
@@ -2335,7 +2338,7 @@ var
               begin
                 ErrorObject := Boundary.ScreenObject as TScreenObject;
                 frmErrorsAndWarnings.AddError(Model,
-                  StrInvalidStartingTimeStep1, ErrorObject.Name);
+                  StrInvalidStartingTimeStep1, ErrorObject.Name, ErrorObject);
                 Continue;
               end;
               if SubSeg = nil then
@@ -2373,7 +2376,7 @@ var
               begin
                 ErrorObject := Boundary.ScreenObject as TScreenObject;
                 frmErrorsAndWarnings.AddError(Model,
-                  StrInvalidStartingTimeStep1, ErrorObject.Name);
+                  StrInvalidStartingTimeStep1, ErrorObject.Name, ErrorObject);
                 Continue;
               end;
               if SubSeg = nil then
@@ -2412,7 +2415,7 @@ var
             begin
               ErrorObject := Boundary.ScreenObject as TScreenObject;
               frmErrorsAndWarnings.AddError(Model,
-                StrInvalidStartingTimeStep1, ErrorObject.Name);
+                StrInvalidStartingTimeStep1, ErrorObject.Name, ErrorObject);
               Continue;
             end;
             if SubSeg = nil then
@@ -2450,7 +2453,7 @@ var
             begin
               ErrorObject := Boundary.ScreenObject as TScreenObject;
               frmErrorsAndWarnings.AddError(Model,
-                StrInvalidStartingTimeStep1, ErrorObject.Name);
+                StrInvalidStartingTimeStep1, ErrorObject.Name, ErrorObject);
               Continue;
             end;
             if SubSeg = nil then
@@ -2487,7 +2490,7 @@ var
                 BoundaryCount[Model] = 0 then
               begin
                 frmErrorsAndWarnings.AddError(Model, UnsatError,
-                  Segment.FScreenObject.Name);
+                  Segment.FScreenObject.Name, Segment.FScreenObject);
               end
               else
               begin
@@ -2525,7 +2528,7 @@ var
                 BoundaryCount[Model] = 0 then
               begin
                 frmErrorsAndWarnings.AddError(Model, UnsatError,
-                  Segment.FScreenObject.Name);
+                  Segment.FScreenObject.Name, Segment.FScreenObject);
               end
               else
               begin
@@ -2533,7 +2536,8 @@ var
                   Boundaries[0, Model] as TSfrUnsatSegmentStorage;
                 if SubSeg = nil then
                 begin
-                  DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+                  DownstreamUnsatRecord :=
+                    DownstreamUnsatValues.SrfUnsatSegmentArray[0];
                 end
                 else
                 begin
@@ -2566,7 +2570,7 @@ var
                 BoundaryCount[Model] = 0 then
               begin
                 frmErrorsAndWarnings.AddError(Model, UnsatError,
-                  Segment.FScreenObject.Name);
+                  Segment.FScreenObject.Name, Segment.FScreenObject);
               end
               else
               begin
@@ -2605,7 +2609,7 @@ var
                 BoundaryCount[Model] = 0 then
               begin
                 frmErrorsAndWarnings.AddError(Model, UnsatError,
-                  Segment.FScreenObject.Name);
+                  Segment.FScreenObject.Name, Segment.FScreenObject);
               end
               else
               begin
@@ -2647,7 +2651,7 @@ var
                 BoundaryCount[Model] = 0 then
               begin
                 frmErrorsAndWarnings.AddError(Model, UnsatError,
-                  Segment.FScreenObject.Name);
+                  Segment.FScreenObject.Name, Segment.FScreenObject);
               end
               else
               begin
@@ -2686,7 +2690,7 @@ var
                 BoundaryCount[Model] = 0 then
               begin
                 frmErrorsAndWarnings.AddError(Model, UnsatError,
-                  Segment.FScreenObject.Name);
+                  Segment.FScreenObject.Name, Segment.FScreenObject);
               end
               else
               begin
@@ -2728,7 +2732,7 @@ var
                 BoundaryCount[Model] = 0 then
               begin
                 frmErrorsAndWarnings.AddError(Model, UnsatError,
-                  Segment.FScreenObject.Name);
+                  Segment.FScreenObject.Name, Segment.FScreenObject);
               end
               else
               begin
@@ -2767,7 +2771,7 @@ var
                 BoundaryCount[Model] = 0 then
               begin
                 frmErrorsAndWarnings.AddError(Model, UnsatError,
-                  Segment.FScreenObject.Name);
+                  Segment.FScreenObject.Name, Segment.FScreenObject);
               end
               else
               begin
@@ -2941,7 +2945,7 @@ begin
       begin
         ErrorObject := Boundary.ScreenObject as TScreenObject;
         frmErrorsAndWarnings.AddError(Model,
-          StrInvalidStartingTimeStep1, ErrorObject.Name);
+          StrInvalidStartingTimeStep1, ErrorObject.Name, ErrorObject);
         Continue;
       end;
       DownstreamValues := Boundary.DownstreamSegmentValues.
@@ -2950,7 +2954,7 @@ begin
       begin
         ErrorObject := Boundary.ScreenObject as TScreenObject;
         frmErrorsAndWarnings.AddError(Model,
-          StrInvalidStartingTimeStep1, ErrorObject.Name);
+          StrInvalidStartingTimeStep1, ErrorObject.Name, ErrorObject);
         Continue;
       end;
       if (UpstreamValues <> PriorUpstreamValues)
@@ -2969,7 +2973,8 @@ begin
           begin
             frmErrorsAndWarnings.AddError(Model,StrOneOrMoreSFRStre,
               Format(StrObjectSTime1, [Segment.FScreenObject.Name,
-              StressPeriod.StartTime, UpstreamElev, DownstreamElev]));
+              StressPeriod.StartTime, UpstreamElev, DownstreamElev]),
+              Segment.FScreenObject);
           end;
         end;
       end;
@@ -3294,7 +3299,8 @@ var
     begin
       frmErrorsAndWarnings.AddWarning(Model, WarningRootRL_Less_0,
         Format(StrObject0sLayer,
-        [ObjectName, Reach.Layer+1, Reach.Row+1, Reach.Column+1]));
+        [ObjectName, Reach.Layer+1, Reach.Row+1, Reach.Column+1]),
+        Segment.FScreenObject);
     end;
   end;
 begin
@@ -3418,7 +3424,8 @@ begin
 //              ScreenObject := Segment.FScreenObject;
               frmErrorsAndWarnings.AddWarning(Model, StrInactiveReach,
                 Format(StrObject0sLayer,
-                [ScreenObject.Name, AReach.Layer+1, AReach.Row+1, AReach.Column+1]));
+                [ScreenObject.Name, AReach.Layer+1, AReach.Row+1, AReach.Column+1]),
+                ScreenObject);
             end;
 
             if ReachIndex > 0 then
@@ -3431,7 +3438,7 @@ begin
                 frmErrorsAndWarnings.AddWarning(Model, StrReachSeparationWarning,
                   Format(StrSegment0dReach,
                   [Segment.OriginalSegmentNumber, ReachIndex+1,
-                  ScreenObjectParamIndex+ 1, DeltaCell]));
+                  ScreenObjectParamIndex+ 1, DeltaCell]), Segment.FScreenObject);
               end;
             end;
             PriorReach := AReach;
@@ -4048,7 +4055,8 @@ begin
             ScreenObject := Segment.FScreenObject;
             frmErrorsAndWarnings.AddWarning(Model, StrInactiveReach,
               Format(StrObject0sLayer,
-              [ScreenObject.Name, AReach.Layer+1, AReach.Row+1, AReach.Column+1]));
+              [ScreenObject.Name, AReach.Layer+1, AReach.Row+1, AReach.Column+1]),
+              ScreenObject);
           end;
 
           if ReachIndex > 0 then
@@ -4057,10 +4065,12 @@ begin
               Abs(AReach.Column - PriorReach.Column));
             if DeltaCell > 1 then
             begin
+              ScreenObject := Segment.FScreenObject;
               SfrReach := AReach as TSfr_Cell;
               frmErrorsAndWarnings.AddWarning(Model, StrReachSeparationWarning,
                 Format(StrSegment0dReach,
-                [Segment.OriginalSegmentNumber, ReachIndex+1, TimeIndex+1, DeltaCell]));
+                [Segment.OriginalSegmentNumber, ReachIndex+1, TimeIndex+1, DeltaCell]),
+                ScreenObject);
             end;
           end;
           PriorReach := AReach;
@@ -4630,7 +4640,7 @@ begin
         begin
           frmErrorsAndWarnings.AddError(Model,StrStreamFlowFileDoe,
             Format(StrTheStreamFlowFile2,
-            [FlowFileName, Segment.FScreenObject.Name]));
+            [FlowFileName, Segment.FScreenObject.Name]), Segment.FScreenObject);
         end;
         IUNIT := Model.ParentModel.UnitNumbers.SequentialUnitNumber;
         WriteToNameFile(StrData, IUNIT, FlowFileName,
@@ -5087,7 +5097,8 @@ begin
         DownstreamScreenObject := OutflowSegement.FScreenObject as TScreenObject;
         frmErrorsAndWarnings.AddWarning(Model, StrLargeSeparationBet,
            Format(StrTheDownstreamEndO,
-           [UpstreamScreenObject.Name, DownstreamScreenObject.Name, MaxDistance]));
+           [UpstreamScreenObject.Name, DownstreamScreenObject.Name, MaxDistance]),
+           UpstreamScreenObject);
       end;
     end;
   end
@@ -5115,7 +5126,8 @@ begin
             DownstreamScreenObject := OutflowSegement.FScreenObject as TScreenObject;
             frmErrorsAndWarnings.AddWarning(Model, StrLargeSeparationBet,
                Format(StrTheDownstreamEndO,
-               [UpstreamScreenObject.Name, DownstreamScreenObject.Name, MaxDistance]));
+               [UpstreamScreenObject.Name, DownstreamScreenObject.Name, MaxDistance]),
+               UpstreamScreenObject);
           end;
         end;
       end;
@@ -5170,7 +5182,8 @@ begin
       UpstreamScreenObject := SourceSegment.FScreenObject as TScreenObject;
       frmErrorsAndWarnings.AddWarning(Model, StrLargeDiversionSeparation,
          Format(StrTheDownstreamEndO,
-         [UpstreamScreenObject.Name, DownstreamScreenObject.Name, MaxDistance]));
+         [UpstreamScreenObject.Name, DownstreamScreenObject.Name, MaxDistance]),
+         UpstreamScreenObject);
     end;
   end;
 end;
@@ -5274,7 +5287,8 @@ begin
         DownstreamScreenObject := OutflowSegement.FScreenObject as TScreenObject;
         frmErrorsAndWarnings.AddWarning(Model, StrLargeSeparationBet,
            Format(StrTheDownstreamEndO,
-           [UpstreamScreenObject.Name, DownstreamScreenObject.Name, MaxDistance]));
+           [UpstreamScreenObject.Name, DownstreamScreenObject.Name, MaxDistance]),
+           UpstreamScreenObject);
       end;
     end;
   end
@@ -5311,7 +5325,8 @@ begin
             DownstreamScreenObject := OutflowSegement.FScreenObject as TScreenObject;
             frmErrorsAndWarnings.AddWarning(Model, StrLargeSeparationBet,
                Format(StrTheDownstreamEndO,
-               [UpstreamScreenObject.Name, DownstreamScreenObject.Name, MaxDistance]));
+               [UpstreamScreenObject.Name, DownstreamScreenObject.Name, MaxDistance]),
+               UpstreamScreenObject);
           end;
         end;
       end;
@@ -5593,14 +5608,14 @@ begin
   begin
     ErrorObject := SfrBoundary.ScreenObject as TScreenObject;
     frmErrorsAndWarnings.AddError(Model,
-      StrInvalidStartingTimeStep1, ErrorObject.Name);
+      StrInvalidStartingTimeStep1, ErrorObject.Name, ErrorObject);
     Exit;
   end
   else if Length(UpstreamValues.SrfSegmentArray) = 0 then
   begin
     ErrorObject := SfrBoundary.ScreenObject as TScreenObject;
     frmErrorsAndWarnings.AddError(Model,
-      StrInvalidStartingTimeStep1, ErrorObject.Name);
+      StrInvalidStartingTimeStep1, ErrorObject.Name, ErrorObject);
     Exit;
   end;
 
@@ -5635,7 +5650,8 @@ begin
     else
     begin
       frmErrorsAndWarnings.AddError(Model, UnsatError,
-        (SfrBoundary.ScreenObject as TScreenObject).Name);
+        (SfrBoundary.ScreenObject as TScreenObject).Name,
+        SfrBoundary.ScreenObject);
     end;
   end;
 
@@ -5681,14 +5697,14 @@ begin
   begin
     ErrorObject := SfrBoundary.ScreenObject as TScreenObject;
     frmErrorsAndWarnings.AddError(Model,
-      StrInvalidStartingTimeStep1, ErrorObject.Name);
+      StrInvalidStartingTimeStep1, ErrorObject.Name, ErrorObject);
     Exit;
   end
   else if Length(DownstreamValues.SrfSegmentArray) = 0 then
   begin
     ErrorObject := SfrBoundary.ScreenObject as TScreenObject;
     frmErrorsAndWarnings.AddError(Model,
-      StrInvalidStartingTimeStep1, ErrorObject.Name);
+      StrInvalidStartingTimeStep1, ErrorObject.Name, ErrorObject);
     Exit;
   end;
   if SubSegIndex < 0 then
@@ -5722,7 +5738,8 @@ begin
     else
     begin
       frmErrorsAndWarnings.AddError(Model, UnsatError,
-        (SfrBoundary.ScreenObject as TScreenObject).Name);
+        (SfrBoundary.ScreenObject as TScreenObject).Name,
+        SfrBoundary.ScreenObject);
     end;
   end;
 

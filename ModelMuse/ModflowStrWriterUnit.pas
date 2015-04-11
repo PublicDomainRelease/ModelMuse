@@ -235,9 +235,9 @@ resourcestring
   'ies, have lower stages than the first reach of the segment into which the' +
   'y flow.';
   StrTributaryObject0 = 'Tributary Object: %0:s; Outflow Segment Object: %1:' +
-  's';
+  's; Difference: %2:g';
   StrDownhillObjectWarning = 'Object: %0:s; Reach: %1:d Layer: %2:d; Row: %3' +
-  ':d, Column: %4:d; Stress Period: %5:d';
+  ':d, Column: %4:d; Stress Period: %5:d; Invalid value: %6:g';
 
 const
   StrSegmentNumber = 'Segment Number in ';
@@ -370,7 +370,7 @@ begin
         and not ScreenObject.SetValuesOfIntersectedCells then
       begin
         frmErrorsAndWarnings.AddError(Model, NoAssignmentErrorRoot,
-          ScreenObject.Name);
+          ScreenObject.Name, ScreenObject);
       end;
       frmProgressMM.AddMessage(Format(StrEvaluatingS,
         [ScreenObject.Name]));
@@ -438,7 +438,8 @@ begin
           begin
             frmErrorsAndWarnings.AddWarning(Model, StrOneOrMoreStreams,
               Format(StrInObject0sWith,
-              [ASegment.FScreenObject.Name, ASegment.OriginalSegmentNumber]));
+              [ASegment.FScreenObject.Name, ASegment.OriginalSegmentNumber]),
+              ASegment.FScreenObject);
           end;
         end;
       end;
@@ -696,7 +697,8 @@ begin
           Segment2 := FSegments[SegPostion];
           Error := Format(DupNumbersError, [Segment1.FScreenObject.Name,
             Segment2.FScreenObject.Name, Segment1.OriginalSegmentNumber]);
-          frmErrorsAndWarnings.AddError(Model, DupErrorCategory, Error);
+          frmErrorsAndWarnings.AddError(Model, DupErrorCategory, Error,
+            Segment1.FScreenObject);
         end;
       end;
     finally
@@ -729,7 +731,8 @@ begin
               frmErrorsAndWarnings.AddError(Model,
                 StrInvalidDownstreamS, Format(StrTheSTRSegmentDefi,
                 [Segment.FScreenObject.Name,
-                Segment.FDownstreamSegments[DownstreamIndex]]) );
+                Segment.FDownstreamSegments[DownstreamIndex]]),
+                Segment.FScreenObject);
             end;
             if Segment.FDownstreamSegments[DownstreamIndex] =
               Segment.OriginalSegmentNumber then
@@ -738,7 +741,8 @@ begin
                 StrStreamsInTheSTRP,
                 Format(StrTheSTRStreamSegem,
                 [Segment.FScreenObject.Name,
-                Segment.FDownstreamSegments[DownstreamIndex]]) );
+                Segment.FDownstreamSegments[DownstreamIndex]]),
+                Segment.FScreenObject);
             end;
             if Segment.FDownstreamSegments[DownstreamIndex] <
               Segment.OriginalSegmentNumber then
@@ -747,7 +751,8 @@ begin
                 StrSegmentsInTheSTR, Format(StrTheSTRStreamSegme,
                 [Segment.FScreenObject.Name,
                 Segment.FDownstreamSegments[DownstreamIndex],
-                Segment.OriginalSegmentNumber]) );
+                Segment.OriginalSegmentNumber]),
+                Segment.FScreenObject);
             end;
           end;
 
@@ -760,7 +765,8 @@ begin
                 StrInvalidDiversionSe,
                 Format(StrTheSTRSegmentDiversion,
                 [Segment.FScreenObject.Name,
-                Segment.FDiversionSegments[DownstreamIndex]]) );
+                Segment.FDiversionSegments[DownstreamIndex]]),
+                Segment.FScreenObject);
             end;
             if Segment.FDiversionSegments[DownstreamIndex] =
               Segment.OriginalSegmentNumber then
@@ -769,7 +775,8 @@ begin
                 StrStreamsInTheSTRPDiversion,
                 Format(StrTheSTRStreamSegmeDiversion,
                 [Segment.FScreenObject.Name,
-                Segment.FDiversionSegments[DownstreamIndex]]) );
+                Segment.FDiversionSegments[DownstreamIndex]]),
+                Segment.FScreenObject);
             end;
             if Segment.FDiversionSegments[DownstreamIndex] >
               Segment.OriginalSegmentNumber then
@@ -779,7 +786,8 @@ begin
                 Format(StrTheSTRStreamSegmeDiver,
                 [Segment.FScreenObject.Name,
                 Segment.FDiversionSegments[DownstreamIndex],
-                Segment.OriginalSegmentNumber]) );
+                Segment.OriginalSegmentNumber]),
+                Segment.FScreenObject);
             end;
           end;
         end;
@@ -867,7 +875,8 @@ begin
         Segment := FSegments[Index];
         Error := Format(CircularError, [Segment.FScreenObject.Name,
           Segment.OriginalSegmentNumber]);
-        frmErrorsAndWarnings.AddError(Model, CircularCategory, Error);
+        frmErrorsAndWarnings.AddError(Model, CircularCategory, Error,
+          Segment.FScreenObject);
       end;
     end;
     FSegments.OwnsObjects := True;
@@ -1165,7 +1174,8 @@ begin
         begin
           frmErrorsAndWarnings.AddError(Model, StrInvalidOutflowSegm,
             Format(StrTheOutflowSegment, [StrItem.OutflowSegment,
-            FSegments[SegmentIndex].FScreenObject.Name]));
+            FSegments[SegmentIndex].FScreenObject.Name]),
+            FSegments[SegmentIndex].FScreenObject);
         end
         else
         begin
@@ -1221,7 +1231,8 @@ begin
       end
       else
       begin
-        frmErrorsAndWarnings.AddWarning(Model, StrSTRParameterHasNo, Format(StrNoReachesAreAssoc, [AParam.ParameterName]));
+        frmErrorsAndWarnings.AddWarning(Model, StrSTRParameterHasNo,
+          Format(StrNoReachesAreAssoc, [AParam.ParameterName]));
         AList.Free;
       end;
     end;
@@ -2121,13 +2132,16 @@ begin
         begin
           frmErrorsAndWarnings.AddWarning(Model, StrTributaryWarning,
             Format(StrTributarySegment0, [TribReachCell.SegmentNumber,
-            OutflowReachCell.SegmentNumber, StressPeriodIndex + 1, DeltaCell]));
+            OutflowReachCell.SegmentNumber, StressPeriodIndex + 1, DeltaCell]),
+            ATributary.FScreenObject);
         end;
         if OutflowReachCell.Stage > TribReachCell.Stage then
         begin
           frmErrorsAndWarnings.AddWarning(Model, StrTribStageWarning,
             Format(StrTributaryObject0,
-            [ATributary.FScreenObject.Name, ASegment.FScreenObject.Name]));
+            [ATributary.FScreenObject.Name, ASegment.FScreenObject.Name,
+            OutflowReachCell.Stage - TribReachCell.Stage]),
+            ATributary.FScreenObject);
         end;
       end;
     end;
@@ -2175,7 +2189,8 @@ begin
           frmErrorsAndWarnings.AddWarning(Model, StrOneOrMoreReaches,
             Format(StrInactiveReachCells,
             [StressPeriodIndex+1, StrReach.SegmentNumber, StrReach.ReachNumber,
-            StrReach.Layer+1, StrReach.Row+1, StrReach.Column+1]));
+            StrReach.Layer+1, StrReach.Row+1, StrReach.Column+1]),
+            ASegment.FScreenObject);
         end;
       end;
     end;
@@ -2209,7 +2224,9 @@ var
       frmErrorsAndWarnings.AddWarning(Model, StrStageTopWarning,
         Format(StrDownhillObjectWarning,
         [ScreenObjectName, AReach.ReachNumber,
-        AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1]));
+        AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1,
+        AReach.Stage - AReach.BedTop]),
+        ASegment.FScreenObject);
     end;
     if AReach.BedTop < AReach.BedBottom then
     begin
@@ -2217,7 +2234,9 @@ var
       frmErrorsAndWarnings.AddWarning(Model, StrStreamTopBottomWarning,
         Format(StrDownhillObjectWarning,
         [ScreenObjectName, AReach.ReachNumber,
-        AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1]));
+        AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1,
+        AReach.BedTop - AReach.BedBottom]),
+        ASegment.FScreenObject);
     end;
     if CalculateStage then
     begin
@@ -2227,7 +2246,9 @@ var
         frmErrorsAndWarnings.AddWarning(Model, StrWidthWarning,
           Format(StrDownhillObjectWarning,
           [ScreenObjectName, AReach.ReachNumber,
-          AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1]));
+          AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1,
+          AReach.Width]),
+          ASegment.FScreenObject);
       end;
       if AReach.Slope <= 0 then
       begin
@@ -2235,7 +2256,9 @@ var
         frmErrorsAndWarnings.AddWarning(Model, StrSlopeWarning,
           Format(StrDownhillObjectWarning,
           [ScreenObjectName, AReach.ReachNumber,
-          AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1]));
+          AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1,
+          AReach.Slope]),
+          ASegment.FScreenObject);
       end;
       if AReach.Roughness <= 0 then
       begin
@@ -2243,7 +2266,9 @@ var
         frmErrorsAndWarnings.AddWarning(Model, StrRoughnessWarning,
           Format(StrDownhillObjectWarning,
           [ScreenObjectName, AReach.ReachNumber,
-          AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1]));
+          AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1,
+          AReach.Roughness]),
+          ASegment.FScreenObject);
       end;
     end;
   end;
@@ -2276,7 +2301,9 @@ begin
             frmErrorsAndWarnings.AddWarning(Model, StrDownhillFlowWarning,
               Format(StrDownhillObjectWarning,
               [ScreenObjectName, AReach.ReachNumber,
-              AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1]));
+              AReach.Layer+1, AReach.Row+1, AReach.Column+1,
+              StressPeriodIndex+1, PriorReach.Stage - AReach.Stage]),
+              ASegment.FScreenObject);
           end;
           PriorReach := AReach;
         end;
@@ -2327,7 +2354,8 @@ begin
             StrReach := AReach as TStr_Cell;
             frmErrorsAndWarnings.AddWarning(Model, StrInTheStreamSTR,
               Format(StrSegment0dReach, [StrReach.SegmentNumber,
-              StrReach.ReachNumber, StressPeriodIndex + 1, DeltaCell]));
+              StrReach.ReachNumber, StressPeriodIndex + 1, DeltaCell]),
+              ASegment.FScreenObject);
           end;
           PriorReach := AReach;
         end;

@@ -30,7 +30,8 @@ uses
   JvComCtrls, frmCustomGoPhastUnit, Buttons, Mask, JvExMask, JvSpin, Grids,
   RbwDataGrid4, JvEdit, JvExExtCtrls, JvNetscapeSplitter, UndoItems,
   ModflowPackageSelectionUnit, FluxObservationUnit, RbwParser, JvCombobox,
-  JvListComb, ArgusDataEntry, Mt3dmsFluxObservationsUnit;
+  JvListComb, ArgusDataEntry, Mt3dmsFluxObservationsUnit, Menus,
+  ScreenObjectUnit;
 
 type
   TFluxColumns = (fcName, fcTime, fcValue, fcStatistic, fcStatFlag, fcComment);
@@ -81,6 +82,14 @@ type
     lblNumMt3dmsObsTimes: TLabel;
     btnDeleteMt3dmsFlux: TButton;
     btnInsertMt3dmsFlux: TButton;
+    pmSelectEditAvailable: TPopupMenu;
+    miSelectAvailable: TMenuItem;
+    miEditAvailable: TMenuItem;
+    miGotoAvailable: TMenuItem;
+    pmSelectEditUsed: TPopupMenu;
+    miSelectUsed: TMenuItem;
+    miEditUsed: TMenuItem;
+    miGoToUsed: TMenuItem;
     procedure IncBtnClick(Sender: TObject);
     procedure IncAllBtnClick(Sender: TObject);
     procedure ExclBtnClick(Sender: TObject);
@@ -141,6 +150,14 @@ type
     procedure btnInsertMt3dmsFluxClick(Sender: TObject);
     procedure rdgConcFluxObsTimesSetEditText(Sender: TObject; ACol,
       ARow: Integer; const Value: string);
+    procedure pmSelectEditAvailablePopup(Sender: TObject);
+    procedure miEditAvailableClick(Sender: TObject);
+    procedure miSelectAvailableClick(Sender: TObject);
+    procedure miGotoAvailableClick(Sender: TObject);
+    procedure miSelectUsedClick(Sender: TObject);
+    procedure miEditUsedClick(Sender: TObject);
+    procedure miGoToUsedClick(Sender: TObject);
+    procedure pmSelectEditUsedPopup(Sender: TObject);
   private
     FChobNode: TTreeNode;
     FChobObservations: TFluxObservationGroups;
@@ -230,6 +247,10 @@ type
     procedure InitializeNewObs(RowIndex, TimeColumn, ValueColumn,
       CommentColumn: Integer; Grid: TRbwDataGrid4;
       ObsTime: TCustomFluxObservationItem);
+    procedure GetSelectedObjects(ListBox: TJvListBox; ScreenObjects: TScreenObjectList);
+    procedure SelectObjects(ListBox: TJvListBox);
+    procedure EditAnObject(ListBox: TJvListBox);
+    procedure GoToAnObject(ListBox: TJvListBox);
   public
     procedure SetButtons;
   end;
@@ -237,9 +258,9 @@ type
 implementation
 
 uses
-  JvBoxProcs, frmGoPhastUnit, ScreenObjectUnit, Math, GIS_Functions,
+  JvBoxProcs, frmGoPhastUnit, Math, GIS_Functions,
   GoPhastTypes, DataSetUnit, frmFormulaUnit, frmErrorsAndWarningsUnit,
-  PhastModelUnit, Mt3dmsChemSpeciesUnit;
+  PhastModelUnit, Mt3dmsChemSpeciesUnit, UndoItemsScreenObjects, frmGoToUnit;
 
 resourcestring
   StrName = 'Name';
@@ -273,6 +294,7 @@ resourcestring
   StrYouMustDefineAtL = 'You must define at least one chemical species in th' +
   'e MT3DMS BTN package before this dialog box can be displayed. Chemical sp' +
   'ecies are defined in the MODFLOW Packages and Programs dialog box.';
+  StrDoYouWantToSave = 'Do you want to save your changes first?';
 
 {$R *.dfm}
 
@@ -293,6 +315,85 @@ begin
   IncAllBtn.Enabled := not SrcEmpty;
   ExclBtn.Enabled := not DstEmpty and (DstList.SelCount > 0);
   ExclAllBtn.Enabled := not DstEmpty;
+end;
+
+procedure TfrmManageFluxObservations.GoToAnObject(ListBox: TJvListBox);
+var
+  ScreenObject: TScreenObject;
+  UndoShowHide: TUndoShowHideScreenObject;
+  ScreenObjects: TScreenObjectList;
+begin
+  ScreenObjects := TScreenObjectList.Create;
+  try
+    GetSelectedObjects(ListBox, ScreenObjects);
+    if ScreenObjects.Count = 1 then
+    begin
+      ScreenObject := ScreenObjects[0];
+      if not ScreenObject.Visible then
+      begin
+        UndoShowHide := TUndoShowHideScreenObject.Create;
+        UndoShowHide.AddScreenObjectToChange(ScreenObject);
+        frmGoPhast.UndoStack.Submit(UndoShowHide);
+      end;
+      GoToObject(ScreenObject);
+    end;
+  finally
+    ScreenObjects.Free;
+  end;
+end;
+
+procedure TfrmManageFluxObservations.EditAnObject(ListBox: TJvListBox);
+var
+  ScreenObject: TScreenObject;
+  ScreenObjects: TScreenObjectList;
+begin
+  ScreenObjects := TScreenObjectList.Create;
+  try
+    GetSelectedObjects(ListBox, ScreenObjects);
+    if ScreenObjects.Count = 1 then
+    begin
+      ScreenObject := ScreenObjects[0];
+      SelectAScreenObject(ScreenObject);
+      if (MessageDlg(StrDoYouWantToSave, mtConfirmation,
+        [mbYes, mbNo], 0) = mrYes) then
+      begin
+        SetData;
+      end;
+      Close;
+      frmGoPhast.EditScreenObjects;
+    end;
+  finally
+    ScreenObjects.Free;
+  end;
+end;
+
+procedure TfrmManageFluxObservations.SelectObjects(ListBox: TJvListBox);
+var
+  ScreenObjects: TScreenObjectList;
+begin
+  ScreenObjects := TScreenObjectList.Create;
+  try
+    GetSelectedObjects(ListBox, ScreenObjects);
+    if ScreenObjects.Count > 0 then
+    begin
+      SelectMultipleScreenObjects(ScreenObjects);
+    end;
+  finally
+    ScreenObjects.Free;
+  end;
+end;
+
+procedure TfrmManageFluxObservations.GetSelectedObjects(ListBox: TJvListBox; ScreenObjects: TScreenObjectList);
+var
+  Index: Integer;
+begin
+  for Index := 0 to ListBox.Items.Count - 1 do
+  begin
+    if ListBox.Selected[Index] then
+    begin
+      ScreenObjects.Add(ListBox.Items.Objects[Index] as TScreenObject);
+    end;
+  end;
 end;
 
 procedure TfrmManageFluxObservations.InitializeNewObs(RowIndex, TimeColumn,
@@ -918,7 +1019,7 @@ begin
     begin
       FPriorErrors.Add(ErrorRoots[ErrorIndex]);
       frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, ErrorRoots[ErrorIndex],
-        ErrorMessages[ErrorIndex]);
+        ErrorMessages[ErrorIndex], ErrorMessages.Objects[ErrorIndex]);
     end;
     if ErrorRoots.Count > 0 then
     begin
@@ -2546,11 +2647,73 @@ begin
   DisplayFactor;
 end;
 
+procedure TfrmManageFluxObservations.miEditAvailableClick(Sender: TObject);
+//var
+//  ListBox: TJvListBox;
+begin
+  inherited;
+  EditAnObject(SrcList);
+
+end;
+
+procedure TfrmManageFluxObservations.miEditUsedClick(Sender: TObject);
+begin
+  inherited;
+  EditAnObject(DstList);
+end;
+
+procedure TfrmManageFluxObservations.miGotoAvailableClick(Sender: TObject);
+//var
+//  ListBox: TJvListBox;
+begin
+  inherited;
+  GoToAnObject(SrcList);
+end;
+
+procedure TfrmManageFluxObservations.miGoToUsedClick(Sender: TObject);
+begin
+  inherited;
+  GoToAnObject(DstList);
+end;
+
+procedure TfrmManageFluxObservations.miSelectAvailableClick(Sender: TObject);
+//var
+//  ListBox: TJvListBox;
+begin
+  inherited;
+  SelectObjects(SrcList);
+
+end;
+
+procedure TfrmManageFluxObservations.miSelectUsedClick(Sender: TObject);
+begin
+  inherited;
+  SelectObjects(DstList);
+
+end;
+
 procedure TfrmManageFluxObservations.OkBtnClick(Sender: TObject);
 begin
   inherited;
   CheckErrors;
   SetData;
+end;
+
+procedure TfrmManageFluxObservations.pmSelectEditAvailablePopup(
+  Sender: TObject);
+begin
+  inherited;
+  miSelectAvailable.Enabled := SrcList.SelCount > 0;
+  miEditAvailable.Enabled := SrcList.SelCount = 1;
+  miGotoAvailable.Enabled := SrcList.SelCount = 1;
+end;
+
+procedure TfrmManageFluxObservations.pmSelectEditUsedPopup(Sender: TObject);
+begin
+  inherited;
+  miSelectUsed.Enabled := DstList.SelCount > 0;
+  miEditUsed.Enabled := DstList.SelCount = 1;
+  miGotoUsed.Enabled := DstList.SelCount = 1;
 end;
 
 procedure TfrmManageFluxObservations.rdeMassFluxMultiValueEditChange(

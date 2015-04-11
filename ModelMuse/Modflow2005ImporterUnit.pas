@@ -2345,6 +2345,9 @@ Type
     property Items[Index: Integer]: TParamInstanceArray read GetItem; default;
   end;
 
+  TStrItemList = TList<TStrItem>;
+  TStrItemLists = TObjectList<TStrItemList>;
+
   TStrImporter = class(TLineImporter)
   private
     ICALC: integer;
@@ -4268,6 +4271,7 @@ begin
   FPackageIdentifiers.AddObject('RVOB:', TRivObsImporter.Create(self, Riv));
   FPackageIdentifiers.AddObject('STOB:', TStrObsImporter.Create(self, Str));
   FPackageIdentifiers.AddObject('LMT6:', nil);
+  FPackageIdentifiers.AddObject('LMT7:', nil);
   FPackageIdentifiers.AddObject('HYD:', THydmodImporter.Create(self,
     SfrImporter, Sub));
   FPackageIdentifiers.AddObject('SWI2:', TSwiImporter.Create(self));
@@ -26065,8 +26069,10 @@ begin
     try
       for LayerIndex := 0 to FGrid.LayerCount - 1 do
       begin
-        MultFunctionList.Add('0');
-        ZoneFunctionList.Add('False');
+//        MultFunctionList.Add('0');
+        MultFunctionList.Add('');
+//        ZoneFunctionList.Add('False');
+        ZoneFunctionList.Add('');
       end;
       for ClusterIndex := 0 to Length(Instance.Clusters) - 1 do
       begin
@@ -26076,17 +26082,10 @@ begin
         begin
           Inc(LayerIndex);
         end;
-        if SameText(Cluster.MultiplierName, StrNone) then
-        begin
-          MultFunctionList[LayerIndex] := '1';
-        end
-        else
-        begin
-          MultFunctionList[LayerIndex] := FixArrayName(Cluster.MultiplierName);
-        end;
         if SameText(Cluster.ZoneName, StrAll) then
         begin
-          ZoneFunctionList[LayerIndex] := 'True';
+          ZoneFunction := 'True';
+//          ZoneFunctionList[LayerIndex] := 'True';
         end
         else
         begin
@@ -26100,7 +26099,84 @@ begin
               ZoneFunction := ZoneFunction + ' or ';
             end;
           end;
+        end;
+        if ZoneFunctionList[LayerIndex] = '' then
+        begin
           ZoneFunctionList[LayerIndex] := ZoneFunction;
+        end
+        else
+        begin
+          ZoneFunctionList[LayerIndex] := ZoneFunctionList[LayerIndex] + ' or ' + ZoneFunction;
+        end;
+        if MultFunctionList[LayerIndex] = '' then
+        begin
+          if SameText(Cluster.MultiplierName, StrNone) then
+          begin
+            if ZoneFunction = 'True' then
+            begin
+              MultFunctionList[LayerIndex] := '1';
+            end
+            else
+            begin
+              MultFunctionList[LayerIndex] := 'If(' + ZoneFunction + ',1 , 0)' ;
+            end;
+          end
+          else
+          begin
+            if ZoneFunction = 'True' then
+            begin
+              MultFunctionList[LayerIndex] := FixArrayName(Cluster.MultiplierName);
+            end
+            else
+            begin
+              MultFunctionList[LayerIndex] := 'If(' + ZoneFunction + ', '
+                + FixArrayName(Cluster.MultiplierName) + ', 0)' ;
+            end;
+          end;
+        end
+        else
+        begin
+          if SameText(Cluster.MultiplierName, StrNone)  then
+          begin
+            if ZoneFunction = 'True' then
+            begin
+              MultFunctionList[LayerIndex] := MultFunctionList[LayerIndex]
+                + ' + 1'
+            end
+            else
+            begin
+              MultFunctionList[LayerIndex] := MultFunctionList[LayerIndex]
+                + ' + ' + 'If(' + ZoneFunction + ',1 , 0)' ;
+            end;
+          end
+          else
+          begin
+            if ZoneFunction = 'True' then
+            begin
+              MultFunctionList[LayerIndex] := MultFunctionList[LayerIndex]
+                + ' + ' + FixArrayName(Cluster.MultiplierName);
+            end
+            else
+            begin
+              MultFunctionList[LayerIndex] := MultFunctionList[LayerIndex]
+                + ' + ' + 'If(' + ZoneFunction + ', '
+                + FixArrayName(Cluster.MultiplierName) + ', 0)' ;
+            end;
+          end;
+        end;
+      end;
+      for LayerIndex := 0 to ZoneFunctionList.Count - 1 do
+      begin
+        if ZoneFunctionList[LayerIndex] = '' then
+        begin
+          ZoneFunctionList[LayerIndex] := 'False'
+        end;
+      end;
+      for LayerIndex := 0 to MultFunctionList.Count - 1 do
+      begin
+        if MultFunctionList[LayerIndex] = '' then
+        begin
+          MultFunctionList[LayerIndex] := '0'
         end;
       end;
       if MultDataArray <> nil then
@@ -26949,15 +27025,20 @@ var
     STime: Double;
     SIndex: Integer;
     StressPeriod: integer;
+    StrItems: TStrItemList;
+    StrItemLists: TStrItemLists;
   begin
     Grid := frmGoPhast.PhastModel.ModflowGrid;
     UndoCreateScreenObject := nil;
     ChannelReachIndex := -1;
     ScreenObjects := TList<TScreenObject>.Create;
+    StrItemLists := TStrItemLists.Create;
     // loop over segments in all stress periods
     try
       for ScreenObjectIndex := 0 to Segments.Count - 1 do
       begin
+        StrItems := TStrItemList.Create;
+        StrItemLists.Add(StrItems);
         SegmentList := Segments[ScreenObjectIndex];
         ReachList := SegmentList[0];
         SegmentNumber := ReachList[0].SegmentNumber;
@@ -27173,6 +27254,7 @@ var
             end;
             StrItem := ParamItem.Param.Add as TStrItem;
           end;
+          StrItems.Add(StrItem);
 
 
           StrItem.StartTime := ReachList.StartTime;
@@ -27267,11 +27349,14 @@ var
         // loop over stress periods.
       for ScreenObjectIndex := 0 to Segments.Count - 1 do
       begin
+        StrItems := StrItemLists[ScreenObjectIndex];
+
         ScreenObject := ScreenObjects[ScreenObjectIndex];
         StrBoundary := ScreenObject.ModflowStrBoundary;
         SegmentList := Segments[ScreenObjectIndex];
         for StressPeriodIndex := 0 to SegmentList.Count - 1 do
         begin
+          StrItem := StrItems[StressPeriodIndex];
           ReachList := SegmentList[StressPeriodIndex];
           if NTRIB > 0 then
           begin
@@ -27296,8 +27381,10 @@ var
                 else
                 begin
   //                ErrorFound := True;
-                  frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, StrInvalidStreamTribu,
-                    Format(Str0d1d2d, [ScreenObjectIndex+1, TributaryNumber, StressPeriodIndex+1]));
+                  frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
+                    StrInvalidStreamTribu,
+                    Format(Str0d1d2d, [ScreenObjectIndex+1, TributaryNumber,
+                    StressPeriodIndex+1]));
                   TributaryObject := nil;
                 end;
                 if TributaryObject <> nil then
@@ -27341,6 +27428,7 @@ var
       end
     finally
       ScreenObjects.Free;
+      StrItemLists.Free;
     end;
   end;
   function SetStartAndEndTime: boolean;

@@ -157,6 +157,7 @@ type
     property HeadAnnotation: string read GetHeadAnnotation;
   end;
 
+  // @name ows the @link(THob_Cell)s it contains.
   TObsCellList = class(TObject)
   private
     FList: TList;
@@ -165,9 +166,10 @@ type
   public
     Constructor Create;
     Destructor Destroy; override;
-    procedure Add(Cell: THob_Cell);
+    function Add(Cell: THob_Cell): integer;
     property Count: integer read GetCount;
     property Items[Index: integer]: THob_Cell read GetItem; default;
+    procedure Delete(Index: Integer);
   end;
 
   TMultiHeadItem = class(TOrderedItem)
@@ -292,6 +294,7 @@ type
 resourcestring
   StrHeadObservationsError = 'Head observations can only be defined using ' +
     'objects with a single vertex.  The following objects need to be fixed.';
+  StrOneOrMoreHeadObs = 'One or more head observation are on inactive cells.';
 
 const
   StrHobout = '.hob_out';
@@ -299,7 +302,8 @@ const
 implementation
 
 uses RbwParser, ScreenObjectUnit, PhastModelUnit, ModflowGridUnit, FastGEO,
-  SubscriptionUnit, RealListUnit, frmErrorsAndWarningsUnit;
+  SubscriptionUnit, RealListUnit, frmErrorsAndWarningsUnit,
+  Generics.Collections;
 
 resourcestring
   ErrorRoot = 'Error: Duplicate head observation times';
@@ -656,7 +660,7 @@ begin
         FObservationRowOffset := -1000;
         FObservationColumnOffset := -1000;
         frmErrorsAndWarnings.AddError(FObservationHeads.Model,
-          StrHeadObservationsError, LocalScreenObject.Name)
+          StrHeadObservationsError, LocalScreenObject.Name, LocalScreenObject)
       end
       else
       begin
@@ -760,6 +764,9 @@ var
   EarlyTimes: string;
   LateTimes: string;
   ActiveDataSet: TDataArray;
+  InactiveList: TList<Integer>;
+  ListPosition: integer;
+  InactiveIndex: Integer;
 begin
   if UpToDate then
     Exit;
@@ -793,59 +800,83 @@ begin
     begin
       CellList := TObsCellList.Create;
       FCellList.Add(CellList);
-      Time := ObservationValues.HobItems[Index].Time;
-      if Times.IndexOf(Time) >= 0 then
-      begin
-        DuplicateTimes := DuplicateTimes + ' ' + FloatToStr(Time);
-        Continue;
-      end;
-
-      if Time < EarliestAllowedTime then
-      begin
-        EarlyTimes := EarlyTimes + ' ' + FloatToStr(Time);
-        Continue;
-      end;
-
-      if Time > LatestAllowedTime then
-      begin
-        LateTimes := LateTimes + ' ' + FloatToStr(Time);
-        Continue;
-      end;
-
-      Times.Add(Time);
-      Value := ObservationValues.HobItems[Index].Head;
-      DataArray := TRealSparseDataSet.Create(LocalModel);
-      Add(Time, DataArray);
-      DataArray.EvaluatedAt := eaBlocks;
-      DataArray.Orientation := dso3D;
-      DataArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-        Grid.ColumnCount);
-
-      ActiveDataSet := LocalModel.DataArrayManager.GetDataSetByName(rsActive);
-      ActiveDataSet.Initialize;
-
-      LocalScreenObject.AssignNumericValueToDataSet(Grid, DataArray, Value,
-        Model);
-      for LayerIndex := 0 to DataArray.LayerCount - 1 do
-      begin
-        for RowIndex := 0 to DataArray.RowCount - 1 do
+      InactiveList := TList<Integer>.Create;
+      try
+        Time := ObservationValues.HobItems[Index].Time;
+        if Times.IndexOf(Time) >= 0 then
         begin
-          for ColIndex := 0 to DataArray.ColumnCount - 1 do
+          DuplicateTimes := DuplicateTimes + ' ' + FloatToStr(Time);
+          Continue;
+        end;
+
+        if Time < EarliestAllowedTime then
+        begin
+          EarlyTimes := EarlyTimes + ' ' + FloatToStr(Time);
+          Continue;
+        end;
+
+        if Time > LatestAllowedTime then
+        begin
+          LateTimes := LateTimes + ' ' + FloatToStr(Time);
+          Continue;
+        end;
+
+        Times.Add(Time);
+        Value := ObservationValues.HobItems[Index].Head;
+        DataArray := TRealSparseDataSet.Create(LocalModel);
+        Add(Time, DataArray);
+        DataArray.EvaluatedAt := eaBlocks;
+        DataArray.Orientation := dso3D;
+        DataArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+          Grid.ColumnCount);
+
+        ActiveDataSet := LocalModel.DataArrayManager.GetDataSetByName(rsActive);
+        ActiveDataSet.Initialize;
+
+        LocalScreenObject.AssignNumericValueToDataSet(Grid, DataArray, Value,
+          Model);
+        for LayerIndex := 0 to DataArray.LayerCount - 1 do
+        begin
+          if not LocalModel.IsLayerSimulated(LayerIndex) then
           begin
-            if DataArray.IsValue[LayerIndex, RowIndex,ColIndex]
-              and ActiveDataSet.BooleanData[LayerIndex, RowIndex,ColIndex] then
+            Continue;
+          end;
+          for RowIndex := 0 to DataArray.RowCount - 1 do
+          begin
+            for ColIndex := 0 to DataArray.ColumnCount - 1 do
             begin
-              Cell := THob_Cell.Create;
-              CellList.Add(Cell);
-              Cell.Values.Cell.Layer := LayerIndex;
-              Cell.Values.Cell.Row := RowIndex;
-              Cell.Values.Cell.Column := ColIndex;
-              Cell.Values.Head := DataArray.RealData[LayerIndex, RowIndex,ColIndex];
-              Cell.Values.HeadAnnotation := DataArray.Annotation[LayerIndex, RowIndex,ColIndex];
-              Cell.Values.Time := Time;
+              if DataArray.IsValue[LayerIndex, RowIndex,ColIndex] then
+              begin
+                Cell := THob_Cell.Create;
+                ListPosition := CellList.Add(Cell);
+                Cell.Values.Cell.Layer := LayerIndex;
+                Cell.Values.Cell.Row := RowIndex;
+                Cell.Values.Cell.Column := ColIndex;
+                Cell.Values.Head := DataArray.RealData[LayerIndex, RowIndex,ColIndex];
+                Cell.Values.HeadAnnotation := DataArray.Annotation[LayerIndex, RowIndex,ColIndex];
+                Cell.Values.Time := Time;
+                if not ActiveDataSet.BooleanData[LayerIndex, RowIndex,ColIndex] then
+                begin
+                  InactiveList.Add(ListPosition);
+                end;
+              end;
             end;
           end;
         end;
+        if (InactiveList.Count > 0) and (InactiveList.Count = CellList.Count) then
+        begin
+          frmErrorsAndWarnings.AddWarning(Model,
+            StrOneOrMoreHeadObs, LocalScreenObject.Name, LocalScreenObject);
+        end
+        else
+        begin
+          for InactiveIndex := InactiveList.Count - 1 downto 0 do
+          begin
+            CellList.Delete(InactiveIndex);
+          end;
+        end;
+      finally
+        InactiveList.Free;
       end;
     end;
     if DuplicateTimes <> '' then
@@ -854,7 +885,8 @@ begin
         [LocalScreenObject.Name, DuplicateTimes]);
 //      DuplicateTimes := 'Error; Object = ' + LocalScreenObject.Name +
 //        ' Duplicate Times = ' +  DuplicateTimes;
-      frmErrorsAndWarnings.AddError(Model, ErrorRoot, DuplicateTimes);
+      frmErrorsAndWarnings.AddError(Model, ErrorRoot, DuplicateTimes,
+        LocalScreenObject);
     end;
     if EarlyTimes <> '' then
     begin
@@ -862,7 +894,8 @@ begin
         [LocalScreenObject.Name, EarlyTimes]);
 //      EarlyTimes := 'Error; Object = ' + LocalScreenObject.Name +
 //        ' Early Times = ' +  EarlyTimes;
-      frmErrorsAndWarnings.AddWarning(Model, EarlyTimeWarning, EarlyTimes);
+      frmErrorsAndWarnings.AddWarning(Model, EarlyTimeWarning, EarlyTimes,
+        LocalScreenObject);
     end;
     if LateTimes <> '' then
     begin
@@ -870,7 +903,8 @@ begin
         [LocalScreenObject.Name, LateTimes]);
 //      LateTimes := 'Error; Object = ' + LocalScreenObject.Name +
 //        ' Late Times = ' +  LateTimes;
-      frmErrorsAndWarnings.AddWarning(Model, LateTimeWarning, LateTimes);
+      frmErrorsAndWarnings.AddWarning(Model, LateTimeWarning, LateTimes,
+        LocalScreenObject);
     end;
   finally
     LocalModel.UpToDate := StoredUpToDate;
@@ -954,15 +988,20 @@ end;
 
 { TObsCellList }
 
-procedure TObsCellList.Add(Cell: THob_Cell);
+function TObsCellList.Add(Cell: THob_Cell): integer;
 begin
-  FList.Add(Cell);
+  result := FList.Add(Cell);
 end;
 
 constructor TObsCellList.Create;
 begin
   inherited;
   FList := TObjectList.Create;
+end;
+
+procedure TObsCellList.Delete(Index: Integer);
+begin
+  FList.Delete(Index);
 end;
 
 destructor TObsCellList.Destroy;

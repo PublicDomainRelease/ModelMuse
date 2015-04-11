@@ -66,7 +66,13 @@ var
 begin
   frmGoPhast.ReadIniFile;
   Locations := frmGoPhast.PhastModel.ProgramLocations;
-  fedPhast.FileName := Locations.PhastLocation;
+  try
+    fedPhast.FileName := Locations.PhastLocation;
+  except on EComboEditError do
+    begin
+      // do nothing.
+    end;
+ end;
 end;
 
 procedure TfrmPhastLocation.HighlightControls;

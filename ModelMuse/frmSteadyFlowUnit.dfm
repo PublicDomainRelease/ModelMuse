@@ -11,7 +11,7 @@ inherited frmSteadyFlow: TfrmSteadyFlow
   Caption = 'PHAST Steady Flow'
   ExplicitWidth = 628
   ExplicitHeight = 296
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object lblHeadTolerance: TLabel
     Left = 296
@@ -112,7 +112,6 @@ inherited frmSteadyFlow: TfrmSteadyFlow
     Text = '1'
     DataType = dtReal
     Max = 1.000000000000000000
-    Min = 1.000000000000000000
     CheckMin = True
     ChangeDisabledColor = True
   end
@@ -128,7 +127,6 @@ inherited frmSteadyFlow: TfrmSteadyFlow
     Text = '1000'
     DataType = dtReal
     Max = 1.000000000000000000
-    Min = 1.000000000000000000
     CheckMin = True
     ChangeDisabledColor = True
   end
@@ -154,7 +152,6 @@ inherited frmSteadyFlow: TfrmSteadyFlow
     Height = 33
     Caption = 'OK'
     Default = True
-    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       04000000000068010000120B0000120B00001000000010000000000000000000
@@ -173,7 +170,6 @@ inherited frmSteadyFlow: TfrmSteadyFlow
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 6
     OnClick = btnOKClick
   end
@@ -182,10 +178,8 @@ inherited frmSteadyFlow: TfrmSteadyFlow
     Top = 212
     Width = 91
     Height = 33
-    DoubleBuffered = True
     Kind = bkCancel
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 7
   end
   object cbDefaultMinTimeStep: TCheckBox
@@ -230,10 +224,8 @@ inherited frmSteadyFlow: TfrmSteadyFlow
     Width = 89
     Height = 33
     HelpType = htKeyword
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 11
     OnClick = btnHelpClick
   end

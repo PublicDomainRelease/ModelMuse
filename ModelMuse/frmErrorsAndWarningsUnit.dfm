@@ -4,8 +4,8 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
   Caption = 'Errors and Warnings'
   ClientWidth = 472
   OnResize = FormResize
-  ExplicitWidth = 490
-  PixelsPerInch = 120
+  ExplicitWidth = 488
+  PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -80,11 +80,14 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
     Header.Font.Name = 'Tahoma'
     Header.Font.Style = []
     Header.Options = [hoColumnResize, hoDrag]
+    PopupMenu = pmSelectEdit
     TabOrder = 0
     TreeOptions.SelectionOptions = [toFullRowSelect]
+    OnContextPopup = vstWarningsAndErrorsContextPopup
     OnGetText = vstWarningsAndErrorsGetText
     OnInitNode = vstWarningsAndErrorsInitNode
     OnMeasureItem = vstWarningsAndErrorsMeasureItem
+    ExplicitTop = -2
     Columns = <
       item
         Position = 0
@@ -104,5 +107,21 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
     Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
     Left = 176
     Top = 88
+  end
+  object pmSelectEdit: TPopupMenu
+    Left = 256
+    Top = 80
+    object miSelect: TMenuItem
+      Caption = 'Select'
+      OnClick = miSelectClick
+    end
+    object miEdit: TMenuItem
+      Caption = 'Edit...'
+      OnClick = miEditClick
+    end
+    object miGoto: TMenuItem
+      Caption = 'Go to'
+      OnClick = miGotoClick
+    end
   end
 end

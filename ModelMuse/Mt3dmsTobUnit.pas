@@ -511,7 +511,8 @@ begin
         FObservationRowOffset := -1000;
         FObservationColumnOffset := -1000;
         frmErrorsAndWarnings.AddError(FObservationConcentrations.Model,
-          StrConcentratonObservationsError, LocalScreenObject.Name)
+          StrConcentratonObservationsError, LocalScreenObject.Name,
+          LocalScreenObject)
       end
       else
       begin
@@ -985,24 +986,27 @@ begin
     begin
       DuplicateTimes := Format(StrErrorObjectDuplicateTimes,
         [LocalScreenObject.Name, DuplicateTimes]);
-      frmErrorsAndWarnings.AddError(Model, ErrorRoot, DuplicateTimes);
+      frmErrorsAndWarnings.AddError(Model, ErrorRoot, DuplicateTimes,
+        LocalScreenObject);
     end;
     if EarlyTimes <> '' then
     begin
       EarlyTimes := Format(StrErrorObjectEarlyTimes,
         [LocalScreenObject.Name, EarlyTimes]);
-      frmErrorsAndWarnings.AddWarning(Model, EarlyTimeWarning, EarlyTimes);
+      frmErrorsAndWarnings.AddWarning(Model, EarlyTimeWarning, EarlyTimes,
+        LocalScreenObject);
     end;
     if LateTimes <> '' then
     begin
       LateTimes := Format(StrErrorObjectLateTimes,
         [LocalScreenObject.Name, LateTimes]);
-      frmErrorsAndWarnings.AddWarning(Model, LateTimeWarning, LateTimes);
+      frmErrorsAndWarnings.AddWarning(Model, LateTimeWarning, LateTimes,
+        LocalScreenObject);
     end;
     if ComponentIndexError then
     begin
       frmErrorsAndWarnings.AddError(Model, StrInTheFollowingObj,
-        LocalScreenObject.Name);
+        LocalScreenObject.Name, LocalScreenObject);
     end;
   finally
     LocalModel.UpToDate := StoredUpToDate;

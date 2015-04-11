@@ -215,7 +215,7 @@ begin
             if AssignmentMethod <> HydmodData.AssignmentMethod then
             begin
               frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
-                StrTheInterpolationAs, ScreenObject.Name);
+                StrTheInterpolationAs, ScreenObject.Name, ScreenObject);
             end;
           end;
           case AssignmentMethod of

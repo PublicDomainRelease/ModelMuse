@@ -540,7 +540,7 @@ begin
     if ComponentError then
     begin
       frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
-        StrInTheFollowingObj, Item.ScreenObject.Name);
+        StrInTheFollowingObj, Item.ScreenObject.Name, Item.ScreenObject);
       frmErrorsAndWarnings.Show;
     end;
   end;
