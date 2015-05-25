@@ -196,6 +196,10 @@ procedure TGuiSettings.SetFrontHeight(Value : integer);
 begin
   if frmGoPhast.pnlBottom <> nil then
   begin
+    if Value < 1 then
+    begin
+      Value := 1;
+    end;
     frmGoPhast.pnlBottom.Height := Value;
     if (frmGoPhast.sbMain <> nil) and (frmGoPhast.splitHoriz <> nil) then
     begin
@@ -716,6 +720,10 @@ begin
   SideFrameView := GetSideView;
   if SideFrameView <> nil then
   begin
+    if Value < 1 then
+    begin
+      Value := 1;
+    end;
     SideFrameView.Width := Value;
     if (frmGoPhast.frame3DView <> nil)
       and (frmGoPhast.splitVertBottom <> nil)

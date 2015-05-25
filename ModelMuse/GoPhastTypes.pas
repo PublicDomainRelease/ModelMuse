@@ -197,6 +197,7 @@ const
     msModflowFmp, msModflowCfp];
   ModelsWithGrid  = [msPhast, msModflow, msModflowLGR, msModflowLGR2,
     msModflowNWT, msModflowFmp, msModflowCfp];
+  HighGradient = 0.01;
 
 type
 

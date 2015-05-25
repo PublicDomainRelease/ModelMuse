@@ -115,7 +115,7 @@ object frameView: TframeView
     Exaggeration = 1.000000000000000000
     HorizontalDirection = hdRight
     Image32.Left = 0
-    Image32.Top = 167
+    Image32.Top = 0
     Image32.Width = 467
     Image32.Height = 208
     Image32.Anchors = [akLeft, akBottom]
@@ -131,7 +131,6 @@ object frameView: TframeView
     Image32.OnMouseDown = ZoomBoxImage32MouseDown
     Image32.OnMouseMove = ZoomBoxImage32MouseMove
     Image32.OnMouseUp = ZoomBoxImage32MouseUp
-    Image32.ExplicitTop = 0
     ImmediateResize = True
     Magnification = 1.000000000000000000
     VerticalDirection = vdUp
@@ -148,21 +147,25 @@ object frameView: TframeView
     object ToFront: TMenuItem
       Caption = 'To Front'
       HelpContext = 1530
+      Hint = 'Move the selected object in front of all other visible objects'
       OnClick = ToFrontClick
     end
     object ToBack: TMenuItem
       Caption = 'To Back'
       HelpContext = 1530
+      Hint = 'Move the selected object behind all other visible objects'
       OnClick = ToBackClick
     end
     object ForwardOne: TMenuItem
       Caption = 'Forward One'
       HelpContext = 1530
+      Hint = 'Move the selected object forward one'
       OnClick = ForwardOneClick
     end
     object BackOne: TMenuItem
       Caption = 'Back One'
       HelpContext = 1530
+      Hint = 'Move the selected object back one'
       OnClick = BackOneClick
     end
     object miHide: TMenuItem
@@ -177,24 +180,31 @@ object frameView: TframeView
     end
     object ShowAll1: TMenuItem
       Caption = 'Show All'
+      Hint = 'Show all objects'
       OnClick = ShowAll1Click
     end
     object miSelectAll: TMenuItem
       Caption = 'Select All'
+      Hint = 'Select all visible objects'
       OnClick = miSelectAllClick
     end
     object miMergeObjects: TMenuItem
       Caption = '&Merge Objects'
       HelpContext = 1890
+      Hint = 'Merge selected objects into a single object'
       OnClick = miMergeObjectsClick
     end
     object miEditSelectedObjects: TMenuItem
       Caption = 'Edit Selected Objects'
       HelpContext = 1890
+      Hint = 'Edit the selected objects in the Object Properties dialog box'
     end
     object miInvertSelectedVertices: TMenuItem
       Caption = 'Invert Selected Vertices'
       HelpContext = 1520
+      Hint = 
+        'Toggle the verticies in the selected object between selected and' +
+        ' unselected'
       OnClick = miInvertSelectedVerticesClick
     end
     object miLockSelectedObjects: TMenuItem

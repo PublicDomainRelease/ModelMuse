@@ -182,7 +182,8 @@ type
     FPriorSolving: Boolean;
     FPriorLine: string;
     FProblem: Boolean;
-    procedure GetListFile(AFileName: string; ListFiles: TStringList);
+    procedure GetListFile(AFileName: string; ListFiles: TStringList;
+      var ListSuppressed: boolean);
     procedure FindStart(RichEdit: TJvRichEdit; PositionInLine: integer;
       out SelStart: integer);
     procedure CreateFileReaders;
@@ -207,7 +208,7 @@ uses {ShellApi,} forceforeground, JvVersionInfo, contnrs, System.Math;
 resourcestring
   StrPERCENTDISCREPANCY = 'PERCENT DISCREPANCY =';
   StrMFOuttxt = 'MF_Out.txt';
-  StrNormalTermination = 'Normal termination of simulation';
+  StrNormalTermination = 'normal termination of simulation';
   StrFailureToConverge = 'Failure to converge';
   StrStopMonitoringMode = 'Stop monitoring model';
   StrStartModel = 'Restart model';
@@ -361,6 +362,7 @@ var
 //  BatFile: TStringList;
 //  ProcessExitCode: Cardinal;
   ListHandler: TListFileHandler;
+  ListSuppressed: Boolean;
 //  Dummy: Boolean;
   {$ENDIF}
 begin
@@ -450,8 +452,9 @@ begin
     {$ENDIF}
     FListFilesNames.Clear;
     FListFileHandlers.Clear;
-    GetListFile(jvfeNameFile.FileName, FListFilesNames);
-    if FListFilesNames.Count = 0 then
+    ListSuppressed := False;
+    GetListFile(jvfeNameFile.FileName, FListFilesNames, ListSuppressed);
+    if (FListFilesNames.Count = 0) and not ListSuppressed then
     begin
       Beep;
       MessageDlg(StrNoListFileInName, mtError, [mbOK], 0);
@@ -656,7 +659,8 @@ begin
   NormalTermination := False;
   for Index := 0 to reMonitor.Lines.Count - 1 do
   begin
-    if Pos(StrNormalTermination, reMonitor.Lines[Index]) > 0 then
+    if Pos(StrNormalTermination,
+      LowerCase(reMonitor.Lines[Index])) > 0 then
     begin
       NormalTermination := True;
       break;
@@ -708,7 +712,8 @@ begin
   SelStart := SelStart + PositionInLine;
 end;
 
-procedure TfrmMonitor.GetListFile(AFileName: string; ListFiles: TStringList);
+procedure TfrmMonitor.GetListFile(AFileName: string; ListFiles: TStringList;
+  var ListSuppressed: boolean);
 var
   ALine: string;
   LineList: TStringList;
@@ -719,7 +724,9 @@ var
   GridCount: Integer;
   GridIndex: Integer;
   GridLineIndex: Integer;
-  ListFile: string; 
+  ListFile: string;
+  OutputSuppression: integer;
+  UnitNumber: Integer;
 begin
   ListFile := '';
   NameFile := TStringList.Create;
@@ -748,7 +755,7 @@ begin
             NameFileLine := NameFile[Index+2];
             Assert(Length(NameFileLine) > 0);
             LineList.DelimitedText := Trim(NameFileLine);
-            GetListFile(LineList[0], ListFiles);
+            GetListFile(LineList[0], ListFiles, ListSuppressed);
 
             for GridIndex := 1 to GridCount - 1 do
             begin
@@ -757,7 +764,7 @@ begin
               NameFileLine := NameFile[GridLineIndex];
               Assert(Length(NameFileLine) > 0);
               LineList.DelimitedText := Trim(NameFileLine);
-              GetListFile(LineList[0], ListFiles);
+              GetListFile(LineList[0], ListFiles, ListSuppressed);
             end;
             Exit;
           end;
@@ -780,6 +787,16 @@ begin
             Continue;
           end;
           ListFile := LineList[2];
+          UnitNumber := StrToInt(LineList[1]);
+          if UnitNumber < 0 then
+          begin
+            OutputSuppression := StrToInt(LineList[3]);
+            if OutputSuppression = 1 then
+            begin
+              ListSuppressed := True;
+              Continue;
+            end;
+          end;
           ListFiles.Add(ListFile);
           break;
         finally
@@ -934,7 +951,7 @@ begin
   begin
     Exit;
   end;
-  Position := Pos(StrNormalTermination, ALine);
+  Position := Pos(StrNormalTermination, LowerCase(ALine));
   if Position > 0 then
   begin
     FindStart(reMonitor, Position, SelStart);

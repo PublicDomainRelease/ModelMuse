@@ -1879,7 +1879,7 @@ uses
   rwXMLConv, WritePhastUnit, frmChemistryOptionsUnit,
   frmImportDistributedDataUnit, UndoItems, frmFreeSurfaceUnit,
   frmImportShapefileUnit, frmImportDXFUnit, CompressedImageUnit,
-  frmImportBitmapUnit, frmSelectImageUnit, frmStartUpUnit, OpenGL12x,
+  frmImportBitmapUnit, frmSelectImageUnit, frmStartUpUnit, //OpenGL12x,
   frmSearchUnit, frmSelectedObjectsUnit, PhastDataSets, frmShowHideObjectsUnit,
   frmColorsUnit, ModelMuseUtilities, frmProgressUnit, frmShowHideBitmapsUnit,
   frmSelectObjectsUnit, frmImportPointsUnits, GuiSettingsUnit, frmLayersUnit,
@@ -2035,7 +2035,8 @@ resourcestring
   ' export the SUTRA input files.';
   StrTheBandwidthHasCh = 'The bandwidth has changed from %0:d to %1:d.';
   StrNowMightBeAGood = 'Now might be a good time to activate the Upstream We' +
-  'ighting (UPW) Flow and the NWT Solver packages in MODFLOW-NWT.';
+  'ighting (UPW) Flow and the NWT Solver packages in MODFLOW-NWT. Change them '
+  + 'in the "Model|MODFLOW Packages and Programs" dialog box.';
   StrAnErrorOccuredWhe = 'An error occured when trying to convert the model ' +
   'data from a binary format to a text format. Try saving in a different for' +
   'mat such as a ModelMuse binary file (.gpb).';
@@ -2050,6 +2051,12 @@ resourcestring
   StrDoYouWantToSaveModelFileName = 'Do you want to save %s now?';
   StrYouMustDefineAtL = 'You must define at least one crop before you can ed' +
   'it farms.';
+  StrReadingTheFileFai = 'Reading the file failed with the error message: "%s"' +
+  '. Please check that you are using the most recent version of ModelMuse to' +
+  ' open this file.';
+  StrReadingTheFileFai2 = 'Reading the file failed with the error message: "' +
+  '%0:s". The file may be corrupt. Check for a file named %1:s. It is a prev' +
+  'ious version of the file with the extension changed to ".bak".';
 
 
 {$R *.dfm}
@@ -3357,6 +3364,7 @@ end;
 
 procedure TfrmGoPhast.FormDestroy(Sender: TObject);
 begin
+  frame3DView.glWidModelView.Visible := False;
   FreeAndNil(frmGridValue);
   FreeAndNil(frmDisplayData);
 //  OutputDebugString('SAMPLING ON');
@@ -9123,7 +9131,18 @@ begin
             case FileFormat of
               ffAscii:
                 begin
+                try
                   ObjectTextToBinary(FFileStream, TempStream);
+                except
+                  on E: EParserError do
+                  begin
+                    Beep;
+                    result := False;
+                    MessageDlg(Format(StrReadingTheFileFai2, [E.Message,
+                      ChangeFileExt(FileName, 'bak')]), mtError, [mbOK], 0);
+                    Exit;
+                  end;
+                end;
                 end;
               ffBinary:
                 begin
@@ -9150,21 +9169,33 @@ begin
 
             PhastModel.PhastGrid.Initialize;
             PhastModel.ModflowGrid.Initialize;
-            if FileFormat = ffBinary then
-            begin
-              FFileStream.ReadComponent(PhastModel);
-            end
-            else if FileFormat = ffZLib then
-            begin
-              FStartTime := Now;
-              DecompressionStream.ReadComponent(PhastModel);
-            end
-            else
-            begin
-              TempStream.Position := 0;
-              TempStream.ReadComponent(PhastModel);
+            try
+              if FileFormat = ffBinary then
+              begin
+                FFileStream.ReadComponent(PhastModel);
+                result := True;
+              end
+              else if FileFormat = ffZLib then
+              begin
+                FStartTime := Now;
+                DecompressionStream.ReadComponent(PhastModel);
+                result := True;
+              end
+              else
+              begin
+                TempStream.Position := 0;
+                TempStream.ReadComponent(PhastModel);
+                result := True;
+              end;
+            except
+              on E: EReadError do
+              begin
+                Beep;
+                result := False;
+                MessageDlg(Format(StrReadingTheFileFai, [E.Message]),
+                  mtError, [mbOK], 0);
+              end;
             end;
-            result := True;
           finally
             TempStream.Free;
             DecompressionStream.Free;
@@ -10519,13 +10550,13 @@ begin
       case PhastModel.ObservationPurpose of
         ofObserved:
           begin
-            NameFile := ExtractRelativePath(PhastModel.ModelFileName,
+            NameFile := ExtractRelativePath(sdModelMate.FileName,
               ObservationFileName[sdModflowInput]);
             PhastModel.ModelMateProject.ModflowNameFile := NameFile
           end;
         ofPredicted:
           begin
-            NameFile := ExtractRelativePath(PhastModel.ModelFileName,
+            NameFile := ExtractRelativePath(sdModelMate.FileName,
               PredictionFileName[sdModflowInput]);
             PhastModel.ModelMateProject.ModflowNameFilePred := NameFile
           end;

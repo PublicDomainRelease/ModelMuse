@@ -7688,26 +7688,39 @@ begin
   DeleteFile(OptionFileName);
   DeleteFile(MeshFileName);
 
+//  RenumberNodesAndElements;
+//  Exit;
+
   Mesh := frmGoPhast.PhastModel.Mesh;
   case RenumberingAlgorithm of
     raNone: ;
+//      begin
+//        if Mesh.MeshType = mt3D then
+//        begin
+//          Mesh.SimpleRenumber;
+//        end;
+//      end;
     CuthillMcKee:
       begin
         CuthillMcKeeRenumbering.RenumberMesh(Mesh.Mesh2D);
         Mesh.Mesh2D.Nodes.SortByNodeNumber;
+        Mesh.Mesh2D.Elements.SortByElementNumber;
         if Mesh.MeshType = mt3D then
         begin
           Mesh.SimpleRenumber;
         end;
+//        frmGoPhast.PhastModel.DataArrayManager.InvalidateAllDataSets;
       end;
     raSloanRandolph:
       begin
         MeshRenumbering.RenumberMesh(Mesh.Mesh2D);
         Mesh.Mesh2D.Nodes.SortByNodeNumber;
+        Mesh.Mesh2D.Elements.SortByElementNumber;
         if Mesh.MeshType = mt3D then
         begin
           Mesh.SimpleRenumber;
         end;
+//        frmGoPhast.PhastModel.DataArrayManager.InvalidateAllDataSets;
       end
     else Assert(False);
   end;
@@ -10126,6 +10139,7 @@ procedure TQuadMeshCreator.RenumberNodesAndElements;
 var
   NodeIndex: Integer;
   BoundaryIndex: Integer;
+  ElementIndex: Integer;
 begin
   for BoundaryIndex := 0 to FBoundaries.Count - 1 do
   begin
@@ -10140,8 +10154,17 @@ begin
   end;
   FNodes.OwnsObjects := False;
 
+  for ElementIndex := 0 to FElementList.Count - 1 do
+  begin
+    FElementList[ElementIndex].ElementNumber := ElementIndex;
+  end;
+  for NodeIndex := 0 to FNodeList.Count - 1 do
+  begin
+    FNodeList[NodeIndex].NodeNumber := NodeIndex;
+  end;
+
   case RenumberingAlgorithm of
-    raNone: ; // do nothing.
+    raNone: ;
     CuthillMcKee: CuthillMcKeeRenumbering.RenumberMesh(self);
     raSloanRandolph: MeshRenumbering.RenumberMesh(self);
     else Assert(False);
@@ -10159,6 +10182,8 @@ begin
     begin
       result := L.NodeNumber - R.NodeNumber;
     end));
+
+//  frmGoPhast.PhastModel.DataArrayManager.InvalidateAllDataSets;
 
 end;
 

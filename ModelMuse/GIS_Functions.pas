@@ -2478,6 +2478,7 @@ begin
       msModflowFmp, msModflowCfp:
       begin
         LocalGrid := TCustomModel(GlobalCurrentModel).ModflowGrid;
+        LocalGrid.UpdateCellElevations;
         if (Lay < 0) or (Lay > LocalGrid.LayerCount)
          or (Row < 0) or (Row > LocalGrid.RowCount-1)
          or (Col < 0) or (Col > LocalGrid.ColumnCount-1) then
@@ -3533,11 +3534,20 @@ var
   LayerGroup: TLayerGroup;
   PhastModel: TPhastModel;
   DummyInvalidIndex: boolean;
+  GLayer: Integer;
 begin
   PhastModel := frmGoPhast.PhastModel;
+  if GlobalCurrentModel <> PhastModel then
+  begin
+    GLayer := (GlobalCurrentModel as TChildModel).ChildLayerToParentLayer(Layer);
+  end
+  else
+  begin
+    GLayer := Layer;
+  end;
   LayerTop := GetLayerPosition(Layer, Row, Column, DummyInvalidIndex);
   LayerBottom := GetLayerPosition(Layer + 1, Row, Column, DummyInvalidIndex);
-  LayerGroup := PhastModel.LayerStructure.GetLayerGroupByLayer(Layer);
+  LayerGroup := PhastModel.LayerStructure.GetLayerGroupByLayer(GLayer);
   if (LayerGroup.AquiferType <> 0) and UseHead then
   begin
     if Head < LayerTop then

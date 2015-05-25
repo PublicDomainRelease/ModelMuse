@@ -1,4 +1,4 @@
-ModelMuse – Version 3.6.0.0
+ModelMuse – Version 3.6.1.0
 
 NOTE: Any use of trade, product or firm names is for descriptive purposes 
       only and does not imply endorsement by the U.S. Government.
@@ -29,11 +29,11 @@ Either version may be used for installing ModelMuse.  Both contain
 the same version of ModelMuse for use on personal computers:
 
 For 32 or 64-bit operating systems:
-         ModelMuseSetup32_3_6.exe
-         ModelMuse32_3_6.zip
+         ModelMuseSetup32_3_6_1.exe
+         ModelMuse32_3_6_1.zip
 For 64-bit operating systems:
-         ModelMuseSetup64_3_6.exe
-         ModelMuse64_3_6.zip
+         ModelMuseSetup64_3_6_1.exe
+         ModelMuse64_3_6_1.zip
 
 Both distribution files contain:
 
@@ -43,22 +43,22 @@ Both distribution files contain:
           Example models
           Supplementary materials
 
-The file ModelMuseSource3_6.zip contains the source code for ModelMuse, 
+The file ModelMuseSource3_6_1.zip contains the source code for ModelMuse, 
          ModelMonitor, and MF2005_Importer.exe.
 
 B. INSTALLING
 
 The distribution file is an installer.  Execution of the distribution 
 file will install ModelMuse in a directory chosen by the user. By default,
-ModelMuse will be installed in C:\Program Files\USGS\ModelMuse3_6 or
-C:\Program Files (x86)\USGS\ModelMuse3_6. If 
+ModelMuse will be installed in C:\Program Files\USGS\ModelMuse3_6_1 or
+C:\Program Files (x86)\USGS\ModelMuse3_6_1. If 
 the new version of ModelMuse is installed over an older version, the 
 program may be installed in the same directory as the older version of the 
 program. The installer will associate files with the extensions .gpt, 
 .gpb, and .mmZlib with ModelMuse.  The following directory structure will 
 be created in the installation directory:
 
-   |--ModelMuse3_6
+   |--ModelMuse3_6_1
    |  |--bin          ; ModelMuse, ModelMonitor, and MF2005_Importer 
    |  |                   executables.
    |  |--doc          ; Documentation file
@@ -69,7 +69,7 @@ ModelMuse will also create a subdirectory of the "My Documents" directory named
    |  |                   documentation or the ModelMuse help.
    |  |--examples     ; Sample models.
 
-Included in directory ModelMuse3_6\doc is the report on ModelMuse as a 
+Included in directory ModelMuse3_6_1\doc is the report on ModelMuse as a 
 Portable Document Format (PDF) file. The PDF file is readable and 
 printable on various computer platforms using Acrobat Reader from Adobe.
 The Acrobat Reader is freely available from the following World Wide Web
@@ -106,12 +106,8 @@ in the examples described in the ModelMuse documentation or help are in the
 
 E. COMPILING
 
-The 64-bit version of ModelMuse is compiled with Delphi XE2 from Embarcadero. 
+The 32 and 64-bit version of ModelMuse are both compiled with Delphi XE2 from Embarcadero. 
 http://www.embarcadero.com/ 
-
-The 32-bit versions of ModelMuse is compiled with Delphi XE from Embarcadero. 
-http://www.embarcadero.com/ 
-It can also be compiled with Delphi XE2.
 
 ModelMonitor is compiled with Delphi XE2 from Embarcadero. 
 http://www.embarcadero.com/
@@ -121,14 +117,14 @@ from EC Software. http://www.helpandmanual.com/
 
 MF2005_Importer is compiled with the Intel Fortran compiler.
 
-ModelMuse uses a number of custom comoponents which must be installed 
-in Delphi XE or Delphi XE2 before compiling ModelMuse.  Some are included  
+ModelMuse uses a number of custom components which must be installed 
+in Delphi XE2 before compiling ModelMuse.  Some are included  
 with the ModelMuse source code.  Additional required files or components are 
 listed below.  In some cases, the files must be altered before they 
 can be used with ModelMuse.  The required changes are listed below.
 
-General instructions for installing packages in Delphi XE or XE2
-1. If the component comes with an installer run the installer.
+General instructions for installing packages in Delphi XE2
+1. If the component comes with an installer, run the installer.
 2. If you are compiling the components from source code, you need to add the 
 directories containing the source code to the Library path for both the 
 Windows 32 and Windows 64 bit platforms.. (Tools|Options) 
@@ -181,8 +177,7 @@ C:\Users\Public\Documents\RAD Studio\9.0\Dcp;C:\Users\Public\Documents\RAD Studi
 
 Installing GLScene
 http://glscene.sourceforge.net
-For compiling with Delphi XE, use GLScene_v1.1.
-For compiling with Delphi XE2, use GLScene_v1.2.
+For compiling with Delphi XE2, use GLScene_v1.3.
 Open and read the readme.html file in the source directory of GLScene. 
 Graphics 32 support must be added by modifing GLScene.inc so make the 
 required change. This is done by changing 
@@ -190,6 +185,24 @@ required change. This is done by changing
 to
 {$DEFINE GLS_Graphics32_SUPPORT}
 
+Required changes to the GLScene source code to compile it with Delphi XE2
+include the following:
+In FXCollectionEditor.pas, remove System.Actions from the uses list.
+In GLSceneEdit.pas, remove System.Actions from the uses list.
+In GLSMemo.pas, change line 417 from 
+    FScrollBars: System.UITypes.TScrollStyle;
+to 
+    FScrollBars: Vcl.StdCtrls.TScrollStyle;
+In GLSMemo.pas, change line 448 from 
+    procedure SetScrollBars(Value: System.UITypes.TScrollStyle);
+to 
+    procedure SetScrollBars(Value: Vcl.StdCtrls.TScrollStyle);
+In GLSMemo.pas, change line 3598 from 
+procedure TGLSCustomMemo.SetScrollBars(Value: TScrollStyle);
+to
+procedure TGLSCustomMemo.SetScrollBars(Value: Vcl.StdCtrls.TScrollStyle);
+
+Add the source directory for GLScene for both 32 and 64-bit compilation.
 
 Build DelphiXE2\GLScene_RunTime.dpk and then install 
 DelphiXE2\GLScene_DesignTime.dpk.
@@ -200,8 +213,9 @@ C:\Users\Public\Documents\RAD Studio\9.0\Dcp
 In the design time package, be sure that the correct package is listed under 
 "Requires".
 
-Get and install VirtualTreeView version 5.3 or later.
+Get and install VirtualTreeView version 5.5.3 or later.
 http://www.jam-software.com/virtual-treeview/
+https://github.com/Virtual-TreeView/Virtual-TreeView-XE2
 
 MadExcept version 4 or later must be installed.  It can be obtained from 
 http://www.madshi.net/

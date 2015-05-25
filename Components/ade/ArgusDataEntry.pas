@@ -885,6 +885,7 @@ procedure TArgusDataEntry.CheckRange;
       and integer data typed in the text field.}
 var
   BeyondBounds : boolean;
+  NeedToChange: Boolean;
 begin
   if ( (Copy(Text,Length(Text),1) = '-') or (Copy(Text,Length(Text),1) = '+') )
     and ((FDataType = dtInteger) or (FDataType = dtReal)) then
@@ -903,56 +904,78 @@ begin
     BeyondBounds := False;
     if CheckMax and ((FDataType = dtInteger) or (FDataType = dtReal)) then
     begin
-      if LocalStrToFloat(Text) > FMax then
+      if (LocalStrToFloat(Text) > FMax) then
       begin
-        ExceedingBounds;
-        BeyondBounds := True;
-        if CheckMax and ((FDataType = dtInteger) or (FDataType = dtReal)) then
+        if FDataType = dtInteger then
         begin
-          if LocalStrToFloat(Text) > FMax then
+          NeedToChange := (Text <> IntToStr(Round(FMax)));
+        end
+        else
+        begin
+          NeedToChange := (Text <> FloatToStr(FMax));
+        end;
+        if NeedToChange then
+        begin
+          ExceedingBounds;
+          BeyondBounds := True;
+          if CheckMax and ((FDataType = dtInteger) or (FDataType = dtReal)) then
           begin
-            if (FDataType = dtInteger) then
+            if LocalStrToFloat(Text) > FMax then
             begin
-              Text := IntToStr(Round(FMax));
-              Change;
-            end
-            else
-            begin
-              Text := FloatToStr(FMax);
-              Change;
+              if (FDataType = dtInteger) then
+              begin
+                Text := IntToStr(Round(FMax));
+                Change;
+              end
+              else
+              begin
+                Text := FloatToStr(FMax);
+                Change;
+              end;
+              FOutput := Text;
+              Beep;
+              self.selStart := Length(Text);
+              ExceededBounds;
             end;
-            FOutput := Text;
-            Beep;
-            self.selStart := Length(Text);
-            ExceededBounds;
           end;
         end;
       end;
     end;
     if CheckMin and ((FDataType = dtInteger) or (FDataType = dtReal)) then
     begin
-      if LocalStrToFloat(Text) < FMin then
+      if (LocalStrToFloat(Text) < FMin) then
       begin
-        ExceedingBounds;
-        BeyondBounds := True;
-        if CheckMin and (FDataType = dtInteger) or (FDataType = dtReal) then
+        if FDataType = dtInteger then
         begin
-          if LocalStrToFloat(Text) < FMin then
+          NeedToChange := (Text <> IntToStr(Round(FMin)));
+        end
+        else
+        begin
+          NeedToChange := (Text <> FloatToStr(FMin));
+        end;
+        if NeedToChange then
+        begin
+          ExceedingBounds;
+          BeyondBounds := True;
+          if CheckMin and (FDataType = dtInteger) or (FDataType = dtReal) then
           begin
-            if (FDataType = dtInteger) then
+            if LocalStrToFloat(Text) < FMin then
             begin
-              Text := IntToStr(Round(FMin));
-              Change;
-            end
-            else
-            begin
-              Text := FloatToStr(FMin);
-              Change;
+              if (FDataType = dtInteger) then
+              begin
+                Text := IntToStr(Round(FMin));
+                Change;
+              end
+              else
+              begin
+                Text := FloatToStr(FMin);
+                Change;
+              end;
+              FOutput := Text;
+              Beep;
+              self.selStart := Length(Text);
+              ExceededBounds;
             end;
-            FOutput := Text;
-            Beep;
-            self.selStart := Length(Text);
-            ExceededBounds;
           end;
         end;
       end;

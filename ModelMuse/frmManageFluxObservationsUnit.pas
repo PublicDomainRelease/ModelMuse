@@ -90,6 +90,8 @@ type
     miSelectUsed: TMenuItem;
     miEditUsed: TMenuItem;
     miGoToUsed: TMenuItem;
+    miHideAvailable: TMenuItem;
+    miHideUsed: TMenuItem;
     procedure IncBtnClick(Sender: TObject);
     procedure IncAllBtnClick(Sender: TObject);
     procedure ExclBtnClick(Sender: TObject);
@@ -158,6 +160,8 @@ type
     procedure miEditUsedClick(Sender: TObject);
     procedure miGoToUsedClick(Sender: TObject);
     procedure pmSelectEditUsedPopup(Sender: TObject);
+    procedure miHideUsedClick(Sender: TObject);
+    procedure miHideAvailableClick(Sender: TObject);
   private
     FChobNode: TTreeNode;
     FChobObservations: TFluxObservationGroups;
@@ -249,6 +253,7 @@ type
       ObsTime: TCustomFluxObservationItem);
     procedure GetSelectedObjects(ListBox: TJvListBox; ScreenObjects: TScreenObjectList);
     procedure SelectObjects(ListBox: TJvListBox);
+    procedure HideObjects(ListBox: TJvListBox);
     procedure EditAnObject(ListBox: TJvListBox);
     procedure GoToAnObject(ListBox: TJvListBox);
   public
@@ -336,6 +341,22 @@ begin
         frmGoPhast.UndoStack.Submit(UndoShowHide);
       end;
       GoToObject(ScreenObject);
+    end;
+  finally
+    ScreenObjects.Free;
+  end;
+end;
+
+procedure TfrmManageFluxObservations.HideObjects(ListBox: TJvListBox);
+var
+  ScreenObjects: TScreenObjectList;
+begin
+  ScreenObjects := TScreenObjectList.Create;
+  try
+    GetSelectedObjects(ListBox, ScreenObjects);
+    if ScreenObjects.Count > 0 then
+    begin
+      HideMultipleScreenObjects(ScreenObjects);
     end;
   finally
     ScreenObjects.Free;
@@ -2676,6 +2697,18 @@ begin
   GoToAnObject(DstList);
 end;
 
+procedure TfrmManageFluxObservations.miHideAvailableClick(Sender: TObject);
+begin
+  inherited;
+  HideObjects(SrcList);
+end;
+
+procedure TfrmManageFluxObservations.miHideUsedClick(Sender: TObject);
+begin
+  inherited;
+  HideObjects(DstList);
+end;
+
 procedure TfrmManageFluxObservations.miSelectAvailableClick(Sender: TObject);
 //var
 //  ListBox: TJvListBox;
@@ -2706,6 +2739,7 @@ begin
   miSelectAvailable.Enabled := SrcList.SelCount > 0;
   miEditAvailable.Enabled := SrcList.SelCount = 1;
   miGotoAvailable.Enabled := SrcList.SelCount = 1;
+  miHideAvailable.Enabled := SrcList.SelCount > 0;
 end;
 
 procedure TfrmManageFluxObservations.pmSelectEditUsedPopup(Sender: TObject);
@@ -2714,6 +2748,7 @@ begin
   miSelectUsed.Enabled := DstList.SelCount > 0;
   miEditUsed.Enabled := DstList.SelCount = 1;
   miGotoUsed.Enabled := DstList.SelCount = 1;
+  miHideUsed.Enabled := DstList.SelCount > 0;
 end;
 
 procedure TfrmManageFluxObservations.rdeMassFluxMultiValueEditChange(

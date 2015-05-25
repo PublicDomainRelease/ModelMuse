@@ -6,7 +6,7 @@ unit IsosurfaceUnit;
 
 interface
 
-uses OpenGL12x;
+uses OpenGL;
 
 type
   TGLCoord = Record

@@ -870,6 +870,7 @@ begin
         Cells.Add(Cell);
         Cell.StressPeriod := TimeIndex;
         Cell.Values := BoundaryValues;
+        Cell.ScreenObject := ScreenObject;
         LocalModel.AdjustCellPosition(Cell);
       end;
       Cells.Cache;

@@ -833,6 +833,7 @@ type
     FNewElementNumbers: TIntegerCollection;
     FNewNodeNumbers: TIntegerCollection;
     procedure AssignNumbers(Nodes, Elements: TIntegerCollection);
+    procedure UpdateElevations;
   protected
     function Description: string; override;
   public
@@ -3203,6 +3204,8 @@ end;
 procedure TUndoRenumberMesh.DoCommand;
 begin
   // do nothing
+//  frmGoPhast.PhastModel.DataArrayManager.InvalidateAllDataSets;
+  UpdateElevations;
   if (frmMeshInformation <> nil) and frmMeshInformation.Visible then
   begin
     frmMeshInformation.GetData;
@@ -3216,6 +3219,8 @@ begin
   frmGoPhast.PhastModel.SutraMesh.Mesh2D.MeshGenControls.RenumberingAlgorithm
     := FNewAlgorithm;
   AssignNumbers(FNewNodeNumbers, FNewElementNumbers);
+  UpdateElevations;
+//  frmGoPhast.PhastModel.DataArrayManager.InvalidateAllDataSets;
 end;
 
 procedure TUndoRenumberMesh.Undo;
@@ -3224,6 +3229,22 @@ begin
   frmGoPhast.PhastModel.SutraMesh.Mesh2D.MeshGenControls.RenumberingAlgorithm
     := FOldAlgorithm;
   AssignNumbers(FOldNodeNumbers, FOldElementNumbers);
+  UpdateElevations;
+//  frmGoPhast.PhastModel.DataArrayManager.InvalidateAllDataSets;
+end;
+
+procedure TUndoRenumberMesh.UpdateElevations;
+//var
+//  Mesh: TSutraMesh3D;
+begin
+  frmGoPhast.SutraMesh.ElevationsNeedUpdating := True;
+  frmGoPhast.SutraMesh.CheckUpdateElevations;
+//  Mesh := frmGoPhast.SutraMesh;
+//  if (Mesh <> nil) and (Mesh.MeshType = mt3D) then
+//  begin
+//    Mesh.UpdateNodeArray;
+//    Mesh.AssignNodeElevations;
+//  end;
 end;
 
 procedure TUndoRenumberMesh.UpdateNumbers;

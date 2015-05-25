@@ -5,7 +5,7 @@ unit ModelMuseUtilities;
 interface
 
 uses
-  Windows, SysUtils, Classes, Graphics, OpenGL12x, GoPhastTypes, ColorSchemes;
+  Windows, SysUtils, Classes, Graphics, OpenGL, GoPhastTypes, ColorSchemes;
 
 resourcestring
   StrSorryItLooksLike = 'Sorry. It looks like some other program has locked ' +
@@ -14,7 +14,7 @@ resourcestring
 // @abstract(@name gets the red, green, and blue components from a TColor
 // in a form suitable for use with OpenGL.)
 procedure ExtractColorComponents(const AColor: TColor;
-  out Red, Green, Blue: TGLubyte);
+  out Red, Green, Blue: GLubyte);
 
 // @name extracts the file name without the drive, directory or extension.
 function ExtractFileRoot(const FileName: string): string;
@@ -135,7 +135,7 @@ begin
 end;
 
 procedure ExtractColorComponents(const AColor: TColor;
-  out Red, Green, Blue: TGLubyte);
+  out Red, Green, Blue: GLubyte);
 var
   Value: integer;
   v: longword;

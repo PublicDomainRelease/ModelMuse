@@ -1106,11 +1106,13 @@ inherited frmGoPhast: TfrmGoPhast
         object SurferGridFile1: TMenuItem
           Caption = 'Surfer Grid File...'
           HelpContext = 3563
+          Hint = 'Import objects from a SURFER grid file'
           OnClick = SurferGridFile1Click
         end
         object SampleDEMData1: TMenuItem
           Caption = 'Sample DEM Data...'
           HelpContext = 3564
+          Hint = 'Sample data points from a DEM grid file'
           OnClick = SampleDEMData1Click
         end
         object miImportPoints: TMenuItem
@@ -1137,6 +1139,7 @@ inherited frmGoPhast: TfrmGoPhast
         object miASCII_RasterFile: TMenuItem
           Caption = 'ASCII Raster File(s)...'
           HelpContext = 3594
+          Hint = 'Import data from ASCII raster files.'
           OnClick = miASCII_RasterFileClick
         end
         object ImportTPROGSBinaryGridFile1: TMenuItem
@@ -1206,34 +1209,40 @@ inherited frmGoPhast: TfrmGoPhast
           object miObjectstoShapefile: TMenuItem
             Caption = '&Objects to Shapefile...'
             HelpContext = 3521
+            Hint = 'Export objects as Shapefiles'
             OnClick = miObjectstoShapefileClick
           end
           object miContourstoShapefile: TMenuItem
             Caption = '&Contours to Shapefile'
             HelpContext = 1550
+            Hint = 'Export contour lines as Shapefiles'
             OnClick = miContourstoShapefileClick
           end
           object miPathlinestoShapefile: TMenuItem
             Caption = '&Pathlines to Shapefile'
             Enabled = False
+            Hint = 'Export MODPATH pathlines as Shapefiles'
             OnClick = miPathlinestoShapefileClick
           end
           object miEndpointsatStartingLocationstoShapefile: TMenuItem
             Caption = 'Endpoints at &Starting Locations to Shapefile'
             Enabled = False
             HelpContext = 1550
+            Hint = 'Export MODPATH endpoint starting locations as Shapefiles'
             OnClick = miEndpointsatStartingLocationstoShapefileClick
           end
           object miEndpointsatEndingLocationstoShapefile: TMenuItem
             Caption = 'Endpoints at &Ending Locations to Shapefile'
             Enabled = False
             HelpContext = 1550
+            Hint = 'Export MODPATH endpoint ending locations as Shapefiles'
             OnClick = miEndpointsatEndingLocationstoShapefileClick
           end
           object miTimeSeriestoShapefile: TMenuItem
             Caption = '&Time Series to Shapefile'
             Enabled = False
             HelpContext = 1550
+            Hint = 'Export MODPATH time series as Shapefiles'
             OnClick = miTimeSeriestoShapefileClick
           end
           object miHeadObsToShapefile: TMenuItem
@@ -1324,11 +1333,13 @@ inherited frmGoPhast: TfrmGoPhast
       object miShowHideBitmaps: TMenuItem
         Caption = 'Show or Hide Images...'
         HelpContext = 1640
+        Hint = 'Show or hide a background image'
         OnClick = miShowHideBitmapsClick
       end
       object miDeleteImage: TMenuItem
         Caption = 'Delete Image'
         HelpContext = 3520
+        Hint = 'Delete a background image'
         OnClick = miDeleteImageClick
       end
       object miClearUndoRedostack: TMenuItem
@@ -1374,6 +1385,7 @@ inherited frmGoPhast: TfrmGoPhast
       end
       object miSpecifyCrossSection: TMenuItem
         Caption = 'Specify &Cross Section...'
+        Hint = 'Specify the endpoints of the cross section'
         OnClick = miSpecifyCrossSectionClick
       end
       object N12: TMenuItem
@@ -1431,6 +1443,7 @@ inherited frmGoPhast: TfrmGoPhast
       object miSetSelectedColRowLayer: TMenuItem
         Caption = 'Set Selected &Col, Row, Layer...'
         HelpContext = 1730
+        Hint = 'Set the selected column, row, and layer numerically'
         OnClick = miSetSelectedColRowLayerClick
       end
       object miSelectColRowLayer: TMenuItem
@@ -1458,10 +1471,12 @@ inherited frmGoPhast: TfrmGoPhast
       object miDisplayDataSetValues: TMenuItem
         Caption = 'Display Data &Set Values'
         HelpContext = 3519
+        Hint = 'Show the values of a data set'
         OnClick = miDisplayDataSetValuesClick
       end
       object DeleteModelResults1: TMenuItem
         Caption = 'Delete Model &Results'
+        Hint = 'Delete model-result data sets'
         OnClick = DeleteModelResults1Click
       end
     end
@@ -1513,6 +1528,7 @@ inherited frmGoPhast: TfrmGoPhast
         object miSelectObjectsforEditing: TMenuItem
           Caption = 'Select Objects for Editing or Deletion...'
           HelpContext = 3525
+          Hint = 'Select objects without displaying them'
           OnClick = miSelectObjectsforEditingClick
         end
         object AddPointstoObject1: TMenuItem
@@ -1577,19 +1593,25 @@ inherited frmGoPhast: TfrmGoPhast
         object miMakeSelectedVerticesASeparateObject: TMenuItem
           Caption = 'Make Selected Vertices a Separate Object'
           HelpContext = 1530
+          Hint = 'Convert the selected nodes of an object to a separate object'
           OnClick = miMakeSelectedVerticesASeparateObjectClick
         end
         object miSplitObjectAtSelectedVertices: TMenuItem
           Caption = 'Split Object at Selected Vertices'
           HelpContext = 1530
+          Hint = 
+            'Split an object into two separate objects at the selected vertic' +
+            'es of the object'
           OnClick = miSplitObjectAtSelectedVerticesClick
         end
         object miLockSelectedObjects: TMenuItem
           Caption = 'Lock Selected Objects'
+          Hint = 'Prevent object(s) from being moved'
           OnClick = miLockSelectedObjectsClick
         end
         object miUnlockSelectedObjects: TMenuItem
           Caption = 'Unlock Selected Objects'
+          Hint = 'Allow object(s) to be moved'
           OnClick = miUnlockSelectedObjectsClick
         end
       end
@@ -1756,6 +1778,7 @@ inherited frmGoPhast: TfrmGoPhast
       end
       object miCustomizeSutraMesh: TMenuItem
         Caption = 'Customize SUTRA Mesh...'
+        Hint = 'Change how the SUTRA mesh is displayed'
         OnClick = miCustomizeSutraMeshClick
       end
     end
@@ -1783,6 +1806,7 @@ inherited frmGoPhast: TfrmGoPhast
       object miBatchFileAdditions: TMenuItem
         Caption = 'Batch File Additions...'
         HelpContext = 3513
+        Hint = 'Add lines to the batch file used to run the model'
         OnClick = miBatchFileAdditionsClick
       end
       object miShowVideoTips: TMenuItem
@@ -1854,6 +1878,7 @@ inherited frmGoPhast: TfrmGoPhast
         Caption = 'MODFLOW Hydrogeologic Units...'
         GroupIndex = 1
         HelpContext = 3515
+        Hint = 'Edit the hydrogeologic units in the HUF package'
         OnClick = miMF_HydrogeologicUnitsClick
       end
       object miTime: TMenuItem
@@ -1895,12 +1920,14 @@ inherited frmGoPhast: TfrmGoPhast
         Caption = 'Manage Parameters...'
         GroupIndex = 1
         HelpContext = 3584
+        Hint = 'Change the value of any parameter'
         OnClick = miManageParametersClick
       end
       object miManageHeadObservations: TMenuItem
         Caption = 'Manage Head Observations...'
         GroupIndex = 1
         HelpContext = 3586
+        Hint = 'Edit head observations in a table'
         OnClick = miManageHeadObservationsClick
       end
       object miManageFluxObservations: TMenuItem
@@ -1944,6 +1971,7 @@ inherited frmGoPhast: TfrmGoPhast
         Caption = 'Child Models...'
         GroupIndex = 1
         HelpContext = 3598
+        Hint = 'Edit child models'
         OnClick = miChildModelsClick
       end
       object miSWR: TMenuItem
@@ -1969,6 +1997,7 @@ inherited frmGoPhast: TfrmGoPhast
       object miFarmProcessDialogBoxes: TMenuItem
         Caption = 'Farm Process'
         GroupIndex = 1
+        Hint = 'Farm process dialog boxes'
         object miFarmCrops: TMenuItem
           Action = acFarmCrops
           GroupIndex = 1
@@ -2061,6 +2090,7 @@ inherited frmGoPhast: TfrmGoPhast
         Caption = 'PHAST Program Location...'
         GroupIndex = 1
         HelpContext = 3540
+        Hint = 'Specify the location of the PHAST executable'
         OnClick = miPHASTProgramLocationClick
       end
       object N10: TMenuItem
@@ -2128,12 +2158,14 @@ inherited frmGoPhast: TfrmGoPhast
       object miUseLocalHelp: TMenuItem
         Caption = 'Use Local Help'
         GroupIndex = 1
+        Hint = 'Use help files on local computer'
         RadioItem = True
         OnClick = miUseLocalHelpClick
       end
       object miUseOnlineHelp: TMenuItem
         Caption = 'Use Online Help'
         GroupIndex = 1
+        Hint = 'Use help via the Internet'
         RadioItem = True
         OnClick = miUseOnlineHelpClick
       end
@@ -2651,7 +2683,7 @@ inherited frmGoPhast: TfrmGoPhast
       Caption = 'New &PHAST Model'
       HelpContext = 1550
       HelpKeyword = 'File'
-      Hint = 'New|Create a new PHAST model'
+      Hint = 'New PHAST model|Create a new PHAST model'
       OnExecute = acFileNewModflowModelExecute
     end
     object acLayers: TAction
@@ -2927,11 +2959,13 @@ inherited frmGoPhast: TfrmGoPhast
     object acRunMt3dms: TAction
       Category = 'File'
       Caption = 'MT3DMS Input Files'
+      Hint = 'Run Mt3DMS'
       OnExecute = acRunMt3dmsExecute
     end
     object acExportZoneBudget: TAction
       Category = 'File'
       Caption = '&ZONEBUDGET Input Files'
+      Hint = 'Run ZoneBudget'
       OnExecute = miZONEBUDGETInputFilesClick
     end
     object acSutraActive: TAction
@@ -2946,16 +2980,19 @@ inherited frmGoPhast: TfrmGoPhast
     object acSutraLayers: TAction
       Category = 'Model'
       Caption = 'SUTRA Layer Groups...'
+      Hint = 'Edit SUTRA layer groups'
       OnExecute = acSutraLayersExecute
     end
     object acSutraOptions: TAction
       Category = 'Model'
       Caption = 'Sutra Options...'
+      Hint = 'Edit options in SUTRA'
       OnExecute = acSutraOptionsExecute
     end
     object acSutraTimes: TAction
       Category = 'Model'
       Caption = 'SUTRA Time Controls...'
+      Hint = 'Edit time controls for SUTRA'
       OnExecute = acSutraTimesExecute
     end
     object acRunSutra: TAction
@@ -2968,16 +3005,19 @@ inherited frmGoPhast: TfrmGoPhast
     object acSutraOutputControl: TAction
       Category = 'Model'
       Caption = 'SUTRA Output Control...'
+      Hint = 'Control output from SUTRA'
       OnExecute = acSutraOutputControlExecute
     end
     object acSutraProgramLocations: TAction
       Category = 'Model'
       Caption = 'SUTRA Program Location...'
+      Hint = 'Specify the location of the SUTRA program'
       OnExecute = acSutraProgramLocationsExecute
     end
     object acImportTprogs: TAction
       Category = 'File'
       Caption = 'T-PROGS Binary Grid File...'
+      Hint = 'Import data from a T-Progs binary grid file'
       OnExecute = acImportTprogsExecute
     end
     object acImportSutraModelResults: TAction
@@ -3007,6 +3047,7 @@ inherited frmGoPhast: TfrmGoPhast
     object acNewSutraModel: TAction
       Category = 'File'
       Caption = 'New &SUTRA Model'
+      Hint = 'New SUTRA model|Create a new SUTRA model'
       OnExecute = acFileNewModflowModelExecute
     end
     object acFishnet: TAction
@@ -3054,6 +3095,7 @@ inherited frmGoPhast: TfrmGoPhast
     object acDefaultCrossSection: TAction
       Category = 'Mesh'
       Caption = 'Set Default Cross Section'
+      Hint = 'Restore cross section to the default location'
       OnExecute = acDefaultCrossSectionExecute
     end
     object acModflowLgr2Active: TAction
@@ -3071,33 +3113,38 @@ inherited frmGoPhast: TfrmGoPhast
       GroupIndex = 1
       HelpContext = 2390
       HelpKeyword = 'Model'
-      Hint = 'Make MODFLOW-FMP2 the selected model type'
+      Hint = 'Make MODFLOW-OWHM the selected model type'
       OnExecute = acModflowFmpActiveExecute
     end
     object acRunModflowFmp: TAction
       Category = 'File'
       Caption = 'MODFLOW-OWHM Input Files'
+      Hint = 'Run MODFLOW-OWHM'
       ImageIndex = 72
       OnExecute = acRunModflowFmpExecute
     end
     object acFarmCrops: TAction
       Category = 'Model'
       Caption = 'Farm Crops...'
+      Hint = 'Edit Crops'
       OnExecute = acFarmCropsExecute
     end
     object acFarmSoils: TAction
       Category = 'Model'
       Caption = 'Farm Soils...'
+      Hint = 'Edit soils'
       OnExecute = acFarmSoilsExecute
     end
     object acFarmClimate: TAction
       Category = 'Model'
       Caption = 'Farm Climate...'
+      Hint = 'Edit climate variables'
       OnExecute = acFarmClimateExecute
     end
     object acFarmAllotment: TAction
       Category = 'Model'
       Caption = 'Farm Allotment...'
+      Hint = 'Edit allowable allotment of farms'
       OnExecute = acFarmAllotmentExecute
     end
     object acModflowCfpActive: TAction
@@ -3112,42 +3159,50 @@ inherited frmGoPhast: TfrmGoPhast
     object acRunModflowCfp: TAction
       Category = 'File'
       Caption = 'MODFLOW-CFP Input Files'
+      Hint = 'Run MODFLOW-CFP'
       ImageIndex = 72
       OnExecute = acRunModflowCfpExecute
     end
     object acHeadObsToShapefile: TAction
       Caption = 'Head Observations to Shapefile'
+      Hint = 'Export head observations as Shapefiles'
       OnExecute = acHeadObsToShapefileExecute
     end
     object acSWR_Tabfiles: TAction
       Category = 'Model'
       Caption = 'Tab Files...'
+      Hint = 'Edit tab files used in sWR'
       OnExecute = acSWR_TabfilesExecute
     end
     object acSWR_ReachGeometry: TAction
       Category = 'Model'
       Caption = 'Reach Geometry...'
+      Hint = 'Edit the geometry assigned to reaches'
       OnExecute = acSWR_ReachGeometryExecute
     end
     object acSwrStructures: TAction
       Category = 'Model'
       Caption = 'Structures...'
+      Hint = 'Edit structures'
       OnExecute = acSwrStructuresExecute
     end
     object acSwrObservations: TAction
       Category = 'Model'
       Caption = 'Observations...'
+      Hint = 'Edit SWR observations'
       OnExecute = acSwrObservationsExecute
     end
     object acImportGriddedDataFiles: TAction
       Category = 'File'
       Caption = 'Gridded Data Files...'
+      Hint = 'Import data from multiple files containing gridded data'
       OnExecute = acImportGriddedDataFilesExecute
     end
     object acImportSutraMesh: TAction
       Category = 'File'
       Caption = 'SUTRA Mesh'
       Enabled = False
+      Hint = 'Import a SUTRA mesh created outside of ModelMuse'
       OnExecute = acImportSutraMeshExecute
     end
     object acExportSutra2DMesh: TAction
@@ -3158,6 +3213,7 @@ inherited frmGoPhast: TfrmGoPhast
     object acEditFarms: TAction
       Category = 'Model'
       Caption = 'Farms...'
+      Hint = 'Edit farms'
       OnExecute = acEditFarmsExecute
     end
   end
@@ -3165,7 +3221,7 @@ inherited frmGoPhast: TfrmGoPhast
     Left = 104
     Top = 128
     Bitmap = {
-      494C010148004D000C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010148004D00080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003001000001002000000000000030
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -5809,7 +5865,7 @@ inherited frmGoPhast: TfrmGoPhast
     Left = 176
     Top = 80
     Bitmap = {
-      494C0101600065000C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010160006500080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000009001000001002000000000000090
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -9235,8 +9291,8 @@ inherited frmGoPhast: TfrmGoPhast
     Filter = 'SUTRA input files|*.inp|All Files|*.*'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
     Title = 'Save SUTRA input files'
-    Left = 176
-    Top = 264
+    Left = 680
+    Top = 64
   end
   object dlgSaveHeadObsToShapefile: TSaveDialog
     DefaultExt = '.shp'

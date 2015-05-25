@@ -26,7 +26,7 @@ uses
   Windows, // Windows is included to allow AnsiCompareText to be inlined.
   GR32, // defines TBitmap32.
   GR32_Polygons, Types, SysUtils, Classes, SyncObjs, Graphics, Dialogs,
-  Controls, OpenGL12x, ZoomBox2, AbstractGridUnit, PhastGridUnit, SelectUnit,
+  Controls, OpenGL, ZoomBox2, AbstractGridUnit, PhastGridUnit, SelectUnit,
   UndoItems, DataSetUnit, Contnrs, RbwParser, FastGEO, GoPhastTypes,
   SubscriptionUnit, SparseDataSets, ModflowConstantHeadBoundaryUnit,
   ModflowGhbUnit, ModflowWellUnit, OrderedCollectionUnit, ModflowBoundaryUnit,
@@ -1792,7 +1792,7 @@ view. }
     FIsClosedCached: Boolean;
     FCachedClosed: boolean;
     FGlListCreated: Boolean;
-    FGlScreenObjectList: TGLuint;
+    FGlScreenObjectList: GLuint;
     FListUpToDate: Boolean;
     FIFACE: TIface;
     FModpathParticles: TParticleStorage;
@@ -3344,10 +3344,6 @@ view. }
     // @SeeAlso(IndexOfDataSet) @SeeAlso(RemoveDataSet)
     property DataSets[const Index: integer]: TDataArray read GetDataSets
       write SetDataSets;
-
-    { TODO : 
-Consider converting formulas into objects and 
-having them take care of the subscriptions. }
 
     // @name contains the formulas used to set the values of
     // the corresponding member of @Link(DataSets).
@@ -4917,6 +4913,7 @@ procedure GetLayerFromZ(Z: Double; var CellLocation: TCellLocation;
 
 procedure SelectAScreenObject(ScreenObject: TScreenObject);
 procedure SelectMultipleScreenObjects(ScreenObjects: TScreenObjectList);
+procedure HideMultipleScreenObjects(ScreenObjects: TScreenObjectList);
 
 function FindIntersectionPoints(Poly1, Poly2: TSubPolygon;
   var Intersections: TIntersectionArray; 
@@ -7184,8 +7181,8 @@ end;
 
 procedure TScreenObject.Draw3D;
 var
-  Red, Green, Blue: TGLubyte;
-  Colors: array[0..3] of TGLfloat;
+  Red, Green, Blue: GLubyte;
+  Colors: array[0..3] of GLfloat;
   GlGridValues: TGrid;
   LocalModel: TPhastModel;
   CellsToDraw: TSelectedCells;
@@ -7323,13 +7320,7 @@ begin
     end;
     FListUpToDate := True;
   end;
-  try
-    glCallList(FGlScreenObjectList);
-  except on EMathError do
-    begin
-      // do nothing
-    end;
-  end;
+  glCallList(FGlScreenObjectList);
 end;
 
 procedure TScreenObject.Draw(Const Bitmap32: TBitmap32;
@@ -19925,6 +19916,12 @@ begin
         LocalModel.InvalidateMfHobHeads (self);
       end;
 
+      if (Mt3dmsTransObservations <> nil) then
+      begin
+        LocalModel.InvalidateMt3dTobConcs (self);
+      end;
+
+
       if FModflowBoundaries <> nil then
       begin
         FModflowBoundaries.Invalidate;
@@ -29344,6 +29341,7 @@ var
   BoundaryPosition: Integer;
   AnObserver: TObserver;
   TestDataArray: TDataArray;
+  StackPosition: integer;
 begin
   { TODO : Consider removing Grid parameter and getting the grid from the model. }
   if not SetValuesOfIntersectedCells and not SetValuesOfEnclosedCells then
@@ -29396,6 +29394,23 @@ begin
   FMixtureExpression := nil;
   UsedVariables := nil;
   try
+    if (Stack <> nil) then
+    begin
+      StackPosition := Stack.IndexOf(Name);
+      if StackPosition >= 0 then
+      begin
+        StackPosition := -1;
+      end
+      else
+      begin
+        StackPosition := Stack.Add(Name)
+      end;
+    end
+    else
+    begin
+      StackPosition := -1;
+    end;
+
     if (OtherData <> nil) then
     begin
       InterpValue := OtherData as TInterpValuesItem;
@@ -29466,6 +29481,10 @@ begin
   finally
     UsedVariables.Free;
     CacheSegments;
+    if StackPosition >= 0 then
+    begin
+      Stack.Delete(StackPosition);
+    end;
   end;
 end;
 
@@ -38378,6 +38397,31 @@ begin
     UndoChangeSelection.Free;
   end;
 end;
+
+procedure HideMultipleScreenObjects(ScreenObjects: TScreenObjectList);
+var
+  AScreenObject: TScreenObject;
+  Index: Integer;
+  UndoChangeSelection: TUndoChangeSelection;
+begin
+  UndoChangeSelection := TUndoChangeSelection.Create;
+  for Index := 0 to ScreenObjects.Count - 1 do
+  begin
+    AScreenObject := ScreenObjects[Index];
+    AScreenObject.Visible := False;
+  end;
+
+  UndoChangeSelection.SetPostSelection;
+  if UndoChangeSelection.SelectionChanged then
+  begin
+    frmGoPhast.UndoStack.Submit(UndoChangeSelection);
+  end
+  else
+  begin
+    UndoChangeSelection.Free;
+  end;
+end;
+
 { TScreenObjectClipboard }
 
 constructor TScreenObjectClipboard.Create(AOwner: TComponent);

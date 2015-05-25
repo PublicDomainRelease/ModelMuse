@@ -43,6 +43,7 @@ type
     property Decimals: integer read FDecimals write SetDecimals;
   end;
 
+  // @name is used to control the output of heads and drawdowns.
   THeadDrawdownOutputControl = class(TGoPhastPersistent)
   private
     FWrapping: TWrapping;
@@ -114,23 +115,46 @@ type
     Destructor Destroy; override;
     procedure Initialize;
   published
+    // @unorderedList(
+    // @item(IPRN in Array reading utility module)
+    // @item(PROPRINT option in Pval file for MODFLOW-OWHM)
+    // @item(IPTFLG in SWR)
+    // @item(PRINTCOORD in DIS)
+    // )
     property PrintInputArrays: boolean read FPrintInputArrays
       write SetPrintInputArrays default True;
+    // @name is used to set a number of variables in different packages.
+    // @unorderedList(
+    // @item(IRDFLG and IPTFLG in STR)
+    // @item(IFHBPT in FHB)
+    // @item(NOPRINT in FMP)
+    // @item(IPTFLG in SWR)
+    // @item(IWELPTin MNW1)
+    // @item(NOPRINT in @link(TCustomListWriter))
+    // @item(IRDFLG in SFR)
+    // )
     property PrintInputCellLists: boolean read FPrintInputCellLists
       write SetPrintInputCellLists default True;
+    // NOPRINT option in CHOB, DROB, GBOB, HOB, RBOB, and STOB.
+    // DTOB does not include the NOPRINT option.
     property PrintObservations: boolean read FPrintObservations
       write SetPrintObservations default True;
+    // @name is used in @link(TCustomModflowWriter.GetFlowUnitNumber)
     property SaveCellFlows: TCellSaveFormat read FSaveCellFlows
       write SetSaveCellFlows default csfBinary;
+    // @name controls "COMPACT BUDGET AUXILIARY"
     property Compact: boolean read FCompact write SetCompact;
     property HeadOC: THeadDrawdownOutputControl read FHeadOC write SetHeadOC;
     property DrawdownOC: THeadDrawdownOutputControl read FDrawdownOC
       write SetDrawdownOC;
     property Comments: TStrings read FComments write SetComments;
+    // helps control SAVE BUDGET and PRINT BUDGET in Output Control
     property BudgetFrequency: integer read FBudgetFrequency
       write SetBudgetFrequency;
+    // helps control SAVE BUDGET and PRINT BUDGET in Output Control
     property BudgetFrequencyChoice: TFrequencyChoice read FBudgetFrequencyChoice
       write SetBudgetFrequencyChoice;
+    // LSTLVL in Name file (MODFLOW-OWHM).
     property OutputSuppression: TOutputSuppression read FOutputSuppression
       write SetOutputSuppression default osShowAll;
   end;

@@ -112,11 +112,13 @@ type
       SfrBoundary: TSfrBoundary; DataSet4B: boolean; SubSegIndex: integer);
     procedure WriteDataSet4c6b(Parameter: Boolean;
       SfrBoundary: TSfrBoundary; ParamScreenObjectItem: TSfrParamIcalcItem;
-      StartTime: double; StressPeriodIndex: integer; Segment: TSegment; SubSegIndex: integer);
+      StartTime: double; StressPeriodIndex: integer; Segment: TSegment;
+      SubSegIndex: integer; ParameterValue: double);
     procedure WriteSegmentValues(StressPeriodIndex: Integer;
       Parameter: Boolean; UpOrDownStreamValues: TSfrSegmentStorage; upstream: Boolean;
       var CommentLine: string; var ValuesWriten: boolean;
-      ParamScreenObjectItem: TSfrParamIcalcItem; PSegValue: PSfrSegmentRecord);
+      ParamScreenObjectItem: TSfrParamIcalcItem; PSegValue: PSfrSegmentRecord;
+      Segment: TSegment; ParameterValue: double);
     procedure WriteUnsatSegmentValues(upstream: Boolean;
       var CommentLine: string; var ValuesWriten: boolean;
       UnsatUpstreamValues: TSfrUnsatSegmentStorage;
@@ -124,7 +126,7 @@ type
     procedure WriteDataSet4d6c(Parameter: Boolean; SfrBoundary: TSfrBoundary;
       ParamScreenObjectItem: TSfrParamIcalcItem;
       StartTime: double; StressPeriodIndex: integer; Segment: TSegment;
-      SubSegIndex: integer);
+      SubSegIndex: integer; ParameterValue: double);
     procedure WriteDataSet4e6d(Parameter: Boolean; SfrBoundary: TSfrBoundary;
       ParamScreenObjectItem: TSfrParamIcalcItem; StressPeriod: integer;
       Segment: TSegment; SubSegIndex: integer);
@@ -145,7 +147,7 @@ type
     procedure WriteSegment(Segment: TSegment;
       StartTime: double; SubSegIndex: integer; Item: TSfrParamIcalcItem;
       Boundary: TSfrBoundary; TimeIndex: integer;
-      IsParameter: boolean);
+      IsParameter: boolean; ParameterValue: double);
     procedure LgrAdjustSegmentValues(
       Segment: TSegment; StartTime: double; SubSegIndex: integer;
       StressPeriod: integer);
@@ -259,6 +261,11 @@ resourcestring
   StrDownstreamSegmentNumber = 'Outflow Segment Number in ';
   StrDiversionSegmentNumber = 'Diversion Segment Number in ';
   StrIprior = 'IPRIOR in ';
+  StrHighSFRHydraulicC = 'High SFR hydraulic conductivity compared to the aq' +
+  'uifer hydraulic conductivity may cause numerical difficulties';
+  StrDuplicateSFRStream = 'Duplicate SFR Stream Segments Numbers';
+  StrTheSFRSegmentNumb = 'The SFR segment number %0:d in %1:s is the same se' +
+  'gment number as in another segment.';
 
 resourcestring
   DupErrorCategory = 'Duplicate SFR segment numbers';
@@ -1092,6 +1099,9 @@ begin
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrLargeDiversionSeparation);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInactiveReach);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrReachSeparationWarning);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrHighSFRHydraulicC);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrDuplicateSFRStream);
+
 
 
 
@@ -2960,8 +2970,9 @@ begin
       if (UpstreamValues <> PriorUpstreamValues)
         or (DownstreamValues <> PriorDownstreamValues) then
       begin
-        WriteValue := ISFROPT in [0, 4, 5];
-        if (ISFROPT in [4, 5]) and (ParamIcalcItem.ICalc in [1, 2]) then
+        WriteValue := (ISFROPT in [0, 4, 5]) and (ParamIcalcItem.ICalc <> 0);
+        if WriteValue and (ISFROPT in [4, 5])
+          and (ParamIcalcItem.ICalc in [1, 2]) then
         begin
           WriteValue := TimeIndex = 0;
         end;
@@ -3235,6 +3246,8 @@ begin
 end;
 
 procedure TModflowSFR_Writer.WriteDataSet2;
+const
+  HighRatio = 1e6;
 var
   Index: integer;
   Segment: TSegment;
@@ -3246,6 +3259,10 @@ var
   SubSeg: TSubSegment;
   IFACE: TIface;
   procedure WriteReach(Reach: TSfr_Cell; SegmentNumber, ReachIndex: integer);
+  var
+    AqKx: double;
+    Ratio: double;
+    ScreenObject: TScreenObject;
   begin
     CheckCell(Reach, 'SFR');
     LocalLayer := Model.
@@ -3262,6 +3279,20 @@ var
       WriteFloat(Reach.StreamSlope);
       WriteFloat(Reach.StreamBedThickness);
       WriteFloat(Reach.HydraulicConductivity);
+
+      AqKx := AquiferKx(Reach.Layer, Reach.Row, Reach.Column);
+      if AqKx > 0 then
+      begin
+        Ratio := Reach.HydraulicConductivity/AqKx;
+        if Ratio > HighRatio then
+        begin
+          ScreenObject := Reach.ScreenObject as TScreenObject;
+          frmErrorsAndWarnings.AddWarning(Model,StrHighSFRHydraulicC,
+            Format(StrLayerRowColObject, [
+            Reach.Layer+1, Reach.Row+1, Reach.Column+1, ScreenObject.Name]),
+            ScreenObject);
+        end;
+      end;
     end;
     if ISFROPT in [2,3] then
     begin
@@ -3674,7 +3705,7 @@ begin
                   SubSegIndex := -1;
                   WriteSegment(Segment, InstanceItem.StartTime,
                     SubSegIndex, ParamScreenObjectItem, SfrBoundary,
-                    ScreenObjectParamIndex, True);
+                    ScreenObjectParamIndex, True, ParamItem.Value);
                 end
                 else
                 begin
@@ -3682,7 +3713,7 @@ begin
                   begin
                     WriteSegment(Segment, InstanceItem.StartTime,
                       SubSegIndex, ParamScreenObjectItem, SfrBoundary,
-                      ScreenObjectParamIndex, True)
+                      ScreenObjectParamIndex, True, ParamItem.Value)
                   end;
                 end;
 
@@ -3903,7 +3934,7 @@ end;
 procedure TModflowSFR_Writer.WriteSegment(Segment: TSegment; StartTime: double;
   SubSegIndex: integer;
   Item: TSfrParamIcalcItem; Boundary: TSfrBoundary; TimeIndex: integer;
-  IsParameter: boolean);
+  IsParameter: boolean; ParameterValue: double);
 begin
 //  LgrAdjustSegmentValues(Segment, StartTime, SubSegIndex, TimeIndex);
 
@@ -3912,11 +3943,11 @@ begin
 
   // Data set 6b
   WriteDataSet4c6b(IsParameter, Boundary, Item, StartTime,
-    TimeIndex, Segment, SubSegIndex);
+    TimeIndex, Segment, SubSegIndex, ParameterValue);
 
   // data set 6c
   WriteDataSet4d6c(IsParameter, Boundary, Item,
-    StartTime, TimeIndex, Segment, SubSegIndex);
+    StartTime, TimeIndex, Segment, SubSegIndex, ParameterValue);
 
   // data set 6d
   WriteDataSet4e6d(IsParameter, Boundary, Item, TimeIndex+1, Segment,
@@ -4248,14 +4279,14 @@ begin
           begin
             SubSegIndex := -1;
             WriteSegment(Segment, StressPeriod.StartTime,
-              SubSegIndex, Item, Boundary, TimeIndex, False);
+              SubSegIndex, Item, Boundary, TimeIndex, False, 1);
           end
           else
           begin
             for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
             begin
               WriteSegment(Segment, StressPeriod.StartTime,
-                SubSegIndex, Item, Boundary, TimeIndex, False);
+                SubSegIndex, Item, Boundary, TimeIndex, False, 1);
             end;
           end;
         end;
@@ -4790,10 +4821,16 @@ end;
 procedure TModflowSFR_Writer.WriteSegmentValues(StressPeriodIndex: Integer;
   Parameter: Boolean; UpOrDownStreamValues: TSfrSegmentStorage; upstream: Boolean;
   var CommentLine: string; var ValuesWriten: boolean;
-  ParamScreenObjectItem: TSfrParamIcalcItem; PSegValue: PSfrSegmentRecord);
+  ParamScreenObjectItem: TSfrParamIcalcItem; PSegValue: PSfrSegmentRecord;
+  Segment: TSegment; ParameterValue: double);
+const
+  HighRatio = 1E6;
 var
   SegmentValues: TSfrSegmentRecord;
   WriteValue: Boolean;
+  AqKx: Double;
+  Ratio: Extended;
+  ScreenObject: TScreenObject;
 begin
   ValuesWriten := False;
   Assert(Length(UpOrDownStreamValues.SrfSegmentArray) >= 1);
@@ -4832,6 +4869,29 @@ begin
         CommentLine := CommentLine + ' HCOND2';
       end;
     end;
+
+    if PSegValue = nil then
+    begin
+      AqKx := AquiferKx(SegmentValues.Cell.Layer, SegmentValues.Cell.Row, SegmentValues.Cell.Column);
+      if AqKx > 0 then
+      begin
+        Ratio := SegmentValues.HydraulicConductivity*ParameterValue/AqKx;
+        if Ratio > HighRatio then
+        begin
+          ScreenObject := Segment.FScreenObject;
+          frmErrorsAndWarnings.AddWarning(Model,StrHighSFRHydraulicC,
+            Format(StrLayerRowColObject, [
+            SegmentValues.Cell.Layer+1, SegmentValues.Cell.Row+1,
+            SegmentValues.Cell.Column+1, ScreenObject.Name]),
+            ScreenObject);
+        end;
+      end;
+    end
+    else
+    begin
+      { TODO : Figure out how to test this for child models. }
+    end;
+
   end;
   // THICKM1, THICKM2
   WriteValue := ISFROPT in [0, 4, 5];
@@ -4924,7 +4984,16 @@ begin
         for Index := 0 to FSegments.Count - 1 do
         begin
           Segment := FSegments[Index];
-          FSegDictionary.Add(Segment.OriginalSegmentNumber, Segment);
+          try
+            FSegDictionary.Add(Segment.OriginalSegmentNumber, Segment);
+          except on EListError Do
+            begin
+              frmErrorsAndWarnings.AddError(Model, StrDuplicateSFRStream,
+                Format(StrTheSFRSegmentNumb,
+                [Segment.OriginalSegmentNumber, Segment.FScreenObject.Name]),
+                Segment.FScreenObject);
+            end;
+          end;
         end;
       end;
       Segment := nil;
@@ -5576,7 +5645,8 @@ end;
 
 procedure TModflowSFR_Writer.WriteDataSet4c6b(Parameter: Boolean;
   SfrBoundary: TSfrBoundary; ParamScreenObjectItem: TSfrParamIcalcItem;
-  StartTime: double; StressPeriodIndex: integer; Segment: TSegment; SubSegIndex: integer);
+  StartTime: double; StressPeriodIndex: integer; Segment: TSegment;
+  SubSegIndex: integer; ParameterValue: double);
 var
   upstream: Boolean;
   CommentLine: string;
@@ -5635,7 +5705,8 @@ begin
     PSegUnsatValue := @(SubSeg.FUpstreamUnsatValues[StressPeriodIndex]);
   end;
   WriteSegmentValues(StressPeriodIndex, Parameter, UpstreamValues,
-    upstream, CommentLine, ValuesWriten, ParamScreenObjectItem, PSegValue);
+    upstream, CommentLine, ValuesWriten, ParamScreenObjectItem, PSegValue,
+    Segment, ParameterValue);
 
   if (ISFROPT in [4,5]) and (StressPeriodIndex = 0) then
   begin
@@ -5665,7 +5736,8 @@ end;
 
 procedure TModflowSFR_Writer.WriteDataSet4d6c(Parameter: Boolean;
   SfrBoundary: TSfrBoundary; ParamScreenObjectItem: TSfrParamIcalcItem;
-  StartTime: double; StressPeriodIndex: integer; Segment: TSegment; SubSegIndex: integer);
+  StartTime: double; StressPeriodIndex: integer; Segment: TSegment;
+  SubSegIndex: integer; ParameterValue: double);
 var
   upstream: Boolean;
   CommentLine: string;
@@ -5723,7 +5795,8 @@ begin
     PSegUnsatValue := @(SubSeg.FDownstreamUnsatValues[StressPeriodIndex]);
   end;
   WriteSegmentValues(StressPeriodIndex, Parameter, DownstreamValues,
-    upstream, CommentLine, ValuesWriten, ParamScreenObjectItem, PSegValue);
+    upstream, CommentLine, ValuesWriten, ParamScreenObjectItem, PSegValue,
+    Segment, ParameterValue);
 
   if (ISFROPT in [4,5]) and (StressPeriodIndex = 0) then
   begin

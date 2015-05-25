@@ -12,10 +12,12 @@ type
   private
     NPDRN: integer;
     MXL: integer;
+    FCells: array of array of TDrn_Cell;
     procedure WriteDataSet1;
     procedure WriteDataSet2;
     procedure WriteDataSets3And4;
     procedure WriteDataSets5To7;
+    procedure InitializeCells;
   protected
     function ObservationPackage: TModflowPackageSelection; override;
     function CellType: TValueCellType; override;
@@ -35,6 +37,7 @@ type
     function ObsNameWarningString: string; override;
     procedure Evaluate; override;
     procedure CheckCell(ValueCell: TValueCell; const PackageName: string); override;
+    procedure DoBeforeWriteCells; override;
   public
     procedure WriteFile(const AFileName: string);
     procedure WriteFluxObservationFile(const AFileName: string;
@@ -45,7 +48,7 @@ implementation
 
 uses ModflowTimeUnit, frmErrorsAndWarningsUnit,
   ModflowTransientListParameterUnit, ModflowUnitNumbers, frmProgressUnit,
-  RbwParser, DataSetUnit, Forms;
+  RbwParser, DataSetUnit, Forms, FastGEO;
 
 resourcestring
   StrTheFollowingDrain = 'The following Drain observation names may be valid' +
@@ -58,6 +61,11 @@ resourcestring
 //  StrWritingDataSets5to7 = '  Writing Data Sets 5 to 7.';
   StrDrainElevationIsB = 'Drain elevation is below the bottom of the cell at' +
   ' the following locations.';
+  StrLargeDrainElevatioDetailed = 'Large drain elevation gradient between %0:s and %' +
+  '1:s.';
+  StrLargeDrainElevatio = 'Large drain elevation gradient';
+  StrHighDrainConductan = 'High Drain conductance compared to the cell-to-cell '
+  + 'conductance may cause numerical difficulties';
 //  StrLayerRowColumn = 'Layer, Row Column = %0:d, %1:d, %2:d';
 
 { TModflowDRN_Writer }
@@ -69,47 +77,130 @@ end;
 
 procedure TModflowDRN_Writer.CheckCell(ValueCell: TValueCell;
   const PackageName: string);
+const
+  HighConductanceContrast = 1E6;
 var
   Drn_Cell: TDrn_Cell;
   ActiveDataArray: TDataArray;
   ScreenObject: TScreenObject;
+  OtherCell: TDrn_Cell;
+  CellBottomElevation: Real;
+  AqCond: Double;
+  Ratio: Extended;
+  procedure CheckGradient;
+  var
+    DeltaDrnElevation: double;
+    WarningMessage: string;
+//    OtherCellBottomElevation: Real;
+//    DeltaCellElevation: Real;
+    Cell1: string;
+    Cell2: string;
+    Point1: TPoint2D;
+    Point2: TPoint2D;
+    Gradient: Extended;
+  begin
+    if OtherCell <> nil then
+    begin
+      DeltaDrnElevation := Abs(Drn_Cell.Elevation - OtherCell.Elevation);
+      Point1 := Model.Grid.TwoDElementCenter(Drn_Cell.Column, Drn_Cell.Row);
+      Point2 := Model.Grid.TwoDElementCenter(OtherCell.Column, OtherCell.Row);
+      Gradient := DeltaDrnElevation/Distance(Point1, Point2);
+//      OtherCellBottomElevation := Model.Grid.CellElevation[
+//        OtherCell.Column, OtherCell.Row, OtherCell.Layer+1];
+//      DeltaCellElevation := Abs(OtherCellBottomElevation - CellBottomElevation);
+      if Gradient > HighGradient  then
+      begin
+        ScreenObject := Drn_Cell.ScreenObject as TScreenObject;
+        Cell1 := Format(StrLayerRowColObject, [
+          Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name]);
+        ScreenObject := OtherCell.ScreenObject as TScreenObject;
+        Cell2 := Format(StrLayerRowColObject, [
+          OtherCell.Layer+1, OtherCell.Row+1, OtherCell.Column+1, ScreenObject.Name]);
+        WarningMessage := Format(StrLargeDrainElevatioDetailed,
+          [Cell1, Cell2]);
+        frmErrorsAndWarnings.AddWarning(Model, StrLargeDrainElevatio,
+          WarningMessage, ScreenObject);
+      end;
+    end;
+  end;
 begin
   inherited;
   Drn_Cell := ValueCell as TDrn_Cell;
+  if Length(FCells) = 0 then
+  begin
+    InitializeCells;
+  end;
+  FCells[Drn_Cell.Row, Drn_Cell.Column] := Drn_Cell;
   ActiveDataArray := Model.DataArrayManager.GetDataSetByName(rsActive);
   Assert(ActiveDataArray <> nil);
+  CellBottomElevation := Model.Grid.CellElevation[
+    Drn_Cell.Column, Drn_Cell.Row, Drn_Cell.Layer+1];
   if ActiveDataArray.BooleanData[Drn_Cell.Layer, Drn_Cell.Row, Drn_Cell.Column]
-    and (Drn_Cell.Elevation < Model.Grid.CellElevation[
-    Drn_Cell.Column, Drn_Cell.Row, Drn_Cell.Layer+1]) then
+    then
   begin
-    ScreenObject := Drn_Cell.ScreenObject as TScreenObject;
-    if Model.ModelSelection = msModflowNWT then
+    if (Drn_Cell.Elevation < CellBottomElevation) then
     begin
-      frmErrorsAndWarnings.AddError(Model, StrDrainElevationIsB,
-        Format(StrLayerRowColObject, [
-        Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name]),
-        ScreenObject);
-    end
-    else
+      ScreenObject := Drn_Cell.ScreenObject as TScreenObject;
+      if Model.ModelSelection = msModflowNWT then
+      begin
+        frmErrorsAndWarnings.AddError(Model, StrDrainElevationIsB,
+          Format(StrLayerRowColObject, [
+          Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name]),
+          ScreenObject);
+      end
+      else
+      begin
+        frmErrorsAndWarnings.AddWarning(Model, StrDrainElevationIsB,
+          Format(StrLayerRowColObject, [
+          Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name]),
+          ScreenObject);
+      end;
+    end;
+    AqCond := AquiferConductance(Drn_Cell.Layer, Drn_Cell.Row, Drn_Cell.Column);
+    if AqCond > 0 then
     begin
-      frmErrorsAndWarnings.AddWarning(Model, StrDrainElevationIsB,
-        Format(StrLayerRowColObject, [
-        Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name]),
-        ScreenObject);
+      Ratio := Drn_Cell.Conductance/AqCond;
+      if Ratio > HighConductanceContrast then
+      begin
+        ScreenObject := Drn_Cell.ScreenObject as TScreenObject;
+        frmErrorsAndWarnings.AddWarning(Model,StrHighDrainConductan,
+          Format(StrLayerRowColObject, [
+          Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name]),
+          ScreenObject);
+      end;
     end;
   end;
+  if Drn_Cell.Row > 0 then
+  begin
+    OtherCell := FCells[Drn_Cell.Row-1,Drn_Cell.Column];
+    CheckGradient;
+  end;
+  if Drn_Cell.Column > 0 then
+  begin
+    OtherCell := FCells[Drn_Cell.Row,Drn_Cell.Column-1];
+    CheckGradient;
+  end;
+  if Drn_Cell.Row < Model.Grid.RowCount-1 then
+  begin
+    OtherCell := FCells[Drn_Cell.Row+1,Drn_Cell.Column];
+    CheckGradient;
+  end;
+  if Drn_Cell.Column < Model.Grid.ColumnCount-1 then
+  begin
+    OtherCell := FCells[Drn_Cell.Row,Drn_Cell.Column+1];
+    CheckGradient;
+  end;
+end;
+
+procedure TModflowDRN_Writer.DoBeforeWriteCells;
+begin
+  inherited;
+  InitializeCells;
 end;
 
 procedure TModflowDRN_Writer.Evaluate;
 begin
-  frmErrorsAndWarnings.BeginUpdate;
-  try
-    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrDrainElevationIsB);
-    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrDrainElevationIsB);
     inherited;
-  finally
-    frmErrorsAndWarnings.EndUpdate;
-  end;
 end;
 
 class function TModflowDRN_Writer.Extension: string;
@@ -241,77 +332,86 @@ var
   ShouldWriteFile: Boolean;
   ShouldWriteObservationFile: Boolean;
 begin
-  if not Package.IsSelected then
-  begin
-    Exit
-  end;
-  ShouldWriteFile := not Model.PackageGeneratedExternally(StrDRN);
-  ShouldWriteObservationFile := ObservationPackage.IsSelected
-    and not Model.PackageGeneratedExternally(StrDROB);
-
-  if not ShouldWriteFile and not ShouldWriteObservationFile then
-  begin
-    Exit;
-  end;
-
-  NameOfFile := FileName(AFileName);
-  if ShouldWriteFile then
-  begin
-    WriteToNameFile('DRN', Model.UnitNumbers.UnitNumber(StrDRN),
-      NameOfFile, foInput);
-  end;
-  if ShouldWriteFile or ShouldWriteObservationFile then
-  begin
-    Evaluate;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-    ClearTimeLists(Model);
-  end;
-  if not ShouldWriteFile then
-  begin
-    Exit;
-  end;
-  OpenFile(FileName(AFileName));
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    frmProgressMM.AddMessage(StrWritingDRNPackage);
-    frmProgressMM.AddMessage(StrWritingDataSet0);
-    WriteDataSet0;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrDrainElevationIsB);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrDrainElevationIsB);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrLargeDrainElevatio);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrHighDrainConductan);
+    if not Package.IsSelected then
+    begin
+      Exit
+    end;
+    ShouldWriteFile := not Model.PackageGeneratedExternally(StrDRN);
+    ShouldWriteObservationFile := ObservationPackage.IsSelected
+      and not Model.PackageGeneratedExternally(StrDROB);
+
+    if not ShouldWriteFile and not ShouldWriteObservationFile then
     begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet1);
-    WriteDataSet1;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
+    NameOfFile := FileName(AFileName);
+    if ShouldWriteFile then
+    begin
+      WriteToNameFile('DRN', Model.UnitNumbers.UnitNumber(StrDRN),
+        NameOfFile, foInput);
+    end;
+    if ShouldWriteFile or ShouldWriteObservationFile then
+    begin
+      Evaluate;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      ClearTimeLists(Model);
+    end;
+    if not ShouldWriteFile then
     begin
       Exit;
     end;
+    OpenFile(FileName(AFileName));
+    try
+      frmProgressMM.AddMessage(StrWritingDRNPackage);
+      frmProgressMM.AddMessage(StrWritingDataSet0);
+      WriteDataSet0;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet2);
-    WriteDataSet2;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
+      frmProgressMM.AddMessage(StrWritingDataSet1);
+      WriteDataSet1;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet2);
+      WriteDataSet2;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSets3and4);
+      WriteDataSets3And4;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSets5to7);
+      WriteDataSets5To7;
+    finally
+      CloseFile;
     end;
-
-    frmProgressMM.AddMessage(StrWritingDataSets3and4);
-    WriteDataSets3And4;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSets5to7);
-    WriteDataSets5To7;
   finally
-    CloseFile;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
@@ -326,6 +426,21 @@ begin
   WriteFluxObsFile(AFileName, StrIUDROBSV, PackageAbbreviation,
     DataSet1Comment, DataSet2Comment, DataSet3Comment,
     Model.DrainObservations, Purpose);
+end;
+
+procedure TModflowDRN_Writer.InitializeCells;
+var
+  RowIndex: Integer;
+  ColIndex: Integer;
+begin
+  SetLength(FCells, Model.Grid.RowCount, Model.Grid.ColumnCount);
+  for RowIndex := 0 to Model.Grid.RowCount - 1 do
+  begin
+    for ColIndex := 0 to Model.Grid.ColumnCount - 1 do
+    begin
+      FCells[RowIndex, ColIndex] := nil;
+    end;
+  end;
 end;
 
 procedure TModflowDRN_Writer.WriteParameterCells(CellList: TValueCellList;

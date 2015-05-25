@@ -24,11 +24,11 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
   end
   inherited comboDataSets: TComboBox
     Top = 148
-    Width = 560
+    Width = 578
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 1
     ExplicitTop = 148
-    ExplicitWidth = 560
+    ExplicitWidth = 578
   end
   inherited comboInterpolators: TComboBox
     Top = 213
@@ -69,17 +69,17 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
   inherited btnOK: TBitBtn
     Left = 398
     Top = 324
-    Width = 73
+    Width = 83
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 9
     OnClick = btnOKClick
     ExplicitLeft = 398
     ExplicitTop = 324
+    ExplicitWidth = 83
   end
   inherited btnCancel: TBitBtn
     Left = 495
     Top = 324
-    Width = 73
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 10
     ExplicitLeft = 495
@@ -88,7 +88,6 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
   inherited btnHelp: TBitBtn
     Left = 301
     Top = 324
-    Width = 73
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 8
     ExplicitLeft = 301
@@ -97,7 +96,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
   object rdgLimits: TRbwDataGrid4 [12]
     Left = 8
     Top = 29
-    Width = 560
+    Width = 578
     Height = 89
     Anchors = [akLeft, akTop, akRight]
     ColCount = 4
@@ -207,12 +206,11 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
         AutoAdjustColWidths = True
       end>
     WordWrapRowCaptions = False
-    ExplicitWidth = 578
   end
   object rgFilterMethod: TRadioGroup [13]
     Left = 346
     Top = 178
-    Width = 222
+    Width = 240
     Height = 140
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Filter method'
@@ -224,7 +222,6 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
       'Point closest to cell center'
       'None')
     TabOrder = 2
-    ExplicitWidth = 214
   end
   inherited OpenDialogFile: TOpenDialog
     Filter = 'Surfer grid file (*.grd, *.dat)|*.grd;*.dat|All files (*.*)|*.*'

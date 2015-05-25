@@ -11,10 +11,12 @@ type
   private
     NPRIV: integer;
     MXL: integer;
+    FCells: array of array of TRiv_Cell;
     procedure WriteDataSet1;
     procedure WriteDataSet2;
     procedure WriteDataSets3And4;
     procedure WriteDataSets5To7;
+    procedure InitializeCells;
   protected
     function ObservationPackage: TModflowPackageSelection; override;
     function CellType: TValueCellType; override;
@@ -33,7 +35,7 @@ type
     class function ObservationOutputExtension: string; override;
     function ObsNameWarningString: string; override;
     procedure CheckCell(ValueCell: TValueCell; const PackageName: string); override;
-    procedure Evaluate; override;
+    procedure DoBeforeWriteCells; override;
   public
     procedure WriteFile(const AFileName: string);
     procedure WriteFluxObservationFile(const AFileName: string;
@@ -44,7 +46,7 @@ implementation
 
 uses ModflowTimeUnit, frmErrorsAndWarningsUnit,
   ModflowTransientListParameterUnit, ModflowUnitNumbers, frmProgressUnit, Forms,
-  DataSetUnit;
+  DataSetUnit, FastGEO;
 
 resourcestring
   StrInTheFollowingRiv = 'In the following river cells, the stage is below t' +
@@ -60,6 +62,15 @@ resourcestring
 //  StrWritingDataSets5to7 = '  Writing Data Sets 5 to 7.';
   StrRiverStageIsBelow = 'River stage is below the bottom of the cell at the' +
   ' following locations.';
+  StrRiverBottomIsBelo = 'River bottom is below the bottom of the cell at th' +
+  'e following locations.';
+  StrRiverStageIsBelowBottom = 'River stage is below the river bottom at the' +
+  ' following locations.';
+  StrLargeRiverStageGrDetailed = 'Large river stage gradient between %0:s an' +
+  'd %1:s.';
+  StrLargeRiverStageGr = 'Large river stage gradient';
+  StrHighRiverConductan = 'High River conductance compared to the cell-to-ce' +
+  'll conductance may cause numerical difficulties';
 
 { TModflowRIV_Writer }
 
@@ -70,47 +81,155 @@ end;
 
 procedure TModflowRIV_Writer.CheckCell(ValueCell: TValueCell;
   const PackageName: string);
+const
+  HighConductanceContrast = 1E6;
 var
   Riv_Cell: TRiv_Cell;
   ActiveDataArray: TDataArray;
   ScreenObject: TScreenObject;
+  OtherCell: TRiv_Cell;
+  CellBottomElevation: Real;
+  AqCond: Double;
+  Ratio: Extended;
+  procedure CheckGradient;
+  var
+    DeltaRivElevation: double;
+//    OtherCellBottomElevation: Real;
+//    DeltaCellElevation: double;
+    Cell1: string;
+    Cell2: string;
+    WarningMessage: string;
+    Point1: TPoint2D;
+    Point2: TPoint2D;
+    Gradient: Extended;
+  begin
+    if OtherCell <> nil then
+    begin
+      DeltaRivElevation := Abs(Riv_Cell.RiverStage - OtherCell.RiverStage);
+      Point1 := Model.Grid.TwoDElementCenter(Riv_Cell.Column, Riv_Cell.Row);
+      Point2 := Model.Grid.TwoDElementCenter(OtherCell.Column, OtherCell.Row);
+      Gradient := DeltaRivElevation/Distance(Point1, Point2);
+//      OtherCellBottomElevation := Model.Grid.CellElevation[
+//        OtherCell.Column, OtherCell.Row, OtherCell.Layer+1];
+//      DeltaCellElevation := Abs(OtherCellBottomElevation - CellBottomElevation);
+      if Gradient > HighGradient then
+      begin
+        ScreenObject := Riv_Cell.ScreenObject as TScreenObject;
+        Cell1 := Format(StrLayerRowColObject, [
+          Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]);
+        ScreenObject := OtherCell.ScreenObject as TScreenObject;
+        Cell2 := Format(StrLayerRowColObject, [
+          OtherCell.Layer+1, OtherCell.Row+1, OtherCell.Column+1, ScreenObject.Name]);
+        WarningMessage := Format(StrLargeRiverStageGrDetailed,
+          [Cell1, Cell2]);
+        frmErrorsAndWarnings.AddWarning(Model, StrLargeRiverStageGr,
+          WarningMessage, ScreenObject);
+      end;
+    end;
+  end;
 begin
   inherited;
   Riv_Cell := ValueCell as TRiv_Cell;
+  if Length(FCells) = 0 then
+  begin
+    InitializeCells;
+  end;
+  FCells[Riv_Cell.Row, Riv_Cell.Column] := Riv_Cell;
   ActiveDataArray := Model.DataArrayManager.GetDataSetByName(rsActive);
   Assert(ActiveDataArray <> nil);
-  if ActiveDataArray.BooleanData[Riv_Cell.Layer, Riv_Cell.Row, Riv_Cell.Column]
-    and (Riv_Cell.RiverStage < Model.Grid.CellElevation[
-    Riv_Cell.Column, Riv_Cell.Row, Riv_Cell.Layer+1]) then
+  CellBottomElevation := Model.Grid.CellElevation[
+    Riv_Cell.Column, Riv_Cell.Row, Riv_Cell.Layer+1];
+  if ActiveDataArray.BooleanData[Riv_Cell.Layer, Riv_Cell.Row, Riv_Cell.Column] then
   begin
-    ScreenObject := Riv_Cell.ScreenObject as TScreenObject;
-    if Model.ModelSelection = msModflowNWT then
+    if (Riv_Cell.RiverStage < CellBottomElevation) then
     begin
-      frmErrorsAndWarnings.AddError(Model, StrRiverStageIsBelow,
-        Format(StrLayerRowColObject, [
-        Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]),
-        ScreenObject);
-    end
-    else
+      ScreenObject := Riv_Cell.ScreenObject as TScreenObject;
+      if Model.ModelSelection = msModflowNWT then
+      begin
+        frmErrorsAndWarnings.AddError(Model, StrRiverStageIsBelow,
+          Format(StrLayerRowColObject, [
+          Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]),
+          ScreenObject);
+      end
+      else
+      begin
+        frmErrorsAndWarnings.AddWarning(Model, StrRiverStageIsBelow,
+          Format(StrLayerRowColObject, [
+          Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]),
+          ScreenObject);
+      end;
+    end;
+
+    if (Riv_Cell.RiverBottom < Model.Grid.CellElevation[
+      Riv_Cell.Column, Riv_Cell.Row, Riv_Cell.Layer+1]) then
     begin
-      frmErrorsAndWarnings.AddWarning(Model, StrRiverStageIsBelow,
+      ScreenObject := Riv_Cell.ScreenObject as TScreenObject;
+      if Model.ModelSelection = msModflowNWT then
+      begin
+        frmErrorsAndWarnings.AddError(Model, StrRiverBottomIsBelo,
+          Format(StrLayerRowColObject, [
+          Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]),
+          ScreenObject);
+      end
+      else
+      begin
+        frmErrorsAndWarnings.AddWarning(Model, StrRiverBottomIsBelo,
+          Format(StrLayerRowColObject, [
+          Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]),
+          ScreenObject);
+      end;
+    end;
+
+    if Riv_Cell.RiverStage <= Riv_Cell.RiverBottom then
+    begin
+      ScreenObject := Riv_Cell.ScreenObject as TScreenObject;
+      frmErrorsAndWarnings.AddError(Model, StrRiverStageIsBelowBottom,
         Format(StrLayerRowColObject, [
         Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]),
         ScreenObject);
     end;
+
+    AqCond := AquiferConductance(Riv_Cell.Layer, Riv_Cell.Row, Riv_Cell.Column);
+    if AqCond > 0 then
+    begin
+      Ratio := Riv_Cell.Conductance/AqCond;
+      if Ratio > HighConductanceContrast then
+      begin
+        ScreenObject := Riv_Cell.ScreenObject as TScreenObject;
+        frmErrorsAndWarnings.AddWarning(Model,StrHighRiverConductan,
+          Format(StrLayerRowColObject, [
+          Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]),
+          ScreenObject);
+      end;
+    end;
+
+  end;
+  if Riv_Cell.Row > 0 then
+  begin
+    OtherCell := FCells[Riv_Cell.Row-1,Riv_Cell.Column];
+    CheckGradient;
+  end;
+  if Riv_Cell.Column > 0 then
+  begin
+    OtherCell := FCells[Riv_Cell.Row,Riv_Cell.Column-1];
+    CheckGradient;
+  end;
+  if Riv_Cell.Row < Model.Grid.RowCount-1 then
+  begin
+    OtherCell := FCells[Riv_Cell.Row+1,Riv_Cell.Column];
+    CheckGradient;
+  end;
+  if Riv_Cell.Column < Model.Grid.ColumnCount-1 then
+  begin
+    OtherCell := FCells[Riv_Cell.Row,Riv_Cell.Column+1];
+    CheckGradient;
   end;
 end;
 
-procedure TModflowRIV_Writer.Evaluate;
+procedure TModflowRIV_Writer.DoBeforeWriteCells;
 begin
-  frmErrorsAndWarnings.BeginUpdate;
-  try
-    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrRiverStageIsBelow);
-    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrRiverStageIsBelow);
-    inherited;
-  finally
-    frmErrorsAndWarnings.EndUpdate;
-  end;
+  inherited;
+  InitializeCells;
 end;
 
 class function TModflowRIV_Writer.Extension: string;
@@ -259,79 +378,91 @@ var
   ShouldWriteFile: Boolean;
   ShouldWriteObservationFile: Boolean;
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInTheFollowingRiv);
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInTheFollowingRiv);
-  if not Package.IsSelected then
-  begin
-    Exit
-  end;
-  ShouldWriteFile := not Model.PackageGeneratedExternally(StrRIV);
-  ShouldWriteObservationFile := ObservationPackage.IsSelected
-    and not Model.PackageGeneratedExternally(StrRVOB);
-
-  if not ShouldWriteFile and not ShouldWriteObservationFile then
-  begin
-    Exit;
-  end;
-  NameOfFile := FileName(AFileName);
-  if ShouldWriteFile then
-  begin
-    WriteToNameFile(StrRIV, Model.UnitNumbers.UnitNumber(StrRIV),
-      NameOfFile, foInput);
-  end;
-  if ShouldWriteFile or ShouldWriteObservationFile then
-  begin
-    Evaluate;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-    ClearTimeLists(Model);
-  end;
-  if not ShouldWriteFile then
-  begin
-    Exit;
-  end;
-  OpenFile(NameOfFile);
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    frmProgressMM.AddMessage(StrWritingRIVPackage);
-    frmProgressMM.AddMessage(StrWritingDataSet0);
-    WriteDataSet0;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrRiverStageIsBelow);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrRiverStageIsBelow);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrRiverBottomIsBelo);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrRiverBottomIsBelo);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrLargeRiverStageGr);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrHighRiverConductan);
+
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInTheFollowingRiv);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInTheFollowingRiv);
+    if not Package.IsSelected then
+    begin
+      Exit
+    end;
+    ShouldWriteFile := not Model.PackageGeneratedExternally(StrRIV);
+    ShouldWriteObservationFile := ObservationPackage.IsSelected
+      and not Model.PackageGeneratedExternally(StrRVOB);
+
+    if not ShouldWriteFile and not ShouldWriteObservationFile then
     begin
       Exit;
     end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet1);
-    WriteDataSet1;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
+    NameOfFile := FileName(AFileName);
+    if ShouldWriteFile then
+    begin
+      WriteToNameFile(StrRIV, Model.UnitNumbers.UnitNumber(StrRIV),
+        NameOfFile, foInput);
+    end;
+    if ShouldWriteFile or ShouldWriteObservationFile then
+    begin
+      Evaluate;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      ClearTimeLists(Model);
+    end;
+    if not ShouldWriteFile then
     begin
       Exit;
     end;
+    OpenFile(NameOfFile);
+    try
+      frmProgressMM.AddMessage(StrWritingRIVPackage);
+      frmProgressMM.AddMessage(StrWritingDataSet0);
+      WriteDataSet0;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet2);
-    WriteDataSet2;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
+      frmProgressMM.AddMessage(StrWritingDataSet1);
+      WriteDataSet1;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet2);
+      WriteDataSet2;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSets3and4);
+      WriteDataSets3And4;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSets5to7);
+      WriteDataSets5To7;
+    finally
+      CloseFile;
     end;
-
-    frmProgressMM.AddMessage(StrWritingDataSets3and4);
-    WriteDataSets3And4;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSets5to7);
-    WriteDataSets5To7;
   finally
-    CloseFile;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
@@ -346,6 +477,21 @@ begin
   WriteFluxObsFile(AFileName, StrIURVOBSV, PackageAbbreviation,
     DataSet1Comment, DataSet2Comment, DataSet3Comment,
     Model.RiverObservations, Purpose);
+end;
+
+procedure TModflowRIV_Writer.InitializeCells;
+var
+  RowIndex: Integer;
+  ColIndex: Integer;
+begin
+  SetLength(FCells, Model.Grid.RowCount, Model.Grid.ColumnCount);
+  for RowIndex := 0 to Model.Grid.RowCount - 1 do
+  begin
+    for ColIndex := 0 to Model.Grid.ColumnCount - 1 do
+    begin
+      FCells[RowIndex, ColIndex] := nil;
+    end;
+  end;
 end;
 
 procedure TModflowRIV_Writer.WriteParameterCells(CellList: TValueCellList;

@@ -10,7 +10,12 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, JvExStdCtrls, JvRadioButton, ExtCtrls, JvExExtCtrls,
   JvImage, GLWin32Viewer, GLScene, GLGeomObjects, GLObjects, GLColor,
-  GoPhastTypes, GLCoordinates, GLCrossPlatform, BaseClasses;
+  GoPhastTypes, GLCoordinates, GLCrossPlatform,
+{$IF CompilerVersion < 23}
+  BaseClasses;
+{$ELSE}
+  GLBaseClasses;
+{$IFEND}
 
 type
   TframeIface = class(TFrame)
@@ -40,6 +45,7 @@ type
     Tube3: TGLCylinder;
     GLCamera1: TGLCamera;
     glsvViewer: TGLSceneViewer;
+    lblMessage: TLabel;
     procedure rbHorizontalClick(Sender: TObject);
   private
     FIFace: TIface;

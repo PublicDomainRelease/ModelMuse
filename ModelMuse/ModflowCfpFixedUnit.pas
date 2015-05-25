@@ -6,6 +6,9 @@ uses Classes, RbwParser, GoPhastTypes, ModflowBoundaryUnit, SubscriptionUnit,
   FormulaManagerUnit, Contnrs, SysUtils;
 
 type
+
+  // @name is used to control data set 27 in the CFP process via the
+  // @link(TDataArray) "CfpFixedHeads."
   TCfpFixedBoundary = class(TModflowSteadyBoundary)
   private
     FFixedHead: TFormulaObject;

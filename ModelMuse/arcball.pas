@@ -62,7 +62,7 @@ unit arcball;
 interface
 
 uses
-  OpenGL12x;
+  OpenGL;
 
 type
   //these first few types are identical to Mike Lischke's geometry.pas

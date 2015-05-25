@@ -1208,9 +1208,9 @@ begin
   UpdateCurrentScreenObject(AScreenObject);
   UpdateCurrentSegment(NearestSegment);
 //  if NearestSegment = nil then
-  begin
-    UpdateCurrentSection(SectionIndex);
-  end;
+//  begin
+  UpdateCurrentSection(SectionIndex);
+//  end;
   if VariablesUsed.Count > 0 then
   begin
     for Index := 0 to VariablesUsed.Count - 1 do
@@ -1263,9 +1263,9 @@ begin
   UpdateCurrentScreenObject(AScreenObject);
   UpdateCurrentSegment(NearestSegment);
 //  if NearestSegment = nil then
-  begin
-    UpdateCurrentSection(SectionIndex);
-  end;
+//  begin
+  UpdateCurrentSection(SectionIndex);
+//  end;
   AScreenObject.UpdateImportedValues(DataSet);
   EvaluateExpression(Compiler, Expression, AScreenObject);
 end;
@@ -1736,9 +1736,9 @@ begin
       begin
         if AScreenObject.SectionEnd[SectionIndex] = PointIndex then
         begin
-          Inc(SectionIndex);
-          if AScreenObject.SectionClosed[SectionIndex-1] then
+          if AScreenObject.SectionClosed[SectionIndex] then
           begin
+            Inc(SectionIndex);
             Continue;
           end;
         end;
@@ -1752,11 +1752,15 @@ begin
         Point2 := Point1;
 
         SortArray[SortIndex].Location := Point2;
-        InitializeVariablesAndExpression(Point2, AScreenObject, SectionIndex-1, Expression);
+        InitializeVariablesAndExpression(Point2, AScreenObject, SectionIndex, Expression);
         SortArray[SortIndex].Value := Expression.DoubleResult;
         SortArray[SortIndex].Duplicate := False;
         SortArray[SortIndex].OriginalIndex := SortIndex;
         Inc(SortIndex);
+        if AScreenObject.SectionEnd[SectionIndex] = PointIndex then
+        begin
+          Inc(SectionIndex);
+        end;
       end;
     end;
 

@@ -14,7 +14,7 @@ uses
   // Delphi XE and earlier
   Controls,
   {$IFEND}
-  OpenGL12x, MeshRenumberingTypes, GPC_Classes, SubPolygonUnit;
+  OpenGL, MeshRenumberingTypes, GPC_Classes, SubPolygonUnit;
 
 Type
   TDrawingChoice = (dcAll, dcEdge);
@@ -898,6 +898,7 @@ Type
     FOnMeshTypeChanged: TNotifyEvent;
     FTopMeshOutline: TMeshOutline;
     FFrontMeshOutline: TMeshOutline;
+    FSettingSelectedLayer: Boolean;
 //    FDrawElementCenters: boolean;
     procedure SetElements(const Value: TSutraElement3D_Collection);
     procedure SetNodes(const Value: TSutraNode3D_Collection);
@@ -968,6 +969,8 @@ Type
     function GetActiveElement(Index: Integer): IElement;
     procedure SetDefaultCrossSectionLocation;
   public
+    procedure UpdateNodeArray;
+    procedure AssignNodeElevations;
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure UpdateNodeNumbers;
@@ -4182,7 +4185,7 @@ begin
 //      result := L.ElementNumber - R.ElementNumber;
 //    end));
 
-
+//  frmGoPhast.PhastModel.DataArrayManager.InvalidateAllDataSets;
 
 end;
 
@@ -7375,9 +7378,9 @@ end;
 
 procedure TSutraMesh3D.RecordColoredCellsOrElements;
 var
-  Red: TGLubyte;
-  Green: TGLubyte;
-  Blue: TGLubyte;
+  Red: GLubyte;
+  Green: GLubyte;
+  Blue: GLubyte;
   ElementIndex: Integer;
   LayerIndex: Integer;
   AnElement3D: TSutraElement3D;
@@ -7476,7 +7479,7 @@ procedure TSutraMesh3D.Draw3D;
 const
   NumberOfLists = 3;
 var
-  Colors: array[0..2] of TGLint;
+  Colors: array[0..2] of GLint;
 begin
 
   glDisable(GL_LIGHTING);
@@ -8199,6 +8202,101 @@ begin
   Mesh2D.SetCorrectElementOrientation;
 end;
 
+procedure TSutraMesh3D.UpdateNodeArray;
+var
+  LayerIndex: Integer;
+  NodeList: TSutraNode3D_List;
+  NodeIndex: Integer;
+  ANode: TSutraNode3D;
+begin
+  NodeList := TSutraNode3D_List.Create;
+  try
+    for LayerIndex := 0 to LayerCount - 1 do
+    begin
+      NodeList.Clear;
+      NodeList.Capacity := Mesh2D.Nodes.Count;
+      for NodeIndex := 0 to Mesh2D.Nodes.Count - 1 do
+      begin
+        ANode := FNodeArray[LayerIndex, NodeIndex];
+        NodeList.Add(ANode);
+      end;
+      for NodeIndex := 0 to NodeList.Count - 1 do
+      begin
+        ANode := NodeList[NodeIndex];
+        FNodeArray[LayerIndex, ANode.Node2D.Number] := ANode;
+      end;
+  //    LayerGroup := LocalModel.SutraLayerStructure[LayerGroupIndex];
+    end;
+  finally
+    NodeList.Free;
+  end;
+
+end;
+
+procedure TSutraMesh3D.AssignNodeElevations;
+var
+  LocalModel: TPhastModel;
+  ANode: TSutraNode3D;
+  IntermediateLayerIndex: Integer;
+  MinimumThickness: Double;
+  LayerGroup: TSutraLayerGroup;
+  MiddleNode: TSutraNode3D;
+  LayerGroupIndex: Integer;
+  PriorLayerIndex: Integer;
+  UnitHeight: TFloat;
+  IntIndex: Integer;
+  HigherNode: TSutraNode3D;
+  DataArray: TDataArray;
+  Fraction: Double;
+  LayerFractions: TDoubleDynArray;
+  Local_ColIndex: Integer;
+  LayerIndex: Integer;
+begin
+  LocalModel := Model as TPhastModel;
+  LayerIndex := -1;
+  for LayerGroupIndex := 0 to LocalModel.SutraLayerStructure.Count - 1 do
+  begin
+    LayerGroup := LocalModel.SutraLayerStructure[LayerGroupIndex];
+    MinimumThickness := LayerGroup.MinThickness;
+    LayerFractions := LocalModel.LayerFractions(LayerGroup);
+    DataArray := LocalModel.DataArrayManager.GetDataSetByName(LayerGroup.DataArrayName);
+    Assert(DataArray <> nil);
+    Assert(DataArray.Orientation = dsoTop);
+    DataArray.Initialize;
+    PriorLayerIndex := LayerIndex;
+    LayerIndex := LayerIndex + LayerGroup.LayerCount;
+    Assert(Length(LayerFractions) = LayerGroup.LayerCount - 1);
+    for Local_ColIndex := 0 to Mesh2D.Nodes.Count - 1 do
+    begin
+      ANode := FNodeArray[LayerIndex, Local_ColIndex];
+      ANode.Z := DataArray.RealData[0, 0, Local_ColIndex];
+      if PriorLayerIndex >= 0 then
+      begin
+        HigherNode := FNodeArray[PriorLayerIndex, Local_ColIndex];
+        UnitHeight := HigherNode.Z - ANode.Z;
+        if UnitHeight < 0 then
+        begin
+          ANode.Z := HigherNode.Z;
+          UnitHeight := 0;
+        end;
+        if UnitHeight < MinimumThickness then
+        begin
+          ANode.Z := HigherNode.Z - MinimumThickness;
+          UnitHeight := MinimumThickness;
+        end;
+        for IntermediateLayerIndex := 0 to Length(LayerFractions) - 1 do
+        begin
+          IntIndex := PriorLayerIndex + IntermediateLayerIndex + 1;
+          Assert(IntIndex < LayerIndex);
+          MiddleNode := FNodeArray[IntIndex, Local_ColIndex];
+          Fraction := LayerFractions[IntermediateLayerIndex];
+          MiddleNode.Z := ANode.Z + UnitHeight * Fraction;
+        end;
+      end;
+    end;
+  end;
+end;
+
 procedure TSutraMesh3D.SetCrossSection(const Value: TCrossSection);
 begin
   FCrossSection.Assign(Value);
@@ -8308,49 +8406,58 @@ end;
 
 procedure TSutraMesh3D.SetSelectedLayer(Value: integer);
 begin
-  if Value < 0 then
+  if FSettingSelectedLayer then
   begin
-    Value := 0;
-  end
-  else
-  begin
-    if LayerCount > 0 then
+    Exit;
+  end;
+  FSettingSelectedLayer := True;
+  try
+    if Value < 0 then
     begin
-      case frmGoPhast.frameTopView.EvaluatedAt of
-        eaBlocks:
-          begin
-            if Value > LayerCount - 1 then
+      Value := 0;
+    end
+    else
+    begin
+      if LayerCount > 0 then
+      begin
+        case frmGoPhast.frameTopView.EvaluatedAt of
+          eaBlocks:
             begin
-              Value := LayerCount - 1;
+              if Value > LayerCount - 1 then
+              begin
+                Value := LayerCount - 1;
+              end;
             end;
-          end;
-        eaNodes:
-          begin
-            if Value > LayerCount then
+          eaNodes:
             begin
-              Value := LayerCount;
+              if Value > LayerCount then
+              begin
+                Value := LayerCount;
+              end;
             end;
-          end;
-      else
-        Assert(False);
+        else
+          Assert(False);
+        end;
       end;
     end;
-  end;
-  if Mesh2D.SelectedLayer <> Value then
-  begin
-    Mesh2D.SelectedLayer := Value;
-    (Model as TPhastModel).CombinedDisplayLayer := Value;
-    FNeedToRecordLayer := True;
-    FNeedToRedraw3d := True;
-//    if not (csLoading in frmGoPhast.PhastModel.ComponentState) then
-//    begin
-//      FDisplayLayer := Value;
-//    end;
-//    FRecordedTopGrid := False;
-    if Assigned(FOnSelectedLayerChange) then
+    if Mesh2D.SelectedLayer <> Value then
     begin
-      FOnSelectedLayerChange(self);
+      Mesh2D.SelectedLayer := Value;
+      (Model as TPhastModel).CombinedDisplayLayer := Value;
+      FNeedToRecordLayer := True;
+      FNeedToRedraw3d := True;
+  //    if not (csLoading in frmGoPhast.PhastModel.ComponentState) then
+  //    begin
+  //      FDisplayLayer := Value;
+  //    end;
+  //    FRecordedTopGrid := False;
+      if Assigned(FOnSelectedLayerChange) then
+      begin
+        FOnSelectedLayerChange(self);
+      end;
     end;
+  finally
+    FSettingSelectedLayer := False;
   end;
 end;
 
@@ -8527,18 +8634,7 @@ var
   LayerIndex: Integer;
   ColIndex: Integer;
   NodeLayerCount: Integer;
-  LayerGroupIndex: Integer;
-  LayerGroup: TSutraLayerGroup;
-  DataArray: TDataArray;
-  PriorLayerIndex: Integer;
   ANode: TSutraNode3D;
-  IntermediateLayerIndex: Integer;
-  HigherNode: TSutraNode3D;
-  IntIndex: Integer;
-  MiddleNode: TSutraNode3D;
-  LayerFractions: TDoubleDynArray;
-  UnitHeight: FastGeo.TFloat;
-  Fraction: double;
   ElementLayerCount: integer;
   AnElement: TSutraElement3D;
   Element2D: TSutraElement2D;
@@ -8553,7 +8649,6 @@ var
   NodeActive: Boolean;
   TempActive: Boolean;
   NodeAbove: TSutraNode3D;
-  MinimumThickness: double;
 begin
   if FUpdatingElevations or (frmGoPhast.ModelSelection <> msSutra22) then
   begin
@@ -8597,49 +8692,7 @@ begin
             FNodeArray[LayerIndex, ColIndex].Node2D_Number := ColIndex;
           end;
         end;
-        LayerIndex := -1;
-        for LayerGroupIndex := 0 to LocalModel.SutraLayerStructure.Count - 1 do
-        begin
-          LayerGroup := LocalModel.SutraLayerStructure[LayerGroupIndex];
-          MinimumThickness := LayerGroup.MinThickness;
-          LayerFractions := LocalModel.LayerFractions(LayerGroup);
-          DataArray := LocalModel.DataArrayManager.GetDataSetByName(
-            LayerGroup.DataArrayName);
-          Assert(DataArray <> nil);
-          Assert(DataArray.Orientation = dsoTop);
-          DataArray.Initialize;
-          PriorLayerIndex := LayerIndex;
-          LayerIndex := LayerIndex + LayerGroup.LayerCount;
-          Assert(Length(LayerFractions) = LayerGroup.LayerCount-1);
-          for ColIndex := 0 to Mesh2D.Nodes.Count - 1 do
-          begin
-            ANode := FNodeArray[LayerIndex, ColIndex];
-            ANode.Z := DataArray.RealData[0, 0, ColIndex];
-            if PriorLayerIndex >= 0 then
-            begin
-              HigherNode := FNodeArray[PriorLayerIndex, ColIndex];
-              UnitHeight := HigherNode.Z - ANode.Z;
-              if UnitHeight < 0 then
-              begin
-                ANode.Z := HigherNode.Z;
-                UnitHeight := 0;
-              end;
-              if UnitHeight < MinimumThickness then
-              begin
-                ANode.Z := HigherNode.Z-MinimumThickness;
-                UnitHeight := MinimumThickness;
-              end;
-              for IntermediateLayerIndex := 0 to Length(LayerFractions) - 1 do
-              begin
-                IntIndex := PriorLayerIndex+IntermediateLayerIndex+1;
-                Assert(IntIndex < LayerIndex);
-                MiddleNode := FNodeArray[IntIndex, ColIndex];
-                Fraction := LayerFractions[IntermediateLayerIndex];
-                MiddleNode.Z := ANode.Z + UnitHeight*Fraction;
-              end;
-            end;
-          end;
-        end;
+        AssignNodeElevations;
       end;
 
       for NodeIndex := 0 to Nodes.Count - 1 do

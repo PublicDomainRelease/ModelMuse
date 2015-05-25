@@ -10,7 +10,7 @@ unit AbstractGridUnit;
 
 interface
 
-uses Types, SysUtils, Classes, Graphics, Controls, Forms, OpenGL12x,
+uses Types, SysUtils, Classes, Graphics, Controls, Forms,  OpenGL,
   GR32, // TBitmap32 and TFloatRect are declared in GR32.
   FastGEO, GoPhastTypes, RbwParser, ZoomBox2, SubscriptionUnit,
   IsosurfaceUnit, ContourUnit, DataSetUnit;
@@ -7251,7 +7251,7 @@ end;
 
 procedure TCustomModelGrid.Draw3D;
 var
-  Colors: array[0..2] of TGLint;
+  Colors: array[0..2] of GLint;
 begin
   if not CanDraw3D then
     Exit;
@@ -7260,6 +7260,7 @@ begin
   begin
     Exit;
   end;
+
   // Draw outer box
 
   glDisable(GL_LIGHTING);
@@ -7352,36 +7353,30 @@ begin
   end;
 
   // Show the display lists.
-  try
-    if frmGoPhast.tbShell.Down and FRecordedShell then
-    begin
-      glCallList(FGridShellGLIndex);
-    end;
-    if frmGoPhast.tbTopGrid.Down and FRecordedTopGrid then
-    begin
-      glCallList(FTopGridGLIndex);
-    end;
-    if frmGoPhast.tbFrontGrid.Down and FRecordedFrontGrid then
-    begin
-      glCallList(FFrontGridGLIndex);
-    end;
-    if frmGoPhast.tbSideGrid.Down and FRecordedSideGrid then
-    begin
-      glCallList(FSideGridGLIndex);
-    end;
-    if frmGoPhast.tb3DColors.Down and (ThreeDDataSet <> nil) then
-    begin
-      glCallList(FCellsGLIndex);
-    end;
-    if frmGoPhast.tb3DColors.Down
-      and (frmGoPhast.PhastModel.EdgeDisplay <> nil) then
-    begin
-      glCallList(FEdgesGLIndex);
-    end;
-  except on EMathError do
-    begin
-      // do nothing
-    end;
+  if frmGoPhast.tbShell.Down and FRecordedShell then
+  begin
+    glCallList(FGridShellGLIndex);
+  end;
+  if frmGoPhast.tbTopGrid.Down and FRecordedTopGrid then
+  begin
+    glCallList(FTopGridGLIndex);
+  end;
+  if frmGoPhast.tbFrontGrid.Down and FRecordedFrontGrid then
+  begin
+    glCallList(FFrontGridGLIndex);
+  end;
+  if frmGoPhast.tbSideGrid.Down and FRecordedSideGrid then
+  begin
+    glCallList(FSideGridGLIndex);
+  end;
+  if frmGoPhast.tb3DColors.Down and (ThreeDDataSet <> nil) then
+  begin
+    glCallList(FCellsGLIndex);
+  end;
+  if frmGoPhast.tb3DColors.Down
+    and (frmGoPhast.PhastModel.EdgeDisplay <> nil) then
+  begin
+    glCallList(FEdgesGLIndex);
   end;
 
   glPopMatrix;
@@ -7523,9 +7518,9 @@ var
   MinValue, MaxValue, MinPositive: double;
   Value: double;
   Color: TColor;
-  Red: TGLubyte;
-  Green: TGLubyte;
-  Blue: TGLubyte;
+  Red: GLubyte;
+  Green: GLubyte;
+  Blue: GLubyte;
   LocalEdgeDisplay: TCustomModflowGridEdgeDisplay;
   ColoringLimits: TColoringLimits;
   ActiveDataArray: TDataArray;
@@ -7881,7 +7876,7 @@ var
   CellColors: TCellColors;
   LayerLength, RowLength, ColLength: integer;
   LayerIndex, RowIndex, ColIndex: integer;
-  Red, Green, Blue: TGLubyte;
+  Red, Green, Blue: GLubyte;
   XPositions, YPositions: TOneDRealArray;
   ZPositions: TThreeDRealArray;
   Index: integer;

@@ -35,6 +35,9 @@ uses
 resourcestring
   StrWritingDataForL = '  Writing data for layer %d.';
   StrWritingBCFPackage = 'Writing BCF Package input.';
+  StrLargeContrastInTr = 'Large contrast in transmissivity (may cause numerical problems)';
+  StrLargeContrastInHy = 'Large contrast in hydraulic conductivity (may caus' +
+  'e numerical problems)';
 
 { TModflowBCF_Writer }
 
@@ -57,6 +60,8 @@ begin
         DataArray := DataArrayManager.GetDataSetByName(StrTransmissivity);
         Assert(DataArray <> nil);
         WriteArray(DataArray, Layer, 'Tran', StrNoValueAssigned);
+        CheckArray(DataArray, Layer, StrLargeContrastInTr,
+          cvmGradient, 1e6, etWarning);
       end;
     1, 3:
       begin
@@ -64,6 +69,8 @@ begin
         DataArray := DataArrayManager.GetDataSetByName(rsKx);
         Assert(DataArray <> nil);
         WriteArray(DataArray, Layer, 'HY', StrNoValueAssigned);
+        CheckArray(DataArray, Layer, StrLargeContrastInHy,
+          cvmGradient, 1e6, etWarning);
       end;
   end;
 end;

@@ -396,6 +396,11 @@ var
       case ITYPE of
         0,1: // full 3D array
           begin
+            if (AFile.Size-AFile.Position) < (Abs(NLAY)*NROW*NCOL*SizeOf(AValue)) then
+            begin
+              result := false;
+              Exit;
+            end;
             for LayerIndex := 0 to Abs(NLAY) - 1 do
             begin
               for RowIndex := 0 to NROW - 1 do
@@ -536,6 +541,11 @@ var
       case ITYPE of
         0,1: // full 3D array
           begin
+            if (AFile.Size-AFile.Position) < (Abs(NLAY)*NROW*NCOL*SizeOf(AValue)) then
+            begin
+              result := false;
+              Exit;
+            end;
             for LayerIndex := 0 to Abs(NLAY) - 1 do
             begin
               for RowIndex := 0 to NROW - 1 do
@@ -607,6 +617,11 @@ begin
     if ReadDoubleArray then
     begin
       FirstDescription := Description;
+      if AFile.Position = AFile.Size then
+      begin
+        result := mpDouble;
+        Exit;
+      end;
       if (AFile.Position < AFile.Size) and ReadDoubleArray then
       begin
         SecondDescription := Description;
@@ -665,6 +680,11 @@ begin
     if ReadSingleArray then
     begin
       FirstDescription := Description;
+      if AFile.Position = AFile.Size then
+      begin
+        result := mpSingle;
+        Exit;
+      end;
       if (AFile.Position < AFile.Size) and ReadSingleArray then
       begin
         SecondDescription := Description;

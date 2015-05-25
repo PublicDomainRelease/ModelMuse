@@ -1,4 +1,4 @@
-{@abstract(The main purpose of @name is to define
+﻿{@abstract(The main purpose of @name is to define
  @link(TfrmScreenObjectProperties) which is
  used to edit one or more
  @link(ScreenObjectUnit.TScreenObject)s.)
@@ -1994,7 +1994,7 @@ type
     procedure CreateLakNode;
     procedure CreateSfrNode(AScreenObject: TScreenObject);
     procedure CreateStrNode(AScreenObject: TScreenObject);
-    procedure CreateUzfNode;
+    procedure CreateUzfNode(AScreenObject: TScreenObject);
     procedure CreateFarmWelNode;
     procedure CreateFarmPrecipNode(AScreenObject: TScreenObject);
     procedure CreateFarmRefEvapNode(AScreenObject: TScreenObject);
@@ -2122,6 +2122,8 @@ type
     // GetDataForMultipleScreenObjects is called to display their properties.
     // @SeeAlso(GetData)
     procedure GetDataForMultipleScreenObjects(const AScreenObjectList: TList);
+    procedure HideGLViewersWithMicrosoftOpenGL;
+    destructor Destroy; override;
     { Public declarations }
   end;
 
@@ -2159,7 +2161,7 @@ uses Math, StrUtils, JvToolEdit, frmGoPhastUnit, AbstractGridUnit,
   ModflowFmpPrecipitationUnit, ModflowFmpEvapUnit, ModflowFmpCropSpatialUnit,
   ModflowFmpWellUnit, ModflowCfpPipeUnit, ModflowCfpFixedUnit,
   ModflowCfpRechargeUnit, ModflowSwrUnit, ModflowSwrDirectRunoffUnit,
-  ObjectLabelUnit, ModflowMnw1Unit, ModflowFmpFarmIdUnit;
+  ObjectLabelUnit, ModflowMnw1Unit, ModflowFmpFarmIdUnit, OpenGL;
 
 resourcestring
   StrConcentrationObserv = 'Concentration Observations: ';
@@ -3084,7 +3086,7 @@ begin
   CreateStrNode(AScreenObject);
   CreateStobNode;
   CreateGageNode;
-  CreateUzfNode;
+  CreateUzfNode(AScreenObject);
   CreateWelNode;
   CreateCfpPipeNode(AScreenObject);
   CreateCfpFixedHeadNode(AScreenObject);
@@ -3183,6 +3185,8 @@ var
 begin
   // This line should always be the first line.
   IsLoaded := False;
+
+  HideGLViewersWithMicrosoftOpenGL;
 
   memoComments.Enabled := True;
   SetModflowBoundaryColCount;
@@ -4440,7 +4444,7 @@ begin
   inherited;
 
   {$IFDEF Win64}
-//  frameModpathParticles.GLSceneViewer1.Visible := False;
+//      frameModpathParticles.GLSceneViewer1.Visible := False;
   {$ENDIF}
 
   reDataSetFormula.DoubleBuffered := False;
@@ -4931,6 +4935,31 @@ begin
 //  OutputDebugString('SAMPLING OFF');
 end;
 
+procedure TfrmScreenObjectProperties.HideGLViewersWithMicrosoftOpenGL;
+var
+  VendorString: PAnsiChar;
+begin
+  // Work-around for buggy Microsoft OpenGL driver.
+{$IFDEF Win64}
+  Handle;
+  VendorString := glGetString(GL_VENDOR);
+  if (VendorString <> '') and (VendorString <> 'Microsoft Corporation') then
+  begin
+    frameModpathParticles.GLSceneViewer1.Visible := True;
+    frameIface.glsvViewer.Visible := True;
+
+    frameModpathParticles.lblMessage.Visible := False;
+    frameIface.lblMessage.Visible := False;
+  end;
+{$ELSE}
+  frameModpathParticles.GLSceneViewer1.Visible := True;
+  frameIface.glsvViewer.Visible := True;
+
+  frameModpathParticles.lblMessage.Visible := False;
+  frameIface.lblMessage.Visible := False;
+{$ENDIF}
+end;
+
 procedure TfrmScreenObjectProperties.SetObjectCaption(List: TList);
 var
   AScreenObject: TScreenObject;
@@ -5245,39 +5274,35 @@ begin
   end
   else if Node = FSWR_Rain_Node then
   begin
-    if (SwrPackage.RainSpecification = smObject) and (FSWR_Reach_Node.StateIndex = 1) then
+    if (SwrPackage.RainSpecification = smObject)
+      and (FSWR_Reach_Node.StateIndex = 1) then
     begin
       AllowChange := False;
     end;
-   { TODO -cSWR : Allow selection only if reach definintion also selected or if array method used in package. }
-//    AllowChange := True;
   end
   else if Node = FSWR_Evap_Node then
   begin
-    if (SwrPackage.EvapSpecification = smObject) and (FSWR_Reach_Node.StateIndex = 1) then
+    if (SwrPackage.EvapSpecification = smObject)
+      and (FSWR_Reach_Node.StateIndex = 1) then
     begin
       AllowChange := False;
     end;
-   { TODO -cSWR : Allow selection only if reach definintion also selected or if array method used in package. }
-//    AllowChange := True;
   end
   else if Node = FSWR_LatInflow_Node then
   begin
-    if (SwrPackage.LateralInflowSpecification = smObject) and (FSWR_Reach_Node.StateIndex = 1) then
+    if (SwrPackage.LateralInflowSpecification = smObject)
+      and (FSWR_Reach_Node.StateIndex = 1) then
     begin
       AllowChange := False;
     end;
-   { TODO -cSWR : Allow selection only if reach definintion also selected or if array method used in package. }
-//    AllowChange := True;
   end
   else if Node = FSWR_Stage_Node then
   begin
-    if (SwrPackage.StageSpecification = smObject) and (FSWR_Reach_Node.StateIndex = 1) then
+    if (SwrPackage.StageSpecification = smObject)
+      and (FSWR_Reach_Node.StateIndex = 1) then
     begin
       AllowChange := False;
     end;
-   { TODO -cSWR : Allow selection only if reach definintion also selected or if array method used in package. }
-//    AllowChange := True;
   end
   else if Node = FSWR_DirectRunoff_Node then
   begin
@@ -8577,6 +8602,14 @@ begin
         begin
           MethodIndex := rgElevationCount.ItemIndex
         end;
+        if MethodIndex <> 0 then
+        begin
+          CanEdit := (List.IndexOf(DataSet) < 0);
+          if not CanEdit then
+          begin
+            break;
+          end;
+        end;
         if (MethodIndex <> 0) or (List.IndexOf(DataSet) < 0) then
         begin
           CanEdit := not AScreenObject.IsListeningTo(DataSet);
@@ -10295,12 +10328,13 @@ begin
   end;
 end;
 
-procedure TfrmScreenObjectProperties.CreateUzfNode;
+procedure TfrmScreenObjectProperties.CreateUzfNode(AScreenObject: TScreenObject);
 var
   Node: TJvPageIndexNode;
 begin
   FUZF_Node := nil;
-  if frmGoPhast.PhastModel.UzfIsSelected then
+  if frmGoPhast.PhastModel.UzfIsSelected
+    and (AScreenObject.ViewDirection = vdTop) then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
       frmGoPhast.PhastModel.ModflowPackages.UzfPackage.PackageIdentifier)
@@ -11766,6 +11800,19 @@ begin
     begin
       result := True;
       Exit;
+    end;
+  end;
+end;
+
+destructor TfrmScreenObjectProperties.Destroy;
+begin
+
+  try
+    inherited;
+  except on EExternalException do
+    begin
+      // work around for bug in Microsoft OpenGL driver on 64 bit Windows.
+      // do nothing;
     end;
   end;
 end;
@@ -13410,6 +13457,9 @@ end;
 procedure TfrmScreenObjectProperties.FormDestroy(Sender: TObject);
 begin
   inherited;
+//  frameIface.glsvViewer.Free;
+//  frameModpathParticles.GLSceneViewer1.Free;
+
   FCaptionFont.Free;
   FCurrentEdit := nil;
 
@@ -16712,8 +16762,14 @@ begin
             TempFormula := edZ.Text;
             if TempFormula <> '' then
             begin
-              LocalCompiler.Compile(TempFormula);
-              UsedDataSets.AddStrings(LocalCompiler.CurrentExpression.VariablesUsed);
+              try
+                LocalCompiler.Compile(TempFormula);
+                UsedDataSets.AddStrings(LocalCompiler.CurrentExpression.VariablesUsed);
+              except on ERbwParserError do
+                begin
+                  // do nothing
+                end;
+              end;
             end;
           end;
         2:
@@ -16721,14 +16777,26 @@ begin
             TempFormula := edHighZ.Text;
             if TempFormula <> '' then
             begin
-              LocalCompiler.Compile(TempFormula);
-              UsedDataSets.AddStrings(LocalCompiler.CurrentExpression.VariablesUsed);
+              try
+                LocalCompiler.Compile(TempFormula);
+                UsedDataSets.AddStrings(LocalCompiler.CurrentExpression.VariablesUsed);
+              except on ERbwParserError do
+                begin
+                  // do nothing
+                end;
+              end;
             end;
             TempFormula := edLowZ.Text;
             if TempFormula <> '' then
             begin
-              LocalCompiler.Compile(TempFormula);
-              UsedDataSets.AddStrings(LocalCompiler.CurrentExpression.VariablesUsed);
+              try
+                LocalCompiler.Compile(TempFormula);
+                UsedDataSets.AddStrings(LocalCompiler.CurrentExpression.VariablesUsed);
+              except on ERbwParserError do
+                begin
+                  // do nothing
+                end;
+              end;
             end;
           end;
       end;
@@ -16978,7 +17046,6 @@ begin
     end
     else
     begin
-      { TODO 1 : Restore boundary conditions here. }
       rgBoundaryTypeClick(nil);
     end;
     for RowIndex := 0 to FDataEdits.Count - 1 do
@@ -21574,6 +21641,7 @@ begin
   frameScreenObjectSFR.zbFlowDepthTable.InvalidateImage32;
   frameScreenObjectSFR.zbFlowWidthTable.InvalidateImage32;
   FCanSetPointsOutOfDate := True;
+  HideGLViewersWithMicrosoftOpenGL;
 end;
 
 procedure TfrmScreenObjectProperties.comboSolutionTypeChange(Sender: TObject);

@@ -96,9 +96,11 @@ type
     // @name is used to compute the streambed elevation for a series of
     // Streamflow Routing Boundaries over a series of time intervals.
     FStreamBedElevationData: TModflowTimeList;
-    // @name is used to compute the stream slope for a series of
+    // @name is used to compute the stream width for a series of
     // Streamflow Routing Boundaries over a series of time intervals.
     FStreamWidthData: TModflowTimeList;
+    // @name is used to compute the stream depth for a series of
+    // Streamflow Routing Boundaries over a series of time intervals.
     FStreamDepthData: TModflowTimeList;
   protected
     procedure CreateTimeLists; override;

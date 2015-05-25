@@ -19,6 +19,17 @@ object frameIface: TframeIface
     Align = alClient
     Caption = 'Flow into boundary cell (IFACE)'
     TabOrder = 0
+    object lblMessage: TLabel
+      Left = 120
+      Top = 71
+      Width = 145
+      Height = 72
+      Caption = 
+        'Image hidden because your computer may not be able to display it' +
+        '.'
+      Visible = False
+      WordWrap = True
+    end
     object rbBottom: TJvRadioButton
       Tag = 5
       Left = 3
@@ -27,7 +38,7 @@ object frameIface: TframeIface
       Height = 18
       Alignment = taLeftJustify
       Caption = 'Bottom (5)'
-      TabOrder = 0
+      TabOrder = 7
       OnClick = rbHorizontalClick
       HotTrackFont.Charset = ANSI_CHARSET
       HotTrackFont.Color = clWindowText
@@ -44,7 +55,7 @@ object frameIface: TframeIface
       Height = 18
       Alignment = taLeftJustify
       Caption = 'Front (3)'
-      TabOrder = 1
+      TabOrder = 5
       OnClick = rbHorizontalClick
       HotTrackFont.Charset = ANSI_CHARSET
       HotTrackFont.Color = clWindowText
@@ -61,7 +72,7 @@ object frameIface: TframeIface
       Height = 18
       Alignment = taLeftJustify
       Caption = 'Right (2)'
-      TabOrder = 2
+      TabOrder = 4
       OnClick = rbHorizontalClick
       HotTrackFont.Charset = ANSI_CHARSET
       HotTrackFont.Color = clWindowText
@@ -91,11 +102,11 @@ object frameIface: TframeIface
       Tag = 6
       Left = 3
       Top = 207
-      Width = 71
+      Width = 69
       Height = 18
       Alignment = taRightJustify
       Caption = 'Top (6)'
-      TabOrder = 4
+      TabOrder = 8
       OnClick = rbHorizontalClick
       HotTrackFont.Charset = ANSI_CHARSET
       HotTrackFont.Color = clWindowText
@@ -112,7 +123,7 @@ object frameIface: TframeIface
       Height = 18
       Alignment = taLeftJustify
       Caption = 'Back (4)'
-      TabOrder = 5
+      TabOrder = 6
       OnClick = rbHorizontalClick
       HotTrackFont.Charset = ANSI_CHARSET
       HotTrackFont.Color = clWindowText
@@ -129,7 +140,7 @@ object frameIface: TframeIface
       Alignment = taLeftJustify
       Caption = 'Internal (0)'
       Checked = True
-      TabOrder = 6
+      TabOrder = 1
       TabStop = True
       OnClick = rbHorizontalClick
       HotTrackFont.Charset = ANSI_CHARSET
@@ -147,7 +158,7 @@ object frameIface: TframeIface
       Height = 44
       Alignment = taLeftJustify
       Caption = 'Horizontal faces next to inactive cells (-1)'
-      TabOrder = 7
+      TabOrder = 0
       WordWrap = True
       OnClick = rbHorizontalClick
       AutoSize = False
@@ -165,7 +176,7 @@ object frameIface: TframeIface
       Height = 146
       Camera = GLCamera1
       FieldOfView = 111.183052062988300000
-      TabOrder = 8
+      TabOrder = 2
     end
   end
   object glsIface: TGLScene
@@ -257,18 +268,18 @@ object frameIface: TframeIface
       object Tube1: TGLCylinder
         Material.FrontProperties.Diffuse.Color = {0000003F0000003F0000003F0000803F}
         Position.Coordinates = {0000003F000000000000003F0000803F}
-        BottomRadius = 0.029999999329447740
+        BottomRadius = 0.029999999329447750
         Height = 1.000000000000000000
-        TopRadius = 0.029999999329447740
+        TopRadius = 0.029999999329447750
       end
       object Tube2: TGLCylinder
         Material.FrontProperties.Diffuse.Color = {0000003F0000003F0000003F0000803F}
         Position.Coordinates = {000000000000003F0000003F0000803F}
         RollAngle = 90.000000000000000000
         Up.Coordinates = {000080BF2EBD3BB30000000000000000}
-        BottomRadius = 0.029999999329447740
+        BottomRadius = 0.029999999329447750
         Height = 1.000000000000000000
-        TopRadius = 0.029999999329447740
+        TopRadius = 0.029999999329447750
       end
       object Tube3: TGLCylinder
         Material.FrontProperties.Diffuse.Color = {0000003F0000003F0000003F0000803F}
@@ -276,9 +287,9 @@ object frameIface: TframeIface
         PitchAngle = 90.000000000000000000
         Position.Coordinates = {0000003F0000003F0000803F0000803F}
         Up.Coordinates = {000000002EBD3BB3000080BF00000000}
-        BottomRadius = 0.029999999329447740
+        BottomRadius = 0.029999999329447750
         Height = 1.000000000000000000
-        TopRadius = 0.029999999329447740
+        TopRadius = 0.029999999329447750
       end
     end
     object GLCamera1: TGLCamera

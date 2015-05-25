@@ -421,6 +421,10 @@ begin
 //          Exit;
         end;
       end;
+    btMtmsObs:
+      begin
+        result := False;
+      end;
   end;
 end;
 
@@ -430,6 +434,7 @@ var
 begin
   TempBoundaries := FSelectedBoundaries;
   Exclude(TempBoundaries, btMfObs);
+  Exclude(TempBoundaries, btMtmsObs);
   chklstTimes.Enabled := TempBoundaries <> [];
 end;
 

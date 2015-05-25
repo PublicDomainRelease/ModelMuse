@@ -329,24 +329,30 @@ begin
     F1 := Fractions1;
     for InteriorIndex := 0 to Length(F1) - 1 do
     begin
-      StartPoint := ProjectPoint(L1,L2, Distance1 * F1[InteriorIndex]);
-      EndPoint := ProjectPoint(L4,L3, Distance2 * F1[InteriorIndex]);
-      LinePoints[0] := ConvertTop2D_Point(ZoomBox, StartPoint);
-      LinePoints[1] := ConvertTop2D_Point(ZoomBox, EndPoint);
-      DrawBigPolyline32(BitMap, clBlack32, OrdinaryGridLineThickness,
-        LinePoints, True, True);
+      if (Distance(L1,L2) > 0) and (Distance(L4,L3) > 0) then
+      begin
+        StartPoint := ProjectPoint(L1,L2, Distance1 * F1[InteriorIndex]);
+        EndPoint := ProjectPoint(L4,L3, Distance2 * F1[InteriorIndex]);
+        LinePoints[0] := ConvertTop2D_Point(ZoomBox, StartPoint);
+        LinePoints[1] := ConvertTop2D_Point(ZoomBox, EndPoint);
+        DrawBigPolyline32(BitMap, clBlack32, OrdinaryGridLineThickness,
+          LinePoints, True, True);
+      end;
     end;
     Distance1 := Distance(L2, L3);
     Distance2 := Distance(L4, L1);
     F2 := Fractions2;
     for InteriorIndex := 0 to Length(F2) - 1 do
     begin
-      StartPoint := ProjectPoint(L2,L3, Distance1 * F2[InteriorIndex]);
-      EndPoint := ProjectPoint(L1,L4, Distance2 * F2[InteriorIndex]);
-      LinePoints[0] := ConvertTop2D_Point(ZoomBox, StartPoint);
-      LinePoints[1] := ConvertTop2D_Point(ZoomBox, EndPoint);
-      DrawBigPolyline32(BitMap, clBlack32, OrdinaryGridLineThickness,
-        LinePoints, True, True);
+      if (Distance(L2,L3) > 0) and (Distance(L1,L4) > 0) then
+      begin
+        StartPoint := ProjectPoint(L2,L3, Distance1 * F2[InteriorIndex]);
+        EndPoint := ProjectPoint(L1,L4, Distance2 * F2[InteriorIndex]);
+        LinePoints[0] := ConvertTop2D_Point(ZoomBox, StartPoint);
+        LinePoints[1] := ConvertTop2D_Point(ZoomBox, EndPoint);
+        DrawBigPolyline32(BitMap, clBlack32, OrdinaryGridLineThickness,
+          LinePoints, True, True);
+      end;
     end;
   end;
 

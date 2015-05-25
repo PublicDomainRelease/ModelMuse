@@ -5174,7 +5174,7 @@ var
   {$EXTERNALSYM glGetPointerv}
   glGetPolygonStipple: procedure(mask: PGLubyte); {$ifdef MSWINDOWS} stdcall; {$endif} {$ifdef LINUX} cdecl; {$endif}
   {$EXTERNALSYM glGetPolygonStipple}
-  glGetString: function(name: TGLEnum): PChar; {$ifdef MSWINDOWS} stdcall; {$endif} {$ifdef LINUX} cdecl; {$endif}
+  glGetString: function(name: TGLEnum): PAnsiChar; {$ifdef MSWINDOWS} stdcall; {$endif} {$ifdef LINUX} cdecl; {$endif}
   {$EXTERNALSYM glGetString}
   glGetTexEnvfv: procedure(target, pname: TGLEnum; params: PGLfloat); {$ifdef MSWINDOWS} stdcall; {$endif} {$ifdef LINUX} cdecl; {$endif}
   {$EXTERNALSYM glGetTexEnvfv}
@@ -5702,9 +5702,9 @@ var
   {$EXTERNALSYM glGetMinmaxParameterfv}
 
   // GL utility functions and procedures
-  gluErrorString: function(errCode: TGLEnum): PChar; {$ifdef MSWINDOWS} stdcall; {$endif} {$ifdef LINUX} cdecl; {$endif}
+  gluErrorString: function(errCode: TGLEnum): PAnsiChar; {$ifdef MSWINDOWS} stdcall; {$endif} {$ifdef LINUX} cdecl; {$endif}
   {$EXTERNALSYM gluErrorString}
-  gluGetString: function(name: TGLEnum): PChar; {$ifdef MSWINDOWS} stdcall; {$endif} {$ifdef LINUX} cdecl; {$endif}
+  gluGetString: function(name: TGLEnum): PAnsiChar; {$ifdef MSWINDOWS} stdcall; {$endif} {$ifdef LINUX} cdecl; {$endif}
   {$EXTERNALSYM gluGetString}
   gluOrtho2D: procedure(left, right, bottom, top: TGLdouble); {$ifdef MSWINDOWS} stdcall; {$endif} {$ifdef LINUX} cdecl; {$endif}
   {$EXTERNALSYM gluOrtho2D}
@@ -5814,7 +5814,7 @@ var
 
   // window support functions
   {$ifdef MSWINDOWS}
-  wglGetProcAddress: function(ProcName: PChar): Pointer; stdcall;
+  wglGetProcAddress: function(ProcName: PAnsiChar): Pointer; stdcall;
   {$EXTERNALSYM wglGetProcAddress}
   wglCopyContext: function(p1: HGLRC; p2: HGLRC; p3: Cardinal): BOOL; stdcall;
   {$EXTERNALSYM wglCopyContext}
@@ -5858,7 +5858,7 @@ var
   {$EXTERNALSYM wglUseFontOutlines}
 
   // ARB wgl extensions
-  wglGetExtensionsStringARB: function(DC: HDC): PChar; stdcall;
+  wglGetExtensionsStringARB: function(DC: HDC): PAnsiChar; stdcall;
   {$EXTERNALSYM wglGetExtensionsStringARB}
   wglGetPixelFormatAttribivARB: function(DC: HDC; iPixelFormat, iLayerPlane: Integer; nAttributes: UINT;
     const piAttributes: PInteger; piValues : PInteger) : BOOL; stdcall;
@@ -6953,11 +6953,11 @@ var
   {$EXTERNALSYM glXUseXFont}
 
   // GLX 1.1 and later
-  glXQueryExtensionsString: function(dpy: PDisplay; screen: TGLInt): PChar; cdecl;
+  glXQueryExtensionsString: function(dpy: PDisplay; screen: TGLInt): PAnsiChar; cdecl;
   {$EXTERNALSYM glXQueryExtensionsString}
-  glXQueryServerString: function(dpy: PDisplay; screen: TGLInt; name: TGLInt): PChar; cdecl;
+  glXQueryServerString: function(dpy: PDisplay; screen: TGLInt; name: TGLInt): PAnsiChar; cdecl;
   {$EXTERNALSYM glXQueryServerString}
-  glXGetClientString: function(dpy: PDisplay; name: TGLInt): PChar; cdecl;
+  glXGetClientString: function(dpy: PDisplay; name: TGLInt): PAnsiChar; cdecl;
   {$EXTERNALSYM glXGetClientString}
 
   // GLX 1.2 and later
@@ -8195,11 +8195,11 @@ begin
   end;
 
   {$ifdef MSWINDOWS}
-    GLUHandle := LoadLibrary(PChar(SDefaultGLULibrary));
+    GLUHandle := LoadLibrary(PAnsiChar(SDefaultGLULibrary));
   {$endif}
 
   {$ifdef LINUX}
-    GLUHandle := dlopen(PChar(SDefaultGLULibrary), RTLD_GLOBAL or RTLD_LAZY);
+    GLUHandle := dlopen(PAnsiChar(SDefaultGLULibrary), RTLD_GLOBAL or RTLD_LAZY);
   {$endif}
 
   if (GLUHandle = INVALID_MODULEHANDLE) then
@@ -9988,7 +9988,7 @@ procedure ReadExtensions;
 {$ifdef FPC}
   // This procedure fixes the problem with this unit compiling
   // under Free Pascal
-  function FPCwglGetProcAddress(ProcName: PChar): Pointer;
+  function FPCwglGetProcAddress(ProcName: PAnsiChar): Pointer;
 
   begin
     Result := wglGetProcAddress(ProcName);

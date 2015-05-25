@@ -8,7 +8,13 @@ uses
   OctTreeClass, Grids, RbwDataGrid4, ExtCtrls, Mask, JvExMask, JvSpin,
   JvExStdCtrls, JvGroupBox, ComCtrls, Buttons, JvPageList, JvExControls,
   ModpathParticleUnit, ModflowPackageSelectionUnit, GLCoordinates,
-  GLCrossPlatform, BaseClasses;
+  GLCrossPlatform,
+{$IF CompilerVersion < 23}
+  BaseClasses;
+{$ELSE}
+  GLBaseClasses;
+{$IFEND}
+
 
 type
   TframeModpathParticles = class(TFrame)
@@ -73,6 +79,7 @@ type
     sbAddTime: TSpeedButton;
     sbInsertTime: TSpeedButton;
     sbDeleteTime: TSpeedButton;
+    lblMessage: TLabel;
     procedure rdgSpecificEndUpdate(Sender: TObject);
     procedure sbAddRowClick(Sender: TObject);
     procedure sbInsertRowClick(Sender: TObject);

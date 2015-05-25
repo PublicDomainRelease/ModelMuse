@@ -1891,10 +1891,10 @@ begin
               and Active[ColIndex+1,RowIndex,SelectedColRowLayer]
               and Active[ColIndex,RowIndex+1,SelectedColRowLayer]
               and Active[ColIndex+1,RowIndex+1,SelectedColRowLayer]
-              and DataSet.ContourGridValueOK(SelectedColRowLayer, RowIndex, ColIndex)
-              and DataSet.ContourGridValueOK(SelectedColRowLayer, RowIndex, ColIndex+1)
-              and DataSet.ContourGridValueOK(SelectedColRowLayer, RowIndex+1, ColIndex)
-              and DataSet.ContourGridValueOK(SelectedColRowLayer, RowIndex+1, ColIndex+1)
+              and DataSet.ContourGridValueOK(DSLayer, RowIndex, ColIndex)
+              and DataSet.ContourGridValueOK(DSLayer, RowIndex, ColIndex+1)
+              and DataSet.ContourGridValueOK(DSLayer, RowIndex+1, ColIndex)
+              and DataSet.ContourGridValueOK(DSLayer, RowIndex+1, ColIndex+1)
               then
             begin
               NodeUL := FTriangulationData.VertexNumbers[DSLayer,RowIndex,ColIndex];
@@ -1958,10 +1958,10 @@ begin
               and Active[ColIndex+1,SelectedColRowLayer,LayerIndex]
               and Active[ColIndex,SelectedColRowLayer,LayerIndex+1]
               and Active[ColIndex+1,SelectedColRowLayer,LayerIndex+1]
-              and DataSet.ContourGridValueOK(LayerIndex, SelectedColRowLayer, ColIndex)
-              and DataSet.ContourGridValueOK(LayerIndex, SelectedColRowLayer, ColIndex+1)
-              and DataSet.ContourGridValueOK(LayerIndex+1, SelectedColRowLayer, ColIndex)
-              and DataSet.ContourGridValueOK(LayerIndex+1, SelectedColRowLayer, ColIndex+1)
+              and DataSet.ContourGridValueOK(LayerIndex, DSRow, ColIndex)
+              and DataSet.ContourGridValueOK(LayerIndex, DSRow, ColIndex+1)
+              and DataSet.ContourGridValueOK(LayerIndex+1, DSRow, ColIndex)
+              and DataSet.ContourGridValueOK(LayerIndex+1, DSRow, ColIndex+1)
               then
             begin
               NodeUL := FTriangulationData.VertexNumbers[LayerIndex,DSRow,ColIndex];
@@ -2025,10 +2025,10 @@ begin
               and Active[SelectedColRowLayer,RowIndex+1,LayerIndex]
               and Active[SelectedColRowLayer,RowIndex,LayerIndex+1]
               and Active[SelectedColRowLayer,RowIndex+1,LayerIndex+1]
-              and DataSet.ContourGridValueOK(LayerIndex, RowIndex, SelectedColRowLayer)
-              and DataSet.ContourGridValueOK(LayerIndex, RowIndex+1, SelectedColRowLayer)
-              and DataSet.ContourGridValueOK(LayerIndex+1, RowIndex, SelectedColRowLayer)
-              and DataSet.ContourGridValueOK(LayerIndex+1, RowIndex+1, SelectedColRowLayer)
+              and DataSet.ContourGridValueOK(LayerIndex, RowIndex, DSCol)
+              and DataSet.ContourGridValueOK(LayerIndex, RowIndex+1, DSCol)
+              and DataSet.ContourGridValueOK(LayerIndex+1, RowIndex, DSCol)
+              and DataSet.ContourGridValueOK(LayerIndex+1, RowIndex+1, DSCol)
               then
             begin
               NodeUR := FTriangulationData.VertexNumbers[LayerIndex,RowIndex,DSCol];

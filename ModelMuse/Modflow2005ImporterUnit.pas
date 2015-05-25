@@ -69,6 +69,10 @@ resourcestring
   'the SFR parameter "%1:s."';
   StrOriginalSegmentNum = 'Original segment number = %0:d in stress period %' +
   '1:d.';
+  StrSIsNegativeOrZe = '%s is negative or zero at the following locations (L' +
+  'ayer, Row, Column, Value).';
+  Str0d1d2d3 = '%0:d, %1:d, %2:d, %3:g';
+//  StrConfinedStorageCoe = 'Confined_Storage_Coefficient';
 
 var
   DummyInteger: integer;
@@ -313,8 +317,12 @@ Type
     procedure AssignImportedValues(ImportedValues: TValueArrayItem;
       ImportedData: TDoubleArray); overload;
     function UniformArray(ImportedData: TDoubleArray): boolean;
+    // Check if an array is constant despite being specified as a variable
+    // array.
     procedure CheckVariableRealArrays(var ConstArray: TRealConstantRecordArray;
       VarArray: T3DDoubleArray);
+    // Check if an array is constant despite being specified as a variable
+    // array.
     procedure CheckVariableIntegerArrays(var ConstArray: TIntegerConstantArray;
       VarArray: T3DIntArray);
     function CreateScreenObjectAroundGrid(const Name: string): TScreenObject;
@@ -439,6 +447,9 @@ Type
 
   TArrayImporter = class(TObjectImporter)
   protected
+    procedure CheckPositiveArrayValues(Values: T3DDoubleArray;
+      ConstantRecordArray: TRealConstantRecordArray; Name: string;
+      Bas: TBasImporter);
     procedure GetTimeStepStartAndEndTimes(TimeStepEndLists: TList;
       TimeStepStartLists: TList);
     // @name assigns values to the @link(TDataArray) named ImportArrayName.
@@ -465,6 +476,8 @@ Type
   end;
 
   TCustomFlowPackageImporter = class(TArrayParameterImporter)
+  private
+    FBas: TBasImporter;
   protected
     FIsSelected: boolean;
     ILPFCB: integer;
@@ -513,7 +526,7 @@ Type
     procedure ImportSpecificStorage;
     procedure ImportSpecificYield;
   public
-    constructor Create(Importer: TModflow2005Importer);
+    constructor Create(Importer: TModflow2005Importer; Bas: TBasImporter);
   end;
 
   TLpfImporter = class(TCustomFlowPackageImporter)
@@ -571,6 +584,7 @@ Type
     FWetDry: T3DDoubleArray;
 //    FModelLayer: Integer;
     FTransientModel: Boolean;
+    FBas: TBasImporter;
     procedure ReadDataSet1;
     procedure ReadDataSet2;
     procedure InitializeContArray(var ConstArray: TRealConstantRecordArray);
@@ -581,12 +595,15 @@ Type
     procedure ReadConstantArrays;
     procedure ImportDataSet1;
     procedure ImportDataSets2And3;
+    procedure CheckPositiveVcont(Values: T3DDoubleArray;
+      ConstantRecordArray: TRealConstantRecordArray; Name: string;
+      Bas: TBasImporter);
   protected
     function ScreenObjectNameRoot: string; override;
     procedure ReadData(const ALabel: string); override;
     procedure HandlePackage; override;
   public
-    Constructor Create(Importer: TModflow2005Importer);
+    Constructor Create(Importer: TModflow2005Importer; Bas: TBasImporter);
   end;
 
   THufRecord = record
@@ -4216,8 +4233,8 @@ begin
   FPackageIdentifiers.AddObject('ZONE_MULT:', MZImporter);
   FPvalImporter := TPvalImporter.Create(self);
   FPackageIdentifiers.AddObject('PVAL:', FPvalImporter);
-  FPackageIdentifiers.AddObject('BCF:', TBcfImporter.Create(self));
-  FPackageIdentifiers.AddObject('LPF:', TLpfImporter.Create(self));
+  FPackageIdentifiers.AddObject('BCF:', TBcfImporter.Create(self, Bas));
+  FPackageIdentifiers.AddObject('LPF:', TLpfImporter.Create(self, Bas));
   HufImporter := THufImporter.Create(self);
   FPackageIdentifiers.AddObject('HUF2:', HufImporter);
   FPackageIdentifiers.AddObject('KDEP:',
@@ -4276,7 +4293,7 @@ begin
     SfrImporter, Sub));
   FPackageIdentifiers.AddObject('SWI2:', TSwiImporter.Create(self));
   FPackageIdentifiers.AddObject('NWT:', TNwtImporter.Create(self));
-  FPackageIdentifiers.AddObject('UPW:', TUpwImporter.Create(self));
+  FPackageIdentifiers.AddObject('UPW:', TUpwImporter.Create(self, Bas));
   FPackageIdentifiers.AddObject('SWR:', TSwrImporter.Create(self, NameFile));
 end;
 
@@ -6761,9 +6778,11 @@ end;
 
 { TLpfImporter }
 
-constructor TCustomFlowPackageImporter.Create(Importer: TModflow2005Importer);
+constructor TCustomFlowPackageImporter.Create(Importer: TModflow2005Importer;
+  Bas: TBasImporter);
 begin
   inherited Create(Importer, PackageLabel);
+  FBas := Bas;
   FIsSelected := False;
   FNextParameterIndex := -1;
 end;
@@ -13204,7 +13223,7 @@ begin
         begin
           Instance := Param.GetInstanceByName(InstanceName)
             as TSfrInstanceObject;
-          if Instance <> nil then
+          if Instance = nil then
           begin
             frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
               StrIncorrectParameter,
@@ -22087,6 +22106,7 @@ begin
         Target.Z := APoint3D.Z;
         AScreenObject.ModflowMnw2Boundary.
           PumpCellTarget.TargetLocation := Target;
+        AScreenObject.ModflowMnw2Boundary.PumpElevation := APoint3D.Z;
       finally
         Target.Free;
       end;
@@ -22584,9 +22604,96 @@ end;
 
 { TBcfImporter }
 
-constructor TBcfImporter.Create(Importer: TModflow2005Importer);
+procedure TArrayImporter.CheckPositiveArrayValues(Values: T3DDoubleArray;
+  ConstantRecordArray: TRealConstantRecordArray; Name: string;
+  Bas: TBasImporter);
+var
+  LayerIndex: Integer;
+  RowIndex: Integer;
+  LayerArray: T2DDoubleArray;
+  ColIndex: Integer;
+  Active: T2DIntArray;
+  ModelLayer: Integer;
+  ErrorMessage: string;
+begin
+  ErrorMessage := Format(StrSIsNegativeOrZe, [Name]);
+  for LayerIndex := 0 to Length(ConstantRecordArray) - 1 do
+  begin
+    if not ConstantRecordArray[LayerIndex].IsConstant then
+    begin
+      if LayerIndex < Length(Values) then
+      begin
+        ModelLayer := frmGoPhast.PhastModel.ModflowLayerToDataSetLayer(LayerIndex+1);
+        LayerArray := Values[LayerIndex];
+        Active := Bas.FIbound[LayerIndex];
+        for RowIndex := 0 to Length(LayerArray) - 1 do
+        begin
+          for ColIndex := 0 to Length(LayerArray[0]) - 1 do
+          begin
+            if Active[RowIndex,ColIndex] <> 0 then
+            begin
+              if LayerArray[RowIndex,ColIndex] <= 0 then
+              begin
+                frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
+                  ErrorMessage, Format(Str0d1d2d3,
+                  [ModelLayer+1, RowIndex+1, ColIndex+1,
+                  LayerArray[RowIndex,ColIndex]]));
+              end;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TBcfImporter.CheckPositiveVcont(Values: T3DDoubleArray;
+  ConstantRecordArray: TRealConstantRecordArray; Name: string;
+  Bas: TBasImporter);
+var
+  LayerIndex: Integer;
+  RowIndex: Integer;
+  LayerArray: T2DDoubleArray;
+  ColIndex: Integer;
+  Active: T2DIntArray;
+  ActiveBelow: T2DIntArray;
+  ModelLayer: Integer;
+  ErrorMessage: string;
+begin
+  ErrorMessage := Format(StrSIsNegativeOrZe, [Name]);
+  for LayerIndex := 0 to Length(ConstantRecordArray) - 2 do
+  begin
+    if not ConstantRecordArray[LayerIndex].IsConstant then
+    begin
+      ModelLayer := frmGoPhast.PhastModel.ModflowLayerToDataSetLayer(LayerIndex+1);
+      LayerArray := Values[LayerIndex];
+      Active := Bas.FIbound[LayerIndex];
+      ActiveBelow := Bas.FIbound[LayerIndex+1];
+      for RowIndex := 0 to Length(LayerArray) - 1 do
+      begin
+        for ColIndex := 0 to Length(LayerArray[0]) - 1 do
+        begin
+          if (Active[RowIndex,ColIndex] <> 0)
+            and (ActiveBelow[RowIndex,ColIndex] <> 0) then
+          begin
+            if LayerArray[RowIndex,ColIndex] <= 0 then
+            begin
+              frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
+                ErrorMessage, Format(Str0d1d2d3,
+                [ModelLayer+1, RowIndex+1, ColIndex+1,
+                LayerArray[RowIndex,ColIndex]]));
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
+constructor TBcfImporter.Create(Importer: TModflow2005Importer; Bas: TBasImporter);
 begin
   inherited Create(Importer, 'BCF:');
+  FBas := Bas;
   FIsSelected := False;
   FTransientModel := False;
 end;
@@ -22877,13 +22984,23 @@ begin
     ImportDataSets2And3;
     FModel.DataArrayManager.CreateInitialDataSets;
 
+    CheckPositiveArrayValues(FConfinedStorage, FConfinedStorage_Const,
+      StrConfinedStorageCoe, FBas);
     ImportDataSet(StrConfinedStorageCoe, StrConfinedStorageCoe,
       FConfinedStorage_Const, FConfinedStorage);
+
+    CheckPositiveArrayValues(FTran, FTran_Const, StrTransmissivity, FBas);
     ImportDataSet(StrTransmissivity, StrTransmissivity,
       FTran_Const, FTran);
+
+    CheckPositiveArrayValues(FHY, FHY_Const, rsKx, FBas);
     ImportDataSet(rsKx, rsKx, FHY_Const, FHY);
+
+    CheckPositiveArrayValues(FSpecificYield, FSpecificYield_Const,
+      rsSpecificYield, FBas);
     ImportDataSet(rsSpecificYield, rsSpecificYield,
       FSpecificYield_Const, FSpecificYield);
+
     ImportDataSet(rsWetDry, rsWetDry, FWetDry_Const, FWetDry);
     if Length(FVcont_Const) > 1 then
     begin
@@ -22909,6 +23026,8 @@ begin
         end;
       end;
     end;
+
+    CheckPositiveVcont(FVcont, FVcont_Const, StrVerticalConductance, FBas);
     ImportDataSet(StrVerticalConductance, StrVerticalConductance,
       FVcont_Const, FVcont);
   end;
@@ -26230,6 +26349,7 @@ end;
 
 procedure TCustomFlowPackageImporter.ImportHorizontalHydraulicConductivity;
 begin
+  CheckPositiveArrayValues(FHk, FHkConst, rsKx, FBas);
   ImportDataSet('Kx', rsKx, FHkConst, FHk);
 end;
 
@@ -26449,12 +26569,15 @@ begin
   begin
     Suffix := ' / ' + StrLayerHeight;
   end;
+  CheckPositiveArrayValues(FSpecificStorage, FSpecificStorageConst,
+    rsSpecific_Storage, FBas);
   ImportDataSet('Specific_Storage', rsSpecific_Storage, FSpecificStorageConst,
     FSpecificStorage, Suffix);
 end;
 
 procedure TCustomFlowPackageImporter.ImportSpecificYield;
 begin
+  CheckPositiveArrayValues(FSpecificYield, FSpecificYieldConst, rsSpecificYield, FBas);
   ImportDataSet('Specific_Yield', rsSpecificYield, FSpecificYieldConst,
     FSpecificYield);
 end;
@@ -26926,6 +27049,13 @@ var
   WidthItem: TValueArrayItem;
   SlopeItem: TValueArrayItem;
   RoughnessItem: TValueArrayItem;
+  PriorStageItem: TValueArrayItem;
+  PriorCondItem: TValueArrayItem;
+  PriorSbotItem: TValueArrayItem;
+  PriorStopItem: TValueArrayItem;
+  PriorWidthItem: TValueArrayItem;
+  PriorSlopeItem: TValueArrayItem;
+  PriorRoughnessItem: TValueArrayItem;
   StrBoundary: TStrBoundary;
   StrItem: TStrItem;
   Flow: double;
@@ -26946,6 +27076,9 @@ var
   ReachIndex: Integer;
   ObjectIndex: Integer;
   StartTimes: TList<double>;
+  InvalidTribIndexes: TList<integer>;
+  InvalidBoundaryNumbers: TList<integer>;
+  InvalidTribObjects: TList<TStrItem>;
 //  ErrorFound: boolean;
   procedure AddSegment;
   var
@@ -27027,6 +27160,11 @@ var
     StressPeriod: integer;
     StrItems: TStrItemList;
     StrItemLists: TStrItemLists;
+    InvalidPos: Integer;
+    MaxZeros: integer;
+    NotZeros: integer;
+    Zeros: string;
+    ZeroIndex: Integer;
   begin
     Grid := frmGoPhast.PhastModel.ModflowGrid;
     UndoCreateScreenObject := nil;
@@ -27035,6 +27173,7 @@ var
     StrItemLists := TStrItemLists.Create;
     // loop over segments in all stress periods
     try
+      MaxZeros := Trunc(Log10(Segments.Count));
       for ScreenObjectIndex := 0 to Segments.Count - 1 do
       begin
         StrItems := TStrItemList.Create;
@@ -27048,7 +27187,17 @@ var
           UndoCreateScreenObject, False);
         ScreenObjects.Add(ScreenObject);
 
-        ScreenObject.Name := 'Str_Segment_' + IntToStr(ObjectIndex);
+        NotZeros := Trunc(Log10(ObjectIndex));
+        Zeros := '';
+        if NotZeros < MaxZeros then
+        begin
+          for ZeroIndex := NotZeros to MaxZeros - 1 do
+          begin
+            Zeros := Zeros + '0';
+          end;
+        end;
+
+        ScreenObject.Name := 'Str_Segment_' + Zeros + IntToStr(ObjectIndex);
         Inc(ObjectIndex);
         FModel.AddScreenObject(ScreenObject);
         ScreenObject.ElevationCount := ecOne;
@@ -27137,6 +27286,14 @@ var
           ScreenObjectsInStressPeriod[SegmentNumber-1] := ScreenObject;
         end;
 //
+        PriorStageItem := nil;
+        PriorCondItem := nil;
+        PriorSbotItem := nil;
+        PriorStopItem := nil;
+        PriorWidthItem := nil;
+        PriorSlopeItem := nil;
+        PriorRoughnessItem := nil;
+
         for StressPeriodIndex := 0 to SegmentList.Count - 1 do
         begin
           ReachList := SegmentList[StressPeriodIndex];
@@ -27267,8 +27424,17 @@ var
           end
           else
           begin
+            if PriorStageItem <> nil then
+            begin
+              if StageItem.Values.IsSame(PriorStageItem.Values) then
+              begin
+                StageItem.Free;
+                StageItem := PriorStageItem;
+              end;
+            end;
             StrItem.Stage := rsObjectImportedValuesR
-             + '("' + StageItem.Name + '")';
+              + '("' + StageItem.Name + '")';
+            PriorStageItem := StageItem;
           end;
 
           if CondItem.Values.UniformValues then
@@ -27278,8 +27444,17 @@ var
           end
           else
           begin
+            if PriorCondItem <> nil then
+            begin
+              if CondItem.Values.IsSame(PriorCondItem.Values) then
+              begin
+                CondItem.Free;
+                CondItem := PriorCondItem;
+              end;
+            end;
             StrItem.Conductance := rsObjectImportedValuesR
-             + '("' + CondItem.Name + '")';
+              + '("' + CondItem.Name + '")';
+            PriorCondItem := CondItem;
           end;
 
           if StopItem.Values.UniformValues then
@@ -27289,8 +27464,17 @@ var
           end
           else
           begin
+            if PriorStopItem <> nil then
+            begin
+              if StopItem.Values.IsSame(PriorStopItem.Values) then
+              begin
+                StopItem.Free;
+                StopItem := PriorStopItem;
+              end;
+            end;
             StrItem.BedTop := rsObjectImportedValuesR
-             + '("' + StopItem.Name + '")';
+              + '("' + StopItem.Name + '")';
+            PriorStopItem := StopItem;
           end;
 
           if SbotItem.Values.UniformValues then
@@ -27300,8 +27484,17 @@ var
           end
           else
           begin
+            if PriorSbotItem <> nil then
+            begin
+              if SbotItem.Values.IsSame(PriorSbotItem.Values) then
+              begin
+                SbotItem.Free;
+                SbotItem := PriorSbotItem;
+              end;
+            end;
             StrItem.BedBottom := rsObjectImportedValuesR
-             + '("' + SbotItem.Name + '")';
+              + '("' + SbotItem.Name + '")';
+            PriorSbotItem := SbotItem;
           end;
 
           // Flow only applies to the first reach.
@@ -27316,8 +27509,17 @@ var
             end
             else
             begin
+              if PriorWidthItem <> nil then
+              begin
+                if WidthItem.Values.IsSame(PriorWidthItem.Values) then
+                begin
+                  WidthItem.Free;
+                  WidthItem := PriorWidthItem;
+                end;
+              end;
               StrItem.Width := rsObjectImportedValuesR
-               + '("' + WidthItem.Name + '")';
+                + '("' + WidthItem.Name + '")';
+              PriorWidthItem := WidthItem;
             end;
 
             if SlopeItem.Values.UniformValues then
@@ -27327,8 +27529,17 @@ var
             end
             else
             begin
+              if PriorSlopeItem <> nil then
+              begin
+                if SlopeItem.Values.IsSame(PriorSlopeItem.Values) then
+                begin
+                  SlopeItem.Free;
+                  SlopeItem := PriorSlopeItem;
+                end;
+              end;
               StrItem.Slope := rsObjectImportedValuesR
-               + '("' + SlopeItem.Name + '")';
+                + '("' + SlopeItem.Name + '")';
+              PriorSlopeItem := SlopeItem;
             end;
 
             if RoughnessItem.Values.UniformValues then
@@ -27338,8 +27549,17 @@ var
             end
             else
             begin
+              if PriorRoughnessItem <> nil then
+              begin
+                if RoughnessItem.Values.IsSame(PriorRoughnessItem.Values) then
+                begin
+                  RoughnessItem.Free;
+                  RoughnessItem := PriorRoughnessItem;
+                end;
+              end;
               StrItem.Roughness := rsObjectImportedValuesR
-               + '("' + RoughnessItem.Name + '")';
+                + '("' + RoughnessItem.Name + '")';
+              PriorRoughnessItem := RoughnessItem;
             end;
           end;
         end;
@@ -27386,6 +27606,9 @@ var
                     Format(Str0d1d2d, [ScreenObjectIndex+1, TributaryNumber,
                     StressPeriodIndex+1]));
                   TributaryObject := nil;
+                  InvalidTribObjects.Add(StrItem);
+                  InvalidTribIndexes.Add(TributaryNumber);
+                  InvalidBoundaryNumbers.Add(StrBoundary.SegmentNumber);
                 end;
                 if TributaryObject <> nil then
                 begin
@@ -27410,6 +27633,33 @@ var
               begin
                 break;
               end;
+            end;
+
+            InvalidPos := InvalidTribIndexes.IndexOf(ScreenObjectIndex+1);
+            if InvalidPos >= 0 then
+            begin
+              TributaryObject := ScreenObjectsInStressPeriod[ScreenObjectIndex];
+              StrItem := InvalidTribObjects[InvalidPos];
+
+              if NP = 0 then
+              begin
+                OtherStrItem := TributaryObject.ModflowStrBoundary.
+                  Values.GetItemByStartTime(STime) as TStrItem;
+//                    OtherStrItem := TributaryObject.ModflowStrBoundary.
+//                      Values[StrBoundary.Values.Count-1] as TStrItem;
+              end
+              else
+              begin
+                OtherStrItem := TributaryObject.ModflowStrBoundary.
+                  Parameters[0].Param.GetItemByStartTime(STime) as TStrItem;
+//                      [StrBoundary.Parameters[0].Param.Count-1] as TStrItem;
+              end;
+              Assert(OtherStrItem <> nil);
+              OtherStrItem.OutflowSegment := InvalidBoundaryNumbers[InvalidPos];
+
+              InvalidTribObjects.Delete(InvalidPos);
+              InvalidTribIndexes.Delete(InvalidPos);
+              InvalidBoundaryNumbers.Delete(InvalidPos);
             end;
           end;
 
@@ -27490,6 +27740,9 @@ begin
   SegmentsNumbers := TListOfTIntegerList.Create;
   Segments := TSegmentListList.Create;
   StartTimes := TList<double>.Create;
+  InvalidTribIndexes := TList<integer>.Create;
+  InvalidTribObjects := TList<TStrItem>.Create;
+  InvalidBoundaryNumbers := TList<integer>.Create;
   try
     if NP = 0 then
     {$REGION 'MyRegion'}
@@ -27620,6 +27873,9 @@ begin
     SegmentsNumbers.Free;
     Segments.Free;
     StartTimes.Free;
+    InvalidTribIndexes.Free;
+    InvalidTribObjects.Free;
+    InvalidBoundaryNumbers.Free;
   end;
   if FObsImporter <> nil then
   begin

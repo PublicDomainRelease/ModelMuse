@@ -1,4 +1,4 @@
-unit framePackageNwtUnit;
+﻿unit framePackageNwtUnit;
 
 interface
 
@@ -95,7 +95,7 @@ var
 implementation
 
 uses
-  ModelMuseUtilities;
+  ModelMuseUtilities, frmGoPhastUnit, ModflowNWT_WriterUnit;
 
 {$R *.dfm}
 
@@ -117,6 +117,11 @@ procedure TframePackageNwt.comboSolverMethodChange(Sender: TObject);
 begin
   inherited;
   EnableTabs;
+  if frmGoPhast.PhastModel.LgrUsed and (comboSolverMethod.ItemIndex = 1) then
+  begin
+    Beep;
+    MessageDlg(StrTheΧMDInTheNWTS, mtError, [mbOK], 0);
+  end;
 end;
 
 procedure TframePackageNwt.EnableFillLevelControls;
@@ -195,6 +200,11 @@ var
   NwtPackage: TNwtPackageSelection;
 begin
   inherited;
+  if frmGoPhast.PhastModel.LgrUsed and (comboSolverMethod.ItemIndex = 1) then
+  begin
+    Beep;
+    MessageDlg(StrTheΧMDInTheNWTS, mtError, [mbOK], 0);
+  end;
   NwtPackage := Package as TNwtPackageSelection;
   NwtPackage.HeadTolerance.Value := FortranStrToFloat(rdeHeadTolerance.Text);
   NwtPackage.FluxTolerance.Value := FortranStrToFloat(rdeFluxTolerance.Text);

@@ -320,6 +320,7 @@ begin
     comboSfrIface.ItemIndex := Ord(ModpathSource.Sfr_Source);
     comboLakIface.ItemIndex := Ord(ModpathSource.Lak_Source);
 
+    comboStopOptionChange(nil);
 
     EnableErrorTolerance;
     EnableMaxTime;

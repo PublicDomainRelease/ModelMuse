@@ -223,11 +223,13 @@ resourcestring
   'ream bed top in one or more reaches.';
   StrStreamTopBottomWarning = 'In the STR package, the stream bed top is les' +
   's than the stream bed bottom in one or more reaches.';
-  StrWidthWarning = 'In the STR package, the width is less or equal to than ' +
+  StrWidthWarning = 'In the STR package, the width is less than or equal to ' +
   'zero in one or more reaches.';
-  StrSlopeWarning = 'In the STR package, the slope is less or equal to than ' +
+  StrSlopeWarning = 'In the STR package, the slope is less than or equal to ' +
   'zero in one or more reaches.';
-  StrRoughnessWarning = 'In the STR package, the roughness is less or equal ' +
+  StrHighSlopeWarning = 'In the STR package, the slope is greater than or equal to than ' +
+  '0.01 in one or more reaches.';
+  StrRoughnessWarning = 'In the STR package, the roughness is less than or equal ' +
   'to than zero in one or more reaches.';
   StrDownhillFlowWarning = 'In the STR package, one or more reaches have a h' +
   'igher stage than in the reach upstream of them.';
@@ -238,6 +240,8 @@ resourcestring
   's; Difference: %2:g';
   StrDownhillObjectWarning = 'Object: %0:s; Reach: %1:d Layer: %2:d; Row: %3' +
   ':d, Column: %4:d; Stress Period: %5:d; Invalid value: %6:g';
+  StrHighSTRStreamCond = 'High STR stream conductance compared to the cell-t' +
+  'o-cell conductance may cause numerical difficulties';
 
 const
   StrSegmentNumber = 'Segment Number in ';
@@ -324,9 +328,13 @@ begin
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrStreamTopBottomWarning);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrWidthWarning);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrSlopeWarning);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrHighSlopeWarning);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrRoughnessWarning);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrDownhillFlowWarning);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrTribStageWarning);
+
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrHighSTRStreamCond);
+
 
     if not Package.IsSelected then
     begin
@@ -801,7 +809,7 @@ begin
     SortedSegments := TObjectList<TStrSegment>.Create;
     SortedSegments.Capacity := FSegments.Count;
 
-     repeat
+    repeat
       // Mark all segments in FSegments that have tributaries or have water
       // diverted from them by segments that are still in FSegments.
 
@@ -842,16 +850,19 @@ begin
       end;
 
       SegmentsFound := False;
-      FirstSegment := FSegments[0];
-      for Index := 0 to FSegments.Count - 1 do
+      if FSegments.Count > 0 then
       begin
-        Segment := FSegments[Index];
-        if (not Segment.FHasTributariesTemp)
-          and (Segment.FParameterNumber = FirstSegment.FParameterNumber) then
+        FirstSegment := FSegments[0];
+        for Index := 0 to FSegments.Count - 1 do
         begin
-          SortedSegments.Add(Segment);
-          FSegments[Index] := nil;
-          SegmentsFound := True;
+          Segment := FSegments[Index];
+          if (not Segment.FHasTributariesTemp)
+            and (Segment.FParameterNumber = FirstSegment.FParameterNumber) then
+          begin
+            SortedSegments.Add(Segment);
+            FSegments[Index] := nil;
+            SegmentsFound := True;
+          end;
         end;
       end;
 
@@ -2213,9 +2224,16 @@ var
   CalculateStage: Boolean;
 //  Layer: Integer;
   ScreenObjectName: TComponentName;
+  ParamValue: Extended;
+  ParamIndex: Integer;
   procedure CheckReach(AReach: TStr_Cell);
+  const
+    HighConductanceContrast = 1e6;
   var
     ScreenObjectName: TComponentName;
+    AqCond: Double;
+    Ratio: Extended;
+    ScreenObject: TScreenObject;
 //    Layer: integer;
   begin
     if AReach.Stage < AReach.BedTop then
@@ -2260,6 +2278,16 @@ var
           AReach.Slope]),
           ASegment.FScreenObject);
       end;
+      if AReach.Slope > HighGradient then
+      begin
+        ScreenObjectName := ASegment.FScreenObject.Name;
+        frmErrorsAndWarnings.AddWarning(Model, StrHighSlopeWarning,
+          Format(StrDownhillObjectWarning,
+          [ScreenObjectName, AReach.ReachNumber,
+          AReach.Layer+1, AReach.Row+1, AReach.Column+1, StressPeriodIndex+1,
+          AReach.Slope]),
+          ASegment.FScreenObject);
+      end;
       if AReach.Roughness <= 0 then
       begin
         ScreenObjectName := ASegment.FScreenObject.Name;
@@ -2271,6 +2299,21 @@ var
           ASegment.FScreenObject);
       end;
     end;
+
+    AqCond := AquiferConductance(AReach.Layer, AReach.Row, AReach.Column);
+    if AqCond > 0 then
+    begin
+      Ratio := AReach.Conductance*ParamValue/AqCond;
+      if Ratio > HighConductanceContrast then
+      begin
+        ScreenObject := AReach.ScreenObject as TScreenObject;
+        frmErrorsAndWarnings.AddWarning(Model,StrHighSTRStreamCond,
+          Format(StrLayerRowColObject, [
+          AReach.Layer+1, AReach.Row+1, AReach.Column+1, ScreenObject.Name]),
+          ScreenObject);
+      end;
+    end;
+
   end;
 begin
   CalculateStage := Model.ModflowPackages.StrPackage.CalculateStage;
@@ -2284,14 +2327,25 @@ begin
       begin
         AList := ASegment.FParamValues.Objects[0] as TList;
         Reaches := AList[StressPeriodIndex];
+        ParamValue := 1.;
+        for ParamIndex := 0 to FParameters.Count - 1 do
+        begin
+          if FParameters[ParamIndex].ParameterName = ASegment.FParamValues[0] then
+          begin
+            ParamValue := FParameters[ParamIndex].Value;
+            Break;
+          end;
+        end;
       end
       else
       begin
         Reaches := ASegment.FReaches[StressPeriodIndex];
+        ParamValue := 1.;
       end;
       if Reaches.Count > 0 then
       begin
         PriorReach := Reaches[0] as TStr_Cell;
+        CheckReach(PriorReach);
         for ReachIndex := 1 to Reaches.Count - 1 do
         begin
           AReach := Reaches[ReachIndex] as TStr_Cell;
@@ -2305,6 +2359,7 @@ begin
               StressPeriodIndex+1, PriorReach.Stage - AReach.Stage]),
               ASegment.FScreenObject);
           end;
+          CheckReach(AReach);
           PriorReach := AReach;
         end;
       end;

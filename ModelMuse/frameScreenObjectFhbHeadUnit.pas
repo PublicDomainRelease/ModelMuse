@@ -27,7 +27,7 @@ type
     FInitialListOfScreenObjects: TScreenObjectList;
     procedure InitializeControls; virtual;
 
-    procedure DoChange;
+    procedure DoChange; virtual;
     property Changing: Boolean read FChanging write FChanging;
     function GetBoundary(AScreenObject: TScreenObject): TFhbHeadBoundary; virtual;
     function CreateNewBoundary: TFhbHeadBoundary; virtual;

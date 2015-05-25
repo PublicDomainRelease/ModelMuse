@@ -128,6 +128,8 @@ type
     property CfpRechargeFractionAnnotation: string read GetCfpRechargeFractionAnnotation;
   end;
 
+  // @name is used to specify data set 2 in the CRCH in the
+  // Conduit Flow Process.
   TCfpRchFractionBoundary = class(TModflowBoundary)
   protected
     // @name fills ValueTimeList with a series of TObjectLists - one for

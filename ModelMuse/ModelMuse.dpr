@@ -582,6 +582,7 @@ begin
     frmErrorsAndWarnings.Show;
     frmErrorsAndWarnings.BringToFront;
   end;
+  frmScreenObjectProperties.HideGLViewersWithMicrosoftOpenGL;
   Application.Run;
 end.
 

@@ -726,6 +726,7 @@ begin
   CheckSfrParameterInstances;
   CheckMt3dChemSpeciesDefined;
 
+
   ModflowPackages := frmGoPhast.PhastModel.ModflowPackages;
   NeedToDefineFluxObservations := False;
   if framePkgCHOB.Selected and
@@ -1299,6 +1300,7 @@ begin
       (Frame.rdgSfrParamInstances, Ord(sicEndTime));
 
     Frame.seInstanceCount.AsInteger := 0;
+    Frame.FrameLoaded := True;
   end;
   while jplSfrParameters.PageCount >
     frameSFRParameterDefinition.seNumberOfParameters.AsInteger do

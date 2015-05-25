@@ -331,11 +331,60 @@ begin
 end;
 
 procedure TframeCustomColor.GetData;
+var
+  index: Integer;
 begin
   if not FFontAssigned then
   begin
     FFontAssigned := True;
     FLegendFont.Assign(Font);
+  end;
+  if FLegend <> nil then
+  begin
+    comboMethod.ItemIndex := Ord(FLegend.ValueAssignmentMethod)-1;
+    seLegendRows.Enabled := FLegend.ValueAssignmentMethod = vamManual;
+    if FLegend.ValueAssignmentMethod = vamManual then
+    begin
+      seLegendRows.AsInteger := FLegend.Values.Count;
+      seLegendRows.OnChange(nil);
+      case FLegend.Values.DataType of
+        rdtDouble:
+          begin
+            for index := 0 to FLegend.Values.Count - 1 do
+            begin
+              rdgLegend.Cells[0,index+1] := FloatToStr(FLegend.Values.RealValues[index]);
+            end;
+          end;
+        rdtInteger:
+          begin
+            for index := 0 to FLegend.Values.Count - 1 do
+            begin
+              rdgLegend.Cells[0,index+1] := IntToStr(FLegend.Values.IntValues[index]);
+            end;
+          end;
+        rdtBoolean:
+          begin
+            for index := 0 to FLegend.Values.Count - 1 do
+            begin
+              if FLegend.Values.BooleanValues[index] then
+              begin
+                rdgLegend.Cells[0,index+1] := 'True';
+              end
+              else
+              begin
+                rdgLegend.Cells[0,index+1] := 'False';
+              end;
+            end;
+          end;
+        rdtString:
+          begin
+            for index := 0 to FLegend.Values.Count - 1 do
+            begin
+              rdgLegend.Cells[0,index+1] := FLegend.Values.StringValues[index];
+            end;
+          end;
+      end;
+    end;
   end;
 end;
 

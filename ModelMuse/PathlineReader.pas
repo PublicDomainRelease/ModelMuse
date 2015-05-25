@@ -3,7 +3,7 @@ unit PathlineReader;
 interface
 
 uses Windows, Classes, SysUtils, GoPhastTypes, ColorSchemes, Graphics, GR32,
-  OpenGL12x, RealListUnit, QuadtreeClass, Generics.Collections, XBase1;
+  OpenGL, RealListUnit, QuadtreeClass, Generics.Collections, XBase1;
 
 type
   TShowChoice = (scAll, scSpecified, scStart, scEnd);
@@ -290,7 +290,7 @@ type
   TPathLineReader = class(TPathLineSettings)
   private
     class var
-      FPathlineGLIndex: TGLuint;
+      FPathlineGLIndex: GLuint;
       FListInitialized: boolean;
   private
     FLinesV5: TPathLines;
@@ -321,7 +321,7 @@ type
       Point: TPathLinePoint): TColor;
     procedure GetMinMaxValues(var MaxValue: Double; var MinValue: Double);
     function CheckShowLine(Line: TCustomPathLine): Boolean;
-    class function GetPathlineGLIndex: TGLuint; static;
+    class function GetPathlineGLIndex: GLuint; static;
     procedure ReadFileV5;
     procedure DrawLines3D(LocalLines: TCustomPathLines);
     procedure DrawLines(Orientation: TDataSetOrientation; const BitMap: TBitmap32;
@@ -333,7 +333,7 @@ type
     procedure SetMinParticleGroup(const Value: integer);
     function GetMaxLineNumber: integer;
   protected
-    class property PathlineGLIndex: TGLuint read GetPathlineGLIndex;
+    class property PathlineGLIndex: GLuint read GetPathlineGLIndex;
   public
     procedure Assign(Source: TPersistent); override;
     { TODO -cRefactor : Consider replacing Model with an interface. }
@@ -646,7 +646,7 @@ type
     FMinParticleGroup: integer;
     procedure SetPoints(const Value: TEndPoints);
     procedure SetFileDate(const Value: TDateTime);
-    class function GetEndPointGLIndex: TGLuint; static;
+    class function GetEndPointGLIndex: GLuint; static;
     procedure GetMinMaxValues(var MaxValue: Double; var MinValue: Double);
     function GetPointColor(MaxValue, MinValue: double;
       Point: TEndPoint): TColor;
@@ -666,7 +666,7 @@ type
     procedure SetMaxParticleGroup(const Value: integer);
     procedure SetMinParticleGroup(const Value: integer);
   protected
-    class property EndPointGLIndex: TGLuint read GetEndPointGLIndex;
+    class property EndPointGLIndex: GLuint read GetEndPointGLIndex;
   public
     procedure Assign(Source: TPersistent); override;
     { TODO -cRefactor : Consider replacing Model with an interface. }
@@ -931,7 +931,7 @@ type
     FMinTime: double;
     FTimeIndex: integer;
     FDrawingTimeSeries: Boolean;
-    FTimeSeriesGLIndex: array of TGLuint;
+    FTimeSeriesGLIndex: array of GLuint;
     FRecordedTimeSeries: array of Boolean;
     FRealList: TRealList;
     { TODO -cRefactor : Consider replacing Model with an interface. }
@@ -950,7 +950,7 @@ type
       Point: TTimeSeriesPoint): TColor;
     function GetRecordedTimeSeries(ATimeIndex: integer): boolean;
     procedure SetRecordedTimeSeries(ATimeIndex: integer; const Value: boolean);
-    function GetTimeSeriesGLIndex(ATimeIndex: integer): TGLuint;
+    function GetTimeSeriesGLIndex(ATimeIndex: integer): GLuint;
     procedure Record3DTimeSeries(TimeIndex: integer);
     procedure EnsureGLArrays(ATimeIndex: Integer);
     function GetTimes: TRealList;
@@ -971,7 +971,7 @@ type
     procedure Draw3D;
     property RecordedTimeSeries[ATimeIndex: integer]: boolean read
       GetRecordedTimeSeries write SetRecordedTimeSeries;
-    property TimeSeriesGLIndex[ATimeIndex: integer]: TGLuint
+    property TimeSeriesGLIndex[ATimeIndex: integer]: GLuint
       read GetTimeSeriesGLIndex;
     property Times: TRealList read GetTimes write SetTimes;
     procedure Invalidate;
@@ -1074,10 +1074,10 @@ end;
 
 procedure AssignColor(AColor: TColor);
 var
-  Red: TGLubyte;
-  Green: TGLubyte;
-  Blue: TGLubyte;
-  Colors: array[0..3] of TGLfloat;
+  Red: GLubyte;
+  Green: GLubyte;
+  Blue: GLubyte;
+  Colors: array[0..3] of GLfloat;
 begin
   ExtractColorComponents(AColor, Red, Green, Blue);
 
@@ -1412,7 +1412,7 @@ begin
   end;
 end;
 
-class function TPathLineReader.GetPathlineGLIndex: TGLuint;
+class function TPathLineReader.GetPathlineGLIndex: GLuint;
 begin
   if not FListInitialized and frmGoPhast.frame3DView.glWidModelView.Started then
   begin
@@ -3010,20 +3010,14 @@ begin
       Exit;
     end;
 //    EnableLighting;
-    try
-      glCallList(EndPointGLIndex);
-    except on EMathError do
-      begin
-        // do nothing
-      end;
-    end;
+    glCallList(EndPointGLIndex);
   finally
     FDrawingEndPoints := False;
   end;
 
 end;
 
-class function TEndPointReader.GetEndPointGLIndex: TGLuint;
+class function TEndPointReader.GetEndPointGLIndex: GLuint;
 begin
   if not FListInitialized and frmGoPhast.frame3DView.glWidModelView.Started then
   begin
@@ -4367,13 +4361,7 @@ begin
       Exit;
     end;
 //    EnableLighting;
-    try
-      glCallList(TimeSeriesGLIndex[TimeIndex]);
-    except on EMathError do
-      begin
-        // do nothing
-      end;
-    end;
+    glCallList(TimeSeriesGLIndex[TimeIndex]);
   finally
     FDrawingTimeSeries := False;
   end;
@@ -4384,7 +4372,7 @@ procedure TTimeSeriesReader.EnsureGLArrays(ATimeIndex: Integer);
 var
   Index: Integer;
   OldLength: Integer;
-  GLIndex: TGLuint;
+  GLIndex: GLuint;
   MaxPoints: Integer;
 begin
   Assert(Length(FRecordedTimeSeries) = Length(FTimeSeriesGLIndex));
@@ -4723,7 +4711,7 @@ begin
   result := FRealList;
 end;
 
-function TTimeSeriesReader.GetTimeSeriesGLIndex(ATimeIndex: integer): TGLuint;
+function TTimeSeriesReader.GetTimeSeriesGLIndex(ATimeIndex: integer): GLuint;
 begin
   EnsureGLArrays(ATimeIndex);
   result := FTimeSeriesGLIndex[ATimeIndex];
@@ -6112,13 +6100,7 @@ begin
       Exit;
     end;
 //    EnableLighting;
-    try
-      glCallList(PathlineGLIndex);
-    except on EMathError do
-      begin
-        // do nothing
-      end;
-    end;
+    glCallList(PathlineGLIndex);
   finally
     FDrawingPathLines := False;
   end;

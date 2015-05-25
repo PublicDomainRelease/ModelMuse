@@ -14,6 +14,7 @@ type
 
   TReachObsLinks = TObjectList<TReachObsLink>;
 
+  // @name stores the data for one reach in the MODFLOW SWR process.
   TReachObject = class(TObject)
   private
     FNeighbors: TList<TReachObject>;

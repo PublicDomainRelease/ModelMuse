@@ -470,20 +470,20 @@ end;
 
 procedure TGLWidget.DoRender;
 begin
-  Activate;
-{$IFDEF MSWindows}
-  if FActivated then
-{$ENDIF}
-  FOnRender(self);
-{$IFDEF MSWindows}
-  if FActivated then
-{$ENDIF}
-  begin
-    try
+  try
+    Activate;
+  {$IFDEF MSWindows}
+    if FActivated then
+  {$ENDIF}
+    FOnRender(self);
+  {$IFDEF MSWindows}
+    if FActivated then
+  {$ENDIF}
+    begin
       SwapBuffers(FDC);
-    except
-      Visible := False;
     end;
+  except
+    Visible := False;
   end;
 end;
 
@@ -580,8 +580,10 @@ begin
   {$IFDEF MSWindows}
     if FActivated then
   {$ENDIF}
-    if Started then
+    if Started and (ClientWidth > 0) and (ClientHeight > 0) then
+    begin
       glViewport(0, 0, ClientWidth, ClientHeight);
+    end;
   end;
   Invalidate;
   inherited;

@@ -177,7 +177,7 @@ begin
   inherited;
   for Index := 1 to dgTime.RowCount - 1 do
   begin
-    LengthFirstTimeStep := dgTime.RealValue[Ord(tcTimeFirstStep), Index];
+    LengthFirstTimeStep := dgTime.RealValueDefault[Ord(tcTimeFirstStep), Index, 0];
     if LengthFirstTimeStep <= 0 then
     begin
       Beep;

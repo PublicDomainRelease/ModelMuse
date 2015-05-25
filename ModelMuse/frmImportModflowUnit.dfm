@@ -97,10 +97,8 @@ inherited frmImportModflow: TfrmImportModflow
     Width = 83
     Height = 33
     Anchors = [akTop, akRight]
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 5
     OnClick = btnHelpClick
   end
@@ -110,11 +108,9 @@ inherited frmImportModflow: TfrmImportModflow
     Width = 83
     Height = 33
     Anchors = [akTop, akRight]
-    DoubleBuffered = True
     Enabled = False
     Kind = bkOK
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 6
     OnClick = btnOKClick
   end
@@ -124,10 +120,8 @@ inherited frmImportModflow: TfrmImportModflow
     Width = 83
     Height = 33
     Anchors = [akTop, akRight]
-    DoubleBuffered = True
     Kind = bkClose
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 7
   end
   object sbStatusBar: TStatusBar

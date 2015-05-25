@@ -2769,7 +2769,7 @@ begin
     // of the element containing APoint;
     // APoint must be on a side view of the model.
   Grid := frmGoPhast.PhastModel.SelectedModel.Grid;
-  if (Grid = nil) or (Grid.ColumnCount <= 0)
+  if (Grid = nil) or (Grid.ColumnCount <= 0) or (Grid.RowCount <= 0)
     or (Grid.LayerCount <= 0) then
   begin
     Layer := -1;
@@ -2941,7 +2941,7 @@ begin
     // @name gets the row and layer numbers of the element containing APoint;
     // APoint must be on a side view of the model.
   Grid := frmGoPhast.PhastModel.SelectedModel.Grid;
-  if (Grid = nil) or (Grid.RowCount <= 0)
+  if (Grid = nil) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0)
     or (Grid.LayerCount <= 0) then
   begin
     Layer := -1;

@@ -455,7 +455,7 @@ object frameCustomColor: TframeCustomColor
         end
         object seLegendRows: TJvSpinEdit
           Left = 8
-          Top = 324
+          Top = 322
           Width = 121
           Height = 24
           CheckMaxValue = False

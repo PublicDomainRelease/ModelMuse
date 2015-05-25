@@ -6,7 +6,7 @@ uses
   Types, // included to allow inlining or "Point" function.
   SysUtils, Classes, Controls, Graphics, Forms,
   GR32, // TBitmap32 and TFloatRect are declared in GR32.
-  GoPhastTypes, AbstractGridUnit, ZoomBox2, OpenGL12x, DataSetUnit;
+  GoPhastTypes, AbstractGridUnit, ZoomBox2, OpenGL12x, OpenGL, DataSetUnit;
 
 type
   TModflowGrid = class(TCustomModelGrid)
@@ -125,6 +125,7 @@ type
     // @name is accessed as @name[Col, Row, Layer].
     property LayerElevations: TThreeDRealArray read GetLayerElevations
       write SetLayerElevations;
+    function LayerThickness(Layer, Row, Column: Integer): double;
     // @name has the cell outlines for the MODFLOW cells as
     // viewed from the front.  The dimensions of the result will be
     // @link(ColumnCount)*2+1, @link(LayerCount)+1
@@ -2093,7 +2094,7 @@ var
   CellColors: TCellColors;
   LayerLength, RowLength, ColLength: integer;
   LayerIndex, RowIndex, ColIndex: integer;
-  Red, Green, Blue: TGLubyte;
+  Red, Green, Blue: GLubyte;
   X, Y, Z: single;
 //  XPositions, YPositions: TOneDRealArray;
 //  ZPositions: TThreeDRealArray;
@@ -3462,6 +3463,12 @@ begin
   begin
     SetLength(LayerBoundaries, 0);
   end;
+end;
+
+function TModflowGrid.LayerThickness(Layer, Row, Column: Integer): double;
+begin
+  Result := LayerElevations[Column, Row, Layer]
+    - LayerElevations[Column, Row, Layer+1];
 end;
 
 function TModflowGrid.LowestElevation: real;

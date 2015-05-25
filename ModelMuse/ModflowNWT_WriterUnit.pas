@@ -1,4 +1,4 @@
-unit ModflowNWT_WriterUnit;
+﻿unit ModflowNWT_WriterUnit;
 
 interface
 
@@ -18,13 +18,18 @@ type
     procedure WriteFile(const AFileName: string);
   end;
 
+resourcestring
+  StrTheΧMDInTheNWTS = 'The χMD in the NWT solver can not be used with local' +
+  ' grid refinement in MODFLOW-OWHM. Try using the GMRES solver instead.';
 
 implementation
 
-uses ModflowUnitNumbers, PhastModelUnit, frmProgressUnit;
+uses ModflowUnitNumbers, PhastModelUnit, frmProgressUnit,
+  frmErrorsAndWarningsUnit, frmGoPhastUnit;
 
 resourcestring
   StrWritingNWTPackage = 'Writing NWT Package input.';
+  StrIllegalSolverChoic = 'Illegal solver choice';
 
 { TNwtWriter }
 
@@ -70,6 +75,10 @@ begin
   MAXITEROUT := NWT.MaxOuterIterations;
   THICKFACT := NWT.ThicknessFactor.Value;
   LINMETH := Ord(NWT.SolverMethod) + 1;
+  if (LINMETH = 2) and frmGoPhast.PhastModel.LgrUsed then
+  begin
+    frmErrorsAndWarnings.AddError(Model,StrIllegalSolverChoic, StrTheΧMDInTheNWTS);
+  end;
   IPRNWT := NWT.PrintFlag;
   IBOTAV := NWT.CorrectForCellBottom;
   case NWT.Option of
@@ -205,6 +214,7 @@ procedure TNwtWriter.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
 begin
+  frmErrorsAndWarnings.RemoveErrorGroup(Model,StrIllegalSolverChoic);
   if not Package.IsSelected then
   begin
     Exit

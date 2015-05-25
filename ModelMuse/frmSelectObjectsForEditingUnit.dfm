@@ -2,13 +2,15 @@ inherited frmSelectObjectsForEditing: TfrmSelectObjectsForEditing
   HelpType = htKeyword
   HelpKeyword = 'Select_Objects_for_Editing'
   Caption = 'Select Objects for Editing or Deletion'
+  ExplicitWidth = 438
+  ExplicitHeight = 452
   PixelsPerInch = 96
   TextHeight = 18
   inherited pnlBottom: TPanel
     TabOrder = 2
     inherited btnClose: TBitBtn
-      TabOrder = 3
       Kind = bkCancel
+      TabOrder = 3
     end
     inherited btnHelp: TBitBtn
       Left = 45
@@ -22,9 +24,10 @@ inherited frmSelectObjectsForEditing: TfrmSelectObjectsForEditing
       Height = 33
       Anchors = [akTop, akRight]
       Caption = '&Edit'
+      Kind = bkOK
+      NumGlyphs = 2
       TabOrder = 2
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnDelete: TBitBtn
       Left = 140
@@ -33,9 +36,6 @@ inherited frmSelectObjectsForEditing: TfrmSelectObjectsForEditing
       Height = 33
       Anchors = [akTop, akRight]
       Caption = '&Delete'
-      ModalResult = 1
-      TabOrder = 1
-      OnClick = btnDeleteClick
       Glyph.Data = {
         42020000424D40020000000000008E0000002800000018000000180000000100
         08000100000040020000120B0000120B000016000000000000000732DE000632
@@ -56,15 +56,19 @@ inherited frmSelectObjectsForEditing: TfrmSelectObjectsForEditing
         07000313011300000006130D0404030D0D130003071113000113011300000005
         130404040D001213011300000004130D040D1313011300001713011300001713
         011300000001}
+      ModalResult = 1
+      TabOrder = 1
+      OnClick = btnDeleteClick
     end
   end
   inherited vstObjects: TVirtualStringTree
     Top = 57
     Height = 316
     PopupMenu = pmChangeStates
+    TabOrder = 1
     TreeOptions.SelectionOptions = [toMultiSelect]
     OnChecked = vstObjectsChecked
-    ExplicitTop = 55
+    ExplicitTop = 57
     ExplicitHeight = 316
   end
   object rgViewDirection: TRadioGroup
@@ -88,10 +92,12 @@ inherited frmSelectObjectsForEditing: TfrmSelectObjectsForEditing
     Top = 88
     object miCheckSelected: TMenuItem
       Caption = 'Check Selected'
+      Hint = 'Check the selected objects'
       OnClick = miCheckSelectedClick
     end
     object UncheckSelected1: TMenuItem
       Caption = 'Uncheck Selected'
+      Hint = 'Uncheck the selected objects'
       OnClick = UncheckSelected1Click
     end
   end

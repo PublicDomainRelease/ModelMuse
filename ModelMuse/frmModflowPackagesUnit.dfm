@@ -5,8 +5,8 @@ inherited frmModflowPackages: TfrmModflowPackages
   ClientHeight = 555
   ClientWidth = 782
   OnResize = FormResize
-  ExplicitWidth = 798
-  ExplicitHeight = 593
+  ExplicitWidth = 800
+  ExplicitHeight = 600
   PixelsPerInch = 120
   TextHeight = 18
   object JvNetscapeSplitter1: TJvNetscapeSplitter
@@ -27,7 +27,7 @@ inherited frmModflowPackages: TfrmModflowPackages
     Top = 0
     Width = 595
     Height = 514
-    ActivePage = jvspFMP
+    ActivePage = jvspModpath
     PropagateEnable = False
     Align = alClient
     OnChange = jvplPackagesChange
@@ -1869,7 +1869,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         Top = 0
         Width = 595
         Height = 514
-        ActivePage = tabSfrGeneral
+        ActivePage = tabSfrParameters
         Align = alClient
         TabOrder = 0
         ClientBorderWidth = 0
@@ -2152,9 +2152,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         object tabSfrParameters: TTabSheet
           Caption = 'Parameters'
           ImageIndex = 1
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object splitSFR: TSplitter
             Left = 0
             Top = 257
@@ -3296,7 +3293,6 @@ inherited frmModflowPackages: TfrmModflowPackages
           ExplicitWidth = 590
           ExplicitHeight = 375
           inherited tabResponse: TTabSheet
-            ExplicitLeft = 4
             ExplicitTop = 29
             ExplicitWidth = 582
             ExplicitHeight = 342
@@ -3342,12 +3338,12 @@ inherited frmModflowPackages: TfrmModflowPackages
               ExplicitHeight = 18
             end
             inherited lblReferenceTime: TLabel
-              Left = 335
-              Top = 118
+              Left = 359
+              Top = 115
               Width = 206
               Height = 36
-              ExplicitLeft = 335
-              ExplicitTop = 118
+              ExplicitLeft = 359
+              ExplicitTop = 115
               ExplicitWidth = 206
               ExplicitHeight = 36
             end
@@ -3394,11 +3390,11 @@ inherited frmModflowPackages: TfrmModflowPackages
               ExplicitHeight = 28
             end
             inherited rdeReferenceTime: TRbwDataEntry
-              Left = 335
-              Top = 162
+              Left = 359
+              Top = 157
               TabOrder = 5
-              ExplicitLeft = 335
-              ExplicitTop = 162
+              ExplicitLeft = 359
+              ExplicitTop = 157
             end
             inherited comboEvtSink: TJvImageComboBox
               Height = 28
@@ -3452,9 +3448,7 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
           end
           inherited tsVersion6Options: TTabSheet
-            ExplicitLeft = 4
             ExplicitTop = 29
-            ExplicitWidth = 592
             ExplicitHeight = 331
             inherited lblWeakSource: TLabel
               Width = 337
@@ -3553,12 +3547,10 @@ inherited frmModflowPackages: TfrmModflowPackages
               ExplicitWidth = 302
             end
             inherited comboAdvObs: TJvImageComboBox
-              Left = 3
               Top = 292
               Height = 28
               ItemHeight = 22
               TabOrder = 11
-              ExplicitLeft = 3
               ExplicitTop = 292
               ExplicitHeight = 28
             end
@@ -3595,9 +3587,7 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
           end
           inherited tabOutputTimes: TTabSheet
-            ExplicitLeft = 4
             ExplicitTop = 29
-            ExplicitWidth = 592
             ExplicitHeight = 331
             inherited lblTimeMethod: TLabel
               Width = 315

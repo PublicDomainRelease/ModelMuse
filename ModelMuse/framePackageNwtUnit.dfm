@@ -26,15 +26,15 @@ inherited framePackageNwt: TframePackageNwt
       object lblSolverMethod: TLabel
         Left = 90
         Top = 117
-        Width = 116
-        Height = 13
+        Width = 138
+        Height = 16
         Caption = 'Matrix solver (LINMETH)'
       end
       object lblThicknessFactor: TLabel
         Left = 90
         Top = 89
-        Width = 332
-        Height = 13
+        Width = 395
+        Height = 16
         Caption = 
           'Portion of cell thickness used for coefficient adjustment (THICK' +
           'FACT)'
@@ -42,29 +42,29 @@ inherited framePackageNwt: TframePackageNwt
       object lblMaxOuterIt: TLabel
         Left = 90
         Top = 62
-        Width = 249
-        Height = 13
+        Width = 301
+        Height = 16
         Caption = 'Maximum number of outer iterations (MAXITEROUT)'
       end
       object lblFluxTolerance: TLabel
         Left = 90
         Top = 34
-        Width = 162
-        Height = 13
+        Width = 195
+        Height = 16
         Caption = 'Flux tolerance (FLUXTOL) (L^3/T)'
       end
       object lblHeadTolerance: TLabel
         Left = 90
         Top = 6
-        Width = 146
-        Height = 13
+        Width = 174
+        Height = 16
         Caption = 'Head tolerance (HEADTOL) (L)'
       end
       object lblOptions: TLabel
         Left = 90
         Top = 210
-        Width = 138
-        Height = 13
+        Width = 165
+        Height = 16
         Caption = 'Model complexity (OPTIONS)'
       end
       object rdeHeadTolerance: TRbwDataEntry
@@ -99,7 +99,7 @@ inherited framePackageNwt: TframePackageNwt
         Left = 3
         Top = 59
         Width = 81
-        Height = 21
+        Height = 24
         CheckMaxValue = False
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
@@ -125,7 +125,7 @@ inherited framePackageNwt: TframePackageNwt
         Left = 3
         Top = 114
         Width = 81
-        Height = 23
+        Height = 26
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
         Color = clBtnFace
@@ -133,7 +133,7 @@ inherited framePackageNwt: TframePackageNwt
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 17
+        ItemHeight = 20
         ItemIndex = 0
         TabOrder = 4
         OnChange = comboSolverMethodChange
@@ -154,7 +154,7 @@ inherited framePackageNwt: TframePackageNwt
         Top = 143
         Width = 273
         Height = 17
-        Caption = 'Print sover convergence information (IPRNWT)'
+        Caption = 'Print solver convergence information (IPRNWT)'
         Enabled = False
         TabOrder = 5
       end
@@ -174,7 +174,7 @@ inherited framePackageNwt: TframePackageNwt
         Left = 3
         Top = 207
         Width = 81
-        Height = 23
+        Height = 26
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
         Color = clBtnFace
@@ -182,7 +182,7 @@ inherited framePackageNwt: TframePackageNwt
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 17
+        ItemHeight = 20
         ItemIndex = 0
         TabOrder = 7
         OnChange = comboOptionsChange
@@ -224,15 +224,11 @@ inherited framePackageNwt: TframePackageNwt
       HelpKeyword = 'Additional_Options_Tab_Newton_'
       Caption = 'Additional Options'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblDbdTheta: TLabel
         Left = 87
         Top = 3
-        Width = 318
-        Height = 26
+        Width = 299
+        Height = 32
         Caption = 
           'Coefficient used to reduce the weight applied to the head change' +
           ' (DBDTHETA)'
@@ -241,8 +237,8 @@ inherited framePackageNwt: TframePackageNwt
       object lblDbdKappa: TLabel
         Left = 87
         Top = 31
-        Width = 322
-        Height = 26
+        Width = 308
+        Height = 32
         Caption = 
           'Coefficient used to increase the weight applied to the head chan' +
           'ge (DBDKAPPA)'
@@ -251,8 +247,8 @@ inherited framePackageNwt: TframePackageNwt
       object lblDbdGamma: TLabel
         Left = 87
         Top = 59
-        Width = 306
-        Height = 26
+        Width = 304
+        Height = 32
         Caption = 
           'Factor used to weight the head change for iterations n-1 and n (' +
           'DBDGAMMA)'
@@ -261,16 +257,16 @@ inherited framePackageNwt: TframePackageNwt
       object lblMomentumCoefficient: TLabel
         Left = 87
         Top = 94
-        Width = 169
-        Height = 13
+        Width = 130
+        Height = 32
         Caption = 'Momentum coefficient (MOMFACT) '
         WordWrap = True
       end
       object Label4: TLabel
         Left = 63
         Top = 143
-        Width = 354
-        Height = 26
+        Width = 327
+        Height = 32
         Caption = 
           'Maximum number of reductions (backtracks) in the head change bet' +
           'ween nonlinear iterations (MAXBACKITER) '
@@ -279,8 +275,8 @@ inherited framePackageNwt: TframePackageNwt
       object lblBackTol: TLabel
         Left = 87
         Top = 172
-        Width = 359
-        Height = 39
+        Width = 354
+        Height = 64
         Caption = 
           'The proportional decrease in the root-mean-squared error of the ' +
           'groundwater-flow equation used to determine if residual control ' +
@@ -290,8 +286,8 @@ inherited framePackageNwt: TframePackageNwt
       object lblReductionFactor: TLabel
         Left = 87
         Top = 220
-        Width = 285
-        Height = 26
+        Width = 266
+        Height = 48
         Caption = 
           'Reduction factor used for residual control that reduces the head' +
           ' change between nonlinear iterations (BACKREDUCE)'
@@ -368,7 +364,7 @@ inherited framePackageNwt: TframePackageNwt
         Left = 3
         Top = 143
         Width = 54
-        Height = 21
+        Height = 24
         CheckMaxValue = False
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
@@ -410,15 +406,11 @@ inherited framePackageNwt: TframePackageNwt
       HelpKeyword = '_GMRES_Variables_Tab_Newton_So'
       Caption = 'GMRES Variables'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblMaxIterationsGmres: TLabel
         Left = 90
         Top = 6
-        Width = 322
-        Height = 13
+        Width = 388
+        Height = 16
         Caption = 
           'Maximum number of iterations for the linear solution (MAXITINNER' +
           ')'
@@ -426,44 +418,44 @@ inherited framePackageNwt: TframePackageNwt
       object lblIluMethod: TLabel
         Left = 3
         Top = 30
-        Width = 239
-        Height = 13
+        Width = 284
+        Height = 16
         Caption = 'Method for incomplete factorization (ILUMETHOD)'
       end
       object lblFillLimit1: TLabel
         Left = 90
         Top = 78
-        Width = 179
-        Height = 13
+        Width = 218
+        Height = 16
         Caption = 'Fill limit for ILUMETHOD = 1 (LEVFILL)'
       end
       object lblFillLimit2: TLabel
         Left = 90
         Top = 105
-        Width = 197
-        Height = 13
+        Width = 235
+        Height = 16
         Caption = 'Level of fill for ILUMETHOD = 2 (LEVFILL)'
       end
       object lblTolerance: TLabel
         Left = 87
         Top = 132
-        Width = 278
-        Height = 13
+        Width = 268
+        Height = 32
         Caption = 'Tolerance for convergence of the linear solver (STOPTOL)'
         WordWrap = True
       end
       object lblRestarts: TLabel
         Left = 90
         Top = 160
-        Width = 324
-        Height = 13
+        Width = 386
+        Height = 16
         Caption = 'Number of iterations between restarts of the GMRES solver (MSDR)'
       end
       object seMaxIterationsGmres: TJvSpinEdit
         Left = 3
         Top = 3
         Width = 81
-        Height = 21
+        Height = 24
         CheckMaxValue = False
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
@@ -474,7 +466,7 @@ inherited framePackageNwt: TframePackageNwt
         Left = 3
         Top = 46
         Width = 262
-        Height = 23
+        Height = 26
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
         Color = clBtnFace
@@ -482,7 +474,7 @@ inherited framePackageNwt: TframePackageNwt
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 17
+        ItemHeight = 20
         ItemIndex = 0
         TabOrder = 1
         OnChange = comboIluMethodChange
@@ -502,7 +494,7 @@ inherited framePackageNwt: TframePackageNwt
         Left = 3
         Top = 75
         Width = 81
-        Height = 21
+        Height = 24
         CheckMaxValue = False
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
@@ -513,7 +505,7 @@ inherited framePackageNwt: TframePackageNwt
         Left = 3
         Top = 102
         Width = 81
-        Height = 21
+        Height = 24
         CheckMaxValue = False
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
@@ -538,7 +530,7 @@ inherited framePackageNwt: TframePackageNwt
         Left = 3
         Top = 157
         Width = 81
-        Height = 21
+        Height = 24
         CheckMaxValue = False
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
@@ -551,36 +543,32 @@ inherited framePackageNwt: TframePackageNwt
       HelpKeyword = 'Chi_MD_Variables_Tab_Newton_So'
       Caption = 'Chi MD Variables'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblAccelMethod: TLabel
         Left = 183
         Top = 6
-        Width = 132
-        Height = 13
+        Width = 157
+        Height = 16
         Caption = 'Acceleration method (IACL)'
       end
       object lblOrderingScheme: TLabel
         Left = 184
         Top = 35
-        Width = 216
-        Height = 13
+        Width = 258
+        Height = 16
         Caption = 'Scheme of ordering the unknowns (NORDER)'
       end
       object lblFillLevel: TLabel
         Left = 90
         Top = 64
-        Width = 239
-        Height = 13
+        Width = 287
+        Height = 16
         Caption = 'Level of fill for incomplete LU factorization (LEVEL)'
       end
       object lblNumOrtho: TLabel
         Left = 90
         Top = 85
-        Width = 333
-        Height = 26
+        Width = 276
+        Height = 32
         Caption = 
           'Number of orthogonalization for the ORTHOMIN acceleration scheme' +
           ' (NORTH) '
@@ -589,39 +577,39 @@ inherited framePackageNwt: TframePackageNwt
       object lblResRedCrit: TLabel
         Left = 87
         Top = 141
-        Width = 253
-        Height = 13
+        Width = 237
+        Height = 32
         Caption = 'Residual reduction-convergence criterion (RRCTOLS)'
         WordWrap = True
       end
       object lblDropTolerance: TLabel
         Left = 87
         Top = 193
-        Width = 207
-        Height = 13
+        Width = 199
+        Height = 32
         Caption = 'Drop tolerance for preconditioning (EPSRN)'
         WordWrap = True
       end
       object lblHeadClosure: TLabel
         Left = 87
         Top = 221
-        Width = 298
-        Height = 13
+        Width = 278
+        Height = 32
         Caption = 'Head closure criteria for inner (linear) iterations (HCLOSEXMD)'
         WordWrap = True
       end
       object lblMaxIterChimd: TLabel
         Left = 87
         Top = 249
-        Width = 318
-        Height = 13
+        Width = 386
+        Height = 16
         Caption = 'Maximum number of iterations for the linear solution (MXITERXMD)'
       end
       object comboAccelMethod: TJvImageComboBox
         Left = 3
         Top = 3
         Width = 174
-        Height = 23
+        Height = 26
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
         Color = clBtnFace
@@ -629,7 +617,7 @@ inherited framePackageNwt: TframePackageNwt
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 17
+        ItemHeight = 20
         ItemIndex = 0
         TabOrder = 0
         Items = <
@@ -653,7 +641,7 @@ inherited framePackageNwt: TframePackageNwt
         Left = 3
         Top = 32
         Width = 174
-        Height = 23
+        Height = 26
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
         Color = clBtnFace
@@ -661,7 +649,7 @@ inherited framePackageNwt: TframePackageNwt
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 17
+        ItemHeight = 20
         ItemIndex = 2
         TabOrder = 1
         Items = <
@@ -685,7 +673,7 @@ inherited framePackageNwt: TframePackageNwt
         Left = 3
         Top = 61
         Width = 81
-        Height = 21
+        Height = 24
         CheckMaxValue = False
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
@@ -696,7 +684,7 @@ inherited framePackageNwt: TframePackageNwt
         Left = 3
         Top = 88
         Width = 81
-        Height = 21
+        Height = 24
         CheckMaxValue = False
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
@@ -767,7 +755,7 @@ inherited framePackageNwt: TframePackageNwt
         Left = 3
         Top = 246
         Width = 81
-        Height = 21
+        Height = 24
         CheckMaxValue = False
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000

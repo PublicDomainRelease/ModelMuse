@@ -405,9 +405,8 @@ begin
   FList.Add(result);
   if AModel <> nil then
   begin
-    { TODO 1 : This needs to change }
     result.FObsTimes.OnInvalidate :=
-      (AModel as TCustomModel).InvalidateMfHobHeads;
+      (AModel as TCustomModel).InvalidateMt3dTobConcs;
   end;
 end;
 
@@ -559,8 +558,7 @@ begin
     and not (csDestroying in PhastModel.ComponentState)
     and not PhastModel.Clearing then
   begin
-    { TODO 1 : This needs to change }
-    PhastModel.InvalidateMfHobHeads(self);
+    PhastModel.InvalidateMt3dTobConcs(self);
   end;
 end;
 

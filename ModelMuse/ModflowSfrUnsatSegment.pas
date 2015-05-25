@@ -82,16 +82,17 @@ type
 
   TSfrUnsatSegmentTimeListLink = class(TTimeListsModelLink)
   private
-    // @name is used to compute the hydraulic conductivity for a series of
+    // @name is used to compute the Brooks Corey Exponent for a series of
     // Streamflow Routing Boundaries over a series of time intervals.
     FBrooksCoreyExponentData: TModflowTimeList;
-    // @name is used to compute the streambed thickness for a series of
+    // @name is used to compute the initial water content for a series of
     // Streamflow Routing Boundaries over a series of time intervals.
     FInitialWaterContentData: TModflowTimeList;
-    // @name is used to compute the streambed elevation for a series of
+    // @name is used to compute the saturated water content for a series of
     // Streamflow Routing Boundaries over a series of time intervals.
     FSaturatedWaterContentData: TModflowTimeList;
-    // @name is used to compute the stream slope for a series of
+    // @name is used to compute the vertical saturated hydraulic conductivity
+    // for a series of
     // Streamflow Routing Boundaries over a series of time intervals.
     FVerticalSaturatedKData: TModflowTimeList;
   protected

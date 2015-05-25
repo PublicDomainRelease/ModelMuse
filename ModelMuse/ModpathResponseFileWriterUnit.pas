@@ -63,7 +63,7 @@ implementation
 uses
   ModflowGridUnit, LayerStructureUnit, ModpathStartingLocationsWriter,
   ModpathParticleUnit, frmProgressUnit, GoPhastTypes, Forms, frmGoPhastUnit,
-  frmErrorsAndWarningsUnit;
+  frmErrorsAndWarningsUnit, ModflowTimeUnit;
 
 resourcestring
   StrWritingDataSets32and33 = '  Writing Data Sets 32 and 33.';
@@ -72,6 +72,14 @@ resourcestring
   StrInSAllValuesSh = 'In %s, all values should be greater than or equal to ' +
   '1';
   StrLayerRowColumn = 'Layer, Row, Column = (%0:d, %1:d, %2:d)';
+  StrBecauseThe0sStr = 'Because the %0:s stress period is not steady-state, ' +
+  'the particles will end at the %1:s of the model simulation. See the docum' +
+  'entation for StopOption in the MODPATH documentation.';
+  StrLast = 'last';
+  StrEnd = 'end';
+  StrFirst = 'first';
+  StrBeginning = 'beginning';
+  StrTheMODPATHStopOpti = 'The MODPATH StopOption may not work as expected.';
 
 { TModpathResponseFileWriter }
 
@@ -849,6 +857,8 @@ var
   ZoneArrayOption: Integer;
   RetardationOption: Integer;
   AdvectiveObservationsOption: Integer;
+  StressPeriod: TModflowStressPeriod;
+  Warning: string;
 begin
   frmProgressMM.AddMessage(StrWritingDataSet3);
   SimulationType := Ord(FOptions.OutputMode) + 1;
@@ -864,6 +874,35 @@ begin
     WeakSouceOption := 2;
   end;
   StopOption := Ord(FOptions.StopOption) + 1;
+  if StopOption = 2 then
+  begin
+    if TrackingDirection = 1 then
+    begin
+      // forward tracking
+      StressPeriod := Model.ModflowFullStressPeriods.Last;
+    end
+    else
+    begin
+      // backwards tracking
+      Assert(TrackingDirection = 2);
+      StressPeriod := Model.ModflowFullStressPeriods.First;
+    end;
+    if StressPeriod.StressPeriodType <> sptSteadyState then
+    begin
+      if TrackingDirection = 1 then
+      begin
+        // forward tracking
+        Warning := Format(StrBecauseThe0sStr, [StrLast, StrEnd]);
+      end
+      else
+      begin
+        // backwards tracking
+        Assert(TrackingDirection = 2);
+        Warning := Format(StrBecauseThe0sStr, [StrFirst, StrBeginning]);
+      end;
+      frmErrorsAndWarnings.AddWarning(Model, StrTheMODPATHStopOpti, Warning);
+    end;
+  end;
   FTimePointOption := 0;
   if (FOptions.OutputMode in [mopPathline, mopTimeSeries]) then
   begin
@@ -1177,6 +1216,7 @@ procedure TModpathSimFileWriter.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
 begin
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrTheMODPATHStopOpti);
   FNameFile := AFileName;
   NameOfFile := FileName(AFileName);
   OpenFile(NameOfFile);

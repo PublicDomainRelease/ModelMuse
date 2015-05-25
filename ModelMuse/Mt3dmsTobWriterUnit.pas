@@ -5,7 +5,8 @@ interface
 uses
   CustomModflowWriterUnit, GoPhastTypes, PhastModelUnit, Classes, SysUtils,
   Mt3dmsTobUnit, Generics.Collections, Mt3dmsFluxObservationsUnit, RbwParser,
-  ScreenObjectUnit, FluxObservationUnit, ModflowPackageSelectionUnit, Forms;
+  ScreenObjectUnit, FluxObservationUnit, ModflowPackageSelectionUnit, Forms,
+  ModflowBoundaryDisplayUnit;
 
 type
   TObsList = TList<TMt3dmsFluxObservationGroup>;
@@ -53,6 +54,8 @@ type
     Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     destructor Destroy; override;
     procedure WriteFile(const AFileName: string; Purpose: TObservationPurpose);
+    procedure UpdateDisplay(TimeLists: TModflowBoundListOfTimeLists;
+      ParameterIndicies: TByteSet; Purpose: TObservationPurpose);
   end;
 
 implementation
@@ -61,7 +64,7 @@ uses
   frmErrorsAndWarningsUnit, DataSetUnit, Contnrs,
   ModflowHobUnit, Mt3dmsChemUnit,
   SubscriptionUnit, GlobalVariablesUnit, GIS_Functions, frmFormulaErrorsUnit,
-  ModflowUnitNumbers, frmProgressUnit;
+  ModflowUnitNumbers, frmProgressUnit, Math;
 
 resourcestring
   ConcOffGrid = 'One or more concentration observation are not located on ' +
@@ -377,6 +380,95 @@ end;
 function TMt3dmsTobWriter.Package: TModflowPackageSelection;
 begin
   result := Model.ModflowPackages.Mt3dmsTransObs;
+end;
+
+procedure TMt3dmsTobWriter.UpdateDisplay(
+  TimeLists: TModflowBoundListOfTimeLists; ParameterIndicies: TByteSet;
+  Purpose: TObservationPurpose);
+var
+  DataArrayList: TList;
+  TimeListIndex: Integer;
+  DisplayTimeList: TMt3dmsTobDisplayTimeList;
+  TimeIndex: Integer;
+//  CellList: TList;
+  DataArray: TModflowBoundaryDisplayDataArray;
+  ObsIndex: Integer;
+  Obs: TMt3dmsTransObservations;
+  ItemIndex: Integer;
+  CellList: TMt3dmsTobsCellList;
+  Cell: TMt3dmsTob_Cell;
+  TimePosition: Integer;
+  CellIndex: Integer;
+begin
+  // Quit if the package isn't used.
+  frmErrorsAndWarnings.BeginUpdate;
+  try
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrConcentratonObservationsError);
+    if not Package.IsSelected then
+    begin
+      UpdateNotUsedDisplay(TimeLists);
+      Exit;
+    end;
+    DataArrayList := TList.Create;
+    try
+      // evaluate all the data used in the package.
+      FillFluxObsList;
+      EvaluateConcentrationObs(Purpose);
+//      Evaluate(Purpose);
+
+      Assert(TimeLists.Count= 1);
+      DisplayTimeList := TimeLists[0] as TMt3dmsTobDisplayTimeList;
+      for ObsIndex := 0 to FObservations.Count - 1 do
+      begin
+        Obs := FObservations[ObsIndex];
+        for ItemIndex := 0 to Obs.Values.ObservationConcentrations[Model].Count - 1 do
+        begin
+          CellList := Obs.Values.ObservationConcentrations[Model][ItemIndex];
+          if CellList.Count > 0 then
+          begin
+            Cell := CellList[0];
+            TimePosition := DisplayTimeList.FirstTimeGreaterThan(Cell.Time);
+            if TimePosition >= DisplayTimeList.Count then
+            begin
+              TimePosition := DisplayTimeList.Count-1;
+            end;
+            for TimeIndex := TimePosition downto Max(0, TimePosition-1) do
+            begin
+              if DisplayTimeList.Times[TimeIndex] = Cell.Time then
+              begin
+                TimePosition := TimeIndex;
+                break;
+              end;
+            end;
+            DataArray := DisplayTimeList[TimePosition]
+              as TModflowBoundaryDisplayDataArray;
+            for CellIndex := 0 to CellList.Count - 1 do
+            begin
+              Cell := CellList[CellIndex];
+              DataArray.AddDataValue(Cell.ConcentrationAnnotation, Cell.Concentration,
+                Cell.Column, Cell.Row, Cell.Layer);
+            end;
+          end;
+        end;
+      end;
+      // Mark all the data arrays and time lists as up to date.
+      for TimeListIndex := 0 to TimeLists.Count - 1 do
+      begin
+        DisplayTimeList := TimeLists[TimeListIndex] as TMt3dmsTobDisplayTimeList;
+        for TimeIndex := 0 to DisplayTimeList.Count - 1 do
+        begin
+          DataArray := DisplayTimeList[TimeIndex]
+            as TModflowBoundaryDisplayDataArray;
+          DataArray.UpToDate := True;
+        end;
+        DisplayTimeList.SetUpToDate(True);
+      end;
+    finally
+      DataArrayList.Free;
+    end;
+  finally
+    frmErrorsAndWarnings.EndUpdate;
+  end;
 end;
 
 procedure TMt3dmsTobWriter.WriteFluxObsCell(DataSets: TList;

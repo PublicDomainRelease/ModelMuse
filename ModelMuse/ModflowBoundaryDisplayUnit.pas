@@ -71,6 +71,11 @@ type
     procedure CreateNewDataSets; override;
   end;
 
+  TMt3dmsTobDisplayTimeList = class(TModflowBoundaryDisplayTimeList)
+  protected
+    procedure CreateNewDataSets; override;
+  end;
+
   TModflowBoundListOfTimeLists = class(TObject)
   private
     FList: TList;
@@ -90,7 +95,7 @@ implementation
 uses SparseArrayUnit, PhastModelUnit, frmGoPhastUnit,
   ModflowTimeUnit, SubscriptionUnit, RealListUnit, ScreenObjectUnit,
   ModflowHobUnit, TempFiles, IntListUnit, CustomModflowWriterUnit, 
-  frmProgressUnit;
+  frmProgressUnit, Mt3dmsTobUnit;
 
 { TModflowBoundaryDisplayDataArray }
 
@@ -637,6 +642,68 @@ begin
         for TimeIndex := 0 to Obs.Values.Count - 1 do
         begin
           Item := Obs.Values.HobItems[TimeIndex];
+          Times.AddUnique(Item.Time);
+        end;
+      end;
+    end;
+    for TimeIndex := 0 to Times.Count - 1 do
+    begin
+      DataArray := TModflowBoundaryDisplayDataArray.Create(LocalModel);
+      DataArray.Orientation := dso3D;
+      DataArray.EvaluatedAt := eaBlocks;
+      Add(Times[TimeIndex], DataArray);
+      DataArray.UpdateDimensions(LocalModel.ModflowGrid.LayerCount,
+        LocalModel.ModflowGrid.RowCount, LocalModel.ModflowGrid.ColumnCount);
+      for Index := 0 to FUseList.Count - 1 do
+      begin
+        ObservedItem := LocalModel.GetObserverByName(FUseList[Index]);
+        Assert(ObservedItem <> nil);
+        ObservedItem.TalksTo(DataArray);
+      end;
+    end;
+  finally
+    Times.Free;
+  end;
+
+end;
+
+{ TMt3dmsTobDisplayTimeList }
+
+procedure TMt3dmsTobDisplayTimeList.CreateNewDataSets;
+var
+  Times: TRealList;
+  LocalModel: TCustomModel;
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  TimeIndex: Integer;
+//  Obs: THobBoundary;
+//  Item: THobItem;
+  DataArray: TModflowBoundaryDisplayDataArray;
+  Index: Integer;
+  ObservedItem: TObserver;
+  Obs: TMt3dmsTransObservations;
+  Item: TMt3dmsTobItem;
+begin
+  LocalModel := Model as TCustomModel;
+  FUseList.Sorted := True;
+  OnGetUseList(self, FUseList);
+  Times := TRealList.Create;
+  try
+    Times.Sorted := True;
+    for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
+    begin
+      ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
+      if ScreenObject.Deleted then
+      begin
+        Continue;
+      end;
+      if (ScreenObject.Mt3dmsTransObservations <> nil)
+        and ScreenObject.Mt3dmsTransObservations.Used then
+      begin
+        Obs := ScreenObject.Mt3dmsTransObservations;
+        for TimeIndex := 0 to Obs.Values.Count - 1 do
+        begin
+          Item := Obs.Values.TobItems[TimeIndex];
           Times.AddUnique(Item.Time);
         end;
       end;

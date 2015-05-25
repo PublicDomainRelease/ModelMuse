@@ -6,6 +6,7 @@ uses Classes, RbwParser, GoPhastTypes, ModflowBoundaryUnit, SubscriptionUnit,
   FormulaManagerUnit, Contnrs, SysUtils;
 
 type
+  // @name controls data set 25 in CFP
   TCfpPipeBoundary = class(TModflowSteadyBoundary)
   private
     FDiameter: TFormulaObject;

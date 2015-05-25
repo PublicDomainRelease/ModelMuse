@@ -14,6 +14,7 @@ inherited frameScreenObjectStr: TframeScreenObjectStr
       OnChange = comboFormulaInterpChange
       ExplicitLeft = 206
       ExplicitTop = 45
+      ExplicitHeight = 21
     end
   end
   inherited pnlTop: TPanel
@@ -26,8 +27,7 @@ inherited frameScreenObjectStr: TframeScreenObjectStr
       CheckKind = ckRadioButtons
       TabOrder = 2
       OnClick = clbParametersClick
-      ExplicitLeft = 0
-      ExplicitTop = 65
+      ExplicitTop = 66
       ExplicitHeight = 54
     end
     object pnlNumber: TPanel
@@ -40,15 +40,15 @@ inherited frameScreenObjectStr: TframeScreenObjectStr
       object lblSegmentNumber: TLabel
         Left = 134
         Top = 17
-        Width = 135
-        Height = 16
+        Width = 110
+        Height = 13
         Caption = 'Segment number (Seg)'
       end
       object seSegmentNumber: TJvSpinEdit
         Left = 7
         Top = 14
         Width = 121
-        Height = 24
+        Height = 21
         MaxValue = 2147483647.000000000000000000
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
@@ -90,6 +90,7 @@ inherited frameScreenObjectStr: TframeScreenObjectStr
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -112,6 +113,7 @@ inherited frameScreenObjectStr: TframeScreenObjectStr
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -134,6 +136,7 @@ inherited frameScreenObjectStr: TframeScreenObjectStr
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end>
       ExplicitTop = 57

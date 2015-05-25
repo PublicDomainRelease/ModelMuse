@@ -375,6 +375,7 @@ const
   StrUzfWaterContent = 'UZF Water Content';
   StrUzfEtDemand = 'UZF ET Demand';
   StrMODFLOWHeadObservations = 'Head Observations';
+  StrMt3dTobConcObservations = 'Transport Observations';
 
   StrWellRadius = 'Well Radius';
   StrSkinRadius = 'Skin Radius';
@@ -1876,8 +1877,11 @@ that affects the model output should also have a comment. }
     function GetTimeListCount: integer;
     procedure ClearAllTimeLists;
     procedure InitializeHobDisplay(Sender: TObject);
+    procedure InitializeTobDisplay(Sender: TObject);
     function ModflowHobPackageUsed(Sender: TObject): boolean;
+    function Mt3dmsTobPackageUsed(Sender: TObject): boolean;
     procedure GetMfHobHeadsUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetMt3dTobCondUseList(Sender: TObject; NewUseList: TStringList);
     procedure CreateModflowDisplayTimeLists;
     procedure SetUnitNumbers(const Value: TUnitNumbers);
     procedure UpdateHfb(Sender: TObject);
@@ -1932,6 +1936,7 @@ that affects the model output should also have a comment. }
     FSwrReachGeometry: TReachGeometryCollection;
     FSwrStructures: TStructureCollection;
     FSwrObservations: TSwrObsCollection;
+    FMt3dTobCond: TMt3dmsTobDisplayTimeList;
     procedure CrossSectionChanged(Sender: TObject);
     procedure SetAlternateFlowPackage(const Value: boolean);
     procedure SetAlternateSolver(const Value: boolean);
@@ -2427,6 +2432,7 @@ that affects the model output should also have a comment. }
     property TimeListCount: integer read GetTimeListCount;
 
     property MfHobHeads: THobDisplayTimeList read FMfHobHeads;
+    property Mt3dTobCond: TMt3dmsTobDisplayTimeList read FMt3dTobCond;
 
     function ProgramName: string;
 
@@ -2748,6 +2754,7 @@ that affects the model output should also have a comment. }
     procedure DrawHeadObservations(const BitMap: TBitmap32;
       const ZoomBox: TQrbwZoomBox2); virtual;
     procedure InvalidateMfHobHeads(Sender: TObject);
+    procedure InvalidateMt3dTobConcs(Sender: TObject);
     property ContourFont: TFont read GetContourFont write SetContourFont;
     property ShowContourLabels: boolean read GetShowContourLabels
       write SetShowContourLabels default True;
@@ -3808,7 +3815,6 @@ that affects the model output should also have a comment. }
 
     property ArchiveName: string read GetArchiveName write SetArchiveName;
     procedure CreateArchive(const FileName: string; const ArchiveCommand: string = '');
-//    procedure InvalidateMfHobHeads(Sender: TObject);
     function DefaultHigherElevationFormula(ViewDirection: TViewDirection;
       EvalAt: TEvaluatedAt): string;
     function DefaultLowerElevationFormula(ViewDirection: TViewDirection;
@@ -6942,10 +6948,82 @@ const
   //        in the STR package has been fixed.
   //      Bug fix: Attempting to edit farms in MODFLOW-OWHM before defining
   //        at least one crop is no longer allowed.
+  //   '3.6.0.1' Bug fix: Prevent objects from setting layer data sets in
+  //        MODFLOW models if they are 3D objects.
+  //      Bug fix: Fixed import of t-progs integer data.
+  //   '3.6.0.2' Bug fix: Because Infiltration and evapotranspiration in the
+  //        UZF package can only be defined on the top view of sthe model, the
+  //        Object Properties dialog box will no longer present UZF as an
+  //        option for objects on the front or side view of the model.
+  //      Change: The labeling of flow the the object properties dialog box
+  //        for the FHB package has been improved.
+  //      Bug fix: In the Object Properties dialog box, the images for MODPATH
+  //        are hidden if the Microsoft OpenGL driver is used. This avoids
+  //        causing an exception which will crash ModelMuse.
+  //      Bug fix: Fixed warning messages when importing an existing MODFLOW
+  //         model using parameters and instances in the SFR package.
+  //   '3.6.0.3' Bug fix: Fixed a bug that could sometimes cause a stack
+  //        overflow.
+  //      Bug fix: Fixed bug that would cause an access violation if the
+  //        Stream package was activated but no streams had been defined.
+  //      Bug fix: When attempting to open ModelMuse file fails, a more
+  //        appropriate error message is displayed to the user.
+  //      Bug fix: Fixed bug that could cause divide by zero errors when
+  //        using the Fishnet Mesh method to generate a mesh in SUTRA.
+  //      Bug fix: The starting locations of MODPATH particles were reversed
+  //        from front to back.
+  //      Enhancement: Enhanced error checking in the Stream (STR) package.
+  //      Enhancement: Improved import of MODFLOW-2000 and SEAWAT models.
+  //      Bug fix: Fixed labeling of MXACTW IWELCB in comments in the WEL
+  //        package.
+  //      Bug fix: Fixed bug in specifying the location of head observations
+  //        when the object defining the observation extends over multiple
+  //        layers and includes inactive cells.
+  //      Enhancement: When importing the STR package, stream connections from
+  //        segments with higher segment numbers to segments with lower
+  //        segment numbers are imported.
+  //   '3.6.0.4' Enhancement: Added additional error checking for the GHB, RIV,
+  //        DRN, DRT, STR, SFR, LPF, UPW, BCF and HUF packages.
+  //      Bug fix: Fixed bug that could cause ModelMuse to crash when drawing
+  //        contour lines using the ACM 626 method.
+  //   '3.6.0.5' Bug fix: Fixed bug in editing the times in MODFLOW models if
+  //        initial time step size is specified.
+  //      Bug fix: (bug not in released version.) Fixed access violation when
+  //        checking GHB, RIV, DRN, and DRT packages that use parameters.
+  //   '3.6.0.6' Bug fix: Improved work-around to prevent the Microsoft OpenGl
+  //        driver from causing the 64-bit version of ModelMuse to crash.
+  //   '3.6.0.7' Enhancement: In the Export Image dialog box, it is now possible
+  //        to copy the the current settings to the clipboard and paste them
+  //        from the clipboard into the dialog box. This allow the settings
+  //        to be transfered from one model to another.
+  //      Bug fix: Fixed bug that would cause a a bug report to be generated
+  //        when changing the number of Z formulas to use with an object and
+  //        one of the new Z formulas was invalid.
+  //   '3.6.0.8' Enhancement. Attempting to read an empty results file will
+  //        result in an error message rather than a bug report.
+  //      Bug fix: Fixed bug that could cause a range check error if no grid
+  //        had been created and the mouse was moved or the front or side
+  //        view of the model.
+  //   '3.6.0.9' Bug fix: ModelMuse can now read the zeta surface if only
+  //        one zeta surface has been calculated.
+  //   '3.6.0.10' Updated VirtualStringTree and MadExcept.
+  //   '3.6.0.11' Bug fix: Fixed export of ModelMate file when the ModelMate
+  //        file of the model is in a different directory from the ModelMuse
+  //        file.
+  //   '3.6.0.12' Bug fix: Fixed appearance of the Import Ascii Raster File
+  //        dialog box.
+  //      Bug fix: Fixed import of pump location in the MNW2 package.
+  //   '3.6.0.13' Enhancement: Added ability to visualize Transport observations
+  //        in MT3DMS.
+  //   '3.6.0.14' Bug fix: Duplicate segment numbers in the SFR package will
+  //        now result in an error message to the user instead of a bug report.
+  //   '3.6.1.0' Bug fix: Fixed renumbering the SUTRA mesh when using the Gmsh to
+  //        create the mesh with 3D models.
+
 
 const
   // version number of ModelMuse.
-  IModelVersion = '3.6.0.0';
+  IModelVersion = '3.6.1.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -7180,7 +7258,7 @@ resourcestring
   StrSwrReachGroup = 'SWR_Reach_Group_Number';
   StrSwrRoutingType = 'SWR_Routing_Type';
   StrSwrReachLength = 'SWR_Reach_Length';
-  StrDefaultGmshPath = 'C:\Gmsh\gmsh-2.8.6-svn-Windows\gmsh.exe';
+  StrDefaultGmshPath = 'C:\Gmsh\gmsh-2.9.3-Windows\gmsh.exe';
   StrGmsh = 'Gmsh';
   StrInvalidStressPerio = 'Invalid stress period length';
   StrInModelMuseAllStr = 'In ModelMuse all stress periods must have a length' +
@@ -17044,6 +17122,11 @@ begin
   ModflowPackages.GhbBoundary.MfGhbConductance.Invalidate;
 end;
 
+procedure TCustomModel.InvalidateMt3dTobConcs(Sender: TObject);
+begin
+  Mt3dTobCond.Invalidate;
+end;
+
 procedure TCustomModel.InvalidateMfHobHeads(Sender: TObject);
 begin
   MfHobHeads.Invalidate;
@@ -18381,6 +18464,10 @@ begin
   ModflowPackages.UzfPackage.InvalidateAllTimeLists;
   ModflowPackages.WelPackage.InvalidateAllTimeLists;
   ModflowPackages.Mnw2Package.InvalidateAllTimeLists;
+  if Mt3dmsTobPackageUsed(nil) then
+  begin
+    InvalidateMt3dTobConcs(nil);
+  end;
 end;
 
 procedure TPhastModel.CreatePhastTimeListGroups;
@@ -21364,6 +21451,7 @@ begin
   FTransientZoneArrays.Free;
   FTimeLists.Free;
   FMfHobHeads.Free;
+  FMt3dTobCond.Free;
   FHfbDisplayer.Free;
   FHfbWriter.Free;
   FUnitNumbers.Free;
@@ -22531,7 +22619,12 @@ begin
 //      try
       MeshCreator.GenerateMeshWithGmsh(ProgramLocations.GmshLocation, Exag);
 //        ImportFromGmshOnTerminate, FMeshFileName;
+
+      SutraMesh.ElevationsNeedUpdating := True;
+      SutraMesh.CheckUpdateElevations;
+
       Exit;
+
 //      except on E: EInvalidElement do
 //        begin
 //          InvalidMesh := True;
@@ -22746,9 +22839,6 @@ function TCustomModel.GetCompiler(const Orientation: TDataSetOrientation;
       const EvaluatedAt: TEvaluatedAt): TRbwParser;
 begin
   result := nil;
-
-//  Assert(ModelSelection <> msSutra);
-  { TODO -cSUTRA : Need to get TRbwParser for SUTRA }
 
   case EvaluatedAt of
     eaBlocks:
@@ -27784,6 +27874,29 @@ begin
   end;
 end;
 
+procedure TCustomModel.InitializeTobDisplay(Sender: TObject);
+var
+  TobWriter: TMt3dmsTobWriter;
+  List: TModflowBoundListOfTimeLists;
+begin
+  Mt3dTobCond.CreateDataSets;
+
+  List := TModflowBoundListOfTimeLists.Create;
+  TobWriter := TMt3dmsTobWriter.Create(Self, etDisplay);
+  try
+    List.Add(Mt3dTobCond);
+    TobWriter.UpdateDisplay(List, [0], ObservationPurpose);
+  finally
+    TobWriter.Free;
+    List.Free;
+  end;
+  Mt3dTobCond.ComputeAverage;
+  if frmErrorsAndWarnings.HasMessages then
+  begin
+    frmErrorsAndWarnings.Show;
+  end;
+end;
+
 procedure TCustomModel.InitializeHobDisplay(Sender: TObject);
 var
   HobWriter: TModflowHobWriter;
@@ -27834,6 +27947,12 @@ begin
   result := LayerStructure.ModflowConfiningBedCount;
 end;
 
+function TCustomModel.Mt3dmsTobPackageUsed(Sender: TObject): boolean;
+begin
+  result := ModflowPackages.Mt3dmsTransObs.IsSelected and
+    ModflowPackages.Mt3dBasic.IsSelected;
+end;
+
 function TCustomModel.ModflowHobPackageUsed(Sender: TObject): boolean;
 begin
   result := ModflowPackages.HobPackage.IsSelected;
@@ -27850,6 +27969,14 @@ begin
     result := nil;
   end;
 end;
+
+procedure TCustomModel.GetMt3dTobCondUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  NewUseList.Add(rsActive);
+  // do nothing
+end;
+
 
 procedure TCustomModel.GetMfHobHeadsUseList(Sender: TObject;
   NewUseList: TStringList);
@@ -27918,6 +28045,13 @@ end;
 
 procedure TCustomModel.CreateModflowDisplayTimeLists;
 begin
+  FMt3dTobCond := TMt3dmsTobDisplayTimeList.Create(self);
+  FMt3dTobCond.OnInitialize := InitializeTobDisplay;
+  FMt3dTobCond.OnGetUseList := GetMt3dTobCondUseList;
+  FMt3dTobCond.OnTimeListUsed := Mt3dmsTobPackageUsed;
+  FMt3dTobCond.Name := StrMt3dTobConcObservations;
+  AddTimeList(FMt3dTobCond);
+
   FMfHobHeads := THobDisplayTimeList.Create(self);
   FMfHobHeads.OnInitialize := InitializeHobDisplay;
   FMfHobHeads.OnGetUseList := GetMfHobHeadsUseList;

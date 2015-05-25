@@ -4,9 +4,10 @@ inherited frmImportTprogs: TfrmImportTprogs
   Caption = 'Import T-PROGS File'
   ClientHeight = 443
   ClientWidth = 579
-  ExplicitWidth = 597
-  ExplicitHeight = 488
-  PixelsPerInch = 120
+  ExplicitTop = -110
+  ExplicitWidth = 595
+  ExplicitHeight = 481
+  PixelsPerInch = 96
   TextHeight = 18
   object lblTprogs: TLabel
     Left = 8
@@ -165,7 +166,7 @@ inherited frmImportTprogs: TfrmImportTprogs
     OnClick = btnHelpClick
   end
   object btnOK: TBitBtn
-    Left = 400
+    Left = 401
     Top = 389
     Width = 83
     Height = 33

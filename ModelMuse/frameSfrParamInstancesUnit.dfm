@@ -30,7 +30,7 @@ object frameSfrParamInstances: TframeSfrParamInstances
       Left = 8
       Top = 6
       Width = 57
-      Height = 21
+      Height = 24
       ButtonKind = bkClassic
       MaxValue = 2147483647.000000000000000000
       TabOrder = 0

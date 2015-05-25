@@ -86,6 +86,7 @@ resourcestring
   StrNegativeSValue = 'Negative %s value';
   StrNegativeOrZeroS = 'Negative or zero %s value';
   StrWritingDataSetParam = '  Writing Data Set %0:d for parameter: %1:s';
+  StrLargeContrastInHy = 'Large contrast in hydraulic conductivity (may cause numerical problems)';
 
 { TModflowLPF_Writer }
 
@@ -689,6 +690,8 @@ begin
       + IntToStr(MFLayerIndex), StrNoValueAssigned);
     CheckArray(DataArray, ArrayIndex, Format(StrNegativeSValue,
       [rsKx]), cvmGreaterEqual, 0, etError);
+    CheckArray(DataArray, ArrayIndex, StrLargeContrastInHy,
+      cvmGradient, 1e6, etWarning);
   end;
 end;
 

@@ -5,6 +5,7 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
   ClientWidth = 472
   OnResize = FormResize
   ExplicitWidth = 488
+  ExplicitHeight = 264
   PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
@@ -82,12 +83,12 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
     Header.Options = [hoColumnResize, hoDrag]
     PopupMenu = pmSelectEdit
     TabOrder = 0
+    TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning, toVariableNodeHeight, toEditOnClick]
     TreeOptions.SelectionOptions = [toFullRowSelect]
     OnContextPopup = vstWarningsAndErrorsContextPopup
     OnGetText = vstWarningsAndErrorsGetText
     OnInitNode = vstWarningsAndErrorsInitNode
     OnMeasureItem = vstWarningsAndErrorsMeasureItem
-    ExplicitTop = -2
     Columns = <
       item
         Position = 0
@@ -113,14 +114,17 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
     Top = 80
     object miSelect: TMenuItem
       Caption = 'Select'
+      Hint = 'Select the related object'
       OnClick = miSelectClick
     end
     object miEdit: TMenuItem
       Caption = 'Edit...'
+      Hint = 'Edit the related object in the Object Properties dialog box'
       OnClick = miEditClick
     end
     object miGoto: TMenuItem
       Caption = 'Go to'
+      Hint = 'Go to the location of the related object'
       OnClick = miGotoClick
     end
   end

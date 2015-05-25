@@ -29,9 +29,13 @@ type
       ARow: Integer; const Value: string);
   private
     ErrorFound: boolean;
+    FFrameLoaded: boolean;
+    procedure UpdateNextTimeCell(DataGrid: TRbwDataGrid4; ACol, ARow: Integer);
+    procedure SetFrameLoaded(const Value: boolean);
     { Private declarations }
   public
     constructor Create(AOwner: TComponent); override;
+    property FrameLoaded: boolean read FFrameLoaded write SetFrameLoaded;
     { Public declarations }
   end;
 
@@ -178,6 +182,7 @@ begin
       rdgSfrParamInstances.Cells[ACol, ARow] := string(NewValue);
     end;
   end;
+  UpdateNextTimeCell(rdgSfrParamInstances, ACol, ARow);
 end;
 
 procedure TframeSfrParamInstances.seInstanceCountChange(Sender: TObject);
@@ -197,6 +202,44 @@ begin
     rdgSfrParamInstances.RowCount := seInstanceCount.AsInteger + 1;
   end;
   btnDeleteFlowTableRow.Enabled := seInstanceCount.AsInteger > 0;
+end;
+
+procedure TframeSfrParamInstances.SetFrameLoaded(const Value: boolean);
+begin
+  FFrameLoaded := Value;
+end;
+
+procedure TframeSfrParamInstances.UpdateNextTimeCell(DataGrid: TRbwDataGrid4;
+  ACol, ARow: Integer);
+var
+  SelectIndex: Integer;
+begin
+  if FrameLoaded and (ARow >= DataGrid.FixedRows) and (ACol in [0, 1])
+    {and (FLastTimeColumn = 1)} then
+  begin
+    SelectIndex := DataGrid.ItemIndex[ACol, ARow];
+    if SelectIndex >= 0 then
+    begin
+      if (ACol = 0) then
+      begin
+        if DataGrid.Cells[1, ARow] = '' then
+        begin
+          DataGrid.ItemIndex[1, ARow] := SelectIndex;
+        end;
+      end
+      else if (ACol = 1) then
+      begin
+        if (ARow + 1 < DataGrid.RowCount) and
+          (DataGrid.Cells[0, ARow + 1] = '') then
+        begin
+          if SelectIndex + 1 < DataGrid.Columns[0].PickList.Count then
+          begin
+            DataGrid.ItemIndex[0, ARow + 1] := SelectIndex + 1;
+          end;
+        end;
+      end;
+    end;
+  end;
 end;
 
 end.

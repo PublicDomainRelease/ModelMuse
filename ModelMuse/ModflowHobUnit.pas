@@ -872,7 +872,7 @@ begin
         begin
           for InactiveIndex := InactiveList.Count - 1 downto 0 do
           begin
-            CellList.Delete(InactiveIndex);
+            CellList.Delete(InactiveList[InactiveIndex]);
           end;
         end;
       finally

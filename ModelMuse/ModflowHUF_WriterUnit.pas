@@ -25,6 +25,7 @@ type
     procedure WriteDataSets10and11;
     procedure WriteDataSet12;
     procedure CheckElevations;
+    procedure CheckHufKx;
   protected
     function Package: TModflowPackageSelection; override;
     class function Extension: string; override;
@@ -62,6 +63,9 @@ resourcestring
   GapWarning = 'Gap between hydrogeologic units';
   OverlapWarning = 'Overlap between hydrogeologic units';
   WarningFormat = 'Column: %0:d; Row: %1:d; Higher unit: %2:s; Lower unit: %3:s';
+  StrLargeContrastInHy = 'Large contrast in hydraulic conductivity (may caus' +
+  'e numerical problems)';
+  StrCheckingHydraulicC = 'Checking hydraulic conductivity';
 
 type
   THguSort = class(TObject)
@@ -184,6 +188,24 @@ begin
     DataArrayManager.CacheDataArrays;
   finally
     frmErrorsAndWarnings.EndUpdate;
+  end;
+end;
+
+procedure TModflowHUF_Writer.CheckHufKx;
+var
+  LayerIndex: Integer;
+  DataArray: TDataArray;
+begin
+  DataArray := Model.DataArrayManager.GetDataSetByName(StrHUFKxName);
+  Assert(DataArray <> nil);
+  DataArray.Initialize;
+  for LayerIndex := 0 to Model.LayerCount - 1 do
+  begin
+    if Model.IsLayerSimulated(LayerIndex) then
+    begin
+      CheckArray(DataArray, LayerIndex, StrLargeContrastInHy,
+        cvmGradient, 1e6, etWarning);
+    end;
   end;
 end;
 
@@ -784,6 +806,14 @@ begin
 
     frmProgressMM.AddMessage(StrCheckingElevation);
     CheckElevations;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage(StrCheckingHydraulicC);
+    CheckHufKx;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
     begin

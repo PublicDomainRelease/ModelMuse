@@ -176,16 +176,6 @@ var
     end;
   end;
 begin
-//  if not FOutputControl.HeadOC.PrintInListing
-//    and not FOutputControl.HeadOC.SaveInExternalFile
-//    and not FOutputControl.DrawdownOC.PrintInListing
-//    and not FOutputControl.DrawdownOC.SaveInExternalFile
-//    and (FOutputControl.SaveCellFlows = csfNone)
-//    and (FOutputControl.BudgetFrequencyChoice = fcStressPeriods) then
-//  begin
-//    Exit;
-//  end;
-
   StressPeriods := Model.ModflowFullStressPeriods;
 
   HeadFrequency := FOutputControl.HeadOC.Frequency;

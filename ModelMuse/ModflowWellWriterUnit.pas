@@ -122,18 +122,18 @@ end;
 
 procedure TModflowWEL_Writer.WriteDataSet2;
 var
-  MXACTC: integer;
+  MXACTW: integer;
   Option: String;
   IWELCB: Integer;
 begin
-  CountCells(MXACTC);
+  CountCells(MXACTW);
   GetFlowUnitNumber(IWELCB);
   GetOption(Option);
 
-  WriteInteger(MXACTC);
+  WriteInteger(MXACTW);
   WriteInteger(IWELCB);
   WriteString(Option);
-  WriteString(' # DataSet 2: MXACTC IGHBCB');
+  WriteString(' # DataSet 2: MXACTW IWELCB');
   if Option <> '' then
   begin
     WriteString(' Option');

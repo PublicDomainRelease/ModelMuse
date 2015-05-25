@@ -39,7 +39,7 @@ type
      the value in the array is OK.)
   }
   TCheckValueMethod = (cvmGreater, cvmGreaterEqual, cvmEqual,
-    cvmNotEqual, cvmLessThan, cvmLessThanEqual);
+    cvmNotEqual, cvmLessThan, cvmLessThanEqual, cvmGradient);
 
   {@name is used in @link(TCustomModflowWriter.CheckArray) to specify
     whether cases that don't pass the check should be treated as errors or
@@ -288,6 +288,8 @@ type
       const PackageName: string); virtual;
     procedure RemoveNoDefinedError(var NoDefinedErrorRoot: string); virtual;
     procedure ShowNoBoundaryError(const NoDefinedErrorRoot: string); virtual;
+    function AquiferConductance(Layer, Row, Column: Integer): double;
+    function AquiferKx(Layer, Row, Column: Integer): double;
   public
     destructor Destroy; override;
   end;
@@ -541,8 +543,8 @@ type
     // @name can be overridden to write additional information for
     // a stress period.
     procedure WriteCustomStressPeriod(TimeIndex: Integer); virtual;
-    procedure WriteBeforeCells; virtual;
-    procedure WriteBeforeParamCells; virtual;
+    procedure DoBeforeWriteCells; virtual;
+    procedure DoBeforeWriteParamCells; virtual;
   public
     // @name is used to update the display of transient data used to color the
     // grid.
@@ -812,7 +814,7 @@ uses frmErrorsAndWarningsUnit, ModflowUnitNumbers, frmGoPhastUnit,
   frmProgressUnit, GlobalVariablesUnit, frmFormulaErrorsUnit, GIS_Functions,
   ZoneBudgetWriterUnit, ModelMuseUtilities, SparseDataSets, SparseArrayUnit,
   RealListUnit, ModflowMultiplierZoneWriterUnit, IOUtils,
-  ModpathResponseFileWriterUnit;
+  ModpathResponseFileWriterUnit, ModflowPackagesUnit, Math;
 
 resourcestring
   StrTheFollowingParame = 'The following %s parameters are being skipped ' +
@@ -1319,10 +1321,14 @@ var
   RowIndex: Integer;
   ColIndex: Integer;
   Value: double;
+  OtherValue1: double;
+  OtherValue2: double;
   OkValue: boolean;
   Error: string;
   ActiveDataArray: TDataArray;
   Active: Boolean;
+  OtherRow: Integer;
+  OtherCol: Integer;
 begin
   ActiveDataArray := FModel.DataArrayManager.GetDataSetByName(rsActive);
   Assert(ActiveDataArray <> nil);
@@ -1346,6 +1352,8 @@ begin
       end;
       Active := ActiveDataArray.BooleanData[LayerIndex, RowIndex, ColIndex];
       OkValue := True;
+      OtherRow := 0;
+      OtherCol := 0;
       if Active then
       begin
         case CheckMethod of
@@ -1355,16 +1363,77 @@ begin
           cvmNotEqual: OkValue := Value <> CheckValue;
           cvmLessThan: OkValue := Value < CheckValue;
           cvmLessThanEqual: OkValue := Value <= CheckValue;
+          cvmGradient:
+            begin
+              Assert(DataArray.DataType = rdtDouble);
+              if Value <> 0 then
+              begin
+                if (RowIndex > 0)
+                  and ActiveDataArray.BooleanData[LayerIndex, RowIndex-1, ColIndex] then
+                begin
+                  OtherValue1 := DataArray.RealData[LayerIndex, RowIndex-1, ColIndex];
+                end
+                else
+                begin
+                  OtherValue1 := Value
+                end;
+                if (ColIndex > 0)
+                  and ActiveDataArray.BooleanData[LayerIndex, RowIndex, ColIndex-1] then
+                begin
+                  OtherValue2 := DataArray.RealData[LayerIndex, RowIndex, ColIndex-1];
+                end
+                else
+                begin
+                  OtherValue2 := Value
+                end;
+                OtherRow := RowIndex;
+                OtherCol := ColIndex;
+                if Abs(OtherValue2-Value) > Abs(OtherValue1-Value)  then
+                begin
+                  OtherValue1 := OtherValue2;
+                  OtherCol := ColIndex-1
+                end
+                else
+                begin
+                  OtherRow := RowIndex-1;
+                end;
+                if OtherValue1 <> 0 then
+                begin
+                  if OtherValue1 > Value then
+                  begin
+                    OtherValue1 := OtherValue1/Value;
+                  end
+                  else
+                  begin
+                    OtherValue1 := Value/OtherValue1;
+                  end;
+                  OkValue := OtherValue1 <= CheckValue;
+                end
+                else
+                begin
+                  OkValue := True;
+                end;
+              end
+              else
+              begin
+                OkValue := True;
+              end;
+            end;
           else Assert(False);
         end;
       end;
       if not OkValue then
       begin
         Error := Format(StrLayer0dRow1, [LayerIndex+1, RowIndex+1,ColIndex+1]);
+        if CheckMethod = cvmGradient then
+        begin
+          Error := 'Between ' + Error + ' and '
+            + Format(StrLayer0dRow1, [LayerIndex+1, OtherRow+1,OtherCol+1]);
+        end;
         case ErrorType of
           etError: frmErrorsAndWarnings.AddError(Model, ErrorOrWarningMessage, Error);
           etWarning: frmErrorsAndWarnings.
-            AddError(Model, ErrorOrWarningMessage, Error);
+            AddWarning(Model, ErrorOrWarningMessage, Error);
         end;
       end;
     end;
@@ -1841,46 +1910,6 @@ class procedure TCustomModflowWriter.WriteToNameFile(const Ftype: string;
 //  Line: string;
 begin
   WriteToNameFile(Ftype, UnitNumber, FileName, Option, osShowAll, RelativeFileName);
-//  Assert(CurrentNameFileWriter <> nil);
-//  if (Option = foInputAlreadyExists) and not FileExists(FileName) then
-//  begin
-//    frmErrorsAndWarnings.AddError(CurrentNameFileWriter.Model,
-//      StrInputFileDoesNot,
-//      Format(StrTheRequiredInputF, [FileName]));
-//  end;
-//  if UnitNumber > MaxUnitNumber then
-//  begin
-//    MaxUnitNumber := UnitNumber;
-//  end;
-//  frmGoPhast.PhastModel.AddModelInputFile(FileName);
-//  if not RelativeFileName then
-//  begin
-//    FileName := ExtractFileName(FileName);
-//  end;
-//  if Pos(' ', FileName) > 0 then
-//  begin
-//    if not FileExists(FileName) and (Option <> foInputAlreadyExists) then
-//    begin
-//      TFile.Create(FileName).Free;
-//    end;
-//    FileName := ExtractShortPathName(FileName);
-//  end;
-//
-//  Line := Ftype + ' ' + IntToStr(UnitNumber) + ' ' + FileName;
-//  case Option of
-//    foNone: ;// do nothing
-//    foInput, foInputAlreadyExists:
-//      begin
-//        Line := Line + ' ' + 'OLD';
-//      end;
-//    foOutput:
-//      begin
-//        Line := Line + ' ' + 'REPLACE';
-//      end;
-//    else
-//      Assert(False);
-//  end;
-//  CurrentNameFileWriter.NameFile.Add(Line);
 end;
 
 function TCustomModflowWriter.IPRN_Real: integer;
@@ -2430,6 +2459,137 @@ begin
   end;
 end;
 
+function TCustomPackageWriter.AquiferConductance(Layer, Row, Column: Integer): double;
+var
+  Packages: TModflowPackages;
+  DataArray: TDataArray;
+  Value: Double;
+  Group: TLayerGroup;
+  AquiferType: Integer;
+begin
+  result := 0;
+  Packages := Model.ModflowPackages;
+  if Packages.LpfPackage.IsSelected or Packages.UpwPackage.IsSelected then
+  begin
+    DataArray := Model.DataArrayManager.GetDataSetByName(rsKx);
+    Assert(DataArray <> nil);
+    DataArray.Initialize;
+    Value := DataArray.RealData[Layer, Row, Column];
+    result := Value * Model.ModflowGrid.LayerThickness(Layer, Row, Column)
+      * Min(Model.Grid.RowWidth[Row], Model.Grid.ColumnWidth[Column]);
+  end
+  else if Packages.BcfPackage.IsSelected then
+  begin
+    Group := Model.GetLayerGroupByLayer(Layer);
+    AquiferType := Group.AquiferType;
+    if (AquiferType = 1) and (Layer > 0) then
+    begin
+      AquiferType := 3;
+    end;
+    case AquiferType of
+      0, 2:
+        begin
+          // Data set 5
+          DataArray := Model.DataArrayManager.GetDataSetByName(StrTransmissivity);
+          Assert(DataArray <> nil);
+          DataArray.Initialize;
+          Value := DataArray.RealData[Layer, Row, Column];
+          result := Value
+            * Min(Model.Grid.RowWidth[Row], Model.Grid.ColumnWidth[Column]);
+        end;
+      1, 3:
+        begin
+          // Data set 6
+          DataArray := Model.DataArrayManager.GetDataSetByName(rsKx);
+          Assert(DataArray <> nil);
+          DataArray.Initialize;
+          Value := DataArray.RealData[Layer, Row, Column];
+          result := Value * Model.ModflowGrid.LayerThickness(Layer, Row, Column)
+            * Min(Model.Grid.RowWidth[Row], Model.Grid.ColumnWidth[Column]);
+        end;
+      else
+        begin
+          Assert(False);
+        end;
+    end;
+  end
+  else if Packages.HufPackage.IsSelected then
+  begin
+    DataArray := Model.DataArrayManager.GetDataSetByName(StrHUFKxName);
+    Assert(DataArray <> nil);
+    DataArray.Initialize;
+    Value := DataArray.RealData[Layer, Row, Column];
+    result := Value * Model.ModflowGrid.LayerThickness(Layer, Row, Column)
+      * Min(Model.Grid.RowWidth[Row], Model.Grid.ColumnWidth[Column]);
+  end
+  else
+  begin
+    Assert(False);
+  end;
+end;
+
+function TCustomPackageWriter.AquiferKx(Layer, Row, Column: Integer): double;
+var
+  Packages: TModflowPackages;
+  DataArray: TDataArray;
+  Value: Double;
+  Group: TLayerGroup;
+  AquiferType: Integer;
+begin
+  result := 0;
+  Packages := Model.ModflowPackages;
+  if Packages.LpfPackage.IsSelected or Packages.UpwPackage.IsSelected then
+  begin
+    DataArray := Model.DataArrayManager.GetDataSetByName(rsKx);
+    Assert(DataArray <> nil);
+    DataArray.Initialize;
+    result := DataArray.RealData[Layer, Row, Column];
+  end
+  else if Packages.BcfPackage.IsSelected then
+  begin
+    Group := Model.GetLayerGroupByLayer(Layer);
+    AquiferType := Group.AquiferType;
+    if (AquiferType = 1) and (Layer > 0) then
+    begin
+      AquiferType := 3;
+    end;
+    case AquiferType of
+      0, 2:
+        begin
+          // Data set 5
+          DataArray := Model.DataArrayManager.GetDataSetByName(StrTransmissivity);
+          Assert(DataArray <> nil);
+          DataArray.Initialize;
+          Value := DataArray.RealData[Layer, Row, Column];
+          result := Value / Model.ModflowGrid.LayerThickness(Layer, Row, Column);
+        end;
+      1, 3:
+        begin
+          // Data set 6
+          DataArray := Model.DataArrayManager.GetDataSetByName(rsKx);
+          Assert(DataArray <> nil);
+          DataArray.Initialize;
+          result := DataArray.RealData[Layer, Row, Column];
+        end;
+      else
+        begin
+          Assert(False);
+        end;
+    end;
+  end
+  else if Packages.HufPackage.IsSelected then
+  begin
+    DataArray := Model.DataArrayManager.GetDataSetByName(StrHUFKxName);
+    Assert(DataArray <> nil);
+    DataArray.Initialize;
+    result := DataArray.RealData[Layer, Row, Column];
+  end
+  else
+  begin
+    Assert(False);
+  end;
+end;
+
 procedure TCustomListWriter.CountCells(var MaximumNumberOfCells: Integer);
 var
   List: TValueCellList;
@@ -2721,7 +2881,7 @@ begin
       // Make sure the maximum length of the name of instance is <= 10.
       GetInstanceRoot(PARNAM, ParamValues, InstanceRoot);
 
-      WriteBeforeParamCells;
+      DoBeforeWriteParamCells;
 
       // Data sets 4a and 4b
       for TimeIndex := 0 to ParamValues.Count - 1 do
@@ -2754,14 +2914,14 @@ begin
   end;
 end;
 
-procedure TCustomListWriter.WriteBeforeCells;
+procedure TCustomListWriter.DoBeforeWriteCells;
 begin
-  // overriden in Farm proces
+  // overriden in Farm process and DRN, RIV, GHB, DRT.
 end;
 
-procedure TCustomListWriter.WriteBeforeParamCells;
+procedure TCustomListWriter.DoBeforeWriteParamCells;
 begin
-  // overriden in Farm proces
+  // overriden in Farm process
 end;
 
 procedure TCustomListWriter.WriteCustomStressPeriod(TimeIndex: Integer);
@@ -2817,7 +2977,7 @@ begin
         // data set 6
         if ITMP > 0 then
         begin
-          WriteBeforeCells;
+          DoBeforeWriteCells;
           for CellIndex := 0 to List.Count - 1 do
           begin
             Cell := List[CellIndex] as TValueCell;

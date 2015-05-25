@@ -118,6 +118,8 @@ var
   ChildIndex: Integer;
   ChildModel: TChildModel;
   Number: string;
+  ComponentIndex: integer;
+  AControl: TControl;
 begin
   UpdateEvalAt;
 
@@ -187,6 +189,15 @@ begin
       lblDataSet.Visible := False;
       comboDataSets.Visible := False;
       Height := Height + 150;
+      rdgFilesAndDataSets.Height := 200;
+      for ComponentIndex := 0 to ControlCount - 1 do
+      begin
+        AControl := Controls[ComponentIndex];
+        if AControl <> rdgFilesAndDataSets then
+        begin
+          AControl.Top := AControl.Top + 150;
+        end;
+      end;
 //      rgFilterMethod.Controls[4].Enabled := False;
     end;
     GetDataSets;

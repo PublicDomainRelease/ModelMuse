@@ -497,6 +497,18 @@ type
     property Model: TBaseModel read FModel;
   end;
 
+  TDisplaySettingsComponent = class(TComponent)
+  private
+    FSettings: TDisplaySettingsCollection;
+    procedure SetSettings(const Value: TDisplaySettingsCollection);
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  published
+    property Settings: TDisplaySettingsCollection read FSettings
+      write SetSettings;
+  end;
+
 
 implementation
 
@@ -1806,5 +1818,28 @@ function TSwrReachPlot.GetNeighbors(Index: Integer): integer;
 begin
   Result := FNeighbors[Index];
 end;
+
+{ TDisplaySettingsComponent }
+
+constructor TDisplaySettingsComponent.Create(AOwner: TComponent);
+begin
+  inherited;
+  FSettings := TDisplaySettingsCollection.Create(nil);
+end;
+
+destructor TDisplaySettingsComponent.Destroy;
+begin
+  FSettings.Free;
+  inherited;
+end;
+
+procedure TDisplaySettingsComponent.SetSettings(
+  const Value: TDisplaySettingsCollection);
+begin
+  FSettings.Assign(Value);
+end;
+
+initialization
+  RegisterClass(TDisplaySettingsComponent);
 
 end.

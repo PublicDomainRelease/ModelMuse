@@ -113,10 +113,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       object tabObservationsTimes: TTabSheet
         Caption = 'Observation times and values'
         OnResize = tabObservationsTimesResize
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         DesignSize = (
           653
           252)
@@ -398,10 +394,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
         Caption = 'Mass flux observation times and values'
         ImageIndex = 2
         TabVisible = False
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         DesignSize = (
           653
           252)
@@ -705,10 +697,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       object tabObjects: TTabSheet
         Caption = 'Objects'
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         DesignSize = (
           653
           252)
@@ -947,15 +935,23 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
     Top = 168
     object miSelectAvailable: TMenuItem
       Caption = 'Select'
+      Hint = 'Select these objects'
       OnClick = miSelectAvailableClick
     end
     object miEditAvailable: TMenuItem
       Caption = 'Edit...'
+      Hint = 'Edit this object in the Object Properties dialog box'
       OnClick = miEditAvailableClick
     end
     object miGotoAvailable: TMenuItem
       Caption = 'Go to'
+      Hint = 'Go to the location of this object'
       OnClick = miGotoAvailableClick
+    end
+    object miHideAvailable: TMenuItem
+      Caption = 'Hide'
+      Hint = 'Hide these objects'
+      OnClick = miHideAvailableClick
     end
   end
   object pmSelectEditUsed: TPopupMenu
@@ -964,15 +960,23 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
     Top = 232
     object miSelectUsed: TMenuItem
       Caption = 'Select'
+      Hint = 'Select these objects'
       OnClick = miSelectUsedClick
     end
     object miEditUsed: TMenuItem
       Caption = 'Edit...'
+      Hint = 'Edit this object in the Object Properties dialog box'
       OnClick = miEditUsedClick
     end
     object miGoToUsed: TMenuItem
       Caption = 'Go to'
+      Hint = 'Go to the location of this object'
       OnClick = miGoToUsedClick
+    end
+    object miHideUsed: TMenuItem
+      Caption = 'Hide'
+      Hint = 'Hide these objects'
+      OnClick = miHideUsedClick
     end
   end
 end

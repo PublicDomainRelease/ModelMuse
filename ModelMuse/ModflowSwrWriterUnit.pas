@@ -1701,7 +1701,8 @@ begin
   else
     Assert(False);
   end;
-  if Model.ModflowOutputControl.PrintInputArrays or Model.ModflowOutputControl.PrintInputCellLists then
+  if Model.ModflowOutputControl.PrintInputArrays
+    or Model.ModflowOutputControl.PrintInputCellLists then
   begin
     IPTFLG := 1;
   end

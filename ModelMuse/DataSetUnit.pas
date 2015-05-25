@@ -38,7 +38,7 @@ type
     btMfChd, btMfEts, btMfEt, btMfRch, btMfSfr, btMfStr, btMfUzf, btMfObs,
     btMfMnw, btMt3dSsm, btMfHfb, btSutraSpecifiedPressure, btSutraSpecifiedHead,
     btSutraSpecConcTemp, btSutraFluidFlux, btMassEnergyFlux, btMfFhb, btCFP,
-    btMfFarm, btSWR, btMnw1);
+    btMfFarm, btSWR, btMnw1, btMtmsObs);
 
   TBoundaryTypes = set of TBoundaryType;
 
@@ -1513,6 +1513,7 @@ resourcestring
   StrMODFLOWStream = 'MODFLOW Stream';
   StrMODFLOWUnsaturated = 'MODFLOW Unsaturated Zone Flow';
   StrMODFLOWObservations = 'MODFLOW Observations';
+  StrMt3dmsObservations = 'MT3DMS Observations';
   StrMT3DMSSinkAndSour = 'MT3DMS Sink and Source Mixing';
   StrMODFLOW_Farm = 'MODFLOW Farm Process';
   StrMODFLOW_CFP = 'MODFLOW Conduit Flow Process';
@@ -5740,20 +5741,20 @@ begin
         Grid := LocalModel.Grid;
         if Grid <> nil then
         begin
-          case EvaluatedAt of
-            eaBlocks:
-              begin
+//          case EvaluatedAt of
+//            eaBlocks:
+//              begin
                 NumberOfLayers := Grid.LayerCount;
                 NumberOfRows := Grid.RowCount;
                 NumberOfColumns := Grid.ColumnCount;
-              end;
-            eaNodes:
-              begin
-                NumberOfLayers := Grid.LayerCount+1;
-                NumberOfRows := Grid.RowCount+1;
-                NumberOfColumns := Grid.ColumnCount+1;
-              end;
-          end;
+//              end;
+//            eaNodes:
+//              begin
+//                NumberOfLayers := Grid.LayerCount+1;
+//                NumberOfRows := Grid.RowCount+1;
+//                NumberOfColumns := Grid.ColumnCount+1;
+//              end;
+//          end;
         end
         else
         begin
@@ -6799,6 +6800,11 @@ begin
   begin
     Result := btMfObs;
   end
+  else if (Name = StrMt3dTobConcObservations)
+    then
+  begin
+    Result := btMtmsObs;
+  end
   else if (Name = StrWellRadius)
     or (Name = StrSkinRadius)
     or (Name = StrSkinK)
@@ -7027,6 +7033,10 @@ begin
         begin
           Result := StrMODFLOWMNW1;
         end;
+      btMtmsObs:
+        begin
+          Result := StrMt3dmsObservations;
+        end
       else
         Assert(False);
     end;

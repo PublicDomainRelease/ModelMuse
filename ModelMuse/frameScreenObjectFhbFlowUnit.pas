@@ -15,12 +15,14 @@ type
     lblConductanceInterpretation: TLabel;
     procedure comboFormulaInterpChange(Sender: TObject);
   private
+    procedure AssignFlowCaption;
     { Private declarations }
   protected
     procedure InitializeControls; override;
     function GetBoundary(AScreenObject: TScreenObject): TFhbHeadBoundary; override;
     function CreateNewBoundary: TFhbHeadBoundary; override;
     procedure CreateScreenObjectBoundary(AScreenObject: TScreenObject); override;
+    procedure DoChange; override;
   public
     procedure GetData(ScreenObjectList: TScreenObjectEditCollection);
     procedure SetData(List: TScreenObjectEditCollection; SetAll: boolean;
@@ -35,6 +37,11 @@ implementation
 
 uses
   ModflowBoundaryUnit;
+
+resourcestring
+  StrFlowRatePerUnitL = 'Flow rate per unit length or area';
+  StrFlowRate = 'Flow rate';
+  StrTotalFlowRatePer = 'Total flow rate (per layer)';
 
 {$R *.dfm}
 
@@ -53,6 +60,12 @@ procedure TframeScreenObjectFhbFlow.CreateScreenObjectBoundary(
   AScreenObject: TScreenObject);
 begin
   AScreenObject.CreateFhbFlowBoundary
+end;
+
+procedure TframeScreenObjectFhbFlow.DoChange;
+begin
+  inherited;
+  AssignFlowCaption;
 end;
 
 function TframeScreenObjectFhbFlow.GetBoundary(
@@ -86,9 +99,27 @@ end;
 procedure TframeScreenObjectFhbFlow.InitializeControls;
 begin
   inherited;
-  dgModflowBoundary.Cells[Ord(fhcHead), 0] := 'Flow Rate';
   comboFormulaInterp.ItemIndex := 0;
+  AssignFlowCaption;
   LayoutMultiRowEditControls;
+end;
+
+procedure TframeScreenObjectFhbFlow.AssignFlowCaption;
+begin
+  case comboFormulaInterp.ItemIndex of
+    0:
+      begin
+        dgModflowBoundary.Cells[Ord(fhcHead), 0] := StrFlowRatePerUnitL;
+      end;
+    1:
+      begin
+        dgModflowBoundary.Cells[Ord(fhcHead), 0] := StrFlowRate;
+      end;
+    2:
+      begin
+        dgModflowBoundary.Cells[Ord(fhcHead), 0] := StrTotalFlowRatePer;
+      end;
+  end;
 end;
 
 procedure TframeScreenObjectFhbFlow.SetData(List: TScreenObjectEditCollection;

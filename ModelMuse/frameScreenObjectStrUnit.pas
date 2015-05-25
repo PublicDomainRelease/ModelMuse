@@ -69,7 +69,7 @@ resourcestring
   StrStreamWidthWidth = 'Stream width (Width)';
   StrStreamSlopeSlope = 'Stream slope (Slope)';
   StrManningsRoughness = 'Manning’s roughness coefficient (Rough)';
-  StrNearest = 'Nearest';
+  StrNearest = 'Closest';
   StrF = 'F()';
 
 {$R *.dfm}

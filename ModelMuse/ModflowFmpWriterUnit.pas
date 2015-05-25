@@ -168,8 +168,8 @@ type
     procedure FarmBudgetUnitNumber(var UnitNumber: Integer);
     procedure RemoveNoDefinedError(var NoDefinedErrorRoot: string); override;
     procedure ShowNoBoundaryError(const NoDefinedErrorRoot: string); override;
-    procedure WriteBeforeCells; override;
-    procedure WriteBeforeParamCells; override;
+    procedure DoBeforeWriteCells; override;
+    procedure DoBeforeWriteParamCells; override;
   public
     // @name creates and instance of @classname.
     Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
@@ -928,7 +928,7 @@ begin
   NewLine;
 end;
 
-procedure TModflowFmpWriter.WriteBeforeParamCells;
+procedure TModflowFmpWriter.DoBeforeWriteParamCells;
 begin
   inherited;
   WriteNwtOptions;
@@ -3992,7 +3992,7 @@ begin
   end;
 end;
 
-procedure TModflowFmpWriter.WriteBeforeCells;
+procedure TModflowFmpWriter.DoBeforeWriteCells;
 begin
   inherited;
   WriteNwtOptions;

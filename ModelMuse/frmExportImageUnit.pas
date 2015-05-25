@@ -68,6 +68,8 @@ type
     vstDataSets: TVirtualStringTree;
     cbHeadObsLegend: TCheckBox;
     btnScaleFont: TButton;
+    btnCopySettings: TBitBtn;
+    btnPasteSettings: TBitBtn;
     procedure FormCreate(Sender: TObject); override;
     procedure seImageHeightChange(Sender: TObject);
     procedure seImageWidthChange(Sender: TObject);
@@ -115,6 +117,8 @@ type
     procedure cpTextExpand(Sender: TObject);
     procedure cbHeadObsLegendClick(Sender: TObject);
     procedure btnScaleFontClick(Sender: TObject);
+    procedure btnCopySettingsClick(Sender: TObject);
+    procedure btnPasteSettingsClick(Sender: TObject);
   private
     FShouldDraw: Boolean;
     FTextItems: TList;
@@ -192,6 +196,8 @@ type
       NewState: TCheckState);
     procedure CollapseOtherPanels(Sender: TObject);
     procedure ApplyMacro(CommentLines: TStringList; CommentSearchKey: string; TextSearchKey: string; var TextToDraw: string);
+    procedure AssignASetting(PhastModel: TPhastModel; ASetting: TDisplaySettingsItem);
+    procedure ApplyASetting(ASetting: TDisplaySettingsItem; PhastModel: TPhastModel);
     { Private declarations }
   public
     { Public declarations }
@@ -222,6 +228,9 @@ resourcestring
   StrTheSImageCanNot = 'The %s image can not be shown at this magnification.' +
   ' When the magnification is reduced, it will be displayed again.';
   StrDataSets = 'Data Sets';
+  StrTheClipboardConten = 'The clipboard contents were not a valid image set' +
+  'ting.';
+  StrDefaultSettingPrefix = 'Setting_';
 
 const
   StrSP = '%SP';
@@ -255,6 +264,93 @@ begin
     FQuerySaveSettings := True;
   end;
 end;
+
+procedure TfrmExportImage.btnPasteSettingsClick(Sender: TObject);
+var
+  ClipboardText: string;
+  ClipStream: TStringStream;
+  DisplaySettings: TDisplaySettingsComponent;
+  MemStream: TMemoryStream;
+  SettingIndex: Integer;
+  ASetting: TDisplaySettingsItem;
+  PhastModel: TPhastModel;
+  ExistingDisplaySettings: TDisplaySettingsCollection;
+  NameIndex: Integer;
+  ExistingSetting: TDisplaySettingsItem;
+  TestName: string;
+begin
+  inherited;
+  ClipboardText := ClipBoard.AsText;
+  PhastModel := frmGoPhast.PhastModel;
+  ExistingDisplaySettings := PhastModel.DisplaySettings;
+
+  try
+    ClipStream := TStringStream.Create(ClipboardText);
+    try
+      ClipStream.Position := 0;
+      MemStream := TMemoryStream.Create;
+      try
+        ObjectTextToBinary(ClipStream, MemStream);
+        DisplaySettings := TDisplaySettingsComponent.Create(nil);
+        try
+          MemStream.Position := 0;
+          MemStream.ReadComponent(DisplaySettings);
+          ExistingSetting := nil;
+          for SettingIndex := 0 to DisplaySettings.Settings.Count - 1 do
+          begin
+            ASetting := DisplaySettings.Settings.Items[SettingIndex]
+              as TDisplaySettingsItem;
+            NameIndex := 1;
+            while ASetting.Name = '' do
+            begin
+              TestName := StrDefaultSettingPrefix + IntToStr(NameIndex);
+              if ExistingDisplaySettings.GetItemByName(TestName) = nil then
+              begin
+                ASetting.Name := TestName;
+              end
+              else
+              begin
+                Inc(NameIndex);
+              end;
+            end;
+            ExistingSetting := ExistingDisplaySettings.GetItemByName(ASetting.Name);
+            if ExistingSetting <> nil then
+            begin
+              ExistingSetting.Assign(ASetting);
+              comboSavedSettings.ItemIndex := comboSavedSettings.Items.IndexOf(ASetting.Name);
+            end
+            else
+            begin
+              ASetting.Collection := ExistingDisplaySettings;
+              ExistingSetting := ASetting;
+              comboSavedSettings.ItemIndex :=
+                comboSavedSettings.Items.AddObject(ExistingSetting.Name,
+                ExistingSetting);
+            end;
+            ApplyASetting(ExistingSetting, PhastModel);
+          end;
+          SaveSettings;
+          FreeAndNil(FModelImage);
+          DrawImage;
+        finally
+          DisplaySettings.Free;
+        end;
+      finally
+        MemStream.Free;
+      end;
+    finally
+      ClipStream.Free;
+    end;
+  except on EParserError do
+    begin
+      Beep;
+      MessageDlg(StrTheClipboardConten, mtError, [mbOK], 0);
+    end;
+
+  end;
+
+
+  end;
 
 procedure TfrmExportImage.btnPreviewClick(Sender: TObject);
 const
@@ -467,7 +563,7 @@ begin
         Mesh.MeshChanged;
       end;
 
-      UpdateFrmDisplayData;
+      UpdateFrmDisplayData(True);
 //      UpdateFrmContourData;
       Application.ProcessMessages;
       PriorDataArray := DataArray;
@@ -559,6 +655,44 @@ procedure TfrmExportImage.btnCloseClick(Sender: TObject);
 begin
   FShouldStop := True;
   inherited;
+end;
+
+procedure TfrmExportImage.btnCopySettingsClick(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  ModifiedDisplaySettings: TDisplaySettingsComponent;
+  MemStream: TMemoryStream;
+  ClipStream: TStringStream;
+  ASetting: TDisplaySettingsItem;
+begin
+  inherited;
+  PhastModel := frmGoPhast.PhastModel;
+  ModifiedDisplaySettings := TDisplaySettingsComponent.Create(nil);
+  try
+    ASetting := ModifiedDisplaySettings.Settings.Add as TDisplaySettingsItem;
+    if comboSavedSettings.Text <> comboSavedSettings.Items[0] then
+    begin
+      ASetting.Name := comboSavedSettings.Text;
+    end;
+    AssignASetting(PhastModel, ASetting);
+
+    MemStream := TMemoryStream.Create;
+    ClipStream := TStringStream.Create('');
+    try
+      MemStream.WriteComponent(ModifiedDisplaySettings);
+      MemStream.Position := 0;
+      ClipStream.Position := 0;
+      ObjectBinaryToText(MemStream, ClipStream);
+      ClipStream.Position := 0;
+      Clipboard.AsText := ClipStream.ReadString(ClipStream.Size);
+    finally
+      ClipStream.Free;
+      MemStream.Free;
+    end;
+
+  finally
+    ModifiedDisplaySettings.Free;
+  end;
 end;
 
 procedure TfrmExportImage.btnFontClick(Sender: TObject);
@@ -1867,17 +2001,6 @@ var
   PhastModel: TPhastModel;
   DisplaySettings: TDisplaySettingsCollection;
   ASetting: TDisplaySettingsItem;
-  Frame: TframeView;
-  Index: Integer;
-  DrawItem: TDrawItem;
-  TextItem: TTextItem;
-  AScreenObject: TScreenObject;
-  NewVisibility: Boolean;
-  VisibilityChanged: Boolean;
-//  SutraSettings: TSutraSettings;
-  UndoShowHideObjects: TUndoShowHideScreenObject;
-  SelectedVelocityDescription: string;
-  ChildIndex: Integer;
 begin
   PhastModel := frmGoPhast.PhastModel;
   DisplaySettings := PhastModel.DisplaySettings;
@@ -1887,173 +2010,7 @@ begin
   begin
     Exit;
   end;
-  comboView.ItemIndex := Ord(ASetting.ViewToDisplay);
-  PhastModel.Exaggeration := ASetting.VerticalExaggeration;
-  PhastModel.SutraMesh.Assign(ASetting.SutraSettings);
-  PhastModel.MaxVectors := ASetting.MaxVectors;
-  PhastModel.MidVectors := ASetting.MidVectors;
-  PhastModel.MinVectors := ASetting.MinVectors;
-  PhastModel.VelocityVectors := ASetting.VelocityVectors;
-
-  if ASetting.VelocityVectors.SelectedItem >= 0 then
-  begin
-    SelectedVelocityDescription := (ASetting.VelocityVectors.Items[
-      ASetting.VelocityVectors.SelectedItem] as TVectorItem).Description;
-    PhastModel.VelocityVectors.SetItemByName(SelectedVelocityDescription);
-  end
-  else
-  begin
-    PhastModel.VelocityVectors.SelectedItem := -1;
-  end;
-
-  frmGoPhast.frameTopView.ZoomBox.Magnification := ASetting.Magnification;
-  frmGoPhast.frameFrontView.ZoomBox.Magnification := ASetting.Magnification;
-  frmGoPhast.frameSideView.ZoomBox.Magnification := ASetting.Magnification;
-  case ASetting.ViewToDisplay of
-    vdTop:
-      begin
-        SetTopCornerPosition(ASetting.ReferencePointX, ASetting.ReferencePointY)
-      end;
-    vdFront:
-      begin
-        SetFrontCornerPosition(ASetting.ReferencePointX, ASetting.ReferencePointY)
-      end;
-    vdSide:
-      begin
-        SetSideCornerPosition(ASetting.ReferencePointY, ASetting.ReferencePointX)
-      end;
-    else Assert(false);
-  end;
-  Frame := nil;
-  case ASetting.ViewToDisplay of
-  vdTop:
-    begin
-      Frame := frmGoPhast.frameTopView;
-    end;
-  vdFront:
-    begin
-      Frame := frmGoPhast.frameFrontView;
-    end;
-  vdSide:
-    begin
-      Frame := frmGoPhast.frameSideView;
-    end;
-  else
-    Assert(False);
-  end;
-  if ASetting.ViewToDisplay = vdSide then
-  begin
-    Frame.rulVertical.Assign(ASetting.HorizontalRuler);
-    Frame.rulHorizontal.Assign(ASetting.VerticalRuler);
-  end
-  else
-  begin
-    Frame.rulVertical.Assign(ASetting.VerticalRuler);
-    Frame.rulHorizontal.Assign(ASetting.HorizontalRuler);
-  end;
-  cbHorizontalScale.Checked := ASetting.HorizontalRuler.Visible;
-  cbVerticalScale.Checked := ASetting.VerticalRuler.Visible;
-  cbHeadObsLegend.Checked := ASetting.ShowHeadObsLegend;
-  seImageHeight.AsInteger := ASetting.ImageHeight;
-  seImageWidth.AsInteger := ASetting.ImageWidth;
-  cbShowColoredGridLines.Checked := ASetting.ShowColoredGridLines;
-  if PhastModel.Grid <> nil then
-  begin
-    case ASetting.GridDisplayChoice of
-      gldcAll:
-        begin
-          frmGoPhast.acShowAllGridLines.Checked := True;
-        end;
-      gldcExterior:
-        begin
-          frmGoPhast.acShowExteriorGridLines.Checked := True;
-        end;
-      gldcActive:
-        begin
-          frmGoPhast.acShowActiveGridLines.Checked := True;
-        end;
-      gldcActiveEdge:
-        begin
-          frmGoPhast.acShowActiveEdge.Checked := True;
-        end;
-      else Assert(false);
-    end;
-    frmGoPhast.SetGridLineDrawingChoice(nil);
-  end;
-
-  UndoShowHideObjects := TUndoShowHideScreenObject.Create;
-  try
-    VisibilityChanged := False;
-    for Index := 0 to PhastModel.ScreenObjectCount - 1 do
-    begin
-      AScreenObject := PhastModel.ScreenObjects[Index];
-      NewVisibility := (not AScreenObject.Deleted) and
-      (ASetting.VisibleObjects.IndexOf(AScreenObject.Name) >= 0);
-      if AScreenObject.Visible <> NewVisibility then
-      begin
-        VisibilityChanged := True;
-      end;
-      AScreenObject.Visible := NewVisibility;
-    end;
-    UndoShowHideObjects.SetPostSelection;
-    if VisibilityChanged then
-    begin
-      frmGoPhast.UndoStack.Submit(UndoShowHideObjects);
-    end
-    else
-    begin
-      UndoShowHideObjects.Free;
-    end;
-  except
-    UndoShowHideObjects.Free;
-    raise;
-  end;
-
-  PhastModel.EndPoints.Assign(ASetting.ModpathEndPointSettings);
-  PhastModel.PathLines.Assign(ASetting.ModpathPathLineSettings);
-  PhastModel.TimeSeries.Assign(ASetting.ModpathTimeSeriesSettings);
-  PhastModel.ShowContourLabels := ASetting.LabelContours;
-  PhastModel.ContourFont := ASetting.ContourFont;
-
-  ApplyCrossSectionSettings(PhastModel, ASetting);
-  if PhastModel.LgrUsed then
-  begin
-    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
-    begin
-      ApplyCrossSectionSettings(
-        PhastModel.ChildModels[ChildIndex].ChildModel, ASetting);
-    end;
-  end;
-
-  ApplyContourDisplaySettings(ASetting.ContourDisplaySettings);
-  ApplyColorDisplaySettings(ASetting.ColorDisplaySettings);
-
-  if ASetting.EdgeDisplaySettings.Visible then
-  begin
-    PhastModel.EdgeDisplay := PhastModel.HfbDisplayer;
-    PhastModel.EdgeDisplay.Assign(ASetting.EdgeDisplaySettings);
-  end
-  else
-  begin
-    PhastModel.EdgeDisplay := nil;
-  end;
-
-  PhastModel.SfrStreamLinkPlot := ASetting.SfrStreamLinkPlot;
-
-  FTextItems.Clear;
-  for Index := 0 to ASetting.AdditionalText.Count - 1 do
-  begin
-    DrawItem := TDrawItem.Create;
-    DrawItem.OnDraw := ExpandText;
-    TextItem := ASetting.AdditionalText.Items[Index] as TTextItem;
-    DrawItem.Assign(TextItem);
-    FTextItems.Add(DrawItem);
-  end;
-
-  memoTitle.Lines.Text := ASetting.Title.Text;
-  memoTitle.Font := ASetting.Title.Font;
-  UpdateModelColors;
-  FQuerySaveSettings := False;
+  ApplyASetting(ASetting, PhastModel);
 
 end;
 
@@ -2067,16 +2024,10 @@ end;
 
 procedure TfrmExportImage.SaveSettings;
 var
-  TextItem: TTextItem;
   PhastModel: TPhastModel;
   ModifiedDisplaySettings: TDisplaySettingsCollection;
   ASetting: TDisplaySettingsItem;
-  Frame: TframeView;
-  Index: Integer;
-  DrawItem: TDrawItem;
   Undo: TUndoEditDisplaySettings;
-  AScreenObject: TScreenObject;
-  DataArrayIndex: Integer;
 begin
   PhastModel := frmGoPhast.PhastModel;
   ModifiedDisplaySettings := TDisplaySettingsCollection.Create(nil);
@@ -2089,117 +2040,7 @@ begin
       ASetting.Name := comboSavedSettings.Text;
       comboSavedSettings.Items.Add(ASetting.Name)
     end;
-    ASetting.ViewToDisplay := TViewDirection(comboView.ItemIndex);
-    Frame := nil;
-    case ASetting.ViewToDisplay of
-      vdTop:
-        begin
-          Frame := frmGoPhast.frameTopView;
-        end;
-      vdFront:
-        begin
-          Frame := frmGoPhast.frameFrontView;
-        end;
-      vdSide:
-        begin
-          Frame := frmGoPhast.frameSideView;
-        end;
-    else
-      Assert(False);
-    end;
-    ASetting.Magnification := Frame.ZoomBox.Magnification;
-    ASetting.ReferencePointX := Frame.ZoomBox.X(0);
-    ASetting.ReferencePointY := Frame.ZoomBox.Y(0);
-    ASetting.VerticalExaggeration := PhastModel.Exaggeration;
-    if ASetting.ViewToDisplay = vdSide then
-    begin
-      ASetting.HorizontalRuler.Assign(Frame.rulVertical);
-      ASetting.VerticalRuler.Assign(Frame.rulHorizontal);
-    end
-    else
-    begin
-      ASetting.HorizontalRuler.Assign(Frame.rulHorizontal);
-      ASetting.VerticalRuler.Assign(Frame.rulVertical);
-    end;
-    ASetting.HorizontalRuler.Visible := cbHorizontalScale.Checked;
-    ASetting.VerticalRuler.Visible := cbVerticalScale.Checked;
-
-    ASetting.ImageHeight := seImageHeight.AsInteger;
-    ASetting.ImageWidth := seImageWidth.AsInteger;
-
-    ASetting.ShowColoredGridLines := cbShowColoredGridLines.Checked;
-
-    if PhastModel.Grid <> nil then
-    begin
-      ASetting.GridDisplayChoice := PhastModel.Grid.GridLineDrawingChoice;
-    end
-    else
-    begin
-      ASetting.GridDisplayChoice := gldcAll
-    end;
-    ASetting.ModpathEndPointSettings := PhastModel.EndPoints;
-    ASetting.ModpathPathLineSettings := PhastModel.PathLines;
-    ASetting.ModpathTimeSeriesSettings := PhastModel.TimeSeries;
-    SaveContourSettings(ASetting.ContourDisplaySettings);
-    SaveColorDisplaySettings(ASetting.ColorDisplaySettings);
-    ASetting.EdgeDisplaySettings.Assign(PhastModel.EdgeDisplay);
-    while ASetting.AdditionalText.Count > FTextItems.Count do
-    begin
-      ASetting.AdditionalText.Delete(ASetting.AdditionalText.Count - 1);
-    end;
-    while ASetting.AdditionalText.Count < FTextItems.Count do
-    begin
-      ASetting.AdditionalText.Add;
-    end;
-    for Index := 0 to FTextItems.Count - 1 do
-    begin
-      DrawItem := FTextItems[Index];
-      TextItem := ASetting.AdditionalText.Items[Index] as TTextItem;
-      TextItem.Assign(DrawItem);
-    end;
-    ASetting.Title.Text := memoTitle.Lines.Text;
-    ASetting.Title.Font := memoTitle.Font;
-    ASetting.VisibleObjects.Clear;
-    ASetting.VisibleObjects.Capacity := PhastModel.ScreenObjectCount;
-    for Index := 0 to PhastModel.ScreenObjectCount - 1 do
-    begin
-      AScreenObject := PhastModel.ScreenObjects[Index];
-      if AScreenObject.Visible and (not AScreenObject.Deleted) then
-      begin
-        ASetting.VisibleObjects.Add(AScreenObject.Name);
-      end;
-    end;
-    ASetting.VisibleObjects.Sorted := True;
-    ASetting.ContourFont := PhastModel.ContourFont;
-    ASetting.LabelContours := PhastModel.ShowContourLabels;
-    ASetting.SfrStreamLinkPlot := PhastModel.SfrStreamLinkPlot;
-
-    ASetting.SutraSettings.Assign(PhastModel.SutraMesh);
-    ASetting.MaxVectors := PhastModel.MaxVectors;
-    ASetting.MidVectors := PhastModel.MidVectors;
-    ASetting.MinVectors := PhastModel.MinVectors;
-    ASetting.VelocityVectors := PhastModel.VelocityVectors;
-    ASetting.ShowHeadObsLegend := cbHeadObsLegend.Checked;
-
-    ASetting.CrossSectionDataSets.Clear;
-    ASetting.CrossSectionColors.Clear;
-    ASetting.CrossSectionDataSets.Capacity :=
-      PhastModel.CrossSection.DataArrays.Count;
-    ASetting.CrossSectionColors.Capacity :=
-      PhastModel.CrossSection.DataArrays.Count;
-    for DataArrayIndex := 0 to PhastModel.CrossSection.DataArrays.Count - 1 do
-    begin
-      ASetting.CrossSectionDataSets.Add(
-        PhastModel.CrossSection.DataArrays[DataArrayIndex].Name);
-      ASetting.CrossSectionColors.Add.Value :=
-        PhastModel.CrossSection.Colors[DataArrayIndex];
-    end;
-    ASetting.CrossSectionLayersToUse.Clear;
-    ASetting.CrossSectionLayersToUse.Capacity := PhastModel.CrossSection.LayersToUse.Count;
-    for Index := 0 to PhastModel.CrossSection.LayersToUse.Count - 1 do
-    begin
-      ASetting.CrossSectionLayersToUse.Add.Value := PhastModel.CrossSection.LayersToUse[Index];
-    end;
+    AssignASetting(PhastModel, ASetting);
 //    ASetting.CrossSectionLayersToUse := PhastModel.CrossSection.LayersToUse;
 
     Undo := TUndoEditDisplaySettings.Create(ModifiedDisplaySettings);
@@ -2323,7 +2164,7 @@ begin
     DataArray.UpdateMinMaxValues;
   end;
   cbContourLegend.Checked := ContourDisplaySettings.LegendVisible;
-  UpdateFrmDisplayData;
+  UpdateFrmDisplayData(True);
 end;
 
 procedure TfrmExportImage.ApplyColorDisplaySettings(
@@ -2466,7 +2307,7 @@ begin
     end;
   end;
   cbColorLegend.Checked := ColorDisplaySettings.LegendVisible;
-  UpdateFrmDisplayData;
+  UpdateFrmDisplayData(True);
 end;
 
 procedure TfrmExportImage.UncheckSelected1Click(Sender: TObject);
@@ -3063,6 +2904,8 @@ begin
   FCanDraw := True;
   comboViewChange(nil);
   FQuerySaveSettings := False;
+
+  StrNone
 end;
 
 procedure TfrmExportImage.FormDestroy(Sender: TObject);
@@ -3390,6 +3233,291 @@ begin
     TextToDraw := StringReplace(TextToDraw, TextSearchKey,
       ReplacementText, [rfReplaceAll, rfIgnoreCase]);
   end;
+end;
+
+procedure TfrmExportImage.AssignASetting(PhastModel: TPhastModel; ASetting: TDisplaySettingsItem);
+var
+  AScreenObject: TScreenObject;
+  DrawItem: TDrawItem;
+  TextItem: TTextItem;
+  DataArrayIndex: Integer;
+  Frame: TframeView;
+  Index: Integer;
+begin
+  ASetting.ViewToDisplay := TViewDirection(comboView.ItemIndex);
+  Frame := nil;
+  case ASetting.ViewToDisplay of
+    vdTop:
+      begin
+        Frame := frmGoPhast.frameTopView;
+      end;
+    vdFront:
+      begin
+        Frame := frmGoPhast.frameFrontView;
+      end;
+    vdSide:
+      begin
+        Frame := frmGoPhast.frameSideView;
+      end;
+  else
+    Assert(False);
+  end;
+  ASetting.Magnification := Frame.ZoomBox.Magnification;
+  ASetting.ReferencePointX := Frame.ZoomBox.X(0);
+  ASetting.ReferencePointY := Frame.ZoomBox.Y(0);
+  ASetting.VerticalExaggeration := PhastModel.Exaggeration;
+  if ASetting.ViewToDisplay = vdSide then
+  begin
+    ASetting.HorizontalRuler.Assign(Frame.rulVertical);
+    ASetting.VerticalRuler.Assign(Frame.rulHorizontal);
+  end
+  else
+  begin
+    ASetting.HorizontalRuler.Assign(Frame.rulHorizontal);
+    ASetting.VerticalRuler.Assign(Frame.rulVertical);
+  end;
+  ASetting.HorizontalRuler.Visible := cbHorizontalScale.Checked;
+  ASetting.VerticalRuler.Visible := cbVerticalScale.Checked;
+  ASetting.ImageHeight := seImageHeight.AsInteger;
+  ASetting.ImageWidth := seImageWidth.AsInteger;
+  ASetting.ShowColoredGridLines := cbShowColoredGridLines.Checked;
+  if PhastModel.Grid <> nil then
+  begin
+    ASetting.GridDisplayChoice := PhastModel.Grid.GridLineDrawingChoice;
+  end
+  else
+  begin
+    ASetting.GridDisplayChoice := gldcAll;
+  end;
+  ASetting.ModpathEndPointSettings := PhastModel.EndPoints;
+  ASetting.ModpathPathLineSettings := PhastModel.PathLines;
+  ASetting.ModpathTimeSeriesSettings := PhastModel.TimeSeries;
+  SaveContourSettings(ASetting.ContourDisplaySettings);
+  SaveColorDisplaySettings(ASetting.ColorDisplaySettings);
+  ASetting.EdgeDisplaySettings.Assign(PhastModel.EdgeDisplay);
+  while ASetting.AdditionalText.Count > FTextItems.Count do
+  begin
+    ASetting.AdditionalText.Delete(ASetting.AdditionalText.Count - 1);
+  end;
+  while ASetting.AdditionalText.Count < FTextItems.Count do
+  begin
+    ASetting.AdditionalText.Add;
+  end;
+  for Index := 0 to FTextItems.Count - 1 do
+  begin
+    DrawItem := FTextItems[Index];
+    TextItem := ASetting.AdditionalText.Items[Index] as TTextItem;
+    TextItem.Assign(DrawItem);
+  end;
+  ASetting.Title.Text := memoTitle.Lines.Text;
+  ASetting.Title.Font := memoTitle.Font;
+  ASetting.VisibleObjects.Clear;
+  ASetting.VisibleObjects.Capacity := PhastModel.ScreenObjectCount;
+  for Index := 0 to PhastModel.ScreenObjectCount - 1 do
+  begin
+    AScreenObject := PhastModel.ScreenObjects[Index];
+    if AScreenObject.Visible and (not AScreenObject.Deleted) then
+    begin
+      ASetting.VisibleObjects.Add(AScreenObject.Name);
+    end;
+  end;
+  ASetting.VisibleObjects.Sorted := True;
+  ASetting.ContourFont := PhastModel.ContourFont;
+  ASetting.LabelContours := PhastModel.ShowContourLabels;
+  ASetting.SfrStreamLinkPlot := PhastModel.SfrStreamLinkPlot;
+  ASetting.SutraSettings.Assign(PhastModel.SutraMesh);
+  ASetting.MaxVectors := PhastModel.MaxVectors;
+  ASetting.MidVectors := PhastModel.MidVectors;
+  ASetting.MinVectors := PhastModel.MinVectors;
+  ASetting.VelocityVectors := PhastModel.VelocityVectors;
+  ASetting.ShowHeadObsLegend := cbHeadObsLegend.Checked;
+  ASetting.CrossSectionDataSets.Clear;
+  ASetting.CrossSectionColors.Clear;
+  ASetting.CrossSectionDataSets.Capacity := PhastModel.CrossSection.DataArrays.Count;
+  ASetting.CrossSectionColors.Capacity := PhastModel.CrossSection.DataArrays.Count;
+  for DataArrayIndex := 0 to PhastModel.CrossSection.DataArrays.Count - 1 do
+  begin
+    ASetting.CrossSectionDataSets.Add(PhastModel.CrossSection.DataArrays[DataArrayIndex].Name);
+    ASetting.CrossSectionColors.Add.Value := PhastModel.CrossSection.Colors[DataArrayIndex];
+  end;
+  ASetting.CrossSectionLayersToUse.Clear;
+  ASetting.CrossSectionLayersToUse.Capacity := PhastModel.CrossSection.LayersToUse.Count;
+  for Index := 0 to PhastModel.CrossSection.LayersToUse.Count - 1 do
+  begin
+    ASetting.CrossSectionLayersToUse.Add.Value := PhastModel.CrossSection.LayersToUse[Index];
+  end;
+end;
+
+procedure TfrmExportImage.ApplyASetting(ASetting: TDisplaySettingsItem; PhastModel: TPhastModel);
+var
+  UndoShowHideObjects: TUndoShowHideScreenObject;
+  AScreenObject: TScreenObject;
+  Frame: TframeView;
+  NewVisibility: Boolean;
+  TextItem: TTextItem;
+  ChildIndex: Integer;
+  VisibilityChanged: Boolean;
+  DrawItem: TDrawItem;
+  Index: Integer;
+  SelectedVelocityDescription: string;
+begin
+  comboView.ItemIndex := Ord(ASetting.ViewToDisplay);
+  PhastModel.Exaggeration := ASetting.VerticalExaggeration;
+  PhastModel.SutraMesh.Assign(ASetting.SutraSettings);
+  PhastModel.MaxVectors := ASetting.MaxVectors;
+  PhastModel.MidVectors := ASetting.MidVectors;
+  PhastModel.MinVectors := ASetting.MinVectors;
+  PhastModel.VelocityVectors := ASetting.VelocityVectors;
+  if ASetting.VelocityVectors.SelectedItem >= 0 then
+  begin
+    SelectedVelocityDescription := (ASetting.VelocityVectors.Items[ASetting.VelocityVectors.SelectedItem] as TVectorItem).Description;
+    PhastModel.VelocityVectors.SetItemByName(SelectedVelocityDescription);
+  end
+  else
+  begin
+    PhastModel.VelocityVectors.SelectedItem := -1;
+  end;
+  frmGoPhast.frameTopView.ZoomBox.Magnification := ASetting.Magnification;
+  frmGoPhast.frameFrontView.ZoomBox.Magnification := ASetting.Magnification;
+  frmGoPhast.frameSideView.ZoomBox.Magnification := ASetting.Magnification;
+  case ASetting.ViewToDisplay of
+    vdTop:
+      begin
+        SetTopCornerPosition(ASetting.ReferencePointX, ASetting.ReferencePointY);
+      end;
+    vdFront:
+      begin
+        SetFrontCornerPosition(ASetting.ReferencePointX, ASetting.ReferencePointY);
+      end;
+    vdSide:
+      begin
+        SetSideCornerPosition(ASetting.ReferencePointY, ASetting.ReferencePointX);
+      end;
+  else
+    Assert(false);
+  end;
+  Frame := nil;
+  case ASetting.ViewToDisplay of
+    vdTop:
+      begin
+        Frame := frmGoPhast.frameTopView;
+      end;
+    vdFront:
+      begin
+        Frame := frmGoPhast.frameFrontView;
+      end;
+    vdSide:
+      begin
+        Frame := frmGoPhast.frameSideView;
+      end;
+  else
+    Assert(False);
+  end;
+  if ASetting.ViewToDisplay = vdSide then
+  begin
+    Frame.rulVertical.Assign(ASetting.HorizontalRuler);
+    Frame.rulHorizontal.Assign(ASetting.VerticalRuler);
+  end
+  else
+  begin
+    Frame.rulVertical.Assign(ASetting.VerticalRuler);
+    Frame.rulHorizontal.Assign(ASetting.HorizontalRuler);
+  end;
+  cbHorizontalScale.Checked := ASetting.HorizontalRuler.Visible;
+  cbVerticalScale.Checked := ASetting.VerticalRuler.Visible;
+  cbHeadObsLegend.Checked := ASetting.ShowHeadObsLegend;
+  seImageHeight.AsInteger := ASetting.ImageHeight;
+  seImageWidth.AsInteger := ASetting.ImageWidth;
+  cbShowColoredGridLines.Checked := ASetting.ShowColoredGridLines;
+  if PhastModel.Grid <> nil then
+  begin
+    case ASetting.GridDisplayChoice of
+      gldcAll:
+        begin
+          frmGoPhast.acShowAllGridLines.Checked := True;
+        end;
+      gldcExterior:
+        begin
+          frmGoPhast.acShowExteriorGridLines.Checked := True;
+        end;
+      gldcActive:
+        begin
+          frmGoPhast.acShowActiveGridLines.Checked := True;
+        end;
+      gldcActiveEdge:
+        begin
+          frmGoPhast.acShowActiveEdge.Checked := True;
+        end;
+    else
+      Assert(false);
+    end;
+    frmGoPhast.SetGridLineDrawingChoice(nil);
+  end;
+  UndoShowHideObjects := TUndoShowHideScreenObject.Create;
+  try
+    VisibilityChanged := False;
+    for Index := 0 to PhastModel.ScreenObjectCount - 1 do
+    begin
+      AScreenObject := PhastModel.ScreenObjects[Index];
+      NewVisibility := (not AScreenObject.Deleted) and (ASetting.VisibleObjects.IndexOf(AScreenObject.Name) >= 0);
+      if AScreenObject.Visible <> NewVisibility then
+      begin
+        VisibilityChanged := True;
+      end;
+      AScreenObject.Visible := NewVisibility;
+    end;
+    UndoShowHideObjects.SetPostSelection;
+    if VisibilityChanged then
+    begin
+      frmGoPhast.UndoStack.Submit(UndoShowHideObjects);
+    end
+    else
+    begin
+      UndoShowHideObjects.Free;
+    end;
+  except
+    UndoShowHideObjects.Free;
+    raise ;
+  end;
+  PhastModel.EndPoints.Assign(ASetting.ModpathEndPointSettings);
+  PhastModel.PathLines.Assign(ASetting.ModpathPathLineSettings);
+  PhastModel.TimeSeries.Assign(ASetting.ModpathTimeSeriesSettings);
+  PhastModel.ShowContourLabels := ASetting.LabelContours;
+  PhastModel.ContourFont := ASetting.ContourFont;
+  ApplyCrossSectionSettings(PhastModel, ASetting);
+  if PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ApplyCrossSectionSettings(PhastModel.ChildModels[ChildIndex].ChildModel, ASetting);
+    end;
+  end;
+  ApplyContourDisplaySettings(ASetting.ContourDisplaySettings);
+  ApplyColorDisplaySettings(ASetting.ColorDisplaySettings);
+  if ASetting.EdgeDisplaySettings.Visible then
+  begin
+    PhastModel.EdgeDisplay := PhastModel.HfbDisplayer;
+    PhastModel.EdgeDisplay.Assign(ASetting.EdgeDisplaySettings);
+  end
+  else
+  begin
+    PhastModel.EdgeDisplay := nil;
+  end;
+  UpdateFrmDisplayData(True);
+  PhastModel.SfrStreamLinkPlot := ASetting.SfrStreamLinkPlot;
+  FTextItems.Clear;
+  for Index := 0 to ASetting.AdditionalText.Count - 1 do
+  begin
+    DrawItem := TDrawItem.Create;
+    DrawItem.OnDraw := ExpandText;
+    TextItem := ASetting.AdditionalText.Items[Index] as TTextItem;
+    DrawItem.Assign(TextItem);
+    FTextItems.Add(DrawItem);
+  end;
+  memoTitle.Lines.Text := ASetting.Title.Text;
+  memoTitle.Font := ASetting.Title.Font;
+  UpdateModelColors;
+  FQuerySaveSettings := False;
 end;
 
 procedure TfrmExportImage.spdSaveImageTypeChange(Sender: TObject);

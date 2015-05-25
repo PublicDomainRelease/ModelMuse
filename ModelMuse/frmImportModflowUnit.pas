@@ -63,6 +63,8 @@ resourcestring
   StrADirectoryListedI = 'A directory listed in the name file "%s" does not ' +
   'exist and could not be created.';
   StrUnableToSaveTempo = 'Unable to save temporaray name file: %s';
+  StrTheSolverPackages = 'The solver packages can not be imported in MODFLOW' +
+  '-2000 models.';
 
 procedure TfrmImportModflow.btnOKClick(Sender: TObject);
 var
@@ -88,6 +90,7 @@ var
   FileDir: string;
   UnitNumberIndex: Integer;
   NameFileName: string;
+  Modflow2000Model: Boolean;
 //  DelimPos: Integer;
 begin
   inherited;
@@ -114,6 +117,29 @@ begin
     try
       Splitter.Delimiter := ' ';
       NameFile.LoadFromFile(NameFileName);
+      Modflow2000Model := False;
+      for LineIndex := 0 to NameFile.Count - 1 do
+      begin
+        ALine := NameFile[LineIndex];
+        if (Length(ALine) > 0) and (ALine[1] <> '#') then
+        begin
+          Splitter.DelimitedText := ALine;
+          if Splitter.Count > 0 then
+          begin
+            Ftype := UpperCase(Splitter[0]);
+            if (Ftype = 'GLOBAL')
+               or (Ftype = 'BTN') or (Ftype = 'ADV') or (Ftype = 'DSP')
+               or (Ftype = 'GCG') or (Ftype = 'VDF') or (Ftype = 'SSM')
+               or (Ftype = 'RCT') or (Ftype = 'SOR') or (Ftype = 'SEN')
+               or (Ftype = 'PES') or (Ftype = 'OBS') or (Ftype = 'LMG')
+               or (Ftype = 'DAF') or (Ftype = 'DAFG') or (Ftype = 'VSC')
+               or (Ftype = 'DTOB') or (Ftype = 'ADV2') then
+            begin
+              Modflow2000Model := True;
+            end;
+          end;
+        end;
+      end;
       for LineIndex := 0 to NameFile.Count - 1 do
       begin
         ALine := NameFile[LineIndex];
@@ -128,11 +154,24 @@ begin
                or (Ftype = 'SEN') or (Ftype = 'PES') or (Ftype = 'GLOBAL')
                or (Ftype = 'SOR') or (Ftype = 'DAF') or (Ftype = 'DAFG')
                or (Ftype = 'DTOB') or (Ftype = 'ADV2')
+               or (Ftype = 'BTN') or (Ftype = 'ADV') or (Ftype = 'DSP')
+               or (Ftype = 'GCG') or (Ftype = 'VDF') or (Ftype = 'SSM')
+               or (Ftype = 'RCT') or (Ftype = 'VSC')
                // CLB, NDC, and WHS are only in Visual MODFLOW.
                or (Ftype = 'CLB') or (Ftype = 'NDC') or (Ftype = 'WHS') then
             begin
               ALine := '#' + ALine;
               NameFile[LineIndex] := ALine;
+            end
+            else if Modflow2000Model and
+              ((Ftype = 'DE4') or (Ftype = 'GMG') or (Ftype = 'LMG')
+              or (Ftype = 'PCG') or (Ftype = 'PCGN') or (Ftype = 'SIP')
+               or (Ftype = 'SOR')) then
+            begin
+              ALine := '#' + ALine;
+              NameFile[LineIndex] := ALine;
+              Beep;
+              MessageDlg(StrTheSolverPackages, mtInformation, [mbOK], 0);
             end
             else if Splitter.Count > 2 then
             begin

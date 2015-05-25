@@ -55,6 +55,7 @@ type
     procedure RestoreData;
     procedure Reverse;
     function UniformValues: boolean;
+    function IsSame(OtherStorage: TValueArrayStorage): Boolean;
   published
     property DataType: TRbwDataType read FDataType write SetDataType;
     property Count: integer read GetCount write SetCount;
@@ -514,6 +515,29 @@ begin
           FStringValues.Insert(Index, '');
         end;
       else Assert(False);
+    end;
+  end;
+end;
+
+function TValueArrayStorage.IsSame(OtherStorage: TValueArrayStorage): Boolean;
+var
+  index: Integer;
+begin
+  result := (DataType = OtherStorage.DataType) and (Count = OtherStorage.Count);
+  if result then
+  begin
+    for index := 0 to Count - 1 do
+    begin
+      case DataType of
+        rdtDouble: result := RealValues[index] = OtherStorage.RealValues[index];
+        rdtInteger: result := IntValues[index] = OtherStorage.IntValues[index];
+        rdtBoolean: result := BooleanValues[index] = OtherStorage.BooleanValues[index];
+        rdtString: result := StringValues[index] = OtherStorage.StringValues[index];
+      end;
+      if not result then
+      begin
+        Exit;
+      end;
     end;
   end;
 end;

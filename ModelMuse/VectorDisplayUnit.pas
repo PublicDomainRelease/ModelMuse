@@ -4,7 +4,7 @@ interface
 
 uses
   Classes, FastGEO, DataSetUnit, GoPhastTypes, ZoomBox2, Graphics, GR32,
-  SubscriptionUnit, OpenGL12x;
+  SubscriptionUnit, OpenGL;
 
 type
   TLayerPoints = array of array of TPoint3D;
@@ -769,9 +769,9 @@ var
   AVector: TLine3D;
   X1, Y1, Z1: single;
   X2, Y2, Z2: single;
-  Red: TGLubyte;
-  Green: TGLubyte;
-  Blue: TGLubyte;
+  Red: GLubyte;
+  Green: GLubyte;
+  Blue: GLubyte;
   TotalDistance: TFloat;
   SpacingTree: TRbwOctTree;
   HorizontalDistance: TFloat;

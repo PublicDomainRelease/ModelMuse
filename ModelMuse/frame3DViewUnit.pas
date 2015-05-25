@@ -13,7 +13,7 @@ interface
 
 uses
   Windows, SysUtils, Types, Classes, Variants, Graphics, Controls, Forms,
-  Dialogs, GLWidget, arcball, OpenGL12x;
+  Dialogs, GLWidget, arcball, OpenGL;
 
 type
   {@abstract(@name is used to encapsulate the interaction with the 3D view
@@ -284,14 +284,7 @@ begin
     glTranslated(-0.8, -0.8, -0.8);
     glscaled(glWidModelView.ClientHeight/Max(1,glWidModelView.ClientWidth), 1, 1);
     glMultMatrixf(@FTheBall.Matrix);
-    try
-      glCallList(FAxesGLIndex);
-    except on EMathError do
-      begin
-        // do nothing
-      end;
-    end;
-
+    glCallList(FAxesGLIndex);
   finally
     glPopMatrix;
     glMatrixMode(GL_PROJECTION);
@@ -506,7 +499,7 @@ end;
 
 procedure Tframe3DView.glWidModelViewRender(Sender: TObject);
 var
-  errorCode: TGLuint;
+  errorCode: GLuint;
   light_position: array[0..3] of GLfloat;
   //  Colors: array[0..3] of TGLint;
   //const
@@ -520,7 +513,14 @@ begin
 //    glWidModelView.Visible := False;
 //    {$ENDIF}
     if not glWidModelView.Started then
+    begin
       Exit;
+    end;
+
+    if Height <= 2 then
+    begin
+      Exit;
+    end;
 
     light_position[0] := ColorValues.X;
     light_position[1] := ColorValues.Y;
@@ -591,7 +591,11 @@ begin
       errorCode := glGetError;
 
       if errorCode <> GL_NO_ERROR then
-      Beep;
+      begin
+        Beep;
+        glWidModelView.Visible := False;
+        Exit;
+      end;
 
     finally
       glPopMatrix;
@@ -646,8 +650,12 @@ end;
 
 procedure Tframe3DView.glWidModelViewResize(Sender: TObject);
 var
-  errorCode: TGLuint;
+  errorCode: GLuint;
 begin
+  if not glWidModelView.Visible then
+  begin
+    Exit;
+  end;
   if not glWidModelView.Started then
     Exit;
   if FTheBall <> nil then

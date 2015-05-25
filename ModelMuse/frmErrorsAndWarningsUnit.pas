@@ -764,7 +764,7 @@ begin
     begin
       ParentNode := Node.Parent;
       Data := Sender.GetNodeData(ParentNode);
-      if Assigned(Data) and (Data.List <> nil) then
+      if Assigned(Data) and (Data.List <> nil) and (Data.List.Count > Node.Index) then
       begin
         CellText := Data.List[Node.Index];
       end;

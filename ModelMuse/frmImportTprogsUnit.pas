@@ -268,6 +268,7 @@ begin
       begin
         Beep;
         MessageDlg(E.Message, mtError, [mbOK], 0);
+        Exit;
       end;
     end;
     StartPosition := 0;
@@ -295,6 +296,7 @@ begin
       Beep;
       MessageDlg(Format(StrUnableToReadS, [fedTprogs.FileName]), mtError,
         [mbOK], 0);
+      Exit;
       // ModalResult := mrNone;
       // Exit;
     end;
@@ -398,7 +400,7 @@ begin
       1:
         begin
           if (BgrFile.Size - BgrFile.Position - EndOfFileLength <>
-            NLAY * NROW * NCOL * SizeOf(integer) ) then
+            NLAY * NROW * NCOL * SizeOf(byte) ) then
           begin
             Beep;
             MessageDlg(Format(StrThereWasAnErrorR,
@@ -413,7 +415,7 @@ begin
               for ColIndex := 0 to NCOL - 1 do
               begin
                 BgrFile.Read(IntegerData[LayerIndex, RowIndex, ColIndex],
-                  SizeOf(integer));
+                  SizeOf(byte));
               end;
             end;
           end;

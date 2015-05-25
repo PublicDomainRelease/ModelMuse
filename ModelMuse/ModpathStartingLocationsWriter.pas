@@ -467,7 +467,7 @@ begin
   begin
     ParticleItem := Particles.Items[Index] as TParticleLocation;
     XYString := FortranFloatToStr(ParticleItem.X) + ' '
-      + FortranFloatToStr(ParticleItem.Y) + ' ';
+      + FortranFloatToStr(1-ParticleItem.Y) + ' ';
     FSimulatedLocations.Add(XYString + FortranFloatToStr(ParticleItem.Z)
       + ' 0 0 0 ');
     FNonSimulatedLocations.Add(XYString + FortranFloatToStr(1-ParticleItem.Z)

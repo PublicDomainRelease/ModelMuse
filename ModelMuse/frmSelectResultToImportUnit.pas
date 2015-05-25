@@ -419,6 +419,7 @@ resourcestring
   'mber is stored using 8 bytes. There are two versions of MODFLOW-2005 dist' +
   'ributed by the USGS. Mf2005.exe saves results in single precision format. ' +
   'Mf2005dbl.exe saves results in double precision format.';
+  StrTheFileYouSelecte = 'The file you selected is empty.';
 
 //resourcestring
 //  StrLayerData = StrModelResults + '|Layer Data';
@@ -4001,6 +4002,7 @@ function TfrmSelectResultToImport.OpenResultFile(AFileName: string;
 var
   Extension: string;
   frmBudgetPrecisionQuery: TfrmBudgetPrecisionQuery;
+  AFileStream: TFileStream;
 begin
   result := True;
   Precision := mpSingle;
@@ -4158,47 +4160,77 @@ begin
     mrBinary, mrHufBinary, mfSubBinary:
       begin
         FFileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
-        Precision := CheckArrayPrecision(FFileStream);
+        if FFileStream.Size > 0 then
+        begin
+          Precision := CheckArrayPrecision(FFileStream);
+        end
+        else
+        begin
+          result := False;
+          Beep;
+          MessageDlg(StrTheFileYouSelecte, mtError, [mbOK], 0);
+          Exit;
+        end;
       end;
     mfMt3dConc:
       begin
         FFileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
-        Precision := CheckMt3dmsArrayPrecision(FFileStream);
+        if FFileStream.Size > 0 then
+        begin
+          Precision := CheckMt3dmsArrayPrecision(FFileStream);
+        end
+        else
+        begin
+          result := False;
+          Beep;
+          MessageDlg(StrTheFileYouSelecte, mtError, [mbOK], 0);
+          Exit;
+        end;
       end;
     mrFlux, mrHufFlux:
       begin
         FFileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
-        try
-          Precision := CheckBudgetPrecision(FFileStream, HufFormat);
-        except on EPrecisionReadError do
-          begin
-            frmBudgetPrecisionQuery := TfrmBudgetPrecisionQuery.Create(nil);
-            try
-              frmBudgetPrecisionQuery.ShowModal;
-              case frmBudgetPrecisionQuery.rgBudgetPrecision.ItemIndex of
-                0:
-                  begin
-                    Precision := mpSingle;
-                  end;
-                1:
-                  begin
-                    Precision := mpDouble;
-                  end;
-                2:
-                  begin
-                    MessageDlg(StrUsuallyTheFileWil, mtInformation, [mbOK], 0);
-                    Precision := mpSingle;
-                  end;
-                3:
-                  begin
-                    MessageDlg(StrSinglePrecisionMea + StrUsuallyTheFileWil, mtInformation, [mbOK], 0);
-                    Precision := mpSingle;
-                  end;
+        if FFileStream.Size > 0 then
+        begin
+          try
+            Precision := CheckBudgetPrecision(FFileStream, HufFormat);
+          except on EPrecisionReadError do
+            begin
+              frmBudgetPrecisionQuery := TfrmBudgetPrecisionQuery.Create(nil);
+              try
+                frmBudgetPrecisionQuery.ShowModal;
+                case frmBudgetPrecisionQuery.rgBudgetPrecision.ItemIndex of
+                  0:
+                    begin
+                      Precision := mpSingle;
+                    end;
+                  1:
+                    begin
+                      Precision := mpDouble;
+                    end;
+                  2:
+                    begin
+                      MessageDlg(StrUsuallyTheFileWil, mtInformation, [mbOK], 0);
+                      Precision := mpSingle;
+                    end;
+                  3:
+                    begin
+                      MessageDlg(StrSinglePrecisionMea + StrUsuallyTheFileWil, mtInformation, [mbOK], 0);
+                      Precision := mpSingle;
+                    end;
+                end;
+              finally
+                frmBudgetPrecisionQuery.Free;
               end;
-            finally
-              frmBudgetPrecisionQuery.Free;
             end;
           end;
+        end
+        else
+        begin
+          result := False;
+          Beep;
+          MessageDlg(StrTheFileYouSelecte, mtError, [mbOK], 0);
+          Exit;
         end;
       end;
     mrAscii, mrHufAscii:
@@ -4206,13 +4238,38 @@ begin
         FFileVariable := TFileVariable.Create;
         AssignFile(FFileVariable.AFile, AFileName);
         Reset(FFileVariable.AFile);
-        Precision := mpDouble;
+        if FileSize(FFileVariable.AFile) > 0 then
+        begin
+          Precision := mpDouble;
+        end
+        else
+        begin
+          result := False;
+          Beep;
+          MessageDlg(StrTheFileYouSelecte, mtError, [mbOK], 0);
+          Exit;
+        end;
       end;
     mfSwrStageAscii, mfSwrStageBinary,
       mfSwrReachExchangeAscii, mfSwrReachExchangeBinary,
       mfSwrReachGroupBudgetAscii, mfSwrReachGroupBudgetBinary:
       begin
-       Precision := mpDouble;
+        AFileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
+        try
+          if AFileStream.Size > 0 then
+          begin
+            Precision := mpDouble;
+          end
+          else
+          begin
+            result := False;
+            Beep;
+            MessageDlg(StrTheFileYouSelecte, mtError, [mbOK], 0);
+            Exit;
+          end;
+        finally
+          AFileStream.Free;
+        end;
       end
     else Assert(False);
   end;
