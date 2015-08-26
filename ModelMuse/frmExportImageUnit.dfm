@@ -8,7 +8,7 @@ inherited frmExportImage: TfrmExportImage
   OnClose = FormClose
   ExplicitWidth = 737
   ExplicitHeight = 593
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object JvNetscapeSplitter2: TJvNetscapeSplitter
     Left = 249
@@ -347,6 +347,7 @@ inherited frmExportImage: TfrmExportImage
         Collapsed = True
         TabOrder = 0
         OnExpand = cpViewExpand
+        ExplicitWidth = 185
         ExpandedHeight = 386
         object Panel3: TPanel
           Left = 0

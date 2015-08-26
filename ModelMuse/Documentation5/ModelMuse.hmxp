@@ -101,7 +101,7 @@
       <config-value name="deffont">font-family:'MS Sans Serif'; font-size:8pt; color:#000000;</config-value>
       <config-value name="contents"></config-value>
       <config-value name="topicprefix"></config-value>
-      <config-value name="autohelpstart">3940</config-value>
+      <config-value name="autohelpstart">3957</config-value>
       <config-value name="autohelpincrement">1</config-value>
       <config-value name="autohelpanchor">1</config-value>
       <config-value name="searchpath">.\;.\Used Images\;.\ScreenShots\;.\ModflowGuide\;.\Topics\Invisible\</config-value>
@@ -111,10 +111,11 @@
         <config-value name="USER1">Class Exercise</config-value>
         <config-value name="USER2">User defined 2</config-value>
         <config-value name="USER3">User defined 3</config-value>
+        <config-value name="FOOTPRINT">FOOTPRINT</config-value>
       </config-group>
       <config-value name="imageshortcuts_includebaggage">1</config-value>
       <config-value name="make0include">CHM,ALLMODELS,OPT_ATOC,OPT_BREADTRAIL,OPT_COMMENTS,OPT_FB,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_TOGGLE,OPT_TOGTOC</config-value>
-      <config-value name="make0status">*</config-value>
+      <config-value name="make0status">(Complete)</config-value>
       <config-value name="make3include">HTML,ALLMODELS,OPT_ATOC,OPT_BREADTRAIL,OPT_COMMENTS,OPT_FB,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
       <config-value name="make3status">(Complete)</config-value>
     </config-group>
@@ -784,6 +785,7 @@ document.write('</frameset>');
       <helpcontext-number href="Data_Sets_Required_by_SUTRA#_sortable_SUTRA_Equivalent_cicons-graphic_" value="3736"/>
       <helpcontext-number href="Data_Sets_Required_by_SUTRA#_sortable_SUTRA_WhenUsed_cicons-graphic_" value="3737"/>
       <helpcontext-number href="Data_Sets_Required_by_SUTRA#ANGLE1" value="3768"/>
+      <helpcontext-number href="Data_Sets_Required_by_Well_Foo" value="3946"/>
       <helpcontext-number href="Data_Sets_Required_by_ZONEBUDG" value="3706"/>
       <helpcontext-number href="Data_Sets_Required_by_ZONEBUDG#_sortable_ZONEBUDGET_DataSets_cicons-graphic_" value="3726"/>
       <helpcontext-number href="Data_Sets_Required_by_ZONEBUDG#_sortable_ZONEBUDGET_Description_cicons-graphic_" value="3727"/>
@@ -816,6 +818,7 @@ document.write('</frameset>');
       <helpcontext-number href="DRT_Object_Pane" value="1970"/>
       <helpcontext-number href="DSP_Dispersion_Package_Pane" value="3642"/>
       <helpcontext-number href="Edit" value="1630"/>
+      <helpcontext-number href="Edit_Feature_Formula_Dialog_Bo" value="3942"/>
       <helpcontext-number href="Editing_a_Mesh" value="3690"/>
       <helpcontext-number href="Editing_Objects" value="1530"/>
       <helpcontext-number href="Editing_the_Grid" value="1660"/>
@@ -871,6 +874,9 @@ document.write('</frameset>');
       <helpcontext-number href="Fluid_Properties_Pane" value="3757"/>
       <helpcontext-number href="Flux_Observations_TOB_Transpor" value="3651"/>
       <helpcontext-number href="FMP_Farm_Process" value="3784"/>
+      <helpcontext-number href="Footprint_Models" value="3947"/>
+      <helpcontext-number href="Footprint_Properties_Dialog_Bo" value="3943"/>
+      <helpcontext-number href="Footprint_Well_Tab" value="3944"/>
       <helpcontext-number href="For_MODFLOW_Experts" value="3433"/>
       <helpcontext-number href="Formula_Diagram" value="3375"/>
       <helpcontext-number href="Formula_Editor" value="1810"/>
@@ -959,6 +965,7 @@ document.write('</frameset>');
       <helpcontext-number href="Initial_Conditions_Pane" value="3754"/>
       <helpcontext-number href="Initial_Dialog_Boxes" value="90"/>
       <helpcontext-number href="Initial_Grid_Dialog_Box" value="110"/>
+      <helpcontext-number href="Initial_Grid_Dialog_Box_for_Fo" value="3948"/>
       <helpcontext-number href="Initial_Grid_Dialog_Box_for_MO" value="3482"/>
       <helpcontext-number href="Initial_Grid_Dialog_Box_for_PH" value="3481"/>
       <helpcontext-number href="Initial_Head" value="2980"/>
@@ -1047,6 +1054,7 @@ document.write('</frameset>');
       <helpcontext-number href="MNW2_Pumping_Rate_Tab#CapMult" value="3537"/>
       <helpcontext-number href="MNW2_Pumping_Rate_Tab#Qdes" value="3536"/>
       <helpcontext-number href="Model" value="2390"/>
+      <helpcontext-number href="Model#Footprint" value="3945"/>
       <helpcontext-number href="Model#LGR_Selection" value="3599"/>
       <helpcontext-number href="Model#ObservationType" value="3506"/>
       <helpcontext-number href="Model_Features_in_MODFLOW" value="3480"/>
@@ -1210,21 +1218,30 @@ document.write('</frameset>');
       <helpcontext-number href="RIV_River_Package" value="2740"/>
       <helpcontext-number href="Rivers" value="3110"/>
       <helpcontext-number href="RMA_Activating_CHD_Package" value="3399"/>
+      <helpcontext-number href="RMA_Activating_MT3DMS" value="3949"/>
       <helpcontext-number href="RMA_Additional_Layers" value="3451"/>
+      <helpcontext-number href="RMA_Animating_the_MT3DMS_Resul" value="3956"/>
       <helpcontext-number href="RMA_Assigning_Active_Cells_1" value="3397"/>
       <helpcontext-number href="RMA_Assigning_Active_Cells_2" value="3398"/>
       <helpcontext-number href="RMA_Bottom_Elevation" value="3404"/>
+      <helpcontext-number href="RMA_Change_MT3DMS_Output_Frequ" value="3954"/>
       <helpcontext-number href="RMA_Confined_vs._Convertible" value="3448"/>
+      <helpcontext-number href="RMA_Data_Sets_for_MT3DMS" value="3951"/>
       <helpcontext-number href="RMA_Define_Model_Limits" value="3395"/>
       <helpcontext-number href="RMA_Defining_Hydraulic_Conduct" value="3591"/>
+      <helpcontext-number href="RMA_Dispersion_in_MT3DMS" value="3950"/>
       <helpcontext-number href="RMA_Generating_the_Grid" value="3396"/>
+      <helpcontext-number href="RMA_Import_MT3DMS_Results" value="3955"/>
       <helpcontext-number href="RMA_Importing_Data" value="3393"/>
       <helpcontext-number href="RMA_Initial_Set_Up" value="3394"/>
       <helpcontext-number href="RMA_Interpolation" value="3452"/>
+      <helpcontext-number href="RMA_Mass_Units_for_MT3DMS" value="3957"/>
       <helpcontext-number href="RMA_Northern_Specified_Head_Bo" value="3400"/>
       <helpcontext-number href="RMA_Parameters" value="3450"/>
+      <helpcontext-number href="RMA_Run_MT3DMS" value="3953"/>
       <helpcontext-number href="RMA_Running_the_Model" value="3406"/>
       <helpcontext-number href="RMA_Saving_the_Model" value="3408"/>
+      <helpcontext-number href="RMA_Source_Concentration_in_MT" value="3952"/>
       <helpcontext-number href="RMA_Southern_Specified_Head_Bo" value="3403"/>
       <helpcontext-number href="RMA_Stress_Periods" value="3401"/>
       <helpcontext-number href="RMA_Study_Area_Description" value="3409"/>
@@ -1422,6 +1439,7 @@ document.write('</frameset>');
       <helpcontext-number href="Time_Step_Length_Calculator" value="3509"/>
       <helpcontext-number href="Time_Tab" value="2090"/>
       <helpcontext-number href="Time_Tab#ICALC" value="2100"/>
+      <helpcontext-number href="Time_Units_Converter" value="3941"/>
       <helpcontext-number href="Title_and_Units_Dialog_Box" value="2820"/>
       <helpcontext-number href="Title_Pane" value="3753"/>
       <helpcontext-number href="TOB_Transport_Observation_Pack" value="3646"/>

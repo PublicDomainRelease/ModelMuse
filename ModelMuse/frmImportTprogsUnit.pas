@@ -211,6 +211,10 @@ begin
           Exit;
         end;
       end;
+    msFootPrint:
+      begin
+        Assert(False);
+      end;
   else
     Assert(False);
   end;

@@ -40,6 +40,7 @@ type
     btnDelete: TButton;
     btnInsert: TButton;
     frameGrid: TframeGrid;
+    btnConvertTimeUnits: TButton;
     procedure FormCreate(Sender: TObject); override;
     procedure dgTimeSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
@@ -66,6 +67,7 @@ type
     procedure pgcMainChange(Sender: TObject);
     procedure frameGridGridBeforeDrawCell(Sender: TObject; ACol, ARow: Integer);
     procedure comboTimeUnitChange(Sender: TObject);
+    procedure btnConvertTimeUnitsClick(Sender: TObject);
   private
     FModflowStressPeriods: TModflowStressPeriods;
     FDeleting: Boolean;
@@ -110,7 +112,8 @@ implementation
 {$R *.dfm}
 
 uses Math, frmGoPhastUnit, frmTimeStepLengthCalculatorUnit, GoPhastTypes,
-  ModflowPackageSelectionUnit, frmErrorsAndWarningsUnit, PhastModelUnit;
+  ModflowPackageSelectionUnit, frmErrorsAndWarningsUnit, PhastModelUnit,
+  frmTimeUnitsConverterUnit;
 
 type
   TTimeColumn = (tcStressPeriod, tcStartTime, tcEndTime, tcLength,
@@ -249,6 +252,15 @@ end;
 procedure TfrmModflowTime.SetDeleteButtonEnabled;
 begin
   btnDelete.Enabled := dgTime.RowCount > 2;
+end;
+
+procedure TfrmModflowTime.btnConvertTimeUnitsClick(Sender: TObject);
+var
+  frmTimeUnitsConverter: TfrmTimeUnitsConverter;
+begin
+  inherited;
+  frmTimeUnitsConverter := TfrmTimeUnitsConverter.Create(nil);
+  frmTimeUnitsConverter.Show;
 end;
 
 procedure TfrmModflowTime.btnDeleteClick(Sender: TObject);

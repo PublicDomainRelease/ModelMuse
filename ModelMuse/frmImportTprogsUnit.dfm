@@ -7,7 +7,7 @@ inherited frmImportTprogs: TfrmImportTprogs
   ExplicitTop = -110
   ExplicitWidth = 595
   ExplicitHeight = 481
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object lblTprogs: TLabel
     Left = 8

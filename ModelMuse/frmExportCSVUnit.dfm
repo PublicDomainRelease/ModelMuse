@@ -2,25 +2,34 @@ inherited frmExportCSV: TfrmExportCSV
   HelpType = htKeyword
   HelpKeyword = 'Export_Data_as_CSV_Dialog_Box'
   Caption = 'Export Data as CSV'
-  ClientHeight = 407
-  ExplicitHeight = 452
-  PixelsPerInch = 120
+  ClientHeight = 452
+  ClientWidth = 578
+  ExplicitWidth = 594
+  ExplicitHeight = 490
+  PixelsPerInch = 96
   TextHeight = 18
   object Panel1: TPanel
     Left = 0
     Top = 64
-    Width = 424
-    Height = 343
+    Width = 578
+    Height = 388
     Align = alClient
     TabOrder = 1
     DesignSize = (
-      424
-      343)
+      578
+      388)
+    object lblDataToExport: TLabel
+      Left = 264
+      Top = 288
+      Width = 98
+      Height = 18
+      Caption = 'Data to export'
+    end
     object vstDataSets: TVirtualStringTree
       Left = 8
       Top = 8
-      Width = 416
-      Height = 256
+      Width = 570
+      Height = 273
       Anchors = [akLeft, akTop, akRight, akBottom]
       CheckImageKind = ckLightCheck
       Header.AutoSizeIndex = 0
@@ -40,7 +49,7 @@ inherited frmExportCSV: TfrmExportCSV
     end
     object rgOrientation: TRadioGroup
       Left = 8
-      Top = 270
+      Top = 315
       Width = 113
       Height = 65
       Anchors = [akLeft, akBottom]
@@ -54,7 +63,7 @@ inherited frmExportCSV: TfrmExportCSV
     end
     object rgEvaluatedAt: TRadioGroup
       Left = 127
-      Top = 270
+      Top = 315
       Width = 122
       Height = 65
       Anchors = [akLeft, akBottom]
@@ -67,19 +76,19 @@ inherited frmExportCSV: TfrmExportCSV
       OnClick = rgEvaluatedAtClick
     end
     object btnHelp: TBitBtn
-      Left = 304
-      Top = 270
+      Left = 458
+      Top = 315
       Width = 104
       Height = 27
       Anchors = [akRight, akBottom]
       Kind = bkHelp
       NumGlyphs = 2
-      TabOrder = 3
+      TabOrder = 4
       OnClick = btnHelpClick
     end
     object btnSave: TBitBtn
-      Left = 304
-      Top = 308
+      Left = 458
+      Top = 353
       Width = 104
       Height = 27
       Anchors = [akRight, akBottom]
@@ -98,19 +107,35 @@ inherited frmExportCSV: TfrmExportCSV
         99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
         93337FFFF7737777733300000033333333337777773333333333}
       NumGlyphs = 2
-      TabOrder = 4
+      TabOrder = 5
       OnClick = btnSaveClick
+    end
+    object clIncluded: TJvCheckListBox
+      Left = 263
+      Top = 315
+      Width = 186
+      Height = 65
+      Anchors = [akLeft, akBottom]
+      DoubleBuffered = False
+      ItemHeight = 18
+      Items.Strings = (
+        'Location'
+        'Cell, element, or node'
+        'Data set values')
+      ParentDoubleBuffered = False
+      ScrollWidth = 170
+      TabOrder = 3
     end
   end
   object pnlModel: TPanel
     Left = 0
     Top = 0
-    Width = 424
+    Width = 578
     Height = 64
     Align = alTop
     TabOrder = 0
     DesignSize = (
-      424
+      578
       64)
     object lblModel: TLabel
       Left = 8
@@ -122,7 +147,7 @@ inherited frmExportCSV: TfrmExportCSV
     object comboModel: TComboBox
       Left = 8
       Top = 32
-      Width = 423
+      Width = 577
       Height = 26
       Style = csDropDownList
       Anchors = [akLeft, akTop, akRight]

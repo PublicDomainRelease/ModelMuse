@@ -64,6 +64,7 @@ resourcestring
   StrLargeGHBBoundaryH = 'Large GHB boundary head gradient';
   StrHighGHBConductance = 'High GHB conductance compared to the cell-to-cell' +
   ' conductance may cause numerical difficulties';
+  StrZeroGHBConductance = 'Negative or zero GHB conductance';
 
 { TModflowGHB_Writer }
 
@@ -165,6 +166,14 @@ begin
           Ghb_Cell.Layer+1, Ghb_Cell.Row+1, Ghb_Cell.Column+1, ScreenObject.Name]),
           ScreenObject);
       end;
+    end
+    else
+    begin
+      ScreenObject := Ghb_Cell.ScreenObject as TScreenObject;
+      frmErrorsAndWarnings.AddWarning(Model,StrZeroGHBConductance,
+        Format(StrLayerRowColObject, [
+        Ghb_Cell.Layer+1, Ghb_Cell.Row+1, Ghb_Cell.Column+1, ScreenObject.Name]),
+        ScreenObject);
     end;
   end;
   if Ghb_Cell.Row > 0 then
@@ -329,6 +338,8 @@ begin
     frmErrorsAndWarnings.RemoveWarningGroup(Model,StrLargeGHBBoundaryH);
     frmErrorsAndWarnings.RemoveErrorGroup(Model, StrGHBBoundaryHeadIs);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrGHBBoundaryHeadIs);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrZeroGHBConductance);
+
     if not Package.IsSelected then
     begin
       Exit
@@ -443,6 +454,7 @@ var
   CellIndex: Integer;
 begin
   // Data set 4b
+  InitializeCells;
   for CellIndex := 0 to CellList.Count - 1 do
   begin
     Cell := CellList[CellIndex] as TGhb_Cell;

@@ -35,6 +35,10 @@ type
     property AddMethod: TValueAddMethod read FAddMethod write FAddMethod;
   end;
 
+  TFootprintWithdrawalDataArray = class(TModflowBoundaryDisplayDataArray)
+    function GetRealData(const Layer, Row, Col: integer): double; override;
+  end;
+
   TModflowBoundaryDisplayTimeList = class(TCustomTimeList)
   private
     FOnInitialize: TNotifyEvent;
@@ -729,8 +733,24 @@ begin
 
 end;
 
+{ TFootprintWithdrawalDataArray }
+
+function TFootprintWithdrawalDataArray.GetRealData(const Layer, Row,
+  Col: integer): double;
+begin
+  if IsValue[Layer, Row, Col] then
+  begin
+    result := inherited GetRealData(Layer, Row, Col);
+  end
+  else
+  begin
+    result := 0;
+  end;
+end;
+
 initialization
 
   RegisterClass(TModflowBoundaryDisplayDataArray);
+  RegisterClass(TFootprintWithdrawalDataArray);
 
 end.

@@ -94,6 +94,7 @@ type
     lblTransportCycles: TLabel;
     jvgrphdrICS: TJvGroupHeader;
     jvgrphdrInput6: TJvGroupHeader;
+    btnConvertTimeUnits: TButton;
     procedure comboScheduleTypeChange(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
@@ -115,6 +116,7 @@ type
     procedure frameTimesGridSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure rgMannerOfTimeSpecificationClick(Sender: TObject);
+    procedure btnConvertTimeUnitsClick(Sender: TObject);
   private
     FSutraTimeOptions: TSutraTimeOptions;
     FSelectedSchedule: TSutraTimeScheduleItem;
@@ -143,7 +145,7 @@ var
 implementation
 
 uses
-  frmGoPhastUnit, Undo, GoPhastTypes;
+  frmGoPhastUnit, Undo, GoPhastTypes, frmTimeUnitsConverterUnit;
 
 resourcestring
   StrStepList = 'Step List';
@@ -154,6 +156,15 @@ resourcestring
   StrChangeSUTRATimeOp = 'Change SUTRA time options';
 
 {$R *.dfm}
+
+procedure TfrmSutraTimes.btnConvertTimeUnitsClick(Sender: TObject);
+var
+  frmTimeUnitsConverter: TfrmTimeUnitsConverter;
+begin
+  inherited;
+  frmTimeUnitsConverter := TfrmTimeUnitsConverter.Create(nil);
+  frmTimeUnitsConverter.Show;
+end;
 
 procedure TfrmSutraTimes.btnOKClick(Sender: TObject);
 begin

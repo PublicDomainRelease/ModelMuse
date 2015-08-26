@@ -69,18 +69,14 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
   inherited btnOK: TBitBtn
     Left = 398
     Top = 324
-    Width = 83
-    Anchors = [akLeft, akTop, akRight]
     TabOrder = 9
     OnClick = btnOKClick
     ExplicitLeft = 398
     ExplicitTop = 324
-    ExplicitWidth = 83
   end
   inherited btnCancel: TBitBtn
     Left = 495
     Top = 324
-    Anchors = [akLeft, akTop, akRight]
     TabOrder = 10
     ExplicitLeft = 495
     ExplicitTop = 324
@@ -88,7 +84,6 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
   inherited btnHelp: TBitBtn
     Left = 301
     Top = 324
-    Anchors = [akLeft, akTop, akRight]
     TabOrder = 8
     ExplicitLeft = 301
     ExplicitTop = 324

@@ -241,11 +241,15 @@ type
 implementation
 
 uses
-  SysUtils, frmGoPhastUnit, ScreenObjectUnit, SutraBoundariesUnit, Math;
+  SysUtils, frmGoPhastUnit, ScreenObjectUnit, SutraBoundariesUnit, Math,
+  frmErrorsAndWarningsUnit;
 
 resourcestring
   StrASchedule = 'A_Schedule';
   StrScheduled = 'Schedule%d';
+  StrTimeScheduleAdjust = 'Time schedule adjusted';
+  StrTheObject0sAdds = 'The object %0:s adds %1:d times to the time step sch' +
+  'edule';
 
   { TCustomSutraTimeSchedule }
 
@@ -811,7 +815,11 @@ var
   AValue2: single;
   LastTime: Double;
   AValue: Double;
+  StartingCount: Integer;
 begin
+  frmErrorsAndWarnings.RemoveWarningGroup(frmGoPhast.PhastModel,
+        StrTimeScheduleAdjust);
+
   { TODO -cSUTRA : Only do this when the FAllTimes is out of date. }
   FAllTimes.Clear;
   FAllTimes.Sorted := True;
@@ -839,6 +847,7 @@ begin
   // Custom times may be in boundaries or observations.
   for ScreenObjectIndex := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
   begin
+    StartingCount := FAllTimes.Count;
     AScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
     if AScreenObject.Deleted then
     begin
@@ -899,6 +908,13 @@ begin
           FAllTimes.AddUnique(AValue);
         end;
       end;
+    end;
+    if StartingCount <> FAllTimes.Count then
+    begin
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
+        StrTimeScheduleAdjust,
+        Format(StrTheObject0sAdds,
+        [AScreenObject.Name, FAllTimes.Count-StartingCount]), AScreenObject);
     end;
   end;
   for TimeIndex := FAllTimes.Count - 1 downto 1 do

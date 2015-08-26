@@ -30,7 +30,7 @@ implementation
 
 uses
   ModflowUnitNumbers, frmProgressUnit, GoPhastTypes, 
-  DataSetUnit, Forms;
+  DataSetUnit, Forms, frmErrorsAndWarningsUnit;
 
 resourcestring
   StrWritingDataForL = '  Writing data for layer %d.';
@@ -38,6 +38,11 @@ resourcestring
   StrLargeContrastInTr = 'Large contrast in transmissivity (may cause numerical problems)';
   StrLargeContrastInHy = 'Large contrast in hydraulic conductivity (may caus' +
   'e numerical problems)';
+  StrZeroTrans = 'Transmissivity equals zero.';
+  StrZeroK = 'Hydraulic conductivity equals zero.';
+  StrNegativeOrZeroVer = 'Negative or zero vertical conductance';
+  StrNegativeOrZeroSpe = 'Negative or zero specific yield';
+  StrNegativeOrZeroSpeSto = 'Negative or zero specific storage';
 
 { TModflowBCF_Writer }
 
@@ -62,6 +67,8 @@ begin
         WriteArray(DataArray, Layer, 'Tran', StrNoValueAssigned);
         CheckArray(DataArray, Layer, StrLargeContrastInTr,
           cvmGradient, 1e6, etWarning);
+        CheckArray(DataArray, Layer, StrZeroTrans,
+          cvmGreater, 0, etWarning);
       end;
     1, 3:
       begin
@@ -71,6 +78,8 @@ begin
         WriteArray(DataArray, Layer, 'HY', StrNoValueAssigned);
         CheckArray(DataArray, Layer, StrLargeContrastInHy,
           cvmGradient, 1e6, etWarning);
+        CheckArray(DataArray, Layer, StrZeroK,
+          cvmGreater, 0, etWarning);
       end;
   end;
 end;
@@ -206,6 +215,20 @@ begin
   begin
     Exit;
   end;
+  frmErrorsAndWarnings.BeginUpdate;
+  try
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrLargeContrastInTr);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrZeroTrans);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrLargeContrastInHy);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrZeroK);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrNegativeOrZeroSpe);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrNegativeOrZeroVer);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrNegativeOrZeroSpeSto);
+
+  finally
+    frmErrorsAndWarnings.EndUpdate;
+  end;
+
   NameOfFile := FileName(AFileName);
   WriteToNameFile(StrBCF, Model.UnitNumbers.UnitNumber(StrBCF),
     NameOfFile, foInput);
@@ -264,6 +287,8 @@ begin
     DataArray := Model.DataArrayManager.GetDataSetByName(rsSpecificYield);
     Assert(DataArray <> nil);
     WriteArray(DataArray, Layer, 'Sf2', StrNoValueAssigned);
+    CheckArray(DataArray, Layer, StrNegativeOrZeroSpe,
+      cvmGreater, 0, etWarning);
   end;
 end;
 
@@ -276,6 +301,8 @@ begin
     DataArray := Model.DataArrayManager.GetDataSetByName(StrVerticalConductance);
     Assert(DataArray <> nil);
     WriteArray(DataArray, LayerIndex, 'Vcont', StrNoValueAssigned);
+    CheckArray(DataArray, LayerIndex, StrNegativeOrZeroVer,
+      cvmGreater, 0, etWarning);
   end;
 end;
 
@@ -284,6 +311,7 @@ procedure TModflowBCF_Writer.WriteDataSet4(Layer: Integer;
 var
   DataArray: TDataArray;
   DataArrayManager: TDataArrayManager;
+  ErrorMessage: string;
 begin
   if TransientModel then
   begin
@@ -294,17 +322,21 @@ begin
         begin
           // confined storage coeficient
           DataArray := DataArrayManager.GetDataSetByName(StrConfinedStorageCoe);
+          ErrorMessage := StrNegativeOrZeroSpeSto;
         end;
       1:
         begin
           // specific yield
           DataArray := DataArrayManager.GetDataSetByName(rsSpecificYield);
+          ErrorMessage := StrNegativeOrZeroSpe;
         end;
     else
       Assert(False);
     end;
     Assert(DataArray <> nil);
     WriteArray(DataArray, Layer, 'Sf1', StrNoValueAssigned);
+    CheckArray(DataArray, Layer, ErrorMessage,
+      cvmGreater, 0, etWarning);
   end;
 end;
 

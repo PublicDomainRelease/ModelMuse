@@ -1,3 +1,6 @@
+{TODO -cArchive :
+Create an archive that meets OGW archive policy. This may involve
+modifying where the input and output files are generated.}
 {TODO -cSWR : Plot lateral flow and structure flow spatially similarly to how reach links are plotted.}
 {DONE -cSWR : make it possible to create a structure at a location.}
 {DONE -cSWR : plot stage and other output variables spatially.}

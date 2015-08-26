@@ -26,6 +26,8 @@ type
     procedure WriteDataSet12;
     procedure CheckElevations;
     procedure CheckHufKx;
+    procedure CheckHufSS;
+    procedure CheckHufSy;
   protected
     function Package: TModflowPackageSelection; override;
     class function Extension: string; override;
@@ -62,10 +64,12 @@ resourcestring
   StrCheckingElevation = '  Checking elevations.';
   GapWarning = 'Gap between hydrogeologic units';
   OverlapWarning = 'Overlap between hydrogeologic units';
-  WarningFormat = 'Column: %0:d; Row: %1:d; Higher unit: %2:s; Lower unit: %3:s';
+  WarningFormat = 'Column: %0:d; Row: %1:d; Higher unit: %2:s; Lower unit: %3:s; Amount: %4:g';
   StrLargeContrastInHy = 'Large contrast in hydraulic conductivity (may caus' +
   'e numerical problems)';
   StrCheckingHydraulicC = 'Checking hydraulic conductivity';
+  StrHydraulicConductivi = 'Hydraulic conductivity is less than or equal to ' +
+  'zero.';
 
 type
   THguSort = class(TObject)
@@ -106,8 +110,10 @@ var
   TopArray: TDataArray;
   Delta: Double;
   DataArrayManager: TDataArrayManager;
+  Gridtop: Real;
+  GridBottom: Real;
 const
-  Epsilon = 1e-4;
+  Epsilon = 1e-2;
 begin
   frmErrorsAndWarnings.BeginUpdate;
   try
@@ -116,6 +122,7 @@ begin
 
     DataArrayManager := Model.DataArrayManager;
     ActiveDataArray := DataArrayManager.GetDataSetByName(rsActive);
+
     ActiveDataArray.Initialize;
 
     HguList := TObjectList.Create;
@@ -124,20 +131,34 @@ begin
       begin
         for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
         begin
+
           CellUsed := False;
           for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
           begin
             if Model.IsLayerSimulated(LayerIndex) then
             begin
-              if ActiveDataArray.BooleanData[0, RowIndex, ColIndex] then
+              if ActiveDataArray.BooleanData[LayerIndex, RowIndex, ColIndex] then
               begin
                 CellUsed := True;
+                Gridtop := Model.ModflowGrid.CellElevation[ColIndex,RowIndex,LayerIndex];
                 Break;
               end;
             end;
           end;
           if CellUsed then
           begin
+            for LayerIndex := Model.ModflowGrid.LayerCount - 1 downto 0 do
+            begin
+              if Model.IsLayerSimulated(LayerIndex) then
+              begin
+                if ActiveDataArray.BooleanData[LayerIndex, RowIndex, ColIndex] then
+                begin
+                  GridBottom := Model.ModflowGrid.
+                    CellElevation[ColIndex,RowIndex,LayerIndex+1];
+                  Break;
+                end;
+              end;
+            end;
             for HguIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
             begin
               HGU := Model.HydrogeologicUnits[HguIndex];
@@ -161,19 +182,29 @@ begin
             for HguIndex := 1 to HguList.Count - 1 do
             begin
               SortItem1 := HguList[HguIndex-1];
+              if (SortItem1.Bottom >= Gridtop)
+                or (SortItem1.Top <= GridBottom) then
+              begin
+                Continue;
+              end;
               SortItem2 := HguList[HguIndex];
+              if (SortItem2.Bottom >= Gridtop)
+                or (SortItem2.Top <= GridBottom) then
+              begin
+                Continue;
+              end;
               Delta := SortItem1.Bottom - SortItem2.Top;
               if Delta > Epsilon then
               begin
                 frmErrorsAndWarnings.AddWarning(Model, GapWarning,
                   Format(WarningFormat, [ColIndex+1, RowIndex+1,
-                    SortItem1.HGU.HufName, SortItem2.HGU.HufName]));
+                    SortItem1.HGU.HufName, SortItem2.HGU.HufName, Delta]));
               end
               else if Delta < -Epsilon then
               begin
                 frmErrorsAndWarnings.AddWarning(Model, OverlapWarning,
                   Format(WarningFormat, [ColIndex+1, RowIndex+1,
-                    SortItem1.HGU.HufName, SortItem2.HGU.HufName]));
+                    SortItem1.HGU.HufName, SortItem2.HGU.HufName, -Delta]));
               end;
             end;
             HguList.Clear;
@@ -205,6 +236,52 @@ begin
     begin
       CheckArray(DataArray, LayerIndex, StrLargeContrastInHy,
         cvmGradient, 1e6, etWarning);
+      CheckArray(DataArray, LayerIndex, StrHydraulicConductivi,
+        cvmGreater, 0, etWarning);
+    end;
+  end;
+end;
+
+procedure TModflowHUF_Writer.CheckHufSS;
+var
+  LayerIndex: Integer;
+  DataArray: TDataArray;
+begin
+  if Model.ModflowStressPeriods.TransientModel then
+  begin
+    DataArray := Model.DataArrayManager.GetDataSetByName(StrHUFSSName);
+    Assert(DataArray <> nil);
+    DataArray.Initialize;
+    for LayerIndex := 0 to Model.LayerCount - 1 do
+    begin
+      if Model.IsLayerSimulated(LayerIndex)
+        and (Model.Laytyp[LayerIndex] = 0) then
+      begin
+        CheckArray(DataArray, LayerIndex, 'Specific Storage less or equal to zero',
+          cvmGreater, 0, etWarning);
+      end;
+    end;
+  end;
+end;
+
+procedure TModflowHUF_Writer.CheckHufSy;
+var
+  LayerIndex: Integer;
+  DataArray: TDataArray;
+begin
+  if Model.ModflowStressPeriods.TransientModel then
+  begin
+    DataArray := Model.DataArrayManager.GetDataSetByName(StrHUFAverageSYName);
+    Assert(DataArray <> nil);
+    DataArray.Initialize;
+    for LayerIndex := 0 to Model.LayerCount - 1 do
+    begin
+      if Model.IsLayerSimulated(LayerIndex)
+        and (Model.Laytyp[LayerIndex] <> 0) then
+      begin
+        CheckArray(DataArray, LayerIndex, 'Specific Yield less or equal to zero',
+          cvmGreater, 0, etWarning);
+      end;
     end;
   end;
 end;
@@ -814,6 +891,8 @@ begin
 
     frmProgressMM.AddMessage(StrCheckingHydraulicC);
     CheckHufKx;
+    CheckHufSS;
+    CheckHufSy;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
     begin

@@ -22,7 +22,6 @@ inherited frmImportPoints: TfrmImportPoints
     Align = alBottom
     ParentColor = True
     TabOrder = 1
-    ExplicitWidth = 560
     DesignSize = (
       585
       49)
@@ -35,7 +34,6 @@ inherited frmImportPoints: TfrmImportPoints
       Kind = bkCancel
       NumGlyphs = 2
       TabOrder = 2
-      ExplicitLeft = 461
     end
     object btnOK: TBitBtn
       Left = 398
@@ -47,7 +45,6 @@ inherited frmImportPoints: TfrmImportPoints
       NumGlyphs = 2
       TabOrder = 1
       OnClick = btnOKClick
-      ExplicitLeft = 373
     end
     object btnHelp: TBitBtn
       Left = 310
@@ -59,7 +56,6 @@ inherited frmImportPoints: TfrmImportPoints
       NumGlyphs = 2
       TabOrder = 0
       OnClick = btnHelpClick
-      ExplicitLeft = 285
     end
   end
   object pcImportPoints: TPageControl
@@ -70,13 +66,8 @@ inherited frmImportPoints: TfrmImportPoints
     ActivePage = tabControls
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 560
     object tabControls: TTabSheet
       Caption = 'Controls'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 552
-      ExplicitHeight = 0
       object pnlRadioGroups: TPanel
         Left = 184
         Top = 0
@@ -249,7 +240,6 @@ inherited frmImportPoints: TfrmImportPoints
         Align = alClient
         Caption = 'pnlData'
         TabOrder = 0
-        ExplicitWidth = 182
         object jvclbDataSets: TJvxCheckListBox
           Left = 1
           Top = 26
@@ -260,7 +250,6 @@ inherited frmImportPoints: TfrmImportPoints
           ItemHeight = 18
           TabOrder = 1
           OnClickCheck = jvclbDataSetsClickCheck
-          ExplicitWidth = 180
           InternalVersion = 202
         end
         object pnlLabelDataSets: TPanel
@@ -272,17 +261,12 @@ inherited frmImportPoints: TfrmImportPoints
           Caption = 'Data sets'
           ParentColor = True
           TabOrder = 0
-          ExplicitWidth = 180
         end
       end
     end
     object tabData: TTabSheet
       Caption = 'Data'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 552
-      ExplicitHeight = 0
       object pnlDataTabControls: TPanel
         Left = 0
         Top = 354
@@ -291,7 +275,6 @@ inherited frmImportPoints: TfrmImportPoints
         Align = alBottom
         ParentColor = True
         TabOrder = 1
-        ExplicitWidth = 552
         object lblRows: TLabel
           Left = 115
           Top = 13
@@ -405,7 +388,6 @@ inherited frmImportPoints: TfrmImportPoints
           end>
         OnEndUpdate = dgDataEndUpdate
         WordWrapRowCaptions = False
-        ExplicitWidth = 552
       end
     end
   end

@@ -48,6 +48,8 @@ type
     function GetElevationObserver: TObserver;
     procedure SetRecordNodeValues(const Value: boolean);
     procedure SetRecordPipeValues(const Value: boolean);
+    function GetBoundaryFormula(Index: Integer): string;
+    procedure SetBoundaryFormula(Index: Integer; const Value: string);
   protected
     procedure HandleChangedValue(Observer: TObserver); override;
     procedure GetPropertyObserver(Sender: TObject; List: TList); override;
@@ -67,6 +69,8 @@ type
     Procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     destructor Destroy; override;
+    property BoundaryFormula[Index: Integer]: string read GetBoundaryFormula
+      write SetBoundaryFormula;
   published
     // data set 25 DIAMETER
     property Diameter: string read GetDiameter write SetDiameter;
@@ -100,7 +104,7 @@ type
 implementation
 
 uses
-  PhastModelUnit, frmGoPhastUnit, ScreenObjectUnit;
+  PhastModelUnit, frmGoPhastUnit, ScreenObjectUnit, DataSetUnit;
 
 const
   DiameterPosition = 0;
@@ -202,6 +206,20 @@ begin
   inherited;
 end;
 
+function TCfpPipeBoundary.GetBoundaryFormula(Index: Integer): string;
+begin
+  case Index of
+    DiameterPosition: result := Diameter;
+    TortuosityPosition: result := Tortuosity;
+    RoughnessHeightPosition: result := RoughnessHeight;
+    LowerCriticalRPosition: result := LowerCriticalR;
+    HigherCriticalRPosition: result := HigherCriticalR;
+    ConductancePermeabilityPosition: result := ConductancePermeability;
+    ElevationPosition: result := Elevation;
+    else Assert(False);
+  end;
+end;
+
 function TCfpPipeBoundary.GetConductancePermeability: string;
 begin
   Result := FConductancePermeability.Formula;
@@ -212,10 +230,22 @@ begin
 end;
 
 function TCfpPipeBoundary.GetConductancePermeabilityObserver: TObserver;
+var
+  Model: TPhastModel;
+  DataArray: TDataArray;
 begin
   if FConductancePermeabilityObserver = nil then
   begin
-    CreateObserver('Cfp_ConductancePerm_', FConductancePermeabilityObserver);
+    if ParentModel <> nil then
+    begin
+      Model := ParentModel as TPhastModel;
+      DataArray := Model.DataArrayManager.GetDataSetByName(KPipeConductanceOrPer);
+    end
+    else
+    begin
+      DataArray := nil;
+    end;
+    CreateObserver('Cfp_ConductancePerm_', FConductancePermeabilityObserver, DataArray);
   end;
   result := FConductancePermeabilityObserver;
 end;
@@ -230,10 +260,22 @@ begin
 end;
 
 function TCfpPipeBoundary.GetDiameterObserver: TObserver;
+var
+  Model: TPhastModel;
+  DataArray: TDataArray;
 begin
   if FDiameterObserver = nil then
   begin
-    CreateObserver('Cfp_Diameter_', FDiameterObserver);
+    if ParentModel <> nil then
+    begin
+      Model := ParentModel as TPhastModel;
+      DataArray := Model.DataArrayManager.GetDataSetByName(KPipeDiameter);
+    end
+    else
+    begin
+      DataArray := nil;
+    end;
+    CreateObserver('Cfp_Diameter_', FDiameterObserver, DataArray);
   end;
   result := FDiameterObserver;
 end;
@@ -248,10 +290,22 @@ begin
 end;
 
 function TCfpPipeBoundary.GetElevationObserver: TObserver;
+var
+  Model: TPhastModel;
+  DataArray: TDataArray;
 begin
   if FElevationObserver = nil then
   begin
-    CreateObserver('Cfp_Elevation_', FElevationObserver);
+    if ParentModel <> nil then
+    begin
+      Model := ParentModel as TPhastModel;
+      DataArray := Model.DataArrayManager.GetDataSetByName(KCfpNodeElevation);
+    end
+    else
+    begin
+      DataArray := nil;
+    end;
+    CreateObserver('Cfp_Elevation_', FElevationObserver, DataArray);
   end;
   result := FElevationObserver;
 
@@ -267,10 +321,22 @@ begin
 end;
 
 function TCfpPipeBoundary.GetHigherCriticalRObserver: TObserver;
+var
+  Model: TPhastModel;
+  DataArray: TDataArray;
 begin
   if FHigherCriticalRObserver = nil then
   begin
-    CreateObserver('Cfp_HigherCriticalR_', FHigherCriticalRObserver);
+    if ParentModel <>  nil then
+    begin
+      Model := ParentModel as TPhastModel;
+      DataArray := Model.DataArrayManager.GetDataSetByName(KUpperCriticalR);
+    end
+    else
+    begin
+      DataArray := nil;
+    end;
+    CreateObserver('Cfp_HigherCriticalR_', FHigherCriticalRObserver, DataArray);
   end;
   result := FHigherCriticalRObserver;
 end;
@@ -285,10 +351,22 @@ begin
 end;
 
 function TCfpPipeBoundary.GetLowerCriticalRObserver: TObserver;
+var
+  Model: TPhastModel;
+  DataArray: TDataArray;
 begin
   if FLowerCriticalRObserver = nil then
   begin
-    CreateObserver('Cfp_LowerCriticalR_', FLowerCriticalRObserver);
+    if ParentModel <> nil then
+    begin
+      Model := ParentModel as TPhastModel;
+      DataArray := Model.DataArrayManager.GetDataSetByName(KLowerCriticalR);
+    end
+    else
+    begin
+      DataArray := nil;
+    end;
+    CreateObserver('Cfp_LowerCriticalR_', FLowerCriticalRObserver, DataArray);
   end;
   result := FLowerCriticalRObserver;
 end;
@@ -336,10 +414,22 @@ begin
 end;
 
 function TCfpPipeBoundary.GetRoughnessHeightObserver: TObserver;
+var
+  Model: TPhastModel;
+  DataArray: TDataArray;
 begin
   if FRoughnessHeightObserver = nil then
   begin
-    CreateObserver('Cfp_RoughnessHeight_', FRoughnessHeightObserver);
+    if ParentModel <> nil then
+    begin
+      Model := ParentModel as TPhastModel;
+      DataArray := Model.DataArrayManager.GetDataSetByName(KRoughnessHeight);
+    end
+    else
+    begin
+      DataArray := nil;
+    end;
+    CreateObserver('Cfp_RoughnessHeight_', FRoughnessHeightObserver, DataArray);
   end;
   result := FRoughnessHeightObserver;
 end;
@@ -355,10 +445,22 @@ begin
 end;
 
 function TCfpPipeBoundary.GetTortuosityObserver: TObserver;
+var
+  Model: TPhastModel;
+  DataArray: TDataArray;
 begin
   if FTortuosityObserver = nil then
   begin
-    CreateObserver('Cfp_Tortuosity_', FTortuosityObserver);
+    if ParentModel <> nil then
+    begin
+      Model := ParentModel as TPhastModel;
+      DataArray := Model.DataArrayManager.GetDataSetByName(KTortuosity);
+    end
+    else
+    begin
+      DataArray := nil;
+    end;
+    CreateObserver('Cfp_Tortuosity_', FTortuosityObserver, DataArray);
   end;
   result := FTortuosityObserver;
 end;
@@ -367,7 +469,7 @@ function TCfpPipeBoundary.GetUsedObserver: TObserver;
 begin
   if FUsedObserver = nil then
   begin
-    CreateObserver('CFP_Pipe_Used_', FUsedObserver);
+    CreateObserver('CFP_Pipe_Used_', FUsedObserver, nil);
   end;
   result := FUsedObserver;
 end;
@@ -376,6 +478,28 @@ procedure TCfpPipeBoundary.HandleChangedValue(Observer: TObserver);
 begin
   // invalidate display here.
   { TODO -cCFP : Does this need to be finished?}
+end;
+
+procedure TCfpPipeBoundary.SetBoundaryFormula(Index: Integer;
+  const Value: string);
+begin
+  case Index of
+    DiameterPosition:
+      Diameter := Value;
+    TortuosityPosition:
+      Tortuosity := Value;
+    RoughnessHeightPosition:
+      RoughnessHeight := Value;
+    LowerCriticalRPosition:
+      LowerCriticalR := Value;
+    HigherCriticalRPosition:
+      HigherCriticalR := Value;
+    ConductancePermeabilityPosition:
+      ConductancePermeability := Value;
+    ElevationPosition:
+      Elevation := Value;
+    else Assert(False);
+  end;
 end;
 
 procedure TCfpPipeBoundary.SetConductancePermeability(const Value: string);

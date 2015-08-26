@@ -90,7 +90,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
         OnSetEditText = rdgObservationsSetEditText
         ExtendedAutoDistributeText = False
         AutoMultiEdit = True
-        AutoDistributeText = False
+        AutoDistributeText = True
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = False
         SelectedRowOrColumnColor = clAqua

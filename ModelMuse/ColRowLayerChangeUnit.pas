@@ -747,6 +747,10 @@ var
   LayerCount: Integer;
   LocalModel: TPhastModel;
 begin
+  if frmGoPhast.ModelSelection = msUndefined then
+  begin
+    Exit;
+  end;
   if (frmGoPhast.Grid <> nil) or (frmGoPhast.SutraMesh <> nil) then
   begin
     LocalModel := frmGoPhast.PhastModel;

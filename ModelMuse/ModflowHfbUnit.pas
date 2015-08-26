@@ -144,10 +144,23 @@ begin
 end;
 
 function THfbBoundary.GetAdjustmentMethodObserver: TObserver;
+var
+  Model: TPhastModel;
+  Observer: TObserver;
 begin
   if FAdjustmentMethodObserver = nil then
   begin
-    CreateObserver('HFB_AdjustmentMethod_', FAdjustmentMethodObserver);
+    if ParentModel <> nil then
+    begin
+      Model := ParentModel as TPhastModel;
+      Observer := Model.HfbDisplayer;
+    end
+    else
+    begin
+      Observer := nil;
+    end;
+    CreateObserver('HFB_AdjustmentMethod_', FAdjustmentMethodObserver,
+      Observer);
   end;
   result := FAdjustmentMethodObserver;
 end;
@@ -162,11 +175,23 @@ begin
 end;
 
 function THfbBoundary.GetHydraulicConductivityObserver: TObserver;
+var
+  Model: TPhastModel;
+  Observer: TObserver;
 begin
   if FHydraulicConductivityObserver = nil then
   begin
+    if ParentModel <> nil then
+    begin
+      Model := ParentModel as TPhastModel;
+      Observer := Model.HfbDisplayer;
+    end
+    else
+    begin
+      Observer := nil;
+    end;
     CreateObserver('HFB_HydraulicConductivity_',
-      FHydraulicConductivityObserver);
+      FHydraulicConductivityObserver, Observer);
   end;
   result := FHydraulicConductivityObserver;
 end;
@@ -181,19 +206,43 @@ begin
 end;
 
 function THfbBoundary.GetLayerOffsetObserver: TObserver;
+var
+  Model: TPhastModel;
+  Observer: TObserver;
 begin
   if FLayerOffsetObserver = nil then
   begin
-    CreateObserver('HFB_Layer_Offset_', FLayerOffsetObserver);
+    if ParentModel <> nil then
+    begin
+      Model := ParentModel as TPhastModel;
+      Observer := Model.HfbDisplayer;
+    end
+    else
+    begin
+      Observer := nil;
+    end;
+    CreateObserver('HFB_Layer_Offset_', FLayerOffsetObserver, Observer);
   end;
   result := FLayerOffsetObserver;
 end;
 
 function THfbBoundary.GetParameterNameObserver: TObserver;
+var
+  Model: TPhastModel;
+  Observer: TObserver;
 begin
   if FParameterNameObserver = nil then
   begin
-    CreateObserver('HFB_ParameterName_', FParameterNameObserver);
+    if ParentModel <> nil then
+    begin
+      Model := ParentModel as TPhastModel;
+      Observer := Model.HfbDisplayer;
+    end
+    else
+    begin
+      Observer := nil;
+    end;
+    CreateObserver('HFB_ParameterName_', FParameterNameObserver, Observer);
   end;
   result := FParameterNameObserver;
 end;
@@ -224,19 +273,43 @@ begin
 end;
 
 function THfbBoundary.GetThicknessObserver: TObserver;
+var
+  Model: TPhastModel;
+  Observer: TObserver;
 begin
   if FThicknessObserver = nil then
   begin
-    CreateObserver('HFB_Thickness_', FThicknessObserver);
+    if ParentModel <> nil then
+    begin
+      Model := ParentModel as TPhastModel;
+      Observer := Model.HfbDisplayer;
+    end
+    else
+    begin
+      Observer := nil;
+    end;
+    CreateObserver('HFB_Thickness_', FThicknessObserver, Observer);
   end;
   result := FThicknessObserver;
 end;
 
 function THfbBoundary.GetUsedObserver: TObserver;
+var
+  Model: TPhastModel;
+  Observer: TObserver;
 begin
   if FUsedObserver = nil then
   begin
-    CreateObserver('HFB_Used_', FUsedObserver);
+    if ParentModel <> nil then
+    begin
+      Model := ParentModel as TPhastModel;
+      Observer := Model.HfbDisplayer;
+    end
+    else
+    begin
+      Observer := nil;
+    end;
+    CreateObserver('HFB_Used_', FUsedObserver, Observer);
   end;
   result := FUsedObserver;
 end;

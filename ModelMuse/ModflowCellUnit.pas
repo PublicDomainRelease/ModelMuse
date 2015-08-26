@@ -215,13 +215,13 @@ end;
 
 function ReadCompStringSimple(Stream: TStream): string;
 var
-  CommentLength: Integer;
+  StringLength: Integer;
 begin
-  Stream.Read(CommentLength, SizeOf(CommentLength));
-  if CommentLength > 0 then
+  Stream.Read(StringLength, SizeOf(StringLength));
+  if StringLength > 0 then
   begin
-    SetString(result, nil, CommentLength);
-    Stream.Read(Pointer(result)^, CommentLength * SizeOf(Char));
+    SetString(result, nil, StringLength);
+    Stream.Read(Pointer(result)^, StringLength * SizeOf(Char));
   end
   else
   begin

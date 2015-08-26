@@ -4,9 +4,9 @@ inherited frmImportModflow: TfrmImportModflow
   Caption = 'Import MODFLOW-2005 on -NWT Model'
   ClientHeight = 320
   ClientWidth = 468
-  ExplicitWidth = 486
-  ExplicitHeight = 365
-  PixelsPerInch = 120
+  ExplicitWidth = 484
+  ExplicitHeight = 358
+  PixelsPerInch = 96
   TextHeight = 18
   object Label1: TLabel
     Left = 8

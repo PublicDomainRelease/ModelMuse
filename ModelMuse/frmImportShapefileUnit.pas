@@ -38,6 +38,10 @@ type
     scDist1, scDist2, scDist3, scDist4, scDist5, scDist6, scDist7, scDist8,
     scZ1, scZ2, scZ3, scZ4, scZ5, scZ6, scZ7, scZ8);
 
+  TStrColumn = (strcStartTime, strcEndTime, strcOutflow,
+    strcDiversion, strcFlow, strcHead, strcConductance, strcBedBottom,
+    strcBedTop, strcWidth, strcSlope, strcRoughness);
+
   TLakeColumns = (lcStartTime, lcEndTime, lcMinStage, lcMaxStage, lcPrecip,
     lcEvap, lcRunoff, lcWithdrawl, lcConcentration);
 
@@ -395,6 +399,16 @@ type
     pnlDataTop: TPanel;
     cbSelect: TCheckBox;
     comboInterpolaters: TComboBox;
+    jvspModflowSTR: TJvStandardPage;
+    lblConductanceInterpSTR: TLabel;
+    comboConductanceInterpSTR: TComboBox;
+    lblStrSegmentNumber: TLabel;
+    comboStrSegmentNumber: TComboBox;
+    lblParameterName: TLabel;
+    comboStrParameterName: TComboBox;
+    jvspFootprintWell: TJvStandardPage;
+    lblFootprintWell: TLabel;
+    comboFootprintWell: TComboBox;
     // @name edits the formula in @link(edImportCriterion).
     procedure btnImportCriterionClick(Sender: TObject);
     // @name sets all the checkboxes to checked
@@ -483,7 +497,7 @@ type
     FInvalidParameterNames: TStringList;
     FCombinedObjectsAllowed: Boolean;
     FObsCount: Integer;
-    CombinedObjects: boolean;
+    FCombinedObjects: boolean;
     // @name checks for valid data in @link(dgFields).
     function CheckDataSets: boolean;
     // @name checks that AFormula is a valid formula.
@@ -610,6 +624,10 @@ type
     procedure ImportConcItemForSeparateShapes(ItemIndex: Integer;
       ConcItem: TMt3dmsConcItem; StartingConcIndex: Integer);
     procedure InitializeColumnsForMt3dConc(StartingConcIndex: Integer);
+    procedure ImportModflowStrPackage(AScreenObject: TScreenObject);
+    procedure InitializeBoundaryControlsForSTR;
+    procedure InitializeBoundaryControlsForFootprintWell;
+    procedure ImportModflowFootprintWell(AScreenObject: TScreenObject);
     { Private declarations }
   public
     // @name returns @true if the Shapefile is selected.
@@ -623,12 +641,15 @@ type
     Formula: string;
     RealValue: double;
     IntValue: integer;
+    StringValue: string;
     Cached: boolean;
     function GetRealValue: double;
     function GetIntValue: integer;
+    function GetStringValue: string;
     Constructor Create(XBase: TXBase);
     function RealFormula: string;
     function IntFormula: string;
+    function StringFormula: string;
   end;
 
 implementation
@@ -645,7 +666,7 @@ uses Math, Contnrs , frmGoPhastUnit, frmProgressUnit,
   ModflowLakUnit, ModflowDrtUnit, ModflowResUnit, ModflowHfbUnit, 
   ModflowUzfUnit, GlobalVariablesUnit, frameScreenObjectMNW2Unit,
   ModflowMnw2Unit, frmErrorsAndWarningsUnit, ModflowSfrTable, frmGridValueUnit,
-  LayerStructureUnit;
+  LayerStructureUnit, ModflowStrUnit, FootprintBoundary;
 
 resourcestring
   StrParameterName = 'Parameter name';
@@ -692,6 +713,7 @@ resourcestring
   StrEvaporation = 'Evaporation';
   StrOverlandRunoff = 'Overland runoff';
   StrWithdrawal = 'Withdrawal';
+  StrFootprintWithdrawal = 'Withdrawal';
   StrOutflowSegments = 'Outflow Segments';
   StrICALC = 'ICALC';
   StrFLOW = 'FLOW';
@@ -830,6 +852,7 @@ resourcestring
   StrThereWasAnErrorP = 'There was an error processing the database file tha' +
   't is part of the Shapefile. The error was "%s" If you can not solve this' +
   'problem yourself, you may contact the ModelMuse developer.';
+//  StrFootprintWithdrawal = 'Withdrawal';
 
 {$R *.dfm}
 
@@ -1257,6 +1280,7 @@ begin
     end;
 
   end;
+  EnableFeatureImport
 end;
 
 procedure TfrmImportShapefile.InitializeColumnsForMt3dConc(
@@ -1724,6 +1748,48 @@ begin
   end;
 end;
 
+procedure TfrmImportShapefile.ImportModflowFootprintWell(
+  AScreenObject: TScreenObject);
+var
+  Footprint: TFootprintWell;
+  AValue: Extended;
+  ItemName: string;
+  ValueItem: TValueArrayItem;
+  DataArray: TDataArray;
+  DataArrayPosition: Integer;
+begin
+  AScreenObject.CreateFootprintWell;
+  Footprint := AScreenObject.FootprintWell;
+  Footprint.IsUsed := True;
+
+  if FCombinedObjects then
+  begin
+    AValue := GetRealValueFromText(comboFootprintWell.Text);
+    ItemName := StrFootprintWithdrawal;
+    ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+      ItemName);
+    if ValueItem = nil then
+    begin
+      ValueItem := AScreenObject.
+        ImportedValues.Add as TValueArrayItem;
+      ValueItem.Name := ItemName;
+      ValueItem.Values.DataType := rdtDouble;
+      ValueItem.Values.Count := 0;
+      Footprint.Withdrawal := rsObjectImportedValuesR
+        + '("' + ItemName + '")';
+    end;
+    ValueItem.Values.Add(AValue);
+  end
+  else
+  begin
+    Footprint.Withdrawal :=
+      GetRealFormulaFromText(comboFootprintWell.Text);
+    DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(KWithdrawals);
+    DataArrayPosition := AScreenObject.AddDataSet(DataArray);
+    AScreenObject.DataSetFormulas[DataArrayPosition] := Footprint.Withdrawal;
+  end;
+end;
+
 procedure TfrmImportShapefile.ImportModflowMnw2Package(
   AScreenObject: TScreenObject);
 var
@@ -2018,7 +2084,7 @@ begin
       end;
       Item.StartTime := StartTime;
       Item.EndTime := EndTime;
-      if CombinedObjects then
+      if FCombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(ucInfiltration), Index + 1]);
@@ -2052,7 +2118,7 @@ begin
       end;
       EvtItem.StartTime := StartTime;
       EvtItem.EndTime := EndTime;
-      if CombinedObjects then
+      if FCombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(ucEvapRate), Index + 1]);
@@ -2088,7 +2154,7 @@ begin
       end;
       ExtinctItem.StartTime := StartTime;
       ExtinctItem.EndTime := EndTime;
-      if CombinedObjects then
+      if FCombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(ucExtinctDepth), Index + 1]);
@@ -2124,7 +2190,7 @@ begin
       end;
       WaterContentItem.StartTime := StartTime;
       WaterContentItem.EndTime := EndTime;
-      if CombinedObjects then
+      if FCombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(ucExtinctWaterContent), Index + 1]);
@@ -2164,7 +2230,7 @@ begin
   Boundary := AScreenObject.ModflowHfbBoundary;
   Boundary.IsUsed := True;
 
-  if CombinedObjects then
+  if FCombinedObjects then
   begin
     AValue := GetRealValueFromText(comboHfbHydCond.Text);
     ItemName := StrHFBHydraulicConduct;
@@ -2282,6 +2348,192 @@ begin
 
     end;
   end;
+end;
+
+procedure TfrmImportShapefile.ImportModflowStrPackage(
+  AScreenObject: TScreenObject);
+var
+  Boundary: TStrBoundary;
+  Index: Integer;
+  UseRow: Boolean;
+  InitializeGrid: Boolean;
+  CellText: AnsiString;
+  CachedPosition: Integer;
+  FieldStorage: TFieldNumStorage;
+  FieldNumber: Integer;
+  ColIndex: Integer;
+  First: Boolean;
+  ParameterName: string;
+  ParamItem: TModflowParamItem;
+  Param: TModflowTransientListParameter;
+  AnItem: TCustomModflowBoundaryItem;
+  Count: Integer;
+  StartTime: Double;
+  EndTime: Double;
+  Item: TStrItem;
+  StageCalculated: Boolean;
+begin
+  AScreenObject.CreateStrBoundary;
+  Boundary := AScreenObject.ModflowStrBoundary;
+
+  InitializeGrid := False;
+  for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
+  begin
+    UseRow := (rdgBoundaryConditions.Cells[Ord(strcStartTime), Index + 1] <> '')
+      and (rdgBoundaryConditions.Cells[Ord(strcEndTime), Index + 1] <> '');
+    if UseRow then
+    begin
+      InitializeGrid := rdgBoundaryConditions.Objects[0,Index+1] = nil;
+      break;
+    end;
+  end;
+  for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
+  begin
+    UseRow := (rdgBoundaryConditions.Cells[Ord(strcStartTime), Index + 1] <> '')
+      and (rdgBoundaryConditions.Cells[Ord(strcEndTime), Index + 1] <> '');
+    if UseRow then
+    begin
+      for ColIndex := 0 to rdgBoundaryConditions.ColCount - 1 do
+      begin
+        if InitializeGrid then
+        begin
+          CellText := AnsiString(rdgBoundaryConditions.
+            Cells[ColIndex, Index + 1]);
+          CachedPosition := FFieldNumbers.Indexof(string(CellText));
+          if CachedPosition >= 0 then
+          begin
+            FieldStorage := FFieldNumbers.Objects[CachedPosition]
+              as TFieldNumStorage;
+          end
+          else
+          begin
+            FieldNumber := GetFieldNumberFromName(CellText);
+            FieldStorage := TFieldNumStorage.Create(xbShapeDataBase);
+            FieldStorage.FieldNumber := FieldNumber;
+            FieldStorage.Formula := string(CellText);
+            FFieldNumbers.AddObject(string(CellText), FieldStorage);
+            if FieldNumber = 0 then
+            begin
+              FieldStorage.RealValue := StrToFloatDef(string(CellText), 0);
+              FieldStorage.IntValue := StrToIntDef(string(CellText), 0);
+            end;
+            FieldStorage.StringValue := string(CellText);
+          end;
+          rdgBoundaryConditions.Objects[ColIndex, Index+1] := FieldStorage;
+        end
+        else
+        begin
+          FieldStorage := TFieldNumStorage(rdgBoundaryConditions.
+            Objects[ColIndex, Index+1]);
+          FieldStorage.Cached := False;
+        end;
+      end;
+    end;
+  end;
+
+  First := True;
+  ParamItem := nil;
+  Count := 0;
+  StageCalculated := frmGoPhast.PhastModel.ModflowPackages.StrPackage.CalculateStage;
+
+  for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
+  begin
+    UseRow := (rdgBoundaryConditions.Cells[Ord(strcStartTime), Index + 1] <> '')
+      and (rdgBoundaryConditions.Cells[Ord(strcEndTime), Index + 1] <> '');
+    if UseRow then
+    begin
+      FieldStorage := TFieldNumStorage(
+        rdgBoundaryConditions.Objects[Ord(strcStartTime), Index + 1]);
+      StartTime := FieldStorage.GetRealValue;
+      FieldStorage := TFieldNumStorage(
+        rdgBoundaryConditions.Objects[Ord(strcEndTime), Index + 1]);
+      EndTime := FieldStorage.GetRealValue;
+      if First then
+      begin
+        First := False;
+        Boundary.FormulaInterpretation := TFormulaInterpretation(
+          comboConductanceInterpSTR.ItemIndex);
+
+        Boundary.SegmentNumber :=
+          GetIntegerValueFromText(comboStrSegmentNumber.Text);
+
+        ParameterName := comboStrParameterName.Text;
+        ParameterName := StringReplace(ParameterName, '"', '',
+          [rfReplaceAll, rfIgnoreCase]);
+        if ParameterName = '' then
+        begin
+          Param := nil;
+        end
+        else
+        begin
+          Param := frmGoPhast.PhastModel.
+            ModflowTransientParameters.GetParamByName(ParameterName);
+          if Param = nil then
+          begin
+            FInvalidParameterNames.Add(ParameterName);
+          end
+          else if Param.ParameterType <> ptSTR then
+          begin
+            Param := nil;
+            FInvalidParameterNames.Add(ParameterName);
+          end;
+        end;
+      end;
+
+      GetNewOrExistingBoundaryItem(AnItem, ParameterName, Param, ParamItem,
+        Boundary, Count);
+
+
+      Item := AnItem as TStrItem;
+      Item.StartTime := StartTime;
+      Item.EndTime := EndTime;
+
+      FieldStorage := TFieldNumStorage(
+        rdgBoundaryConditions.Objects[Ord(strcOutflow), Index + 1]);
+      Item.OutflowSegment := FieldStorage.GetIntValue;
+
+      FieldStorage := TFieldNumStorage(
+        rdgBoundaryConditions.Objects[Ord(strcDiversion), Index + 1]);
+      Item.DiversionSegment := FieldStorage.GetIntValue;
+
+      FieldStorage := TFieldNumStorage(
+        rdgBoundaryConditions.Objects[Ord(strcFlow), Index + 1]);
+      Item.Flow := FieldStorage.RealFormula;
+
+      FieldStorage := TFieldNumStorage(
+        rdgBoundaryConditions.Objects[Ord(strcHead), Index + 1]);
+      Item.Stage := FieldStorage.RealFormula;
+
+      FieldStorage := TFieldNumStorage(
+        rdgBoundaryConditions.Objects[Ord(strcConductance), Index + 1]);
+      Item.Conductance := FieldStorage.RealFormula;
+
+      FieldStorage := TFieldNumStorage(
+        rdgBoundaryConditions.Objects[Ord(strcBedBottom), Index + 1]);
+      Item.BedBottom := FieldStorage.RealFormula;
+
+      FieldStorage := TFieldNumStorage(
+        rdgBoundaryConditions.Objects[Ord(strcBedTop), Index + 1]);
+      Item.BedTop := FieldStorage.RealFormula;
+
+      if StageCalculated then
+      begin
+        FieldStorage := TFieldNumStorage(
+          rdgBoundaryConditions.Objects[Ord(strcWidth), Index + 1]);
+        Item.Width := FieldStorage.RealFormula;
+
+        FieldStorage := TFieldNumStorage(
+          rdgBoundaryConditions.Objects[Ord(strcSlope), Index + 1]);
+        Item.Slope := FieldStorage.RealFormula;
+
+        FieldStorage := TFieldNumStorage(
+          rdgBoundaryConditions.Objects[Ord(strcRoughness), Index + 1]);
+        Item.Roughness := FieldStorage.RealFormula;
+
+      end;
+
+    end;
+  end
 end;
 
 procedure TfrmImportShapefile.ImportModflowSfrPackage(
@@ -2789,15 +3041,15 @@ procedure TfrmImportShapefile.InitializeBoundaryControlsForUZF;
 var
   Index: Integer;
 begin
-  CombinedObjects := comboJoinObjects.ItemIndex = 1;
+  FCombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspNone;
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := 6;
   AssignColFeatureProperties;
   for Index := Ord(ucStartTime) to Ord(ucEndTime) do
   begin
-    rdgBoundaryConditions.Columns[Index].ComboUsed := not CombinedObjects;
-    if CombinedObjects then
+    rdgBoundaryConditions.Columns[Index].ComboUsed := not FCombinedObjects;
+    if FCombinedObjects then
     begin
       rdgBoundaryConditions.Columns[Index].Format := rcf4Integer;
     end
@@ -2897,6 +3149,119 @@ begin
   end;
 
   InitializeColumnsForMt3dConc(Ord(lcConcentration));
+end;
+
+procedure TfrmImportShapefile.InitializeBoundaryControlsForSTR;
+var
+  StageCalculated: Boolean;
+begin
+  plBoundary.ActivePage := jvspModflowSTR;
+
+  comboStrSegmentNumber.Items := FIntegerFieldNames;
+  comboStrParameterName.Items := FStringFieldNames;
+
+  rdgBoundaryConditions.Enabled := True;
+
+  StageCalculated := frmGoPhast.PhastModel.ModflowPackages.StrPackage.CalculateStage;
+  if StageCalculated then
+  begin
+    rdgBoundaryConditions.ColCount := Ord(High(TStrColumn)) + 1;
+  end
+  else
+  begin
+    rdgBoundaryConditions.ColCount := Ord(strcBedTop) + 1;
+  end;
+  AssignColFeatureProperties;
+
+  rdgBoundaryConditions.Cells[Ord(strcStartTime), 0] := StrStartingTime;
+  rdgBoundaryConditions.Columns[Ord(strcStartTime)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(strcStartTime)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(strcStartTime)].PickList.Clear;
+
+  frmGoPhast.PhastModel.ModflowStressPeriods.FillPickListWithStartTimes(
+    rdgBoundaryConditions, Ord(strcStartTime));
+  rdgBoundaryConditions.Columns[Ord(strcStartTime)].
+    PickList.AddStrings(FRealFieldAndGlobalVariablesNames);
+
+  rdgBoundaryConditions.Cells[Ord(strcEndTime), 0] := StrEndingTime;
+  rdgBoundaryConditions.Columns[Ord(strcEndTime)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(strcEndTime)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(strcEndTime)].PickList.Clear;
+  frmGoPhast.PhastModel.ModflowStressPeriods.FillPickListWithEndTimes(
+    rdgBoundaryConditions, Ord(strcEndTime));
+  rdgBoundaryConditions.Columns[Ord(strcEndTime)].
+    PickList.AddStrings(FRealFieldAndGlobalVariablesNames);
+
+//  rdgBoundaryConditions.Cells[Ord(strcParameterName), 0] := StrParameterName;
+//  rdgBoundaryConditions.Columns[Ord(strcParameterName)].ComboUsed := True;
+//  rdgBoundaryConditions.Columns[Ord(strcParameterName)].Format := rcf4String;
+//  rdgBoundaryConditions.Columns[Ord(strcParameterName)].PickList := FStringFieldNames;
+
+  rdgBoundaryConditions.Cells[Ord(strcOutflow), 0] := 'Outflow Segment (ITRIB)';
+  rdgBoundaryConditions.Columns[Ord(strcOutflow)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(strcOutflow)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(strcOutflow)].PickList := FIntegerFieldNames;
+
+  rdgBoundaryConditions.Cells[Ord(strcDiversion), 0] := 'Diversion Segment (IUPSEG)';
+  rdgBoundaryConditions.Columns[Ord(strcDiversion)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(strcDiversion)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(strcDiversion)].PickList := FIntegerFieldNames;
+
+  rdgBoundaryConditions.Cells[Ord(strcFlow), 0] := StrFLOW;
+  rdgBoundaryConditions.Columns[Ord(strcFlow)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(strcFlow)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(strcFlow)].PickList :=
+    FRealFieldAndGlobalVariablesNames;
+
+  rdgBoundaryConditions.Cells[Ord(strcHead), 0] := 'Head';
+  rdgBoundaryConditions.Columns[Ord(strcHead)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(strcHead)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(strcHead)].PickList :=
+    FRealFieldAndGlobalVariablesNames;
+
+  rdgBoundaryConditions.Cells[Ord(strcConductance), 0] := 'Conductance';
+  rdgBoundaryConditions.Columns[Ord(strcConductance)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(strcConductance)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(strcConductance)].PickList :=
+    FRealFieldAndGlobalVariablesNames;
+
+  rdgBoundaryConditions.Cells[Ord(strcBedBottom), 0] := 'Streambed Bottom';
+  rdgBoundaryConditions.Columns[Ord(strcBedBottom)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(strcBedBottom)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(strcBedBottom)].PickList :=
+    FRealFieldAndGlobalVariablesNames;
+
+  rdgBoundaryConditions.Cells[Ord(strcBedTop), 0] := 'Streambed Top';
+  rdgBoundaryConditions.Columns[Ord(strcBedTop)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(strcBedTop)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(strcBedTop)].PickList :=
+    FRealFieldAndGlobalVariablesNames;
+
+  if StageCalculated then
+  begin
+    rdgBoundaryConditions.Cells[Ord(strcWidth), 0] := 'Streambed Width';
+    rdgBoundaryConditions.Columns[Ord(strcWidth)].ComboUsed := True;
+    rdgBoundaryConditions.Columns[Ord(strcWidth)].Format := rcf4String;
+    rdgBoundaryConditions.Columns[Ord(strcWidth)].PickList :=
+      FRealFieldAndGlobalVariablesNames;
+
+    rdgBoundaryConditions.Cells[Ord(strcSlope), 0] := 'Streambed Slope';
+    rdgBoundaryConditions.Columns[Ord(strcSlope)].ComboUsed := True;
+    rdgBoundaryConditions.Columns[Ord(strcSlope)].Format := rcf4String;
+    rdgBoundaryConditions.Columns[Ord(strcSlope)].PickList :=
+      FRealFieldAndGlobalVariablesNames;
+
+    rdgBoundaryConditions.Cells[Ord(strcRoughness), 0] := 'Streambed Roughness';
+    rdgBoundaryConditions.Columns[Ord(strcRoughness)].ComboUsed := True;
+    rdgBoundaryConditions.Columns[Ord(strcRoughness)].Format := rcf4String;
+    rdgBoundaryConditions.Columns[Ord(strcRoughness)].PickList :=
+      FRealFieldAndGlobalVariablesNames;
+  end;
+
+//  TStrColumn = (strcStartTime, strcEndTime, strcOutflow, strcDiversion,
+//    strcFlow, strcHead, strcConductance, strcBedBottom, strcBedTop)
+
+
 end;
 
 procedure TfrmImportShapefile.InitializeBoundaryControlsForSFR;
@@ -3261,7 +3626,7 @@ begin
 
       ConcItem := CreateConcItem(ConcBoundary, Index, Item);
 
-      if CombinedObjects then
+      if FCombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(rescStartingHead), Index + 1]);
@@ -3386,7 +3751,7 @@ begin
 
       ConcItem := CreateConcItem(ConcBoundary, Index, Item);
 
-      if CombinedObjects then
+      if FCombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(etscRate), Index + 1]);
@@ -3454,7 +3819,7 @@ begin
         Ord(etscEndingTime), Index + 1]);
       SurfDepthItem.EndTime := AValue;
 
-      if CombinedObjects then
+      if FCombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(etscSurface), Index + 1]);
@@ -3596,7 +3961,7 @@ begin
           rdgBoundaryConditions.Cells[Ord(etscEndingTime), Index + 1]);
         LayerItem.EndTime := AValue;
 
-        if CombinedObjects then
+        if FCombinedObjects then
         begin
           AnIntValue := GetIntegerValueFromText(rdgBoundaryConditions.
             Cells[Ord(etscRate), Index + 1]);
@@ -3631,7 +3996,7 @@ procedure TfrmImportShapefile.InitializeBoundaryControlsForRES(
 var
   Index: Integer;
 begin
-  CombinedObjects := comboJoinObjects.ItemIndex = 1;
+  FCombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspNone;
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := Ord(rescEndingHead) + 1
@@ -3642,8 +4007,8 @@ begin
 
   for Index := Ord(rescStartingTime) to Ord(rescEndingTime) do
   begin
-    rdgBoundaryConditions.Columns[Index].ComboUsed := not CombinedObjects;
-    if CombinedObjects then
+    rdgBoundaryConditions.Columns[Index].ComboUsed := not FCombinedObjects;
+    if FCombinedObjects then
     begin
       rdgBoundaryConditions.Columns[Index].Format := rcf4Integer;
     end
@@ -3673,7 +4038,7 @@ var
   NonConcColumnCount: Integer;
   StartingConcIndex: Integer;
 begin
-  CombinedObjects := comboJoinObjects.ItemIndex = 1;
+  FCombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspNone;
   rdgBoundaryConditions.Enabled := True;
   if Packages.EtsPackage.TimeVaryingLayers then
@@ -3691,8 +4056,8 @@ begin
   AssignColFeatureProperties;
   for Index := Ord(etscStartingTime) to Ord(etscEndingTime) do
   begin
-    rdgBoundaryConditions.Columns[Index].ComboUsed := not CombinedObjects;
-    if CombinedObjects then
+    rdgBoundaryConditions.Columns[Index].ComboUsed := not FCombinedObjects;
+    if FCombinedObjects then
     begin
       rdgBoundaryConditions.Columns[Index].Format := rcf4Integer;
     end
@@ -3806,7 +4171,7 @@ begin
 
       ConcItem := CreateConcItem(ConcBoundary, Index, Item);
 
-      if CombinedObjects then
+      if FCombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(evtRate), Index + 1]);
@@ -3866,7 +4231,7 @@ begin
       AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[
         Ord(evtcEndingTime), Index + 1]);
       SurfDepthItem.EndTime := AValue;
-      if CombinedObjects then
+      if FCombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(evtcSurface), Index + 1]);
@@ -3942,7 +4307,7 @@ begin
           Cells[Ord(evtcEndingTime), Index + 1]);
         LayerItem.EndTime := AValue;
 
-        if CombinedObjects then
+        if FCombinedObjects then
         begin
           AnIntValue := GetIntegerValueFromText(rdgBoundaryConditions.
             Cells[Ord(evtcLayer), Index + 1]);
@@ -3978,7 +4343,7 @@ var
   Index: Integer;
   StartingConcIndex: Integer;
 begin
-  CombinedObjects := comboJoinObjects.ItemIndex = 1;
+  FCombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspNone;
   rdgBoundaryConditions.Enabled := True;
   if Packages.EvtPackage.TimeVaryingLayers then
@@ -3992,9 +4357,9 @@ begin
   rdgBoundaryConditions.ColCount := StartingConcIndex + AssociatedConcColumns;
   AssignColFeatureProperties;
   rdgBoundaryConditions.Columns[Ord(evtcStartingTime)].ComboUsed :=
-    not CombinedObjects;
+    not FCombinedObjects;
   rdgBoundaryConditions.Columns[Ord(evtcEndingTime)].ComboUsed :=
-    not CombinedObjects;
+    not FCombinedObjects;
   rdgBoundaryConditions.Columns[Ord(evtcParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(evtRate)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(evtcSurface)].ComboUsed := True;
@@ -4006,7 +4371,7 @@ begin
 
    InitializeColumnsForMt3dConc(StartingConcIndex);
 
-  if CombinedObjects then
+  if FCombinedObjects then
   begin
     rdgBoundaryConditions.Columns[Ord(evtcStartingTime)].Format := rcf4Integer;
     rdgBoundaryConditions.Columns[Ord(evtcEndingTime)].Format := rcf4Integer;
@@ -4050,6 +4415,14 @@ begin
   begin
     rdgBoundaryConditions.Cells[Ord(evtcLayer), 0] := StrEvapoTranspirationL;
   end;
+end;
+
+procedure TfrmImportShapefile.InitializeBoundaryControlsForFootprintWell;
+begin
+  plBoundary.ActivePage := jvspFootprintWell;
+  rdgBoundaryConditions.Enabled := False;
+  seBoundaryTimeCount.Enabled := False;
+  comboFootprintWell.Items := FRealFieldAndGlobalVariablesNames;
 end;
 
 procedure TfrmImportShapefile.ImportModflowRchPackage(Packages: TModflowPackages;
@@ -4115,7 +4488,7 @@ begin
 
       ConcItem := CreateConcItem(ConcBoundary, Index, Item);
 
-      if CombinedObjects then
+      if FCombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(rcFluxRate), Index + 1]);
@@ -4175,7 +4548,7 @@ begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(rcEndTime), Index + 1]);
         LayerItem.EndTime := AValue;
-        if CombinedObjects then
+        if FCombinedObjects then
         begin
           AnIntValue := GetIntegerValueFromText(rdgBoundaryConditions.
             Cells[Ord(rcLayer), Index + 1]);
@@ -4210,7 +4583,7 @@ procedure TfrmImportShapefile.InitializeBoundaryControlsForRCH(
 var
   ConcColum: integer;
 begin
-  CombinedObjects := comboJoinObjects.ItemIndex = 1;
+  FCombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspNone;
   rdgBoundaryConditions.Enabled := True;
   if Packages.RchPackage.TimeVaryingLayers then
@@ -4225,9 +4598,9 @@ begin
   end;
   AssignColFeatureProperties;
   rdgBoundaryConditions.Columns[Ord(rcStartTime)].ComboUsed :=
-    not CombinedObjects;
+    not FCombinedObjects;
   rdgBoundaryConditions.Columns[Ord(rcEndTime)].ComboUsed :=
-    not CombinedObjects;
+    not FCombinedObjects;
   rdgBoundaryConditions.Columns[Ord(rcParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(rcFluxRate)].ComboUsed := True;
   if Packages.RchPackage.TimeVaryingLayers then
@@ -4236,7 +4609,7 @@ begin
   end;
 
   InitializeColumnsForMt3dConc(ConcColum);
-  if CombinedObjects then
+  if FCombinedObjects then
   begin
     rdgBoundaryConditions.Columns[Ord(rcStartTime)].Format := rcf4Integer;
     rdgBoundaryConditions.Columns[Ord(rcEndTime)].Format := rcf4Integer;
@@ -4370,7 +4743,7 @@ begin
       Item.EndTime := AValue;
 
       ConcItem := CreateConcItem(ConcBoundary, Index, Item);
-      if CombinedObjects then
+      if FCombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(dtcElevation), Index + 1]);
@@ -4497,7 +4870,7 @@ begin
 
       ConcItem := CreateConcItem(ConcBoundary, ItemIndex, Item);
 
-      if CombinedObjects then
+      if FCombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(dcElevation), ItemIndex + 1]);
@@ -4552,7 +4925,7 @@ end;
 
 procedure TfrmImportShapefile.InitializeBoundaryControlsForDRT;
 begin
-  CombinedObjects := comboJoinObjects.ItemIndex = 1;
+  FCombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspModflowDRT;
   lblConductanceInterpretationDRT.Caption := StrConductanceInterpre;
   rdgBoundaryConditions.Enabled := True;
@@ -4561,9 +4934,9 @@ begin
   AssignColFeatureProperties;
 
   rdgBoundaryConditions.Columns[Ord(dtcStartingTime)].ComboUsed :=
-    not CombinedObjects;
+    not FCombinedObjects;
   rdgBoundaryConditions.Columns[Ord(dtcEndingTime)].ComboUsed :=
-    not CombinedObjects;
+    not FCombinedObjects;
   rdgBoundaryConditions.Columns[Ord(dtcParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(dtcElevation)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(dtcConductance)].ComboUsed := True;
@@ -4571,7 +4944,7 @@ begin
 
   InitializeColumnsForMt3dConc(Ord(dtcConcentration));
 
-  if CombinedObjects then
+  if FCombinedObjects then
   begin
     rdgBoundaryConditions.Columns[Ord(dtcStartingTime)].Format := rcf4Integer;
     rdgBoundaryConditions.Columns[Ord(dtcEndingTime)].Format := rcf4Integer;
@@ -4625,7 +4998,7 @@ end;
 
 procedure TfrmImportShapefile.InitializeBoundaryControlsForDRN;
 begin
-  CombinedObjects := comboJoinObjects.ItemIndex = 1;
+  FCombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspConductanceInterp;
   lblConductanceInterpretation.Caption := StrConductanceInterpre;
   rdgBoundaryConditions.Enabled := True;
@@ -4633,16 +5006,16 @@ begin
     AssociatedConcColumns;
   AssignColFeatureProperties;
   rdgBoundaryConditions.Columns[Ord(dcStartingTime)].ComboUsed :=
-    not CombinedObjects;
+    not FCombinedObjects;
   rdgBoundaryConditions.Columns[Ord(dcEndingTime)].ComboUsed :=
-    not CombinedObjects;
+    not FCombinedObjects;
   rdgBoundaryConditions.Columns[Ord(dcParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(dcElevation)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(dcConductance)].ComboUsed := True;
 
   InitializeColumnsForMt3dConc(Ord(dcConcentration));
 
-  if CombinedObjects then
+  if FCombinedObjects then
   begin
     rdgBoundaryConditions.Columns[Ord(dcStartingTime)].Format := rcf4Integer;
     rdgBoundaryConditions.Columns[Ord(dcEndingTime)].Format := rcf4Integer;
@@ -4737,7 +5110,7 @@ begin
 
       ConcItem := CreateConcItem(ConcBoundary, Index, Item);
 
-      if CombinedObjects then
+      if FCombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(rivcBottom), Index + 1]);
@@ -4811,7 +5184,7 @@ end;
 
 procedure TfrmImportShapefile.InitializeBoundaryControlsForRIV;
 begin
-  CombinedObjects := comboJoinObjects.ItemIndex = 1;
+  FCombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspConductanceInterp;
   lblConductanceInterpretation.Caption := StrConductanceInterpre;
   rdgBoundaryConditions.Enabled := True;
@@ -4819,9 +5192,9 @@ begin
   AssignColFeatureProperties;
 
   rdgBoundaryConditions.Columns[Ord(rivcStartingTime)].ComboUsed :=
-    not CombinedObjects;
+    not FCombinedObjects;
   rdgBoundaryConditions.Columns[Ord(rivcEndingTime)].ComboUsed :=
-    not CombinedObjects;
+    not FCombinedObjects;
   rdgBoundaryConditions.Columns[Ord(rivcParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(rivcBottom)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(rivcStage)].ComboUsed := True;
@@ -4829,7 +5202,7 @@ begin
 
   InitializeColumnsForMt3dConc(Ord(rivcConcentration));
 
-  if CombinedObjects then
+  if FCombinedObjects then
   begin
     rdgBoundaryConditions.Columns[Ord(rivcStartingTime)].Format := rcf4Integer;
     rdgBoundaryConditions.Columns[Ord(rivcEndingTime)].Format := rcf4Integer;
@@ -4926,7 +5299,7 @@ begin
 
       ConcItem := CreateConcItem(ConcBoundary, Index, Item);
 
-      if CombinedObjects then
+      if FCombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(welcPumpingRate), Index + 1]);
@@ -4962,7 +5335,7 @@ end;
 
 procedure TfrmImportShapefile.InitializeBoundaryControlsForWEL;
 begin
-  CombinedObjects := comboJoinObjects.ItemIndex = 1;
+  FCombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspConductanceInterp;
   lblConductanceInterpretation.Caption := StrPumpingRateInterpr;
   rdgBoundaryConditions.Enabled := True;
@@ -4970,15 +5343,15 @@ begin
   AssignColFeatureProperties;
 
   rdgBoundaryConditions.Columns[Ord(welcStartingTime)].ComboUsed :=
-    not CombinedObjects;
+    not FCombinedObjects;
   rdgBoundaryConditions.Columns[Ord(welcEndingTime)].ComboUsed :=
-    not CombinedObjects;
+    not FCombinedObjects;
   rdgBoundaryConditions.Columns[Ord(welcParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(welcPumpingRate)].ComboUsed := True;
 
   InitializeColumnsForMt3dConc(Ord(welcConcentration));
 
-  if CombinedObjects then
+  if FCombinedObjects then
   begin
     rdgBoundaryConditions.Columns[Ord(welcStartingTime)].Format := rcf4Integer;
     rdgBoundaryConditions.Columns[Ord(welcEndingTime)].Format := rcf4Integer;
@@ -5069,7 +5442,7 @@ begin
 
       ConcItem := CreateConcItem(ConcBoundary, Index, Item);
 
-      if CombinedObjects then
+      if FCombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(ghbcHead), Index + 1]);
@@ -5124,7 +5497,7 @@ end;
 
 procedure TfrmImportShapefile.InitializeBoundaryControlsForGHB;
 begin
-  CombinedObjects := comboJoinObjects.ItemIndex = 1;
+  FCombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspConductanceInterp;
   lblConductanceInterpretation.Caption := StrConductanceInterpre;
   rdgBoundaryConditions.Enabled := True;
@@ -5132,16 +5505,16 @@ begin
   AssignColFeatureProperties;
 
   rdgBoundaryConditions.Columns[Ord(ghbcStartingTime)].ComboUsed :=
-    not CombinedObjects;
+    not FCombinedObjects;
   rdgBoundaryConditions.Columns[Ord(ghbcEndingTime)].ComboUsed :=
-    not CombinedObjects;
+    not FCombinedObjects;
   rdgBoundaryConditions.Columns[Ord(ghbcParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(ghbcHead)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(ghbcConductance)].ComboUsed := True;
 
   InitializeColumnsForMt3dConc(Ord(ghbcConcentration));
 
-  if CombinedObjects then
+  if FCombinedObjects then
   begin
     rdgBoundaryConditions.Columns[Ord(ghbcStartingTime)].Format := rcf4Integer;
     rdgBoundaryConditions.Columns[Ord(ghbcEndingTime)].Format := rcf4Integer;
@@ -5194,23 +5567,23 @@ end;
 
 procedure TfrmImportShapefile.InitializeBoundaryControlsForCHD;
 begin
-  CombinedObjects := comboJoinObjects.ItemIndex = 1;
+  FCombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspNone;
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := Ord(ccEndingHead) + 1
     + AssociatedConcColumns;
   AssignColFeatureProperties;
   rdgBoundaryConditions.Columns[Ord(ccStartingTime)].ComboUsed :=
-    not CombinedObjects;
+    not FCombinedObjects;
   rdgBoundaryConditions.Columns[Ord(ccEndingTime)].ComboUsed :=
-    not CombinedObjects;
+    not FCombinedObjects;
   rdgBoundaryConditions.Columns[Ord(ccParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(ccStartingHead)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(ccEndingHead)].ComboUsed := True;
 
   InitializeColumnsForMt3dConc(Ord(ccConcentration));
 
-  if CombinedObjects then
+  if FCombinedObjects then
   begin
     rdgBoundaryConditions.Columns[Ord(ccStartingTime)].Format := rcf4Integer;
     rdgBoundaryConditions.Columns[Ord(ccEndingTime)].Format := rcf4Integer;
@@ -5297,7 +5670,7 @@ begin
 
       ConcItem := CreateConcItem(ConcBoundary, ItemIndex, Item);
 
-      if CombinedObjects then
+      if FCombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(ccStartingHead), ItemIndex + 1]);
@@ -5375,6 +5748,12 @@ begin
         begin
           ShouldEnable := (rgEvaluatedAt.ItemIndex = 0);
         end;
+      msFootPrint:
+        begin
+          { TODO -cFootprint : Enable import of well locations and data from Shapefiles. }
+          ShouldEnable := (FGeometryFile <> nil) and (FGeometryFile.FileHeader.ShapeType in
+            [stPoint, stMultiPoint, stPointZ, stMultiPointZ, stPointM, stMultipointM]);
+        end
     else
       begin
         Assert(False);
@@ -6018,12 +6397,22 @@ begin
         AddModflowPackageToImportChoices(Packages.ResPackage);
         AddModflowPackageToImportChoices(Packages.RivPackage);
         AddModflowPackageToImportChoices(Packages.SfrPackage);
+
+        AddModflowPackageToImportChoices(Packages.StrPackage);
+
         AddModflowPackageToImportChoices(Packages.UzfPackage);
         AddModflowPackageToImportChoices(Packages.WelPackage);
       end;
     msSutra22:
       begin
+        { TODO -cSUTRA : Enable import SUTRA boundaries from Shapefiles. }
       end;
+    msFootPrint:
+      begin
+        comboBoundaryChoice.Items.AddObject(StrFootprintWithdrawal,
+          Model.FootprintProperties);
+        { TODO -cFootprint : Enable import of well locations and data from Shapefiles. }
+      end
   else
     begin
       Assert(False);
@@ -6547,7 +6936,7 @@ begin
       FInvalidParameterNames.Sorted := True;
       FInvalidParameterNames.Duplicates := dupIgnore;
       frmGoPhast.ChangingSelection := True;
-      CombinedObjects := comboJoinObjects.Enabled
+      FCombinedObjects := comboJoinObjects.Enabled
         and (comboJoinObjects.ItemIndex = 1);
       GlobalDecompileType := dcValue;
       InvalidObjectNumbers := TIntegerList.Create;
@@ -6775,7 +7164,7 @@ begin
 
                 Undo := TUndoImportShapefile.Create;
                 try
-                  if CombinedObjects then
+                  if FCombinedObjects then
                   begin
                     ScreenObjectList.Capacity := 1;
                   end
@@ -6790,14 +7179,14 @@ begin
                   begin
                     ShapeObject := FGeometryFile[Index];
                     FNumPointsInCurrentShape := ShapeObject.FNumPoints;
-                    if not CombinedObjects or (Index = 0) then
+                    if not FCombinedObjects or (Index = 0) then
                     begin
                       AScreenObject := TScreenObject.CreateWithViewDirection(
                         frmGoPhast.PhastModel, vdTop,
                         UndoCreateScreenObject, False);
                       AScreenObject.ElevationCount :=
                         TElevationCount(rgElevationCount.ItemIndex);
-                      if CombinedObjects then
+                      if FCombinedObjects then
                       begin
                         case AScreenObject.ElevationCount of
                           ecZero: ; // do nothing
@@ -6854,7 +7243,7 @@ begin
                       AScreenObject.EvaluatedAt := EvalAt;
                       AScreenObject.Selected := comboVisibility.ItemIndex = 0;
                       AScreenObject.Visible := comboVisibility.ItemIndex <= 1;
-                      if CombinedObjects then
+                      if FCombinedObjects then
                       begin
                         for DataSetIndex := 0 to DataSets.Count - 1 do
                         begin
@@ -6880,7 +7269,7 @@ begin
 
                       if FDataBaseFileName = '' then
                       begin
-                        if CombinedObjects then
+                        if FCombinedObjects then
                         begin
                           if ScreenObjectList.Count = 0 then
                           begin
@@ -6900,7 +7289,7 @@ begin
                         for DataSetIndex := 0 to DataSets.Count - 1 do
                         begin
                           DataSet := DataSets[DataSetIndex];
-                          if not CombinedObjects or (Index = 0) then
+                          if not FCombinedObjects or (Index = 0) then
                           begin
                             if DataSet <> nil then
                             begin
@@ -6919,7 +7308,7 @@ begin
 
                           Variable := Variables[DataSetIndex];
                           ValueList := nil;
-                          if CombinedObjects then
+                          if FCombinedObjects then
                           begin
                             ValueList := MultiValueList[DataSetIndex];
                           end;
@@ -6932,7 +7321,7 @@ begin
                                   RealFieldNames[DataSetIndex]));
                                 if DataSet <> nil then
                                 begin
-                                  if CombinedObjects then
+                                  if FCombinedObjects then
                                   begin
                                     ValueList.RealValues[Index-DeleteCount+AddCount]
                                       := RealVariable.Value;
@@ -6952,7 +7341,7 @@ begin
                                   RealFieldNames[DataSetIndex]));
                                 if DataSet <> nil then
                                 begin
-                                  if CombinedObjects then
+                                  if FCombinedObjects then
                                   begin
                                     if DataSet.DataType = rdtDouble then
                                     begin
@@ -6984,7 +7373,7 @@ begin
                                   BooleanVariable.Value := True;
                                   if DataSet <> nil then
                                   begin
-                                    if CombinedObjects then
+                                    if FCombinedObjects then
                                     begin
                                       ValueList.BooleanValues[
                                         Index-DeleteCount+AddCount] := True;
@@ -7001,7 +7390,7 @@ begin
                                   BooleanVariable.Value := False;
                                   if DataSet <> nil then
                                   begin
-                                    if CombinedObjects then
+                                    if FCombinedObjects then
                                     begin
                                       ValueList.BooleanValues[
                                         Index-DeleteCount+AddCount] := False;
@@ -7024,7 +7413,7 @@ begin
                                 StringVariable.Value := Trim(StringFormula);
                                 if DataSet <> nil then
                                 begin
-                                  if CombinedObjects then
+                                  if FCombinedObjects then
                                   begin
                                     ValueList.StringValues[Index-DeleteCount+AddCount]
                                       := StringVariable.Value;
@@ -7044,7 +7433,7 @@ begin
                         if ImportCriterionExpression.BooleanResult then
                         begin
                           AssignBoundary(AScreenObject);
-                          if CombinedObjects then
+                          if FCombinedObjects then
                           begin
                             if ScreenObjectList.Count = 0 then
                             begin
@@ -7058,7 +7447,7 @@ begin
                         end
                         else
                         begin
-                          if CombinedObjects then
+                          if FCombinedObjects then
                           begin
                             Inc(DeleteCount);
                           end
@@ -7084,7 +7473,7 @@ begin
                             else
                             begin
                               ZExpression.Evaluate;
-                              if CombinedObjects then
+                              if FCombinedObjects then
                               begin
                                 AScreenObject.ImportedSectionElevations.Add
                                   (ZExpression.DoubleResult);
@@ -7111,7 +7500,7 @@ begin
                             else
                             begin
                               HighZExpression.Evaluate;
-                              if CombinedObjects then
+                              if FCombinedObjects then
                               begin
                                 AScreenObject.ImportedHigherSectionElevations.Add
                                   (HighZExpression.DoubleResult);
@@ -7135,7 +7524,7 @@ begin
                             else
                             begin
                               LowZExpression.Evaluate;
-                              if CombinedObjects then
+                              if FCombinedObjects then
                               begin
                                 AScreenObject.ImportedLowerSectionElevations.Add
                                   (LowZExpression.DoubleResult);
@@ -7156,7 +7545,7 @@ begin
                       end;
 
 
-                      if CombinedObjects then
+                      if FCombinedObjects then
                       begin
                         if Index = 0 then
                         begin
@@ -7228,7 +7617,7 @@ begin
                           end;
                           PriorPoint := PointRecord;
                         end;
-                        if CombinedObjects and NewSection and (PointIndex > 0) then
+                        if FCombinedObjects and NewSection and (PointIndex > 0) then
                         begin
                           Inc(AddCount);
                           for ValueIndex := 0 to MultiValueList.Count - 1 do
@@ -7274,7 +7663,7 @@ begin
                         ScreenObjectList.Remove(AScreenObject);
                         AScreenObject.Free;
                         InvalidObjectNumbers.Add(Index+1);
-                        if CombinedObjects then
+                        if FCombinedObjects then
                         begin
                           break
                         end;
@@ -7288,7 +7677,7 @@ begin
                           InvalidFormulaNumbers := TIntegerList.Create;
                         end;
                         InvalidFormulaNumbers.Add(Index+1);
-                        if CombinedObjects then
+                        if FCombinedObjects then
                         begin
                           break
                         end;
@@ -7302,7 +7691,7 @@ begin
                     Application.ProcessMessages;
 
                   end;
-                  if CombinedObjects then
+                  if FCombinedObjects then
                   begin
                     Assert(ScreenObjectList.Count <= 1);
                     for ValueIndex := 0 to MultiValueList.Count - 1 do
@@ -7642,6 +8031,8 @@ begin
   begin
     DataSet := DataArrayManager.DataSets[Index];
     if (DataSet.EvaluatedAt = EvalAt)
+      and (not (dcFormula in DataSet.Lock))
+      and DataSet.Visible
       and (DataSet.Orientation = dsoTop)
       and ((DataSet.DataType = FFieldTypes[ARow - 1])
       or ((DataSet.DataType = rdtDouble)
@@ -8291,7 +8682,8 @@ begin
   FCombinedObjectsAllowed := True;
   Model := frmGoPhast.PhastModel;
   rdgBoundaryConditions.Enabled := comboBoundaryChoice.ItemIndex <> 0;
-  seBoundaryTimeCount.Enabled := comboBoundaryChoice.ItemIndex <> 0;
+  seBoundaryTimeCount.Enabled := (comboBoundaryChoice.ItemIndex <> 0)
+    and (Model.ModelSelection <> msFootPrint);
   case Model.ModelSelection of
     msUndefined:
       begin
@@ -8421,6 +8813,11 @@ begin
           InitializeBoundaryControlsForSFR;
           FCombinedObjectsAllowed := False;
         end
+        else if APackage = Packages.STrPackage then
+        begin
+          InitializeBoundaryControlsForSTR;
+          FCombinedObjectsAllowed := False;
+        end
         else if APackage = Packages.LakPackage then
         begin
           InitializeBoundaryControlsForLAK;
@@ -8439,6 +8836,10 @@ begin
           FCombinedObjectsAllowed := False;
         end;
       end;
+    msFootPrint:
+      begin
+        InitializeBoundaryControlsForFootprintWell;
+      end
     else
       begin
         Assert(False);
@@ -8838,6 +9239,10 @@ begin
           begin
             ImportModflowSfrPackage(AScreenObject);
           end
+          else if Package = Packages.StrPackage then
+          begin
+            ImportModflowStrPackage(AScreenObject);
+          end
           else if Package = Packages.LakPackage then
           begin
             ImportModflowLakPackage(AScreenObject);
@@ -8855,6 +9260,10 @@ begin
             ImportModflowMnw2Package(AScreenObject);
           end
         end;
+      msFootPrint:
+        begin
+          ImportModflowFootprintWell(AScreenObject);
+        end
       else
         begin
           Assert(False);
@@ -9082,6 +9491,18 @@ begin
   end;
 end;
 
+function TFieldNumStorage.GetStringValue: string;
+begin
+  if FieldNumber = 0 then
+  begin
+    result := StringValue;
+  end
+  else
+  begin
+    result := FXBase.GetFieldStr(AnsiString(StringValue));
+  end;
+end;
+
 function TFieldNumStorage.IntFormula: string;
 begin
   if (FieldNumber = 0) or Cached then
@@ -9121,6 +9542,19 @@ begin
     end;
     Cached := True;
     Formula := result;
+  end;
+end;
+
+function TFieldNumStorage.StringFormula: string;
+begin
+  if (FieldNumber = 0) or Cached  then
+  begin
+    result := Formula;
+  end
+  else
+  begin
+    Cached := True;
+    Formula := GetStringValue;
   end;
 end;
 

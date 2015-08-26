@@ -1418,47 +1418,54 @@ begin
     end;
     Position := Stack.Add(Name);
 
-    if UsePHAST_InterpolationForAllCells then
+    if Assigned(OnInitialize) then
     begin
-      if DimensionsChanged then
-      begin
-        SetDimensions(False);
-      end
-      else
-      begin
-        RestoreArraySize;
-        // where needed, InitializePhastArrays is called from SetDimensions
-        // in descendants of TCustomPhastDataSet;
-        InitializePhastArrays;
-      end;
-      for ScreenObjectIndex := 0 to
-        frmGoPhast.PhastModel.ScreenObjectCount - 1 do
-      begin
-        AScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
-        if not AScreenObject.Deleted then
-        begin
-          AScreenObject.AssignValuesToDataSet(self, FModel, lctUse);
-        end;
-      end;
-
-      PostInitialize;
-
-      UpToDate := True;
-      CheckIfUniform;
+      OnInitialize(Self);
     end
     else
     begin
-      if DimensionsChanged then
+      if UsePHAST_InterpolationForAllCells then
       begin
-        SetDimensions(False);
+        if DimensionsChanged then
+        begin
+          SetDimensions(False);
+        end
+        else
+        begin
+          RestoreArraySize;
+          // where needed, InitializePhastArrays is called from SetDimensions
+          // in descendants of TCustomPhastDataSet;
+          InitializePhastArrays;
+        end;
+        for ScreenObjectIndex := 0 to
+          frmGoPhast.PhastModel.ScreenObjectCount - 1 do
+        begin
+          AScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
+          if not AScreenObject.Deleted then
+          begin
+            AScreenObject.AssignValuesToDataSet(self, FModel, lctUse);
+          end;
+        end;
+
+        PostInitialize;
+
+        UpToDate := True;
+        CheckIfUniform;
       end
       else
       begin
-        RestoreArraySize;
+        if DimensionsChanged then
+        begin
+          SetDimensions(False);
+        end
+        else
+        begin
+          RestoreArraySize;
+        end;
+        ResetCellsPhastInterpolation;
+        Stack.Delete(Position);
+        inherited;
       end;
-      ResetCellsPhastInterpolation;
-      Stack.Delete(Position);
-      inherited;
     end;
   finally
     if FreeStack then

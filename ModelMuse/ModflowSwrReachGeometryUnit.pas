@@ -126,6 +126,7 @@ type
     FGeometryType: TGeometryType;
     FStoredRoughness: TRealStorage;
     FStoredWidth: TRealStorage;
+    FGeoNumber: integer;
     function GetBottomElevation: Double;
     function GetCenterDistance: Double;
     function GetConductance: Double;
@@ -180,6 +181,8 @@ type
     // GETEXTD
     property ExtinctionDepth: Double  read GetExtinctionDepth
       write SetExtinctionDepth;
+    // IGEONUM
+    property GeoNumber: integer read FGeoNumber write FGeoNumber;
   published
     // IGEONUM
     property Name: string read FName write SetName;

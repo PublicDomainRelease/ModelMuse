@@ -68,6 +68,9 @@ type
     FSutraFluidFluxList: TList;
     FvstSutraUFluxNode: PVirtualNode;
     FSutraUFluxList: TList;
+    FvstFootprintWellNode: PVirtualNode;
+    FFootprintList: TList;
+    FvstFootprintFeaturesNode: PVirtualNode;
     { Private declarations }
 
   { Public declarations }
@@ -355,6 +358,7 @@ resourcestring
   StrLateralInflowInS = 'Lateral Inflow in %s';
   StrStageInS = 'Stage in %s';
   StrDirectRunoffInS = 'Direct Runoff in %s';
+  StrFootprintWell = 'Footprint Well';
 
 {$R *.dfm}
 procedure TfrmCustomSelectObjects.vstObjectsInitNode(Sender: TBaseVirtualTree;
@@ -403,6 +407,11 @@ begin
       Data.Caption := StrSUTRAFeatures;
       Node.CheckType := ctTriStateCheckBox;
     end
+    else if Node = FvstFootprintFeaturesNode then
+    begin
+      Data.Caption := 'Footprint Features';
+      Node.CheckType := ctTriStateCheckBox;
+    end
     else if Node = FvstDataSetRootNode then
     begin
       Data.Caption := StrDataSets;
@@ -435,7 +444,7 @@ begin
             Data.Caption := StrSetGridElementSize;
           end;
         msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-          msModflowFmp, msModflowCfp:
+          msModflowFmp, msModflowCfp, msFootPrint:
           begin
             Data.Caption := StrSetGridCellSize;
           end;
@@ -696,7 +705,13 @@ begin
     begin
       Data.Caption := StrConduitRechargeFra;
       Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstFootprintWellNode then
+    begin
+      Data.Caption := StrFootprintWell;
+      Node.CheckType := ctTriStateCheckBox;
     end;
+
 
 
     If (ParentNode = nil) then
@@ -820,6 +835,12 @@ begin
     begin
       CellText := CellText + ', '
         + AScreenObject.ModflowHeadObservations.ObservationName;
+    end;
+
+    if FvstFootprintWellNode = Node.Parent then
+    begin
+      CellText := CellText + ', '
+        + AScreenObject.FootprintWell.Withdrawal;
     end;
 
     If (ParentNode <> nil) and (ParentNode.Parent = FvstDataSetRootNode) then
@@ -1274,6 +1295,12 @@ begin
       InitializeData(FvstSutraUFluxNode);
     end;
 
+    if (AScreenObject.FootprintWell <> nil)
+      and AScreenObject.FootprintWell.Used then
+    begin
+      InitializeData(FvstFootprintWellNode);
+    end;
+
     if PutInOtherObjects then
     begin
       InitializeData(FvstOtherObjectsNode);
@@ -1375,11 +1402,13 @@ begin
   vstCheckDeleteNode(FvstSutraSpecUNode);
   vstCheckDeleteNode(FvstSutraFluidFluxNode);
   vstCheckDeleteNode(FvstSutraUFluxNode);
+  vstCheckDeleteNode(FvstFootprintWellNode);
 
   vstCheckDeleteNode(FvstModflowBoundaryConditionsRoot);
   vstCheckDeleteNode(FvstModpathRoot);
   vstCheckDeleteNode(FvstChildModelNode);
   vstCheckDeleteNode(FvstSutraFeaturesNode);
+  vstCheckDeleteNode(FvstFootprintFeaturesNode);
 
 
   ParentNodes := TList.Create;
@@ -1597,6 +1626,15 @@ begin
   end;
   InitializeNodeData(FvstSutraFeaturesNode, nil);
 
+  if FvstFootprintFeaturesNode = nil then
+  begin
+    FvstFootprintFeaturesNode := vstObjects.InsertNode(
+      FvstChildModelNode, amInsertAfter);
+    vstObjects.ReinitNode(FvstFootprintFeaturesNode, False);
+  end;
+  InitializeNodeData(FvstFootprintFeaturesNode, nil);
+
+
 
   if FvstOtherObjectsNode = nil then
   begin
@@ -1710,6 +1748,16 @@ begin
   InitializeMF_BoundaryNode(FvstSutraSpecUNode, PriorNode, FSutraSpecUList);
   InitializeMF_BoundaryNode(FvstSutraFluidFluxNode, PriorNode, FSutraFluidFluxList);
   InitializeMF_BoundaryNode(FvstSutraUFluxNode, PriorNode, FSutraUFluxList);
+
+  // Add children of FvstFootprintFeaturesNode
+  if FvstFootprintWellNode = nil then
+  begin
+    FvstFootprintWellNode := vstObjects.InsertNode(
+      FvstFootprintFeaturesNode, amAddChildFirst);
+    vstObjects.ReinitNode(FvstFootprintWellNode, False);
+  end;
+  InitializeNodeData(FvstFootprintWellNode, FFootprintList);
+  PriorNode := FvstFootprintWellNode;
 
 
   FDataSetLists.Clear;
@@ -1855,6 +1903,7 @@ begin
   FSutraSpecUList.Free;
   FSutraFluidFluxList.Free;
   FSutraUFluxList.Free;
+  FFootprintList.Free;
 
   inherited;
 end;
@@ -1921,6 +1970,7 @@ begin
   FSutraSpecUList := TList.Create;
   FSutraFluidFluxList := TList.Create;
   FSutraUFluxList := TList.Create;
+  FFootprintList := TList.Create;
 
   FCanEdit := True;
 
@@ -1997,10 +2047,12 @@ begin
   FvstSutraSpecUNode := nil;
   FvstSutraFluidFluxNode := nil;
   FvstSutraUFluxNode := nil;
+  FvstFootprintWellNode := nil;
 
   FvstModpathRoot := nil;
   FvstChildModelNode := nil;
   FvstSutraFeaturesNode := nil;
+  FvstFootprintFeaturesNode := nil;
 end;
 
 procedure TfrmCustomSelectObjects.SetCanEdit(const Value: boolean);
@@ -2130,6 +2182,7 @@ begin
   FSutraSpecUList.Sort(ScreenObjectCompare);
   FSutraFluidFluxList.Sort(ScreenObjectCompare);
   FSutraUFluxList.Sort(ScreenObjectCompare);
+  FFootprintList.Sort(ScreenObjectCompare);
 
   for Index := 0 to FDataSetLists.Count - 1 do
   begin
@@ -2362,6 +2415,7 @@ begin
     or (Node = FvstPhastBoundaryConditionsRoot)
     or (Node = FvstModflowBoundaryConditionsRoot)
     or (Node = FvstSutraFeaturesNode)
+    or (Node = FvstFootprintFeaturesNode)
     then
   begin
     if Sender.CheckState[Node] <> csMixedNormal then
@@ -2528,6 +2582,7 @@ begin
       if (vstNode = FvstPhastBoundaryConditionsRoot)
         or (vstNode = FvstModflowBoundaryConditionsRoot)
         or (vstNode = FvstSutraFeaturesNode)
+        or (vstNode = FvstFootprintFeaturesNode)
         then
       begin
         // Convert vstObjects.ChildCount[Node] from Cardinal to integer to
@@ -2642,6 +2697,7 @@ begin
   SetRootNodeStates(FvstPhastBoundaryConditionsRoot);
   SetRootNodeStates(FvstModflowBoundaryConditionsRoot);
   SetRootNodeStates(FvstSutraFeaturesNode);
+  SetRootNodeStates(FvstFootprintFeaturesNode);
   UpdateChildCheck(FvstModpathRoot);
   SetRootNodeStates(FvstDataSetRootNode);
   UpdateChildCheck(FvstChildModelNode);

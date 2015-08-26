@@ -4,8 +4,8 @@ inherited frmModflowOptions: TfrmModflowOptions
   Caption = 'MODFLOW Options'
   ClientHeight = 486
   ClientWidth = 543
-  ExplicitWidth = 559
-  ExplicitHeight = 524
+  ExplicitWidth = 561
+  ExplicitHeight = 531
   PixelsPerInch = 120
   TextHeight = 18
   object pcOptions: TPageControl
@@ -21,10 +21,6 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpType = htKeyword
       HelpKeyword = 'Description_Tab'
       Caption = 'Description'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         535
         371)
@@ -97,10 +93,6 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpKeyword = 'Options_Tab'
       Caption = 'Options'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         535
         371)
@@ -299,6 +291,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         Filter = 'Binary head files (*.bhd)|*.bhd'
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 8
+        OnChange = feInitialHeadsChange
       end
       object edMasUnit: TLabeledEdit
         Left = 3
@@ -332,10 +325,6 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpKeyword = 'Wetting_Tab'
       Caption = 'Wetting'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblWetFact: TLabel
         Left = 3
         Top = 35

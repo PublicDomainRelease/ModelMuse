@@ -343,6 +343,7 @@ begin
     ScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
     FScreenObjects.Add(ScreenObject);
     OldBoundary := TModflowBoundaries.Create;
+    OldBoundary.Model := nil;
     OldBoundary.Assign(ScreenObject.ModflowBoundaries);
     FOldModflowBoundaries.Add(OldBoundary);
   end;
@@ -448,7 +449,9 @@ begin
   begin
     ScreenObject := FScreenObjects[ScreenObjectIndex];
     OldBoundary := FOldModflowBoundaries[ScreenObjectIndex];
+    ScreenObject.ModflowBoundaries.Model := frmGoPhast.PhastModel;
     ScreenObject.ModflowBoundaries.Assign(OldBoundary);
+    ScreenObject.ModflowBoundaries.Model := nil;
   end;
 end;
 

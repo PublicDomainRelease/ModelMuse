@@ -2,24 +2,37 @@ inherited frmSelectObjectsForEditing: TfrmSelectObjectsForEditing
   HelpType = htKeyword
   HelpKeyword = 'Select_Objects_for_Editing'
   Caption = 'Select Objects for Editing or Deletion'
-  ExplicitWidth = 438
+  ClientWidth = 547
+  ExplicitWidth = 563
   ExplicitHeight = 452
   PixelsPerInch = 96
   TextHeight = 18
   inherited pnlBottom: TPanel
+    Top = 368
+    Width = 547
+    Height = 46
     TabOrder = 2
+    ExplicitTop = 368
+    ExplicitWidth = 547
+    ExplicitHeight = 46
     inherited btnClose: TBitBtn
+      Left = 449
+      Top = 6
       Kind = bkCancel
-      TabOrder = 3
+      TabOrder = 4
+      ExplicitLeft = 449
+      ExplicitTop = 6
     end
     inherited btnHelp: TBitBtn
-      Left = 45
+      Left = 2
+      Top = 6
       OnClick = btnHelpClick
-      ExplicitLeft = 45
+      ExplicitLeft = 2
+      ExplicitTop = 6
     end
     object btnOK: TBitBtn
-      Left = 235
-      Top = 4
+      Left = 192
+      Top = 6
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
@@ -30,8 +43,8 @@ inherited frmSelectObjectsForEditing: TfrmSelectObjectsForEditing
       OnClick = btnOKClick
     end
     object btnDelete: TBitBtn
-      Left = 140
-      Top = 4
+      Left = 97
+      Top = 6
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
@@ -60,21 +73,34 @@ inherited frmSelectObjectsForEditing: TfrmSelectObjectsForEditing
       TabOrder = 1
       OnClick = btnDeleteClick
     end
+    object btnEditFeature: TButton
+      Left = 287
+      Top = 6
+      Width = 156
+      Height = 33
+      Anchors = [akTop, akRight]
+      Caption = 'Edit feature formula'
+      ModalResult = 8
+      TabOrder = 3
+      OnClick = btnEditFeatureClick
+    end
   end
   inherited vstObjects: TVirtualStringTree
     Top = 57
-    Height = 316
+    Width = 547
+    Height = 311
     PopupMenu = pmChangeStates
     TabOrder = 1
     TreeOptions.SelectionOptions = [toMultiSelect]
     OnChecked = vstObjectsChecked
     ExplicitTop = 57
-    ExplicitHeight = 316
+    ExplicitWidth = 547
+    ExplicitHeight = 311
   end
   object rgViewDirection: TRadioGroup
     Left = 0
     Top = 0
-    Width = 422
+    Width = 547
     Height = 57
     Align = alTop
     Caption = 'View Direction'

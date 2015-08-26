@@ -1445,11 +1445,14 @@ begin
         if (frmGoPhast.PhastModel.ThreeDDataSet <> nil)
           or (frmGoPhast.Grid.ThreeDContourDataSet <> nil) then
         begin
-          if frmDisplayData = nil then
+          if (frmDisplayData <> nil) and frmDisplayData.Visible then
           begin
-            Application.CreateForm(TfrmDisplayData, frmDisplayData);
+            UpdateFrmDisplayData(True);
           end;
-          UpdateFrmDisplayData(True);
+//          if frmDisplayData = nil then
+//          begin
+//            Application.CreateForm(TfrmDisplayData, frmDisplayData);
+//          end;
         end;
       end
       else
@@ -1533,10 +1536,27 @@ begin
         DrawVectors;
       end;
 
-    except on EInvalidGraphicOperation do
+    except
+      on EInvalidGraphicOperation do
       begin
         // If the size is too big, make it smaller and start over.
         WarnTooBig;
+      end;
+      on EIntOverflow do
+      begin
+        // If the size is too big, make it smaller and start over.
+        ZoomBox.ZoomBy(0.5);
+        ZoomBox.InvalidateImage32;
+        Beep;
+        MessageDlg(StrSorryTheViewWas, mtInformation, [mbOK], 0);
+      end;
+      on EOverflow do
+      begin
+        // If the size is too big, make it smaller and start over.
+        ZoomBox.ZoomBy(0.5);
+        ZoomBox.InvalidateImage32;
+        Beep;
+        MessageDlg(StrSorryTheViewWas, mtInformation, [mbOK], 0);
       end;
     end;
   finally
@@ -1787,11 +1807,7 @@ end;
 
 procedure TframeView.PaintLayer(Sender: TObject; Buffer: TBitmap32);
 begin
-  if frmGoPhast.PhastModel.ModelSelection = msSutra22 then
-  begin
-
-  end
-  else
+  if frmGoPhast.PhastModel.ModelSelection <> msSutra22 then
   begin
     if frmGoPhast.Grid = nil then
     begin
@@ -3222,13 +3238,16 @@ begin
   result := nil;
   case frmGoPhast.PhastModel.ModelSelection of
     msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         Grid := frmGoPhast.PhastModel.SelectedModel.Grid;
-        result := Grid.TopDataSet;
-        if result = nil then
+        if Grid <> nil then
         begin
-          result := Grid.TopContourDataSet;
+          result := Grid.TopDataSet;
+          if result = nil then
+          begin
+            result := Grid.TopContourDataSet;
+          end;
         end;
       end;
     msSutra22:
@@ -3838,7 +3857,7 @@ begin
     begin
       case frmGoPhast.PhastModel.ModelSelection of
         msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-          msModflowFmp, msModflowCfp:
+          msModflowFmp, msModflowCfp, msFootPrint:
         begin
           ShowValue := (Layer <= frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount);
         end;
@@ -3907,7 +3926,7 @@ begin
     begin
       case frmGoPhast.PhastModel.ModelSelection of
         msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-        msModflowFmp, msModflowCfp:
+        msModflowFmp, msModflowCfp, msFootPrint:
         begin
           Layer := frmGoPhast.PhastModel.SelectedModel.SelectedLayer;
         end;
@@ -3936,7 +3955,7 @@ begin
       ShowValue := False;
       case frmGoPhast.PhastModel.ModelSelection of
         msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-        msModflowFmp, msModflowCfp:
+        msModflowFmp, msModflowCfp, msFootPrint:
         begin
           ShowValue := (Layer < frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount);
         end;

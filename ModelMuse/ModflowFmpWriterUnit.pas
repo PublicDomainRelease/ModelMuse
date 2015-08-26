@@ -263,7 +263,7 @@ resourcestring
   'g crops';
   StrInefficiencyLosses = 'Inefficiency losses to surface water not defined ' +
   'for the following crops';
-  StrCropEfficiencesNot = 'Crop Efficiences not fully defined in the followi' +
+  StrCropEfficiencesNot = 'Crop Efficiencies not fully defined in the followi' +
   'ng objects.';
   StrVirtualFarmNumber = 'Virtual Farm Number not defined in the following o' +
   'bjects.';

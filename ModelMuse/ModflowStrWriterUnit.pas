@@ -242,6 +242,7 @@ resourcestring
   ':d, Column: %4:d; Stress Period: %5:d; Invalid value: %6:g';
   StrHighSTRStreamCond = 'High STR stream conductance compared to the cell-t' +
   'o-cell conductance may cause numerical difficulties';
+  StrZeroSTRStreamCond = 'Negative or zero STR stream conductance';
 
 const
   StrSegmentNumber = 'Segment Number in ';
@@ -334,6 +335,8 @@ begin
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrTribStageWarning);
 
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrHighSTRStreamCond);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrZeroSTRStreamCond);
+
 
 
     if not Package.IsSelected then
@@ -2122,6 +2125,10 @@ begin
       begin
         Reaches := ASegment.FReaches[StressPeriodIndex];
       end;
+      if Reaches.Count = 0 then
+      begin
+        Continue;
+      end;
       OutflowReachCell := Reaches.First as TStr_Cell;;
       Tributaries := ASegment.FTributaries[StressPeriodIndex];
       for TribIndex := 0 to Tributaries.Count - 1 do
@@ -2312,6 +2319,14 @@ var
           AReach.Layer+1, AReach.Row+1, AReach.Column+1, ScreenObject.Name]),
           ScreenObject);
       end;
+    end
+    else
+    begin
+      ScreenObject := AReach.ScreenObject as TScreenObject;
+      frmErrorsAndWarnings.AddWarning(Model,StrZeroSTRStreamCond,
+        Format(StrLayerRowColObject, [
+        AReach.Layer+1, AReach.Row+1, AReach.Column+1, ScreenObject.Name]),
+        ScreenObject);
     end;
 
   end;

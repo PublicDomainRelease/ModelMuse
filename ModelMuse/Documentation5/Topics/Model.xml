@@ -8,7 +8,7 @@
     </header>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The items under </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Model</text><text styleclass="Normal" translate="true"> are used to select the model that is being edited (MODFLOW-2005, MODFLOW-LGR, MODFLOW-NWT, PHAST, or SUTRA) and to set options specific to a particular model (Table 13). &#160;</text></para>
     <para styleclass="Table Caption"><text styleclass="Table Caption" translate="true">Table 13. Model Menu</text></para>
-    <para styleclass="Normal" style="text-align:center;"><table rowcount="42" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Normal" style="text-align:center;"><table rowcount="45" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td style="vertical-align:top; width:387px;">
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Menu Item</text></para>
@@ -76,6 +76,14 @@
         </td>
         <td style="vertical-align:top; width:485px;">
           <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Make SUTRA the active model.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:top; width:387px;">
+          <para styleclass="Table Header" style="text-align:left;"><conditional-text type="IF" value="FOOTPRINT"/><anchor id="Footprint" styleclass="Table Header"></anchor><text styleclass="Table Header" translate="true">Footprint</text><conditional-text type="END"/></para>
+        </td>
+        <td style="vertical-align:top; width:485px;">
+          <para styleclass="Table Cell"><conditional-text type="IF" value="FOOTPRINT"/><text styleclass="Table Cell" translate="true">Make a Groundwater Withdrawal Footprint the active model.</text><conditional-text type="END"/></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -343,7 +351,24 @@
           <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Display the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SUTRA_Program_Locations_Dialog" styleclass="Table Cell" style="font-weight:bold;" translate="true">SUTRA Program Location</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
         </td>
       </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:top; width:387px;">
+          <para styleclass="Table Header" style="text-align:left;"><conditional-text type="IF" value="FOOTPRINT"/><text styleclass="Table Header" translate="true">Footprint Properties...</text><conditional-text type="END"/></para>
+        </td>
+        <td style="vertical-align:top; width:485px;">
+          <para styleclass="Table Cell"><conditional-text type="IF" value="FOOTPRINT"/><text styleclass="Table Cell" translate="true">Display the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Footprint_Properties_Dialog_Bo" styleclass="Strong" translate="true">Footprint Properties</link><text styleclass="Table Cell" translate="true"> dialog box.</text><conditional-text type="END"/></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:top; width:387px;">
+          <para styleclass="Table Header" style="text-align:left;"><conditional-text type="IF" value="FOOTPRINT"/><text styleclass="Table Header" translate="true">Footprint Program Location...</text><conditional-text type="END"/></para>
+        </td>
+        <td style="vertical-align:top; width:485px;">
+          <para styleclass="Table Cell"><conditional-text type="IF" value="FOOTPRINT"/><text styleclass="Table Cell" translate="true">Display the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Footprint_Program_Location" styleclass="Strong" translate="true">Footprint Program Location</link><text styleclass="Table Cell" translate="true"> dialog box.</text><conditional-text type="END"/></para>
+        </td>
+      </tr>
     </table></para>
+    <para styleclass="Normal" style="text-align:center;"></para>
     <para styleclass="Normal"></para>
     <para styleclass="Table Cell"></para>
   </body>

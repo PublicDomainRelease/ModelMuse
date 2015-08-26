@@ -142,7 +142,7 @@ begin
       Count := 0;
       for Index := 0 to Length(AnArray) - 1 do
       begin
-        AnArray[Index] := Power(10,AnArray[Index]);
+        AnArray[Index] := Power(10.,AnArray[Index]);
         Inc(Count);
       end;
       SetLength(AnArray, Count);

@@ -43,7 +43,7 @@ uses Windows, Classes, Dialogs, Forms, Controls;
   widths of adjacent columns, rows, or layers. SmoothingCriterion
   is ignored if SmoothColumns, SmoothRows, and SmoothLayers are all false.)
   }
-function GenerateGrid(out ErrorMessage: string;
+function GenerateGrid(out ErrorMessage, WarningMessage: string;
   const SpecifyGridAngle: boolean; const SpecifiedGridAngle: real;
   const SmoothColumns, SmoothRows, SmoothLayers: boolean;
   const SmoothingCriterion: double): boolean;
@@ -57,7 +57,7 @@ implementation
 
 uses frmGoPhastUnit, ScreenObjectUnit, AbstractGridUnit, GoPhastTypes, Math,
   Contnrs, RealListUnit, frmGoToUnit, frmSmoothGridUnit, UndoItems, FastGEO,
-  SysUtils;
+  SysUtils, System.Generics.Collections;
 
 resourcestring
   StrFailedToGenerateG = 'Failed to generate grid';
@@ -452,13 +452,13 @@ begin
   end;
 end;
 
-function GenerateGrid(out ErrorMessage: string;
+function GenerateGrid(out ErrorMessage, WarningMessage: string;
   const SpecifyGridAngle: boolean; const SpecifiedGridAngle: real;
   const SmoothColumns, SmoothRows, SmoothLayers: boolean;
   const SmoothingCriterion: double): boolean;
 var
-  DomainList: TList;
-  OutlineList: TList;
+  DomainList: TList<TScreenObject>;
+  OutlineList: TList<TScreenObject>;
   ScreenObjectIndex, PointIndex: integer;
   AScreenObject: TScreenObject;
   Points, RotatatedPoints: TRealPointArray;
@@ -481,6 +481,7 @@ var
   DomainCount: integer;
   NewNumElements: integer;
   AMessage: string;
+  DeletedObject: TScreenObject;
   procedure GetMinMax(const PointArray: TRealPointArray;
     out MinX, MaxX, MinY, MaxY: real);
   var
@@ -533,9 +534,10 @@ var
   end;
 begin
   ErrorMessage := StrFailedToGenerateG;
+  WarningMessage := '';
   result := False;
-  DomainList := TList.Create;
-  OutlineList := TList.Create;
+  DomainList := TList<TScreenObject>.Create;
+  OutlineList := TList<TScreenObject>.Create;
   try
     // Get a list of the domain screen objects.
     ArraySize := 0;
@@ -545,13 +547,42 @@ begin
       if AScreenObject.CellSizeUsed
         and not AScreenObject.Deleted then
       begin
-        DomainList.Add(AScreenObject);
-        if (AScreenObject.ViewDirection = vdTop) and AScreenObject.Closed then
+        if frmGoPhast.ModelSelection <> msFootPrint then
+        begin
+          DomainList.Add(AScreenObject);
+        end
+        else if AScreenObject.ScreenObjectArea > 0 then
+        begin
+          DomainList.Add(AScreenObject);
+        end;
+        if (frmGoPhast.ModelSelection = msFootPrint) and (DomainList.Count > 1) then
+        begin
+          WarningMessage := 'Multiple objects were used to define the domain outline. Only the largest one will be used.';
+          if DomainList[0].ScreenObjectArea > DomainList[1].ScreenObjectArea then
+          begin
+            DeletedObject := DomainList[1];
+            DomainList.Delete(1);
+          end
+          else
+          begin
+            DeletedObject := DomainList[0];
+            DomainList.Delete(0);
+          end;
+        end;
+        if (AScreenObject.ViewDirection = vdTop) and AScreenObject.Closed
+          and (frmGoPhast.ModelSelection <> msFootPrint) then
         begin
           ArraySize := ArraySize + AScreenObject.Count;
           OutlineList.Add(AScreenObject);
+
         end;
       end;
+    end;
+    if (frmGoPhast.ModelSelection = msFootPrint) and
+      (DomainList.Count > 0) then
+    begin
+      OutlineList.Add(DomainList[0]);
+      ArraySize := DomainList[0].Count;
     end;
 
     // test if it is possible to generate the grid.

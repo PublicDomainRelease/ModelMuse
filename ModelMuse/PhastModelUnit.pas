@@ -35,7 +35,8 @@ uses Windows, Types, GuiSettingsUnit, SysUtils, Classes, Contnrs, Controls,
   VectorDisplayUnit, ModflowFmpCropUnit, ModflowFmpSoilUnit,
   ModflowFmpClimateUnit, ModflowFmpAllotmentUnit, ModflowSwrTabfilesUnit,
   ModflowSwrReachGeometryUnit, ModflowSwrStructureUnit, ModflowSwrObsUnit,
-  ModflowFmpFarmUnit;
+  ModflowFmpFarmUnit, LinkedRastersUnit, FootprintGridUnit,
+  FootprintPropertiesUnit;
 
 const
   kHufThickness = '_Thickness';
@@ -214,6 +215,10 @@ const
   KSwrRoutingType = 'SWR_Routing_Type';
   KSwrReachLength = 'SWR_Reach_Length';
   KReachString = 'Reach';
+  KDepthRateIndex = 'DepthRateIndex';
+//  KDistributedWithdrawals = 'Distributed_Withdrawals';
+  KWithdrawals = 'Withdrawals';
+//  KFootprint_Code = 'Footprint_Code';
 
 
   // @name is the name of the @link(TDataArray) that specifies
@@ -455,6 +460,9 @@ resourcestring
   StrMODFLOWFHBFlows = 'FHB Flows';
 //  StrFarmID = 'Farm_ID';
   StrSoilID = 'Soil_ID';
+//  StrFootprintInputClassification = 'Footprint|Input';
+  StrFootprintInputClassification = 'Footprint';
+//  StrFootprintOutputClassification = 'Footprint|Output';
 const
   WettableLayers = [1,3];
 
@@ -657,6 +665,8 @@ type
     AssociatedDataSets: string;
     AngleType: TAngleType;
     Visible: boolean;
+    OnInitialize: TNotifyEvent;
+    OnShouldUseOnInitialize: TCheckUsageEvent;
   end;
 
   TDataSetClassification = class(TClassificationObject)
@@ -687,6 +697,7 @@ type
     FModflowFmpLocation: string;
     FModflowCfpLocation: string;
     FGmshLocation: string;
+    FFootprintLocation: string;
     function GetTextEditorLocation: string;
     procedure SetModflowLocation(const Value: string);
     function RemoveQuotes(const Value: string): string;
@@ -704,6 +715,7 @@ type
     procedure SetModflowFmpLocation(const Value: string);
     procedure SetModflowCfpLocation(const Value: string);
     procedure SetGmshLocation(const Value: string);
+    procedure SetFootprintLocation(const Value: string);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create;
@@ -740,6 +752,8 @@ type
     property ModflowCfpLocation: string read FModflowCfpLocation
       write SetModflowCfpLocation;
     property GmshLocation: string read FGmshLocation write SetGmshLocation;
+    property FootprintLocation: string read FFootprintLocation
+      write SetFootprintLocation;
   end;
 
   {
@@ -1604,7 +1618,8 @@ that affects the model output should also have a comment. }
 
   {
     @name manages the creation of @link(TDataArray)s. The @link(TDataArray)s
-    are defined in @link(DefinePackageDataArrays).
+    are defined in @link(DefinePackageDataArrays) and actually created in
+    @link(CreateInitialDataSets).
   }
   TDataArrayManager = class(TObject)
   private
@@ -1642,6 +1657,9 @@ that affects the model output should also have a comment. }
     function GetDataSetsCapacity: integer;
     procedure SetDataSetsCapacity(const Value: integer);
     procedure Invalidate;
+    // @name defines the characteristics of the data sets that should be
+    // created under different circumstances.
+    // @seealso(CreateInitialDataSets)
     procedure DefinePackageDataArrays;
     procedure InvalidateDataSetLookupList;
     function DataArrayHeld(DataArray: TDataArray): boolean;
@@ -1688,12 +1706,15 @@ that affects the model output should also have a comment. }
     procedure CacheDataArrays;
     // @name creates a new @link(TDataArray) and adds it to @link(DataSets).
     function CreateNewDataArray(const ClassType: TDataArrayType;
-      const Name, Formula, DisplayName: string; Lock: TDataLock; DataType: TRbwDataType;
+      const Name, Formula, DisplayName: string; Lock: TDataLock;
+      DataType: TRbwDataType;
       EvaluatedAt: TEvaluatedAt; Orientation: TDataSetOrientation;
       const Classification: string): TDataArray;
     // @name retrieves a @link(TDataArray) from
     // @link(DataSets) based on its name.
     function GetDataSetByName(const DataSetName: string): TDataArray;
+    // @name is used to create data sets whenever the required data sets change.
+    // @seealso(DefinePackageDataArrays)
     procedure CreateInitialDataSets;
     procedure RemoveDataSetFromLookUpList(const DataSet: TDataArray);
     // @name creates non-transient @link(TDataArray)s for boundary conditions.
@@ -1898,7 +1919,9 @@ that affects the model output should also have a comment. }
     function CountStepsInExport: Integer;
     procedure GetDefaultOutputFileExtension(var Extension: string);
     function CheckMt3dTimes(ShowWarning: Boolean): boolean;
-
+    procedure AssignFootprintBoundarydWithdrawal(Sender: TObject);
+//    procedure AssignFootprintDistributedWithdrawals(Sender: TObject);
+    procedure UseFootprintWells(Sender: TObject; var ShouldUse: Boolean);
   private
     FGrid: TCustomModelGrid;
     FModflowOptions: TModflowOptions;
@@ -1937,6 +1960,7 @@ that affects the model output should also have a comment. }
     FSwrStructures: TStructureCollection;
     FSwrObservations: TSwrObsCollection;
     FMt3dTobCond: TMt3dmsTobDisplayTimeList;
+    FFootPrintGrid: TFootPrintGrid;
     procedure CrossSectionChanged(Sender: TObject);
     procedure SetAlternateFlowPackage(const Value: boolean);
     procedure SetAlternateSolver(const Value: boolean);
@@ -2102,6 +2126,8 @@ that affects the model output should also have a comment. }
     function GetUnitNumbers: TUnitNumbers;
     function SwrSelected(Sender: TObject): Boolean;
     procedure UpdateSwrReachNumber(Sender: TObject);
+    function FootprintSelected(Sender: TObject): Boolean;
+
     function GetModelInputFiles: TStrings;
     function GetFilesToArchive: TStrings;
 //    procedure EvaluateFarmProcess;
@@ -2116,12 +2142,20 @@ that affects the model output should also have a comment. }
     procedure SetFmpCrops(const Value: TCropCollection); virtual; abstract;
     procedure SetFmpSoils(const Value: TSoilCollection); virtual; abstract;
     procedure SetFmpAllotment(const Value: TAllotmentCollection); virtual; abstract;
+    procedure SetFootPrintGrid(const Value: TFootPrintGrid);
+    function StoreLinkedRaster: Boolean;
+//    procedure AssignFootprintDistributedPumpage(Sender: TObject);
+    function ActiveUsed(Sender: TObject): boolean;
 //    procedure ImportFromGmshOnTerminate(Sender: TObject; ExitCode: DWORD);
   protected
+    function GetFootprintProperties: TFootprintProperties; virtual; Abstract;
+    procedure SetFootprintProperties(const Value: TFootprintProperties); virtual; Abstract;
     function GetParentModel: TCustomModel; virtual;
     procedure GenerateIrregularMesh(var ErrorMessage: string);
     procedure GenerateFishNetMesh(var ErrorMessage: string); virtual;
     procedure GenerateMeshUsingGmsh(var ErrorMessage: string);
+    function GetLinkedRasters: TLinkedRasterCollection; virtual; abstract;
+    procedure SetLinkedRasters(const Value: TLinkedRasterCollection);  virtual; abstract;
   var
     LakWriter: TObject;
     SfrWriter: TObject;
@@ -2797,6 +2831,9 @@ that affects the model output should also have a comment. }
     property CrossSection: TCrossSection read FCrossSection write SetCrossSection;
     property OnCrossSectionChanged: TNotifyEvent read FOnCrossSectionChanged
       write FOnCrossSectionChanged;
+    property FootprintProperties: TFootprintProperties
+      read GetFootprintProperties write SetFootprintProperties;
+    function DiscretizationLimits(ViewDirection: TViewDirection): TGridLimit;
   published
     // @name defines the grid used with PHAST.
     property PhastGrid: TPhastGrid read FPhastGrid write SetPhastGrid;
@@ -2940,6 +2977,10 @@ that affects the model output should also have a comment. }
       write SetSwrObservations;
     property ContourLabelSpacing: Integer read GetContourLabelSpacing
       write SetContourLabelSpacing default 100;
+    property LinkedRasters: TLinkedRasterCollection read GetLinkedRasters
+      write SetLinkedRasters Stored StoreLinkedRaster;
+    property FootPrintGrid: TFootPrintGrid read FFootPrintGrid
+      write SetFootPrintGrid {$IFNDEF Footprint} stored False {$ENDIF};
   end;
 
   TMapping = record
@@ -3175,6 +3216,8 @@ that affects the model output should also have a comment. }
     FFmpAllotment: TAllotmentCollection;
     FContourLabelSpacing: integer;
     FFarms: TFarmCollection;
+    FLinkedRasters: TLinkedRasterCollection;
+    FFootprintProperties: TFootprintProperties;
     // See @link(Exaggeration).
     function GetExaggeration: double;
 //     See @link(OwnsScreenObjects).
@@ -3450,6 +3493,10 @@ that affects the model output should also have a comment. }
     procedure GenerateFishNetMesh(var ErrorMessage: string); override;
     function GetContourLabelSpacing: Integer; override;
     procedure SetContourLabelSpacing(const Value: Integer); override;
+    function GetLinkedRasters: TLinkedRasterCollection; override;
+    procedure SetLinkedRasters(const Value: TLinkedRasterCollection);  override;
+    function GetFootprintProperties: TFootprintProperties; override;
+    procedure SetFootprintProperties(const Value: TFootprintProperties); override;
   public
     procedure RefreshGlobalVariables(CompilerList: TList);
     procedure CreateGlobalVariables;
@@ -3926,6 +3973,7 @@ that affects the model output should also have a comment. }
     function Mt3dmsReactionRateSorbedUsed(Sender: TObject): boolean;
     function CombinedLayerSimulated(ALayer: Integer): boolean;
     procedure UpdateDataArrayParameterUsed; override;
+    procedure ExportFootprintInput(FileName: string; RunFootprint: boolean);
   published
     // The following properties are obsolete.
 
@@ -4083,6 +4131,12 @@ that affects the model output should also have a comment. }
     property FmpAllotment: TAllotmentCollection read GetFmpAllotment
        write SetFmpAllotment;
     property Farms: TFarmCollection read GetFarms write SetFarms;
+  {$IFDEF LinkedRasters}
+    property LinkedRasters;
+  {$ENDIF}
+  {$IFDEF FootPrint}
+    property FootprintProperties;
+  {$ENDIF}
   end;
 
   TChildDiscretization = class(TOrderedItem)
@@ -4302,6 +4356,10 @@ that affects the model output should also have a comment. }
     procedure SetFmpCrops(const Value: TCropCollection); override;
     procedure SetFmpSoils(const Value: TSoilCollection); override;
     procedure SetFmpAllotment(const Value: TAllotmentCollection); override;
+    function GetLinkedRasters: TLinkedRasterCollection; override;
+    procedure SetLinkedRasters(const Value: TLinkedRasterCollection);  override;
+    function GetFootprintProperties: TFootprintProperties; override;
+    procedure SetFootprintProperties(const Value: TFootprintProperties); override;
   public
     property CanUpdateGrid: Boolean read FCanUpdateGrid write SetCanUpdateGrid;
     function LayerGroupUsed(LayerGroup: TLayerGroup): boolean; override;
@@ -7017,13 +7075,110 @@ const
   //        in MT3DMS.
   //   '3.6.0.14' Bug fix: Duplicate segment numbers in the SFR package will
   //        now result in an error message to the user instead of a bug report.
-  //   '3.6.1.0' Bug fix: Fixed renumbering the SUTRA mesh when using the Gmsh to
-  //        create the mesh with 3D models.
+  //   '3.6.1.0' Bug fix: Fixed renumbering the SUTRA mesh when using the Gmsh
+  //        to create the mesh with 3D models.
+  //   '3.6.1.1' Bug fix: When checking whether an updated version of ModelMuse
+  //        exists, ModelMuse now clears the related cache entry before
+  //        attempting to read the file from the internet.
+  //      Enhancement: ModelMuse will now issue an error message if a flow
+  //        observation is defined but no flow boundary conditions are part
+  //        of the flow observation.
+  //      Bug fix: Fixed bug in drawing contours in data sets with very
+  //        large values.
+  //   '3.6.1.2' Bug fix: Fixed a bug that could cause access violations when
+  //        drawing selected rows or columns in the front or side views.
+  //   '3.6.1.3' Bug fix: Fixed a bug that could cause values to be assigned
+  //        to the wrong cells in MODFLOW models with polygon objects that
+  //        set values of assigned cells and that use formulas to set the
+  //        bottom or top elevations to a value that is different from the
+  //        elevations of the bottom of a layer group or the top of the model.
+  //      Enhancement: Added the ability to import mesh data for SUTRA from
+  //        a list of values associated with node or element numbers.
+  //      Enhancement: In the "Specify Mesh" dialog box, it is now possible
+  //        to drag the rows for the elements into new positions to change
+  //        the element order.
+  //   '3.6.1.4' Enhancement: In the Manage Head Observations dialog box, it is
+  //        now possible to copy multiple cells from a spread sheet and paste
+  //        into the table of observations.
+  //   '3.6.1.5' Bug fix: Fixed bug in checking certain boundary conditions when
+  //        parameters are defined.
+  //   '3.6.1.6' Enhancement: Added a dialog box to convert values from
+  //        one time unit to another.
+  //      Bug fix: It is no longer possible to name a data set the same name
+  //        as one of the functions supported by ModelMuse.
+  //   '3.6.1.7' Bug fix: Fixed bug that could cause incorrect values to be
+  //        assigned with the ObjectIntersectLength function on the edge of a
+  //        SUTRA mesh.
+  //   '3.6.1.8' Bug fix: Fixed bug that could cause intersections between
+  //        objects and the cell around a node to not be recognized if the
+  //        object was perfectly vertical or horizontal.
+  //      Enhancement: The Edit Feature Formula dialog box can now be used to
+  //        assign a new formula to the selected property of a model feature
+  //        in multiple objects.
+  //   '3.6.1.9' Enhancement: Added method for plotting well "footprint".
+  //   '3.6.1.10' Enhancement: Additional error checking in several MODFLOW
+  //        packages.
+  //      Enhancement: New interpolation method "Point Average" added. The
+  //        new interpolator returns the mean of all the points in a cell
+  //        or element. If no points are in the cell or element, it returns
+  //        zero.
+  //   '3.6.1.11' Enhancement: It is now possible to label object vertices.
+  //   '3.6.1.12' Bug fix: Fixed import of Recharge package when multiple
+  //        clusters are used with a parameter.
+  //   '3.6.1.13' Bug fix: Fixed bug in Natural Neighbor interpolator when
+  //        a data point is at a location just slightly different
+  //        from the location where a value is required.
+  //   '3.6.1.14'
+  //   '3.6.1.15'
+  //   '3.6.1.16' Bug fix: Fixed bug in enabling the export of MODPATH
+  //        results to Shapefiles.
+  //   '3.6.1.17' Bug fix: Fixed selecting column, row, or layer with
+  //        Model Cube.
+  //      Bug fix: Fixed bug that caused an error if the user attempted to
+  //        activate an MNW1 well without defining any pumping periods.
+  //      Bug fix: Fixed a bug in which undoing the deletion of a parameter
+  //        did not work correctly.
+  //    '3.6.1.18' Bug fix: Fixed reading formatted head and drawdown files
+  //        that contain values less than or equal to 1e-100 or greater than
+  //        or equal to 1e100;
+  //      Enhancement: When exporting Shapefiles of pathlines or endpoints,
+  //        the particle number is now one of the fields exported.
+  //    '3.6.1.19' Bug fix: Fixed export of SWR channels when a single object
+  //        enters a cell twice.
+  //    '3.6.1.20' Bug fix: not in released version. Fixed export of pathline
+  //        particle index
+  //    '3.6.1.21' Bug fix: Fixed access violation if the user attempted to
+  //        paste more rows of data into the "Imported Data" tab of the Object
+  //        properties dialog box than there were rows in the table.
+  //      Bug fix: Fixed bug that prevented a child model from being run
+  //        independently from the parent model in MODFLOW-LGR2
+  //        and MODFLOW-OWHM.
+  //    '3.6.1.22' Failed Bug fix: Fixed bug that could cause and assertion
+  //        failure when interpolating data set values with an anisotropy
+  //        not equal to 1.
+  //      Enhancement: When exporting data to CSV files, exporting the location
+  //        and cell, node, or element is now optional.
+  //    '3.6.1.23' Bug fix: Fixed export of SWR when a reach geometry is unused.
+  //    '3.6.1.24' Bug fix: when edit the SUTRA mesh in the Specify Mesh dialog
+  //        box, nodes that are not used are now deleted.
+  //      Bug fix: Fixed bug that could cause and assertion failure
+  //        when interpolating data set values with an anisotropy not equal
+  //        to 1.
+  //    '3.6.1.25' Bug fix: Fixed a bug in the export of data sets to
+  //        Shapefiles that would cause an access violation.
+  //    '3.6.1.26' Bug fix: Fixed bug that caused the SSM file to be written
+  //        incorrectly in models using the MNW1 or MNW2 packages.
+  //      Bug fix: Fixed bug in ModelMonitor that caused access violations
+  //        when used with SWR.
+  //      Bug fix: Fixed bug that caused the explanations for some data assigned
+  //        for the SWR package to be incomplete.
+  //    '3.6.2.0' No additional changes.
+
 
 
 const
   // version number of ModelMuse.
-  IModelVersion = '3.6.1.0';
+  IModelVersion = '3.6.2.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -7120,7 +7275,8 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
   SutraBoundaryWriterUnit, QuadtreeClass, frmMeshInformationUnit,
   MeshRenumberingTypes, ModflowStrWriterUnit, ModflowFhbWriterUnit,
   ModflowFmpWriterUnit, ModflowCfpWriterUnit, ModflowSwiWriterUnit,
-  ModflowSwrWriterUnit, SolidGeom, ModflowMnw1Writer, ImportQuadMesh;
+  ModflowSwrWriterUnit, SolidGeom, ModflowMnw1Writer, ImportQuadMesh,
+  FootprintBoundary, FootprintFileUnit;
 
 resourcestring
   StrMpathDefaultPath = 'C:\WRDAPP\Mpath.5_0\setup\Mpathr5_0.exe';
@@ -7259,7 +7415,10 @@ resourcestring
   StrSwrRoutingType = 'SWR_Routing_Type';
   StrSwrReachLength = 'SWR_Reach_Length';
   StrDefaultGmshPath = 'C:\Gmsh\gmsh-2.9.3-Windows\gmsh.exe';
+  { TODO -cfootprint : Need to define default path for footprint. }
+  StrDefaultFootprintPath = '';
   StrGmsh = 'Gmsh';
+  StrFootprint = 'Footprint';
   StrInvalidStressPerio = 'Invalid stress period length';
   StrInModelMuseAllStr = 'In ModelMuse all stress periods must have a length' +
   ' greater than or equal to zero.';
@@ -7273,6 +7432,15 @@ resourcestring
   StrMFOwhmDefaultPath64 = 'C:\WRDAPP\MF_OWHM_v1_0\bin\MF_OWHM.exe';
   StrThereWasAnErrorG = 'There was an error generating the mesh. Please chec' +
   'k the objects used to define the mesh element size.';
+  StrDepthRateIndex = 'DepthRateIndex';
+//  StrDistributedWithdrawals = 'Distributed_Withdrawals';
+  StrWithdrawals = 'Withdrawals';
+//  StrFootprint_Code = 'Footprint_Code';
+  StrNoPumpage = 'No pumpage';
+  StrInvalidWithdrawalR = 'Invalid Withdrawal Rate';
+  StrInSTheWithdrawa = 'In %s, the withdrawal rate is less than or equal to ' +
+  'zero.';
+  StrAssignedByObject = 'Assigned by object %0:s with formula %1:s.';
 
 const
   StatFlagStrings : array[Low(TStatFlag)..High(TStatFlag)] of string
@@ -7350,6 +7518,7 @@ var
   DataSet: TDataArray;
   DataArrayManager: TDataArrayManager;
   GlobalVariable: TGlobalVariable;
+  Compiler: TRbwParser;
 begin
   Root := Trim(Root);
   if Root = '' then
@@ -7389,6 +7558,10 @@ begin
       GlobalVariable := frmGoPhast.PhastModel.GlobalVariables[Index];
       Names.Add(GlobalVariable.Name);
     end;
+
+    // don't allow data sets to be named the same as any function.
+    Compiler := frmGoPhast.PhastModel.rpThreeDFormulaCompiler;
+    Names.AddStrings(Compiler.Functions);
 
     // Generate a new name.
     if Names.IndexOf(Root) < 0 then
@@ -7865,6 +8038,8 @@ begin
     FmpClimate := SourceModel.FmpClimate;
     FmpAllotment := SourceModel.FmpAllotment;
     Farms := SourceModel.Farms;
+    LinkedRasters := SourceModel.LinkedRasters;
+    FootprintProperties := SourceModel.FootprintProperties;
   end;
   inherited;
 
@@ -7915,12 +8090,15 @@ var
   ChildModel: TChildModel;
 begin
   inherited;
-  for ChildIndex := 0 to ChildModels.Count - 1 do
+  if ChildModels <> nil then
   begin
-    ChildModel := ChildModels[ChildIndex].ChildModel;
-    if ChildModel <> nil then
+    for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
-      ChildModel.BeginGridChange;
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        ChildModel.BeginGridChange;
+      end;
     end;
   end;
 end;
@@ -8086,6 +8264,11 @@ begin
   FFmpClimate := TClimateCollection.Create(self);
   FFmpAllotment := TAllotmentCollection.Create(self);
   FFarms := TFarmCollection.Create(self);
+
+  FLinkedRasters := TLinkedRasterCollection.Create(Invalidate);
+
+  FFootprintProperties := TFootprintProperties.Create(self);
+  FFootprintProperties.SetSubComponent(True);
 end;
 
 procedure TPhastModel.CreateArchive(const FileName: string; const ArchiveCommand: string = '');
@@ -8227,6 +8410,11 @@ begin
   result := FLayerStructure;
 end;
 
+function TPhastModel.GetLinkedRasters: TLinkedRasterCollection;
+begin
+  result := FLinkedRasters;
+end;
+
 type
   TScreenObjectCrack = class(TScreenObject);
 
@@ -8308,7 +8496,7 @@ begin
     FModflowOutputControl.Free;
     FModflowFullStressPeriods.Free;
     FModflowStressPeriods.Free;
-
+    FLinkedRasters.Free;
 
     frmFileProgress.pbProgress.Position := 0;
     frmFileProgress.pbProgress.Max := FDataArrayManager.DataSetCount + GlobalVariables.Count
@@ -8344,6 +8532,7 @@ begin
 //      Application.ProcessMessages;
     end;
     AllObserversStopTalking;
+    FFootprintProperties.Free;
 
     FFarms.Free;
     FFmpAllotment.Free;
@@ -8600,7 +8789,7 @@ var
 begin
   Result := False;
   case ModelSelection of
-    msUndefined, msPhast: Exit;
+    msUndefined, msPhast, msFootPrint: Exit;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
       msModflowFmp, msModflowCfp:
       begin
@@ -9008,6 +9197,7 @@ begin
   GlobalVariables.Clear;
   ModflowOutputControl.Initialize;
   Mt3dmsOutputControl.Initialize;
+  FootprintProperties.Initialize;
 
   HydrogeologicUnits.Clear;
   FHufParameters.Clear;
@@ -9371,6 +9561,11 @@ begin
   end;
 end;
 
+procedure TPhastModel.SetLinkedRasters(const Value: TLinkedRasterCollection);
+begin
+  FLinkedRasters.Assign(Value);
+end;
+
 procedure TPhastModel.SetTop(const Value: integer);
 begin
   if GuiSettings <> nil then
@@ -9716,6 +9911,10 @@ begin
           LayerGroup := FSutraLayerStructure.Add as TCustomLayerGroup;
           LayerGroup.AquiferName := kSUTRAMeshTop;
         end
+      end;
+    msFootPrint:
+      begin
+        UpdateDataSetDimensions;
       end
     else Assert(False);
   end;
@@ -9736,8 +9935,22 @@ begin
       begin
         OnTopSutraMeshChanged(Sender);
       end;
+    msFootPrint: ; // do nothing.
     else
       Assert(False);
+  end;
+end;
+
+function TCustomModel.DiscretizationLimits(
+  ViewDirection: TViewDirection): TGridLimit;
+begin
+  if ModelSelection = msSutra22 then
+  begin
+    result := Mesh.MeshLimits(ViewDirection, Mesh.CrossSection.Angle);
+  end
+  else
+  begin
+    result := Grid.GridLimits(ViewDirection);
   end;
 end;
 
@@ -9769,6 +9982,9 @@ begin
       msSutra22:
         begin
 
+        end;
+      msFootprint:
+        begin
         end
       else Assert(False);
     end;
@@ -9797,7 +10013,11 @@ begin
           FGrid := nil;
           TopGridObserver.OnUpToDateSet := OnTopSutraMeshChanged;
 //          ThreeDGridObserver.OnUpToDateSet := OnTopSutraMeshChanged;
-        end
+        end;
+      msFootprint:
+        begin
+          FGrid := FootPrintGrid;
+        end;
       else Assert(False);
     end;
     if (FModelSelection in [msModflow, msModflowLgr, msModflowLGR2,
@@ -10107,6 +10327,11 @@ end;
 function TPhastModel.GetFmpSoils: TSoilCollection;
 begin
   result := FFmpSoils;
+end;
+
+function TPhastModel.GetFootprintProperties: TFootprintProperties;
+begin
+  Result := FFootprintProperties;
 end;
 
 function TPhastModel.GetFormulaManager: TFormulaManager;
@@ -10758,17 +10983,6 @@ begin
   end;
 end;
 
-//procedure TPhastModel.UpdateDataSets;
-//var
-//  index: integer;
-//begin
-//  inherited;
-//  for index := 0 to ChildModels.Count - 1 do
-//  begin
-//    ChildModels[index].ChildModel.UpdateDataSets;
-//  end;
-//end;
-
 function TPhastModel.GetSaveBfhBoundaryConditions: boolean;
 begin
   result := FSaveBfhBoundaryConditions
@@ -10865,7 +11079,7 @@ begin
         Assert(False);
       end;
     msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         Grid.ThreeDDataSet := Value;
       end;
@@ -11467,6 +11681,7 @@ begin
         end;
     msModflowLGR, msModflowLGR2, msModflowFmp: result := 'Parent model';
     msSutra22: result := 'SUTRA';
+    msFootprint: Result := 'Footprint';
     else Assert(False);
   end;
 end;
@@ -11480,7 +11695,7 @@ begin
         Assert(False);
       end;
     msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         result := Grid.ThreeDDataSet;
       end;
@@ -11981,9 +12196,10 @@ begin
     ResKvArray.OnPostInitialize := AdjustResKvArray;
   end;
 
-  Assert(ActiveArray <> nil);
-  if ModflowPackages.LakPackage.IsSelected then
+  if ModflowPackages.LakPackage.IsSelected
+    and (ModelSelection in ModflowSelection) then
   begin
+    Assert(ActiveArray <> nil);
     if LakeIdArray <> nil then
     begin
       LakeIdArray.OnPostInitialize := UpdateLakeId;
@@ -12012,21 +12228,20 @@ begin
       end;
     end;
   end
-  else if ModflowPackages.ChdBoundary.IsSelected then
+  else if ModflowPackages.ChdBoundary.IsSelected
+    and (ModelSelection in ModflowSelection) then
   begin
+    Assert(ActiveArray <> nil);
     if SpecifiedHeadArray <> nil then
     begin
-      if ActiveArray <> nil then
+      ActiveArray.OnPostInitialize := UpdateActive;
+      ActiveArray.OnDestroy := FinalizeActive;
+      SpecifiedHeadArray.TalksTo(ActiveArray);
+      if LakeIdArray <> nil then
       begin
-        ActiveArray.OnPostInitialize := UpdateActive;
-        ActiveArray.OnDestroy := FinalizeActive;
-        SpecifiedHeadArray.TalksTo(ActiveArray);
-        if LakeIdArray <> nil then
-        begin
-          LakeIdArray.StopsTalkingTo(ActiveArray);
-        end;
-        ActiveArray.UpToDate := False;
+        LakeIdArray.StopsTalkingTo(ActiveArray);
       end;
+      ActiveArray.UpToDate := False;
     end;
     if WetDryArray <> nil then
     begin
@@ -12386,6 +12601,26 @@ begin
       end;
     end;
     FDataArrayManager.AddDataSetToCache(LakeIdArray);
+  end;
+end;
+
+procedure TCustomModel.UseFootprintWells(Sender: TObject;
+  var ShouldUse: Boolean);
+var
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+begin
+  ShouldUse := False;
+  for ScreenObjectIndex := 0 to ScreenObjectCount - 1 do
+  begin
+    AScreenObject := ScreenObjects[ScreenObjectIndex];
+    if (not AScreenObject.Deleted)
+      and (AScreenObject.FootprintWell <> nil)
+      and AScreenObject.FootprintWell.Used then
+    begin
+      ShouldUse := true;
+      break;
+    end;
   end;
 end;
 
@@ -12769,6 +13004,16 @@ begin
   PhastGrid.FrontContourDataSet := nil;
   PhastGrid.SideContourDataSet := nil;
   PhastGrid.ThreeDContourDataSet := nil;
+
+  FootPrintGrid.TopDataSet := nil;
+  FootPrintGrid.FrontDataSet := nil;
+  FootPrintGrid.SideDataSet := nil;
+  FootPrintGrid.ThreeDDataSet := nil;
+
+  FootPrintGrid.TopContourDataSet := nil;
+  FootPrintGrid.FrontContourDataSet := nil;
+  FootPrintGrid.SideContourDataSet := nil;
+  FootPrintGrid.ThreeDContourDataSet := nil;
   for Index := 0 to ChildModels.Count - 1 do
   begin
     ChildModels[Index].ChildModel.ClearViewedItems;
@@ -12777,12 +13022,17 @@ end;
 
 function TPhastModel.DirectionCount(ViewDirection: TViewDirection): integer;
 begin
+  // This is needed in setting the selected column, row, or layer
+  // with the ModelCube even when LGR is not used.
   result := 0;
-  case ViewDirection of
-    vdTop: result := ModflowGrid.LayerCount;
-    vdFront: result := ModflowGrid.RowCount;
-    vdSide: result := ModflowGrid.ColumnCount;
-    else Assert(False);
+//  if LgrUsed then
+  begin
+    case ViewDirection of
+      vdTop: result := ModflowGrid.LayerCount;
+      vdFront: result := ModflowGrid.RowCount;
+      vdSide: result := ModflowGrid.ColumnCount;
+      else Assert(False);
+    end;
   end;
 end;
 
@@ -12860,7 +13110,11 @@ begin
         begin
           Inc(result, MaxChildColumnsPerColumn(ColIndex));
         end;
-      end
+      end;
+    msFootPrint:
+      begin
+        result := FootPrintGrid.ColumnCount;
+      end;
     else Assert(False);
   end;
 end;
@@ -12950,7 +13204,11 @@ begin
         begin
           Inc(result, MaxChildRowsPerRow(RowIndex));
         end;
-      end
+      end;
+    msFootPrint:
+      begin
+        result := FootPrintGrid.RowCount;
+      end;
     else Assert(False);
   end;
 end;
@@ -12985,6 +13243,10 @@ begin
         begin
           result := SutraMesh.LayerCount;
         end;
+      end;
+    msFootPrint:
+      begin
+        result := FootPrintGrid.LayerCount;
       end;
     else Assert(False);
   end;
@@ -13375,6 +13637,10 @@ begin
         begin
           result := 0
         end;
+      end;
+    msFootPrint:
+      begin
+        result := FootPrintGrid.LayerCount;
       end;
     else
       Assert(False);
@@ -13791,6 +14057,11 @@ end;
 procedure TPhastModel.SetFmpSoils(const Value: TSoilCollection);
 begin
   FFmpSoils.Assign(Value);
+end;
+
+procedure TPhastModel.SetFootprintProperties(const Value: TFootprintProperties);
+begin
+  FootprintProperties.Assign(Value);
 end;
 
 procedure TPhastModel.SetDiffusivity(const Value: double);
@@ -14257,12 +14528,15 @@ var
   ChildModel: TChildModel;
 begin
   inherited;
-  for ChildIndex := 0 to ChildModels.Count - 1 do
+  if ChildModels <> nil then
   begin
-    ChildModel := ChildModels[ChildIndex].ChildModel;
-    if ChildModel <> nil then
+    for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
-      ChildModel.EndGridChange;
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        ChildModel.EndGridChange;
+      end;
     end;
   end;
 end;
@@ -17271,7 +17545,7 @@ begin
         Assert(False);
       end;
     msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         Grid.GridChanged;
       end;
@@ -17450,6 +17724,10 @@ begin
               begin
                 result := '0'
               end;
+            end;
+          msFootprint:
+            begin
+              result := '0'
             end
           else Assert(False);
         end;
@@ -17503,6 +17781,10 @@ begin
                 end;
               end;
               result := FortranFloatToStr(ADistance);
+            end;
+          msFootPrint:
+            begin
+              result := '0';
             end
           else Assert(False);
         end;
@@ -17541,6 +17823,11 @@ var
   LocalLayerStructure: TCustomLayerStructure;
   ALayerGroup: TCustomLayerGroup;
 begin
+  if ModelSelection = msFootprint then
+  begin
+    UnitID := 0;
+    Exit;
+  end;
   Layer := -1;
   LocalLayerStructure := nil;
   case ModelSelection of
@@ -17688,6 +17975,10 @@ begin
                 result := '0';
               end;
             end;
+          msFootPrint:
+            begin
+                result := '0';
+            end
           else Assert(False);
         end;
       end;
@@ -17697,7 +17988,7 @@ begin
         case ModelSelection of
           msUndefined: Assert(False);
           msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-            msModflowFmp, msModflowCfp:
+            msModflowFmp, msModflowCfp, msFootprint:
             begin
               if (Grid.RowCount > 0) then
               begin
@@ -17869,6 +18160,10 @@ begin
                 result := '0'
               end;
             end;
+          msFootPrint:
+            begin
+              result := '0'
+            end;
           else Assert(False);
         end;
       end;
@@ -17878,7 +18173,7 @@ begin
         case ModelSelection of
           msUndefined: Assert(False);
           msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-            msModflowFmp, msModflowCfp:
+            msModflowFmp, msModflowCfp, msFootPrint:
             begin
 
               if (Grid <> nil) and (Grid.RowCount > 0) then
@@ -20749,6 +21044,7 @@ begin
     ModflowOwhmLocation := SourceLocations.ModflowOwhmLocation;
     ModflowCfpLocation := SourceLocations.ModflowCfpLocation;
     GmshLocation := SourceLocations.GmshLocation;
+    FootprintLocation := SourceLocations.FootprintLocation;
   end
   else
   begin
@@ -20882,6 +21178,14 @@ begin
     GmshLocation := StrDefaultGmshPath;
   end;
 
+  FootprintLocation := IniFile.ReadString(StrProgramLocations, StrFootprint,
+    StrDefaultFootprintPath);
+  if (FootprintLocation = '') and FileExists(StrDefaultFootprintPath) then
+  begin
+    FootprintLocation := StrDefaultFootprintPath;
+  end;
+
+
   ADirectory := GetCurrentDir;
   try
     SetCurrentDir(ExtractFileDir(ParamStr(0)));
@@ -20932,6 +21236,11 @@ begin
   begin
     result := FTextEditorLocation
   end;
+end;
+
+procedure TProgramLocations.SetFootprintLocation(const Value: string);
+begin
+  FFootprintLocation := RemoveQuotes(Value);
 end;
 
 procedure TProgramLocations.SetGmshLocation(const Value: string);
@@ -21029,6 +21338,8 @@ begin
   IniFile.WriteString(StrProgramLocations, strModflowOWHM, ModflowOwhmLocation);
   IniFile.WriteString(StrProgramLocations, strModflowCFP, ModflowCfpLocation);
   IniFile.WriteString(StrProgramLocations, StrGmsh, GmshLocation);
+  IniFile.WriteString(StrProgramLocations, StrFootprint, FootprintLocation);
+
 end;
 
 { TDataSetClassification }
@@ -21249,6 +21560,10 @@ begin
   FSutraMassEnergyFluxTimeList.OnTimeListUsed := SutraUsed;
   FSutraMassEnergyFluxTimeList.OnInitialize := InitializeSutraMassEnergyFlux;
   AddTimeList(FSutraMassEnergyFluxTimeList);
+
+
+  FFootPrintGrid := TFootprintGrid.Create(self);
+
 end;
 
 procedure TCustomModel.UpdateSutraTimeListNames;
@@ -21394,6 +21709,8 @@ end;
 
 destructor TCustomModel.Destroy;
 begin
+  FFootPrintGrid.Free;
+
   FSwrObservations.Free;
   FSwrStructures.Free;
   FSwrReachGeometry.Free;
@@ -21671,7 +21988,8 @@ begin
         begin
           Mesh.SelectedLayer := Value;
         end;
-      end
+      end;
+    msFootPrint: ; // do nothing.
   else
     Assert(False);
   end;
@@ -21694,7 +22012,7 @@ begin
       begin
         Grid.SideDataSet := Value;
       end;
-    msSutra22:
+    msSutra22, msFootPrint:
       begin
         // do nothing
       end;
@@ -21741,7 +22059,7 @@ begin
         Assert(False);
       end;
     msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         Grid.TopDataSet := Value;
       end;
@@ -21783,6 +22101,11 @@ begin
   Invalidate(self);
 end;
 
+procedure TCustomModel.SetFootPrintGrid(const Value: TFootPrintGrid);
+begin
+  FFootPrintGrid.Assign(Value);
+end;
+
 procedure TCustomModel.SetFrontDataSet(const Value: TDataArray);
 begin
   case ModelSelection of
@@ -21795,7 +22118,7 @@ begin
       begin
         Grid.FrontDataSet := Value;
       end;
-    msSutra22:
+    msSutra22, msFootPrint:
       begin
         // do nothing
       end;
@@ -21956,6 +22279,10 @@ var
   Index: Integer;
   DataSet: TDataArray;
 begin
+  if FootprintProperties <> nil then
+  begin
+    FootprintProperties.StopTalkingToAnyone;
+  end;
   FSwrReachGeometry.Clear;
   FSwrTabFiles.Clear;
   FSwrStructures.Clear;
@@ -21984,6 +22311,17 @@ begin
     if ModflowGrid.ThreeDGridObserver <> nil then
     begin
       ModflowGrid.ThreeDGridObserver.StopTalkingToAnyone;
+    end;
+  end;
+  if FootprintGrid <> nil then
+  begin
+    if FootprintGrid.TopGridObserver <> nil then
+    begin
+      FootprintGrid.TopGridObserver.StopTalkingToAnyone;
+    end;
+    if FootprintGrid.ThreeDGridObserver <> nil then
+    begin
+      FootprintGrid.ThreeDGridObserver.StopTalkingToAnyone;
     end;
   end;
   FCrossSection.Clear;
@@ -22796,6 +23134,7 @@ begin
       else
         Assert(False);
     end;
+    DataArrayManager.UpdateDataSetDimensions;
     if (frmMeshInformation <> nil) and frmMeshInformation.Visible then
     begin
       frmMeshInformation.GetData
@@ -22962,7 +23301,7 @@ begin
   result := 0;
   case ModelSelection of
     msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         result := Grid.SelectedLayer;
       end;
@@ -23003,12 +23342,9 @@ begin
       begin
         result := Grid.SideDataSet;
       end;
-    msSutra22:
+    msSutra22, msFootPrint:
       begin
-        if (Mesh <> nil) then
-        begin
-          // do nothing
-        end;
+        // do nothing
       end;
     else
        Assert(False);
@@ -23612,6 +23948,10 @@ begin
   FHufKzNotifier.StopTalkingToAnyone;
   FHufKyNotifier.StopTalkingToAnyone;
   FHufKxNotifier.StopTalkingToAnyone;
+  if FootprintProperties <> nil then
+  begin
+    FootprintProperties.StopTalkingToAnyone;
+  end;
 end;
 
 procedure TCustomModel.FreeHufNotifiers;
@@ -23986,6 +24326,8 @@ var
       DataArray.AngleType := AngleType;
       DataArray.Classification := Classification;
       DataArray.Visible := DataSetCreationData.Visible;
+      DataArray.OnInitialize := DataSetCreationData.OnInitialize;
+      DataArray.OnShouldUseOnInitialize := DataSetCreationData.OnShouldUseOnInitialize;
     end
     else if ArrayNeeded(DataArray)
       or (Assigned(ArrayArrayShouldBeCreated)
@@ -24005,6 +24347,8 @@ var
       DataArray.DisplayName := DisplayName;
       DataArray.AngleType := AngleType;
       DataArray.Visible := DataSetCreationData.Visible;
+      DataArray.OnInitialize := DataSetCreationData.OnInitialize;
+      DataArray.OnShouldUseOnInitialize := DataSetCreationData.OnShouldUseOnInitialize;
     end;
     if DataArray <> nil then
     begin
@@ -24161,7 +24505,7 @@ procedure TDataArrayManager.DefinePackageDataArrays;
     ARecord.Min := 0;
   end;
 const
-  ArrayCount = 108;
+  ArrayCount = 110;
 var
   Index: integer;
 begin
@@ -24185,6 +24529,8 @@ begin
   for Index := 0 to ArrayCount - 1 do
   begin
     FDataArrayCreationRecords[Index].Visible := True;
+    FDataArrayCreationRecords[Index].OnInitialize := nil;
+    FDataArrayCreationRecords[Index].OnShouldUseOnInitialize := nil;
   end;
 
   Index := 0;
@@ -24197,7 +24543,7 @@ begin
   FDataArrayCreationRecords[Index].Formula := 'True';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded :=
-    FCustomModel.ModflowOrPhastUsed;
+    FCustomModel.ActiveUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
@@ -25833,6 +26179,73 @@ begin
   FDataArrayCreationRecords[Index].Visible := False;
   Inc(Index);
 
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KDepthRateIndex;
+  FDataArrayCreationRecords[Index].DisplayName := StrDepthRateIndex;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrFootprintInputClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.FootprintSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'Rate per unit area of distributed withdrawal (L/T)';
+  FDataArrayCreationRecords[Index].Visible := True;
+  Inc(Index);
+
+//  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+//  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+//  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+//  FDataArrayCreationRecords[Index].Name := KDistributedWithdrawals;
+//  FDataArrayCreationRecords[Index].DisplayName := StrDistributedWithdrawals;
+//  FDataArrayCreationRecords[Index].Formula := '0';
+//  FDataArrayCreationRecords[Index].Classification := StrFootprintOutputClassification;
+//  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.FootprintSelected;
+//  FDataArrayCreationRecords[Index].Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt, dcFormula];
+//  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+//  FDataArrayCreationRecords[Index].AssociatedDataSets := 'Calculated distributed withdrawals (L^3/T)';
+////  FDataArrayCreationRecords[Index].Visible := False;
+//  FDataArrayCreationRecords[Index].OnInitialize :=
+//    FCustomModel.AssignFootprintDistributedWithdrawals;
+//  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TFootprintWithdrawalDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KWithdrawals;
+  FDataArrayCreationRecords[Index].DisplayName := StrWithdrawals;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrFootprintInputClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.FootprintSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock; // [dcName, dcType, dcOrientation, dcEvaluatedAt, dcFormula];
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'Specified withdrawals for footprint model (L^3/T)';
+//  FDataArrayCreationRecords[Index].Visible := False;
+  FDataArrayCreationRecords[Index].OnInitialize :=
+    FCustomModel.AssignFootprintBoundarydWithdrawal;
+  FDataArrayCreationRecords[Index].OnShouldUseOnInitialize :=
+    FCustomModel.UseFootprintWells;
+  Inc(Index);
+
+//  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+//  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+//  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+//  FDataArrayCreationRecords[Index].Name := KFootprint_Code;
+//  FDataArrayCreationRecords[Index].DisplayName := StrFootprint_Code;
+//  FDataArrayCreationRecords[Index].Formula := 'If(not(ActiveOnLayer(1)), 0, If(('
+//    + KDistributedWithdrawals + ' = 0.), 1, If(('
+//    + KDistributedWithdrawals + ' < (' + KDepthRateIndex + ' * BlockAreaTop)), 2, 3)))';
+//  FDataArrayCreationRecords[Index].Classification := StrFootprintOutputClassification;
+//  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.FootprintSelected;
+//  FDataArrayCreationRecords[Index].Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt, dcFormula];
+//  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+//  FDataArrayCreationRecords[Index].AssociatedDataSets := '0 = Inactive'
+//    + sLineBreak  + '1 = No distributed withdrawals'
+//    + sLineBreak  + '2 = Distributed withdrawals < Capacity'
+//    + sLineBreak  + '3 = Distributed withdrawals >= Capacity';
+////  FDataArrayCreationRecords[Index].Visible := False;
+//  Inc(Index);
+
   // See ArrayCount.
   Assert(Length(FDataArrayCreationRecords) = Index);
 end;
@@ -26339,47 +26752,21 @@ var
   Manager: TDataArrayManager;
 begin
   Grid := FCustomModel.Grid;
-//  if Grid = nil then
-//  begin
-//    for Index := 0 to LocalCount - 1 do
-//    begin
-//      DataSet := DataSets[Index];
-//      DataSet.UpdateDimensions(-1, -1, -1);
-//    end;
-//    for Index := 0 to BoundaryDataSetCount - 1 do
-//    begin
-//      DataSet := BoundaryDataSets[Index];
-//      DataSet.UpdateDimensions(-1, -1, -1);
-//    end;
-//    for Index := 0 to FDeletedDataSets.Count - 1 do
-//    begin
-//      DataSet := FDeletedDataSets[Index];
-//      DataSet.UpdateDimensions(-1, -1, -1);
-//    end;
-//  end
-//  else
-//  begin
-    for Index := 0 to LocalCount - 1 do
-    begin
-      DataSet := DataSets[Index];
-      FCustomModel.UpdateDataArrayDimensions(DataSet);
-//      DataSet.UpdateDimensions(Grid.LayerCount,
-//        Grid.RowCount, Grid.ColumnCount);
-    end;
-    for Index := 0 to BoundaryDataSetCount - 1 do
-    begin
-      DataSet := BoundaryDataSets[Index];
-      FCustomModel.UpdateDataArrayDimensions(DataSet);
-//      DataSet.UpdateDimensions(Grid.LayerCount,
-//        Grid.RowCount, Grid.ColumnCount);
-    end;
-    for Index := 0 to FDeletedDataSets.Count - 1 do
-    begin
-      DataSet := FDeletedDataSets[Index];
-      FCustomModel.UpdateDataArrayDimensions(DataSet);
-//      DataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-//        Grid.ColumnCount);
-    end;
+  for Index := 0 to LocalCount - 1 do
+  begin
+    DataSet := DataSets[Index];
+    FCustomModel.UpdateDataArrayDimensions(DataSet);
+  end;
+  for Index := 0 to BoundaryDataSetCount - 1 do
+  begin
+    DataSet := BoundaryDataSets[Index];
+    FCustomModel.UpdateDataArrayDimensions(DataSet);
+  end;
+  for Index := 0 to FDeletedDataSets.Count - 1 do
+  begin
+    DataSet := FDeletedDataSets[Index];
+    FCustomModel.UpdateDataArrayDimensions(DataSet);
+  end;
   if Grid <> nil then
   begin
     Grid.NeedToRecalculateTopCellColors := True;
@@ -26456,6 +26843,16 @@ begin
     inherited;
   end;
 end;
+
+procedure TCustomModel.AssignFootprintBoundarydWithdrawal(Sender: TObject);
+begin
+  FootprintProperties.AssignFootprintBoundarydWithdrawal(Sender);
+end;
+
+//procedure TCustomModel.AssignFootprintDistributedWithdrawals(Sender: TObject);
+//begin
+//  FootprintProperties.AssignFootprintDistributedWithdrawals(Sender);
+//end;
 
 function TCustomModel.KineticsUsed(Sender: TObject): boolean;
 begin
@@ -26542,7 +26939,7 @@ begin
           end;
         end;
       end;
-    msSutra22: result := False;
+    msSutra22, msFootPrint: result := False;
     else Assert(False);
   end;
 end;
@@ -26575,7 +26972,7 @@ begin
           result := False;
         end;
       end;
-    msSutra22: result := False;
+    msSutra22, msFootPrint: result := False;
     else Assert(False);
   end;
 end;
@@ -26664,9 +27061,16 @@ begin
     and (SutraOptions.SaturationChoice = scUnsaturated);
 end;
 
+function TCustomModel.ActiveUsed(Sender: TObject): boolean;
+begin
+  result := (ModelSelection in ModflowSelection)
+    or (ModelSelection in [msPhast, msFootPrint]);
+end;
+
 function TCustomModel.ModflowOrPhastUsed(Sender: TObject): boolean;
 begin
-  result := (ModelSelection in ModelsWithGrid)
+  result := (ModelSelection in ModflowSelection)
+    or (ModelSelection = msPhast);
 end;
 
 function TCustomModel.ExchangeUsed(Sender: TObject): boolean;
@@ -26931,6 +27335,11 @@ begin
   result := FMt3dmsLakMassFluxObservations.Count > 0;
 end;
 
+function TCustomModel.StoreLinkedRaster: Boolean;
+begin
+  result := LinkedRasters.Count > 0;
+end;
+
 function TCustomModel.StoreMassLoadingMassFluxObservations: Boolean;
 begin
   result := FMt3dmsMassLoadingMassFluxObservations.Count > 0;
@@ -27032,7 +27441,7 @@ begin
   result := False;
   case ModelSelection of
     msUndefined: result := False;
-    msPhast, msSutra22: result := False;
+    msPhast, msSutra22, msFootPrint: result := False;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
       msModflowFmp, msModflowCfp:
       begin
@@ -28272,6 +28681,122 @@ begin
     FileName := IncludeTrailingPathDelimiter(FileDir) + FileName;
   end;
   result := FileName;
+end;
+
+function TCustomModel.FootprintSelected(Sender: TObject): Boolean;
+begin
+  result := (ModelSelection = msFootprint);
+end;
+
+procedure TPhastModel.ExportFootprintInput(FileName: string; RunFootprint: boolean);
+var
+  FootprintInput: TFootPrintFile;
+  AGrid: TCustomModelGrid;
+  Outline: TPolygon2D;
+  RowIndex: integer;
+  ColIndex: integer;
+  Withdrawals: TDataArray;
+  ActiveDataArray: TDataArray;
+  DepthRateArray: TDataArray;
+  FootPrintBatchFile: TStringList;
+  BatchFileName: string;
+  function EncloseQuotes(AName: string): string;
+  begin
+    if Pos(' ', AName) > 0 then
+    begin
+      result := '"' + AName + '"';
+    end
+    else
+    begin
+      result := AName;
+    end;
+  end;
+begin
+  FileName := FixFileName(FileName);
+  FootprintInput := TFootPrintFile.Create;
+  try
+    AGrid := Grid;
+    FootprintInput.NumberOfRows := AGrid.RowCount;
+    FootprintInput.NumberOfColumns := AGrid.ColumnCount;
+    FootprintInput.ClosureCriterion  := FootprintProperties.ClosureCriterion;
+    FootprintInput.CellSize := AGrid.ColumnWidth[0]*AGrid.RowWidth[0];
+    FootprintInput.MaxIterations := FootprintProperties.MaxIterations;
+    FootprintInput.InitialDistribution :=
+      FootprintProperties.PerformInitialRedistribution;
+    FootprintInput.RedistributionCriterion :=
+      FootprintProperties.RedistributionCriterion;
+
+    SetLength(Outline, 4);
+    Outline[0] := AGrid.UnrotatedTwoDElementCorner(0,0);
+    Outline[1] := AGrid.UnrotatedTwoDElementCorner(0,AGrid.RowCount);
+    Outline[2] := AGrid.UnrotatedTwoDElementCorner(AGrid.ColumnCount,AGrid.RowCount);
+    Outline[3] := AGrid.UnrotatedTwoDElementCorner(AGrid.ColumnCount,0);
+    FootprintInput.Outline := Outline;
+
+    FootprintInput.GridAngle := AGrid.GridAngle * 180 / Pi;
+    FootprintInput.ListingFileName := ChangeFileExt(FileName, '.fplst');
+    AddFileToArchive(FootprintInput.ListingFileName);
+
+    if FootprintProperties.SaveResultsBinary then
+    begin
+      FootprintInput.BinaryFileName := ChangeFileExt(FileName, '.fpb');
+      AddFileToArchive(FootprintInput.BinaryFileName);
+    end;
+    if FootprintProperties.SaveResultsText then
+    begin
+      FootprintInput.AsciiFileName := ChangeFileExt(FileName, '.fpt');
+      AddFileToArchive(FootprintInput.AsciiFileName);
+    end;
+
+    Withdrawals := DataArrayManager.GetDataSetByName(KWithdrawals);
+    ActiveDataArray := DataArrayManager.GetDataSetByName(rsActive);
+    DepthRateArray := DataArrayManager.GetDataSetByName(KDepthRateIndex);
+    Assert(Withdrawals <> nil);
+    Assert(ActiveDataArray <> nil);
+    Assert(DepthRateArray <> nil);
+    Withdrawals.Initialize;
+    ActiveDataArray.Initialize;
+    DepthRateArray.Initialize;
+    for RowIndex := 0 to AGrid.RowCount - 1 do
+    begin
+      for ColIndex := 0 to AGrid.ColumnCount - 1 do
+      begin
+        FootprintInput.DepthRateIndex[RowIndex,ColIndex] :=
+          DepthRateArray.RealData[0,RowIndex,ColIndex];
+        FootprintInput.Active[RowIndex,ColIndex] :=
+          ActiveDataArray.BooleanData[0,RowIndex,ColIndex];
+        FootprintInput.Withdrawals[RowIndex,ColIndex] :=
+          Withdrawals.RealData[0,RowIndex,ColIndex];
+      end;
+    end;
+
+    FootprintInput.SaveToFile(FileName);
+    AddModelInputFile(FileName);
+
+    BatchFileName := IncludeTrailingPathDelimiter(ExtractFileDir(FileName))
+      + 'RunFootprint.bat';
+    FootPrintBatchFile := TStringList.Create;
+    try
+      FootPrintBatchFile.Add(EncloseQuotes(ProgramLocations.FootprintLocation)
+         + ' ' + EncloseQuotes(ExtractFileName(FileName)));
+
+      AddOpenListFileLine(FootprintInput.ListingFileName,
+        FootprintProperties.OpenInTextEditor, FootPrintBatchFile,
+        ProgramLocations);
+
+      FootPrintBatchFile.Add('pause');
+      FootPrintBatchFile.SaveToFile(BatchFileName);
+    finally
+      FootPrintBatchFile.Free;
+    end;
+  finally
+    FootprintInput.Free;
+  end;
+
+  if RunFootprint then
+  begin
+    RunAProgram('"' + BatchFileName + '"');
+  end;
 end;
 
 procedure TPhastModel.ExportModflowLgrModel(const FileName: string;
@@ -29927,13 +30452,35 @@ begin
           SetCurrentNameFileWriter(ANameFileWriter);
           if self is TChildModel then
           begin
-            ANameFileWriter.WriteToNameFile('BFH', IUPBHSV, HeadFile, foInputAlreadyExists);
+            case ModelSelection of
+              msModflowLGR:
+                begin
+                  ANameFileWriter.WriteToNameFile('BFH', IUPBHSV, HeadFile, foInputAlreadyExists);
+                end;
+              msModflowLGR2, msModflowFmp:
+                begin
+                  ANameFileWriter.WriteToNameFile('BFH2', IUPBHSV, HeadFile, foInputAlreadyExists);
+                end;
+              else
+                Assert(False);
+            end;
             ANameFileWriter.WriteToNameFile(StrDATA, IUPBFSV, FlowFile, foInputAlreadyExists);
           end
           else
           begin
             ANameFileWriter.WriteToNameFile(StrDATA, IUPBHSV, HeadFile, foInputAlreadyExists);
-            ANameFileWriter.WriteToNameFile('BFH', IUPBFSV, FlowFile, foInputAlreadyExists);
+            case ModelSelection of
+              msModflowLGR:
+                begin
+                  ANameFileWriter.WriteToNameFile('BFH', IUPBFSV, FlowFile, foInputAlreadyExists);
+                end;
+              msModflowLGR2, msModflowFmp:
+                begin
+                  ANameFileWriter.WriteToNameFile('BFH2', IUPBFSV, FlowFile, foInputAlreadyExists);
+                end;
+              else
+                Assert(False);
+            end;
           end;
         end;
 
@@ -31455,6 +32002,18 @@ begin
   result := ParentModel.GetFmpSoils;
 end;
 
+function TChildModel.GetFootprintProperties: TFootprintProperties;
+begin
+  if ParentModel <> nil then
+  begin
+    result := ParentModel.FootprintProperties
+  end
+  else
+  begin
+    result := nil;
+  end;
+end;
+
 function TChildModel.GetFormulaManager: TFormulaManager;
 begin
   result := ParentModel.GetFormulaManager;
@@ -31509,6 +32068,11 @@ begin
   begin
     result := ParentModel.GetLayerStructure;
   end;
+end;
+
+function TChildModel.GetLinkedRasters: TLinkedRasterCollection;
+begin
+  result := ParentModel.LinkedRasters;
 end;
 
 function TChildModel.GetMobileComponents: TMobileChemSpeciesCollection;
@@ -31933,6 +32497,11 @@ begin
   ParentModel.SetFmpSoils(Value);
 end;
 
+procedure TChildModel.SetFootprintProperties(const Value: TFootprintProperties);
+begin
+  ParentModel.FootprintProperties := Value;
+end;
+
 procedure TChildModel.SetFreeSurface(const Value: boolean);
 begin
   ParentModel.SetFreeSurface(Value);
@@ -32004,6 +32573,11 @@ begin
     FLgrPrintChoice := Value;
     Invalidate(self);
   end;
+end;
+
+procedure TChildModel.SetLinkedRasters(const Value: TLinkedRasterCollection);
+begin
+  ParentModel.LinkedRasters := Value;
 end;
 
 procedure TChildModel.SetMaxIterations(const Value: integer);
@@ -33446,7 +34020,7 @@ begin
         Assert(False);
       end;
     msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         result := Grid.TopDataSet;
       end;
@@ -33513,7 +34087,7 @@ begin
       begin
         result := Grid.FrontDataSet;
       end;
-    msSutra22:
+    msSutra22, msFootPrint:
       begin
         // do nothing
       end;

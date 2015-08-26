@@ -266,6 +266,7 @@ resourcestring
   StrDuplicateSFRStream = 'Duplicate SFR Stream Segments Numbers';
   StrTheSFRSegmentNumb = 'The SFR segment number %0:d in %1:s is the same se' +
   'gment number as in another segment.';
+  StrZeroSFRHydraulicC = 'Negative or zero SFR hydraulic conductivity';
 
 resourcestring
   DupErrorCategory = 'Duplicate SFR segment numbers';
@@ -1100,6 +1101,7 @@ begin
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInactiveReach);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrReachSeparationWarning);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrHighSFRHydraulicC);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrZeroSFRHydraulicC);
     frmErrorsAndWarnings.RemoveErrorGroup(Model, StrDuplicateSFRStream);
 
 
@@ -3292,6 +3294,14 @@ var
             Reach.Layer+1, Reach.Row+1, Reach.Column+1, ScreenObject.Name]),
             ScreenObject);
         end;
+      end
+      else
+      begin
+        ScreenObject := Reach.ScreenObject as TScreenObject;
+        frmErrorsAndWarnings.AddWarning(Model,StrZeroSFRHydraulicC,
+          Format(StrLayerRowColObject, [
+          Reach.Layer+1, Reach.Row+1, Reach.Column+1, ScreenObject.Name]),
+          ScreenObject);
       end;
     end;
     if ISFROPT in [2,3] then

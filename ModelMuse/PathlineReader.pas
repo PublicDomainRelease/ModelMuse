@@ -200,14 +200,17 @@ type
   TCustomPathLine = class(TCollectionItem)
   private
     FPoints: TCustomPathLinePoints;
+    FParticleIndex: Integer;
     procedure SetPoints(const Value: TCustomPathLinePoints);
     function GetLength: Double;
+    procedure SetParticleIndex(const Value: Integer);
   public
     procedure Assign(Source: TPersistent); override;
     Destructor Destroy; override;
     property Length: Double read GetLength;
   published
     property Points: TCustomPathLinePoints read FPoints write SetPoints;
+    property ParticleIndex: Integer read FParticleIndex write SetParticleIndex;
   end;
 
   TPathLine = class(TCustomPathLine)
@@ -232,6 +235,7 @@ type
   public
     property Lines[Index: integer]: TCustomPathLine read GetLine; default;
     function TestGetMaxTime(var Maxtime: double): boolean;
+    function Add: TCustomPathLine;
   end;
 
   TPathLines = class(TCustomPathLines)
@@ -555,10 +559,10 @@ type
   TCustomEndPoints = class(TCollection)
   private
     function GetPoint(Index: integer): TEndPoint;
-  public
-    property Points[Index: integer]: TEndPoint read GetPoint; default;
     procedure ExportShapefileAtStartingLocations(FileName: string);
     procedure ExportShapefileAtEndingLocations(FileName: string);
+  public
+    property Points[Index: integer]: TEndPoint read GetPoint; default;
   end;
 
   TEndPoints = class(TCustomEndPoints)
@@ -680,6 +684,8 @@ type
     property TopQuadTree: TRbwQuadTree read FTopQuadTree;
     property FrontQuadTree: TRbwQuadTree read FFrontQuadTree;
     property SideQuadTree: TRbwQuadTree read FSideQuadTree;
+    procedure ExportShapefileAtStartingLocations(FileName: string);
+    procedure ExportShapefileAtEndingLocations(FileName: string);
   published
     property FileDate: TDateTime read FFileDate write SetFileDate;
     property FileName: string read FFileName write FFileName;
@@ -1206,10 +1212,14 @@ begin
 end;
 
 procedure TCustomPathLine.Assign(Source: TPersistent);
+var
+  SourcePathLines: TCustomPathLine;
 begin
   if Source is TCustomPathLine then
   begin
-    FPoints.Assign(TCustomPathLine(Source).FPoints);
+    SourcePathLines := TCustomPathLine(Source);
+    FPoints.Assign(SourcePathLines.FPoints);
+    ParticleIndex := SourcePathLines.ParticleIndex;
   end
   else
   begin
@@ -1226,6 +1236,11 @@ end;
 function TCustomPathLine.GetLength: Double;
 begin
   result := FPoints.Length;
+end;
+
+procedure TCustomPathLine.SetParticleIndex(const Value: Integer);
+begin
+  FParticleIndex := Value;
 end;
 
 procedure TCustomPathLine.SetPoints(const Value: TCustomPathLinePoints);
@@ -2078,11 +2093,20 @@ begin
   ShapeDataBase.UpdFieldInt(XbaseFieldName(StrENDROW), LastPoint.FRow);
   ShapeDataBase.UpdFieldInt(XbaseFieldName(StrENDCOL), LastPoint.FColumn);
   ShapeDataBase.UpdFieldNum(XbaseFieldName(StrENDTIME), LastPoint.FTime);
+
+  ShapeDataBase.UpdFieldInt(XbaseFieldName(StrPARTICLE), ALine.ParticleIndex);
+
 end;
 
 function TCustomPathLines.XbaseFieldName(AName: Ansistring): Ansistring;
 begin
   result := AnsiString(Copy(AName, 1, 10));
+end;
+
+function TCustomPathLines.Add: TCustomPathLine;
+begin
+  result := inherited Add as TCustomPathLine;
+  result.ParticleIndex := Count;
 end;
 
 procedure TCustomPathLines.DefineShapeFileFields(Fields: TStringList);
@@ -2095,6 +2119,7 @@ begin
   Fields.Add(string(XbaseFieldName(StrENDROW)) + '=N');
   Fields.Add(string(XbaseFieldName(StrENDCOL)) + '=N');
   Fields.Add(string(XbaseFieldName(StrENDTIME)) + '=N18,10');
+  Fields.Add(string(XbaseFieldName(StrPARTICLE)) + '=N');
 end;
 
 function TCustomPathLines.GetLine(Index: integer): TCustomPathLine;
@@ -2372,6 +2397,9 @@ begin
       Fields.Add(string(StrTRACKTIME) + '=N18,10');
       Fields.Add(string(StrTERMCODE) + '=N');
       Fields.Add(string(StrRELEASET) + '=N18,10');
+
+      Fields.Add(string(StrPARTICLE) + '=N');
+
       InitializeDataBase(FileName, ShapeDataBase, Fields);
     finally
       Fields.Free;
@@ -2405,6 +2433,8 @@ begin
         ShapeDataBase.UpdFieldNum(StrTRACKTIME, APoint.FTrackingTime);
         ShapeDataBase.UpdFieldInt(StrTERMCODE, APoint.FTerminationCode);
         ShapeDataBase.UpdFieldNum(StrRELEASET, APoint.FReleaseTime);
+
+        ShapeDataBase.UpdFieldNum(StrPARTICLE, APoint.ParticleNumber);
 
         ShapeDataBase.PostChanges;
 
@@ -2473,6 +2503,8 @@ begin
       Fields.Add(string(StrTERMCODE) + '=N');
       Fields.Add(string(StrRELEASET) + '=N18,10');
 
+      Fields.Add(string(StrPARTICLE) + '=N');
+
       InitializeDataBase(FileName, ShapeDataBase, Fields);
     finally
       Fields.Free;
@@ -2506,6 +2538,8 @@ begin
         ShapeDataBase.UpdFieldNum(StrTRACKTIME, APoint.FTrackingTime);
         ShapeDataBase.UpdFieldInt(StrTERMCODE, APoint.FTerminationCode);
         ShapeDataBase.UpdFieldNum(StrRELEASET, APoint.FReleaseTime);
+
+        ShapeDataBase.UpdFieldNum(StrPARTICLE, APoint.ParticleNumber);
 
         ShapeDataBase.PostChanges;
 
@@ -3017,6 +3051,24 @@ begin
 
 end;
 
+procedure TEndPointReader.ExportShapefileAtEndingLocations(FileName: string);
+begin
+  case FModpathVersion of
+    pv5: Points.ExportShapefileAtEndingLocations(FileName);
+    pv6_0: PointsV6.ExportShapefileAtEndingLocations(FileName);
+    else Assert(False)
+  end;
+end;
+
+procedure TEndPointReader.ExportShapefileAtStartingLocations(FileName: string);
+begin
+  case FModpathVersion of
+    pv5: Points.ExportShapefileAtStartingLocations(FileName);
+    pv6_0: PointsV6.ExportShapefileAtStartingLocations(FileName);
+    else Assert(False)
+  end;
+end;
+
 class function TEndPointReader.GetEndPointGLIndex: GLuint;
 begin
   if not FListInitialized and frmGoPhast.frame3DView.glWidModelView.Started then
@@ -3242,11 +3294,9 @@ begin
 end;
 
 procedure TEndPointReader.ReadFile;
-var
-  version: TPathlineVersion;
 begin
-  version := GetEndPointVersion(FFileName);
-  case version of
+  FModpathVersion := GetEndPointVersion(FFileName);
+  case FModpathVersion of
     pv5: ReadFileV5;
     pv6_0: ReadFileV6;
     else Assert(False);

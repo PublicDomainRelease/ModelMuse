@@ -26,6 +26,9 @@ type
     procedure btnOKClick(Sender: TObject);
     procedure frameNodesseNumberChange(Sender: TObject);
     procedure frameElementsseNumberChange(Sender: TObject);
+    procedure frameElementsGridBeforeDrawCell(Sender: TObject; ACol,
+      ARow: Integer);
+    procedure pgcMeshDesignChange(Sender: TObject);
   private
     FKind: TMeshKind;
     procedure SetData;
@@ -78,6 +81,60 @@ begin
   frameElements.Grid.Cells[Ord(ecNode2),0] := StrNode2;
   frameElements.Grid.Cells[Ord(ecNode3),0] := StrNode3;
   frameElements.Grid.Cells[Ord(ecNode4),0] := StrNode4;
+end;
+
+procedure TfrmSpecifyMesh.frameElementsGridBeforeDrawCell(Sender: TObject; ACol,
+  ARow: Integer);
+var
+  ElCol: TElementColumns;
+  Node1: Integer;
+  Node2: integer;
+  Node3: integer;
+  Node4: integer;
+begin
+  inherited;
+  if ARow > 0 then
+  begin
+    ElCol := TElementColumns(ACol);
+    case ElCol of
+      ecNode2:
+        begin
+          if TryStrToInt(frameElements.Grid.Cells[Ord(ecNode1),ARow], Node1)
+            and TryStrToInt(frameElements.Grid.Cells[Ord(ecNode2),ARow], Node2) then
+          begin
+            if Node1 = Node2 then
+            begin
+              frameElements.Grid.Canvas.Brush.Color := clRed;
+            end;
+          end;
+        end;
+      ecNode3:
+        begin
+          if TryStrToInt(frameElements.Grid.Cells[Ord(ecNode1),ARow], Node1)
+            and TryStrToInt(frameElements.Grid.Cells[Ord(ecNode2),ARow], Node2)
+            and TryStrToInt(frameElements.Grid.Cells[Ord(ecNode3),ARow], Node3) then
+          begin
+            if (Node3 = Node1) or (Node3 = Node2) then
+            begin
+              frameElements.Grid.Canvas.Brush.Color := clRed;
+            end;
+          end;
+        end;
+      ecNode4:
+        begin
+          if TryStrToInt(frameElements.Grid.Cells[Ord(ecNode1),ARow], Node1)
+            and TryStrToInt(frameElements.Grid.Cells[Ord(ecNode2),ARow], Node2)
+            and TryStrToInt(frameElements.Grid.Cells[Ord(ecNode3),ARow], Node3)
+            and TryStrToInt(frameElements.Grid.Cells[Ord(ecNode4),ARow], Node4) then
+          begin
+            if (Node4 = Node1) or (Node4 = Node2) or (Node4 = Node3) then
+            begin
+              frameElements.Grid.Canvas.Brush.Color := clRed;
+            end;
+          end;
+        end;
+    end;
+  end;
 end;
 
 procedure TfrmSpecifyMesh.frameElementsseNumberChange(Sender: TObject);
@@ -251,6 +308,25 @@ begin
 
 end;
 
+procedure TfrmSpecifyMesh.pgcMeshDesignChange(Sender: TObject);
+var
+  ACol: TRbwColumn4;
+  ColIndex: TElementColumns;
+begin
+  inherited;
+  if pgcMeshDesign.ActivePage = tabElements then
+  begin
+    for ColIndex := ecNode1 to ecNode4 do
+    begin
+      ACol := frameElements.Grid.Columns[Ord(ecNode1)];
+      ACol.Min := 1;
+      ACol.Max := frameNodes.seNumber.AsInteger;
+      ACol.CheckMin := True;
+      ACol.CheckMax := True;
+    end;
+  end;
+end;
+
 procedure TfrmSpecifyMesh.Set2DMesh;
 var
   Undo: TUndoMoveSutraNodes;
@@ -343,6 +419,22 @@ begin
     while Mesh.Elements.Count > ElementIndex do
     begin
       Mesh.Elements.Delete(Mesh.Elements.Count-1);
+    end;
+
+    for NodeIndex := 0 to Mesh.Nodes.Count - 1 do
+    begin
+      ANode2D := Mesh.Nodes[NodeIndex];
+      ANode2D.ClearElements;
+    end;
+
+    for ElementIndex := 0 to Mesh.Elements.Count - 1 do
+    begin
+      AnElement :=  Mesh.Elements[ElementIndex];
+      for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+      begin
+        ANode2D := AnElement.Nodes[NodeIndex].Node;
+        ANode2D.AddElement(AnElement);
+      end;
     end;
 
     Mesh.DeleteUnconnectedNodes;

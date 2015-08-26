@@ -142,6 +142,7 @@ type
     procedure AssignTriangulationValuesFromMesh(out MinValue, MaxValue: double;
       SelectedColRowLayer: integer; DSValues: TStringList;
       ViewDirection: TViewDirection);
+    // C = CONTOUR LEVELS
     procedure PerformAlg626(C: TRealArray);
     procedure CreateSimpleContoursFromMesh(const ContourValues: TOneDRealArray);
   public
@@ -1504,16 +1505,18 @@ begin
     and ((FMesh as TSutraMesh3D).Mesh2D.MeshGenControls.
     MeshGenerationMethod = mgmFishnet) then
   begin
-    // TRIMESH doesn't get a good triangulation for fishnet meshes.
+    // TRMESH doesn't get a good triangulation for fishnet meshes.
     TRICP_Pascal(FTriangulationData.X, FTriangulationData.Y,
-      FTriangulationData.Values, C, WK, ND, NCP, NC, 0, NT,
-      FTriangulationData.Triangulation, IPL);
+      FTriangulationData.Values, C, WK, ND, NCP, NC,
+      0, // NORMAL MODE
+      NT, FTriangulationData.Triangulation, IPL);
   end
   else
   begin
     TRICP_Pascal(FTriangulationData.X, FTriangulationData.Y,
-      FTriangulationData.Values, C, WK, ND, NCP, NC, 1, NT,
-      FTriangulationData.Triangulation, IPL);
+      FTriangulationData.Values, C, WK, ND, NCP, NC,
+      1, // NO TRIANGULATION REQUESTED.
+      NT, FTriangulationData.Triangulation, IPL);
   end;
 end;
 
@@ -2535,6 +2538,7 @@ var
   ANode: TSutraNode3D;
 begin
 //  AnActiveDataSet.Initialize;
+  ADataSet.Initialize;
   SetLength(Active, ADataSet.ColumnCount,
     ADataSet.RowCount, ADataSet.LayerCount);
   LocalMesh := Mesh as TSutraMesh3D;

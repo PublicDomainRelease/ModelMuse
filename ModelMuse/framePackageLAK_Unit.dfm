@@ -7,8 +7,8 @@ inherited framePackageLAK: TframePackageLAK
   object lblTheta: TLabel [1]
     Left = 120
     Top = 146
-    Width = 28
-    Height = 13
+    Width = 33
+    Height = 16
     Anchors = [akLeft, akBottom]
     Caption = 'Theta'
     Enabled = False
@@ -16,17 +16,17 @@ inherited framePackageLAK: TframePackageLAK
   object lblIterations: TLabel [2]
     Left = 120
     Top = 174
-    Width = 197
-    Height = 13
+    Width = 233
+    Height = 16
     Anchors = [akLeft, akBottom]
-    Caption = 'Maximumn number of iterations (NSSITR)'
+    Caption = 'Maximum number of iterations (NSSITR)'
     Enabled = False
   end
   object lblConvergenceCriterion: TLabel [3]
     Left = 120
     Top = 202
-    Width = 157
-    Height = 13
+    Width = 187
+    Height = 16
     Anchors = [akLeft, akBottom]
     Caption = 'Convergence criterion (SSCNCR)'
     Enabled = False
@@ -34,8 +34,8 @@ inherited framePackageLAK: TframePackageLAK
   object lblSurfDepth: TLabel [5]
     Left = 120
     Top = 227
-    Width = 230
-    Height = 13
+    Width = 274
+    Height = 16
     Anchors = [akLeft, akBottom]
     Caption = 'Height of lake bottom undulations (SURFDEPTH)'
     Enabled = False

@@ -258,7 +258,7 @@ begin
   FDataSetDummyObjects := TObjectList.Create;
 
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow, msModflowNWT, msModflowCfp, msSutra22:
+    msPhast, msModflow, msModflowNWT, msModflowCfp, msSutra22, msFootPrint:
       begin
         comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel)
       end;
@@ -628,7 +628,7 @@ var
     VarLabel := '';
     case frmGoPhast.ModelSelection of
       msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-        msModflowFmp, msModflowCfp:
+        msModflowFmp, msModflowCfp, msFootPrint:
         begin
           Grid := frmGoPhast.Grid;
 
@@ -1090,7 +1090,7 @@ begin
   result := False;
   case frmGoPhast.ModelSelection of
     msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         Grid := frmGoPhast.Grid;
         result := (Grid <> nil) and (Grid.LayerCount >= 1)
@@ -1127,7 +1127,7 @@ begin
   begin
     Exit;
   end;
-  if frmGoPhast.ModelSelection = msSutra22 then
+  if frmGoPhast.ModelSelection in [msPhast, msSutra22, msFootPrint] then
   begin
     jvrltEndPoint.Visible := False;
     Exit;
@@ -1357,7 +1357,7 @@ begin
   begin
     Exit;
   end;
-  if frmGoPhast.ModelSelection = msSutra22 then
+  if frmGoPhast.ModelSelection in [msPhast, msSutra22, msFootPrint] then
   begin
     jvrltPathline.Visible := False;
     Exit;

@@ -10,32 +10,29 @@ inherited frmDataSets: TfrmDataSets
   Font.Height = 19
   OnActivate = FormActivate
   OnClose = FormClose
-  ExplicitTop = -60
   ExplicitWidth = 656
   ExplicitHeight = 507
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 19
   object Splitter1: TSplitter
-    Left = 313
+    Left = 315
     Top = 0
     Width = 5
-    Height = 394
+    Height = 401
     Align = alRight
     ExplicitLeft = 325
     ExplicitHeight = 405
   end
   object pnlButtons: TPanel
     Left = 0
-    Top = 394
-    Width = 638
+    Top = 401
+    Width = 640
     Height = 41
     Align = alBottom
     ParentColor = True
     TabOrder = 2
-    ExplicitTop = 401
-    ExplicitWidth = 640
     DesignSize = (
-      638
+      640
       41)
     object btnOK: TBitBtn
       Left = 434
@@ -110,20 +107,18 @@ inherited frmDataSets: TfrmDataSets
   end
   object sbStatusBar: TStatusBar
     Left = 0
-    Top = 435
-    Width = 638
+    Top = 442
+    Width = 640
     Height = 27
     Panels = <>
     ParentColor = True
     SimplePanel = True
-    ExplicitTop = 442
-    ExplicitWidth = 640
   end
   object tvDataSets: TTreeView
     Left = 0
     Top = 0
-    Width = 313
-    Height = 394
+    Width = 315
+    Height = 401
     Align = alClient
     HideSelection = False
     Indent = 21
@@ -132,28 +127,20 @@ inherited frmDataSets: TfrmDataSets
     ReadOnly = True
     TabOrder = 0
     OnChange = tvDataSetsChange
-    ExplicitWidth = 315
-    ExplicitHeight = 401
   end
   object pcDataSets: TJvPageControl
-    Left = 318
+    Left = 320
     Top = 0
     Width = 320
-    Height = 394
+    Height = 401
     ActivePage = tabBasic
     Align = alRight
     TabOrder = 1
-    ExplicitLeft = 320
-    ExplicitHeight = 401
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         312
-        360)
+        367)
       object lblName: TLabel
         Left = 3
         Top = 3
@@ -585,13 +572,12 @@ inherited frmDataSets: TfrmDataSets
       end
       object pnlDescription: TPanel
         Left = 0
-        Top = 173
+        Top = 180
         Width = 312
         Height = 187
         Align = alBottom
         BevelOuter = bvNone
         TabOrder = 1
-        ExplicitTop = 180
         object lblAssociatedDataSets: TLabel
           AlignWithMargins = True
           Left = 3

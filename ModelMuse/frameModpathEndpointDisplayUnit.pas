@@ -187,30 +187,31 @@ begin
 end;
 
 procedure TUndoImportEndpoints.EnableMenuItems;
-var
-  ChildIndex: Integer;
-  ChildModel: TChildModel;
+//var
+//  ChildIndex: Integer;
+//  ChildModel: TChildModel;
 begin
-  frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled :=
-    (frmGoPhast.PhastModel.EndPoints.Points.Count > 0)
-    or (frmGoPhast.PhastModel.EndPoints.Points.Count > 0);
-  if not frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled
-    and frmGoPhast.PhastModel.LgrUsed then
-  begin
-    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
-    begin
-      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
-      frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled :=
-        (ChildModel.EndPoints.Points.Count > 0)
-        or (ChildModel.EndPoints.Points.Count > 0);
-      if frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled then
-      begin
-        break;
-      end;
-    end;
-  end;
-  frmGoPhast.miEndpointsatEndingLocationstoShapefile.Enabled :=
-    frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled;
+  frmGoPhast.EnableModpathToShapefile;
+//  frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled :=
+//    (frmGoPhast.PhastModel.EndPoints.Points.Count > 0)
+//    or (frmGoPhast.PhastModel.EndPoints.Points.Count > 0);
+//  if not frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled
+//    and frmGoPhast.PhastModel.LgrUsed then
+//  begin
+//    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+//    begin
+//      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+//      frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled :=
+//        (ChildModel.EndPoints.Points.Count > 0)
+//        or (ChildModel.EndPoints.Points.Count > 0);
+//      if frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled then
+//      begin
+//        break;
+//      end;
+//    end;
+//  end;
+//  frmGoPhast.miEndpointsatEndingLocationstoShapefile.Enabled :=
+//    frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled;
 end;
 
 { TframeModpathEndpointDisplay }

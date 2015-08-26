@@ -1788,6 +1788,7 @@ begin
 
       FPercentRate.Add(Rate);
       FPercentCumulative.Add(Cum);
+      FVolBudget := False;
     end;
   end;
 end;

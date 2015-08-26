@@ -106,6 +106,10 @@ resourcestring
 //  StrWritingDataSet5 = '  Writing Data Set 5.';
 //  StrWritingDataSet6 = '  Writing Data Set 6.';
   Str0sIn1s = '%0:s in %1:s.';
+  StrHFBThicknessOrHyd = 'HFB thickness or hydraulic conductivity less than ' +
+  'or equal to zero';
+  StrLayer0dRow11 = 'Layer %0:d, Row1 %1:d, Col1 %2:d, Row2: %3:d, Col2 %4:d' +
+  '.';
 
 { TModflowHfb_Writer }
 
@@ -363,6 +367,8 @@ begin
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInTheHFBPackage);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInTheHFBPackage1);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrNoDefinedBoundarie);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrHFBThicknessOrHyd);
+
 
     frmProgressMM.AddMessage(StrEvaluatingHFBPacka);
     FillParameterScreenObjectList;
@@ -898,6 +904,11 @@ begin
   else
   begin
     Writer.WriteFloat(HydraulicConductivity/Thickness);
+  end;
+  if (Thickness <= 0) or (HydraulicConductivity <= 0) then
+  begin
+    frmErrorsAndWarnings.AddWarning(Writer.Model, StrHFBThicknessOrHyd,
+      Format(StrLayer0dRow11, [Layer+1, Row1, Col1, Row2, Col2]));
   end;
   Writer.WriteString(Comment);
   Writer.NewLine;

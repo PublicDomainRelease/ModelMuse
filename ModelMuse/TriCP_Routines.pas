@@ -1,7 +1,7 @@
 // This file contains routines for plotting contour lines based on data points
 // at arbitrary locations.
 //
-// Output from the procedures in this file are set to @link(CalCompRoutines).
+// Output from the procedures in this file are sent to @link(CalCompRoutines).
 // You can alter the procedures in @link(CalCompRoutines) if you wish to
 // capture the output in a different way.
 //
@@ -121,6 +121,9 @@ Type
                  DERIVATIVES INTERACTIVELY AND TO CALL TRICP AGAIN
                  USING THIS MODE.
 )
+
+@seealso(TMultipleContourCreator.CreateAndDrawContours)
+@seealso(TCustomContourCreator.PerformAlg626)
 
 }
 

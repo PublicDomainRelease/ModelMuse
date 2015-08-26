@@ -5,9 +5,12 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, VirtualTrees, DataSetUnit, StdCtrls, ExtCtrls,
-  Buttons, GoPhastTypes;
+  Buttons, GoPhastTypes, Vcl.CheckLst, JvExCheckLst, JvCheckListBox;
 
 type
+  TDataToExport = (dteLocation, dteCell, dteDataSetValues);
+  TDataToExportSet = set of TDataToExport;
+
   TfrmExportCSV = class(TfrmCustomGoPhast)
     sdSaveCSV: TSaveDialog;
     Panel1: TPanel;
@@ -19,6 +22,8 @@ type
     pnlModel: TPanel;
     lblModel: TLabel;
     comboModel: TComboBox;
+    clIncluded: TJvCheckListBox;
+    lblDataToExport: TLabel;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure vstDataSetsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -40,6 +45,8 @@ type
       var Orientation: TDataSetOrientation);
     procedure WriteString(const Value: String);
     procedure NewLine;
+    function ExportTitle(DataArrayList: TList): string;
+    function GetExportOptions: TDataToExportSet;
     { Private declarations }
   public
     { Public declarations }
@@ -62,12 +69,14 @@ resourcestring
   '.';
   StrNoDataSetsHaveBe = 'No data sets have been selected. Do you want to jus' +
   't export the coordinates?';
-  StrXYPrimesLocation = 'X, Y, X_Prime, Y_Prime, Column, Row';
-  StrXYZPrimesLocation = 'X, Y, Z, X_Prime, Y_Prime, Column, Row, Layer';
-  StrXYElement = 'X, Y, Element';
-  StrXYNode = 'X, Y, Node';
-  StrXYZElement = 'X, Y, Z, Element';
-  StrXYZNode = 'X, Y, Z, Node';
+  Str2DXY = 'X, Y';
+  StrZ = ', Z';
+  StrPrimes = ', X_Prime, Y_Prime';
+  Str2D_CellLocation = 'Column, Row';
+  Str3DPrimes = 'X, Y, Z, X_Prime, Y_Prime';
+  StrLayer = ', Layer';
+  StrElement = 'Element';
+  StrNode = 'Node';
 
 {$R *.dfm}
 
@@ -97,6 +106,7 @@ var
   ChildModel: TChildModel;
 begin
   inherited;
+  clIncluded.CheckAll;
   FDataSets := TObjectList.Create;
   rgEvaluatedAt.Enabled := frmGoPhast.PhastModel.ModelSelection
     in [msPhast, msSutra22];
@@ -182,7 +192,112 @@ var
 begin
   GetOrientationAndEvalAt(EvaluatedAt, Orientation);
   result := (DataArray.Orientation = Orientation)
-    and (DataArray.EvaluatedAt = EvaluatedAt)
+    and (DataArray.EvaluatedAt = EvaluatedAt);
+
+end;
+
+function TfrmExportCSV.ExportTitle(DataArrayList: TList): string;
+var
+  EvaluatedAt: TEvaluatedAt;
+  Orientation: TDataSetOrientation;
+//  Grid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
+  LocalModel: TCustomModel;
+  ExportOptions: TDataToExportSet;
+  Index: Integer;
+  ADataArray: TDataArray;
+begin
+  GetOrientationAndEvalAt(EvaluatedAt, Orientation);
+  LocalModel := comboModel.Items.Objects[comboModel.ItemIndex] as TCustomModel;
+//  Grid := nil;
+  Mesh := nil;
+  case LocalModel.ModelSelection of
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
+      msModflowFmp, msModflowCfp, msFootPrint:
+      begin
+//        Grid := LocalModel.Grid;
+      end;
+    msSutra22:
+      begin
+        Mesh := LocalModel.Mesh;
+      end;
+    else Assert(False);
+  end;
+  ExportOptions := GetExportOptions;
+  result := '';
+  if dteLocation in ExportOptions then
+  begin
+    result := Str2DXY;
+    if Orientation = dso3D then
+    begin
+      result := result + StrZ;
+    end;
+    if Mesh = nil then
+    begin
+      result := result + StrPrimes;
+    end;
+  end;
+  if dteCell in ExportOptions then
+  begin
+    if result <> '' then
+    begin
+      result := result + ', ';
+    end;
+    if Mesh = nil then
+    begin
+      result := result + Str2D_CellLocation;
+      if Orientation = dso3D then
+      begin
+        result := result + StrLayer;
+      end;
+    end
+    else
+    begin
+      case EvaluatedAt of
+        eaBlocks: result := result + StrElement;
+        eaNodes: result := result + StrNode;
+      end;
+    end;
+  end;
+  if dteDataSetValues in ExportOptions then
+  begin
+    if result <> '' then
+    begin
+      result := result + ', ';
+    end;
+    for Index := 0 to DataArrayList.Count - 1 do
+    begin
+      ADataArray := DataArrayList[Index];
+      if Index > 0 then
+      begin
+        result := result + ', ';
+      end;
+      result := result + ADataArray.Name;
+      ADataArray.Initialize;
+    end;
+  end;
+//  Str2DXY = 'X, Y';
+//StrZ
+//  StrPrimes = ', X_Prime, Y_Prime';
+//  Str2D_CellLocation = 'Column, Row';
+//  Str3DPrimes = 'X, Y, Z, X_Prime, Y_Prime';
+//  StrLayer = ', Layer';
+//  StrElement = 'Element';
+//  StrNode = 'Node';
+end;
+
+function TfrmExportCSV.GetExportOptions: TDataToExportSet;
+var
+  dteIndex: TDataToExport;
+begin
+  result := [];
+  for dteIndex := Low(TDataToExport) to High(TDataToExport) do
+  begin
+    if clIncluded.Checked[Ord(dteIndex)] then
+    begin
+      Include(result, dteIndex);
+    end;
+  end;
 end;
 
 procedure TfrmExportCSV.SetData;
@@ -212,6 +327,7 @@ var
   Node3D: TSutraNode3D;
   SortIndex: Integer;
   NonRotatedLocation: TPoint3D;
+  ExportOptions: TDataToExportSet;
   function FreeFormattedReal(
     const Value: double): string;
   begin
@@ -220,45 +336,70 @@ var
   procedure WriteAMeshLine;
   var
     Index: integer;
+    PreviousWritten: Boolean;
   begin
-    WriteString(FreeFormattedReal(SortItem.Location.X) + ', ');
-    WriteString(FreeFormattedReal(SortItem.Location.Y));
-    if (Orientation = dso3D) then
+    PreviousWritten := False;
+    if dteLocation in ExportOptions then
     begin
-      WriteString(', ' + FreeFormattedReal(SortItem.Location.Z));
+      WriteString(FreeFormattedReal(SortItem.Location.X) + ', ');
+      WriteString(FreeFormattedReal(SortItem.Location.Y));
+      if (Orientation = dso3D) then
+      begin
+        WriteString(', ' + FreeFormattedReal(SortItem.Location.Z));
+      end;
+      PreviousWritten := True;
     end;
-    WriteString(', ' + IntToStr(SortItem.Number+1));
-    for Index := 0 to DataArrayList.Count - 1 do
+    if dteCell in ExportOptions then
     begin
-      ADataArray := DataArrayList[Index];
-      case ADataArray.DataType of
-        rdtDouble:
-          begin
-            WriteString(', ' + FreeFormattedReal(
-              ADataArray.RealData[SortItem.Layer, 0, SortItem.Column]));
-          end;
-        rdtInteger:
-          begin
-            WriteString(', ' + IntToStr(
-              ADataArray.IntegerData[SortItem.Layer, 0, SortItem.Column]));
-          end;
-        rdtBoolean:
-          begin
-            if ADataArray.BooleanData[SortItem.Layer, 0, SortItem.Column] then
+      if PreviousWritten then
+      begin
+        WriteString(', ');
+      end;
+      WriteString(IntToStr(SortItem.Number+1));
+      PreviousWritten := True;
+    end;
+    if dteDataSetValues in ExportOptions then
+    begin
+      if PreviousWritten then
+      begin
+        WriteString(', ');
+      end;
+      for Index := 0 to DataArrayList.Count - 1 do
+      begin
+        if Index > 0 then
+        begin
+          WriteString(', ');
+        end;
+        ADataArray := DataArrayList[Index];
+        case ADataArray.DataType of
+          rdtDouble:
             begin
-              WriteString(', True');
-            end
-            else
-            begin
-              WriteString(', False');
+              WriteString(FreeFormattedReal(
+                ADataArray.RealData[SortItem.Layer, 0, SortItem.Column]));
             end;
-          end;
-        rdtString:
-          begin
-            WriteString(', "' +
-              ADataArray.StringData[SortItem.Layer, 0, SortItem.Column] + '"' );
-          end;
-        else Assert(False);
+          rdtInteger:
+            begin
+              WriteString(IntToStr(
+                ADataArray.IntegerData[SortItem.Layer, 0, SortItem.Column]));
+            end;
+          rdtBoolean:
+            begin
+              if ADataArray.BooleanData[SortItem.Layer, 0, SortItem.Column] then
+              begin
+                WriteString('True');
+              end
+              else
+              begin
+                WriteString('False');
+              end;
+            end;
+          rdtString:
+            begin
+              WriteString('"' +
+                ADataArray.StringData[SortItem.Layer, 0, SortItem.Column] + '"' );
+            end;
+          else Assert(False);
+        end;
       end;
     end;
     NewLine;
@@ -266,55 +407,76 @@ var
   procedure WriteAGridLine;
   var
     Index: integer;
+    PreviousWritten: boolean;
   begin
-    WriteString(FreeFormattedReal(Location.X) + ', ');
-    WriteString(FreeFormattedReal(Location.Y));
-    if (Orientation = dso3D) then
+    PreviousWritten := False;
+    if dteLocation in ExportOptions then
     begin
-      WriteString(', ' + FreeFormattedReal(Location.Z));
+      PreviousWritten := True;
+      WriteString(FreeFormattedReal(Location.X) + ', ');
+      WriteString(FreeFormattedReal(Location.Y));
+      if (Orientation = dso3D) then
+      begin
+        WriteString(', ' + FreeFormattedReal(Location.Z));
+      end;
+      if Mesh = nil then
+      begin
+        WriteString(', ' + FreeFormattedReal(NonRotatedLocation.X));
+        WriteString(', ' + FreeFormattedReal(NonRotatedLocation.Y));
+      end;
     end;
-    if Mesh = nil then
+    if dteCell in ExportOptions then
     begin
-      WriteString(', ' + FreeFormattedReal(NonRotatedLocation.X));
-      WriteString(', ' + FreeFormattedReal(NonRotatedLocation.Y));
+      if PreviousWritten then
+      begin
+        WriteString(', ');
+      end;
+      WriteString(IntToStr(ColumnIndex+1));
+      WriteString(', ' + IntToStr(RowIndex+1));
+      if (Orientation = dso3D) then
+      begin
+        WriteString(', ' + IntToStr(LayerIndex+1));
+      end;
+      PreviousWritten := true;
     end;
-    WriteString(', ' + IntToStr(ColumnIndex+1));
-    WriteString(', ' + IntToStr(RowIndex+1));
-    if (Orientation = dso3D) then
+    if dteDataSetValues in ExportOptions then
     begin
-      WriteString(', ' + IntToStr(LayerIndex+1));
-    end;
-    for Index := 0 to DataArrayList.Count - 1 do
-    begin
-      ADataArray := DataArrayList[Index];
-      case ADataArray.DataType of
-        rdtDouble:
-          begin
-            WriteString(', ' + FreeFormattedReal(
-              ADataArray.RealData[LayerIndex, RowIndex, ColumnIndex]));
-          end;
-        rdtInteger: 
-          begin
-            WriteString(', ' + IntToStr(
-              ADataArray.IntegerData[LayerIndex, RowIndex, ColumnIndex]));
-          end;
-        rdtBoolean: 
-          begin
-            if ADataArray.BooleanData[LayerIndex, RowIndex, ColumnIndex] then
+      for Index := 0 to DataArrayList.Count - 1 do
+      begin
+        if (Index > 0) or PreviousWritten then
+        begin
+          WriteString(', ');
+        end;
+        ADataArray := DataArrayList[Index];
+        case ADataArray.DataType of
+          rdtDouble:
             begin
-              WriteString(', True');
-            end
-            else
-            begin
-              WriteString(', False');
+              WriteString(FreeFormattedReal(
+                ADataArray.RealData[LayerIndex, RowIndex, ColumnIndex]));
             end;
-          end;
-        rdtString: 
-          begin
-            WriteString(', "' +
-              ADataArray.StringData[LayerIndex, RowIndex, ColumnIndex] + '"' );
-          end;
-        else Assert(False);
+          rdtInteger:
+            begin
+              WriteString(IntToStr(
+                ADataArray.IntegerData[LayerIndex, RowIndex, ColumnIndex]));
+            end;
+          rdtBoolean:
+            begin
+              if ADataArray.BooleanData[LayerIndex, RowIndex, ColumnIndex] then
+              begin
+                WriteString('True');
+              end
+              else
+              begin
+                WriteString('False');
+              end;
+            end;
+          rdtString:
+            begin
+              WriteString('"' +
+                ADataArray.StringData[LayerIndex, RowIndex, ColumnIndex] + '"' );
+            end;
+          else Assert(False);
+        end;
       end;
     end;
     NewLine;
@@ -325,7 +487,7 @@ begin
   Mesh := nil;
   case LocalModel.ModelSelection of
     msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         Grid := LocalModel.Grid;
         if (Grid.ColumnCount = 0)
@@ -404,64 +566,66 @@ begin
       try
         FFileStream := TFileStream.Create(sdSaveCSV.FileName,
           fmCreate or fmShareDenyWrite);
+        WriteString(ExportTitle(DataArrayList));
         try
-          if Mesh = nil then
-          begin
-            case Orientation of
-              dsoTop:
-                begin
-                  WriteString(StrXYPrimesLocation);
-                end;
-              dso3D:
-                begin
-                  WriteString(StrXYZPrimesLocation);
-                end;
-              else Assert(False)
-            end;
-          end
-          else
-          begin
-            case Orientation of
-              dsoTop:
-                begin
-                  case EvaluatedAt of
-                    eaBlocks:
-                      begin
-                        WriteString(StrXYElement);
-                      end;
-                    eaNodes:
-                      begin
-                        WriteString(StrXYNode);
-                      end;
-                    else Assert(False);
-                  end;
-
-                end;
-              dso3D:
-                begin
-                  case EvaluatedAt of
-                    eaBlocks:
-                      begin
-                        WriteString(StrXYZElement);
-                      end;
-                    eaNodes:
-                      begin
-                        WriteString(StrXYZNode);
-                      end;
-                    else Assert(False);
-                  end;
-
-                end;
-              else Assert(False)
-            end;
-          end;
-          for Index := 0 to DataArrayList.Count - 1 do
-          begin
-            ADataArray := DataArrayList[Index];
-            WriteString(', ' + ADataArray.Name);
-            ADataArray.Initialize;
-          end;
+//          if Mesh = nil then
+//          begin
+//            case Orientation of
+//              dsoTop:
+//                begin
+//                  WriteString(StrXYPrimesLocation);
+//                end;
+//              dso3D:
+//                begin
+//                  WriteString(StrXYZPrimesLocation);
+//                end;
+//              else Assert(False)
+//            end;
+//          end
+//          else
+//          begin
+//            case Orientation of
+//              dsoTop:
+//                begin
+//                  case EvaluatedAt of
+//                    eaBlocks:
+//                      begin
+//                        WriteString(StrXYElement);
+//                      end;
+//                    eaNodes:
+//                      begin
+//                        WriteString(StrXYNode);
+//                      end;
+//                    else Assert(False);
+//                  end;
+//
+//                end;
+//              dso3D:
+//                begin
+//                  case EvaluatedAt of
+//                    eaBlocks:
+//                      begin
+//                        WriteString(StrXYZElement);
+//                      end;
+//                    eaNodes:
+//                      begin
+//                        WriteString(StrXYZNode);
+//                      end;
+//                    else Assert(False);
+//                  end;
+//
+//                end;
+//              else Assert(False)
+//            end;
+//          end;
+//          for Index := 0 to DataArrayList.Count - 1 do
+//          begin
+//            ADataArray := DataArrayList[Index];
+//            WriteString(', ' + ADataArray.Name);
+//            ADataArray.Initialize;
+//          end;
           NewLine;
+          ExportOptions := GetExportOptions;
 
           if Mesh = nil then
           begin

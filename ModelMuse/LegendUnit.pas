@@ -409,7 +409,7 @@ begin
                         Delta := (MaxReal - MinReal)/IntervalCount;
                         for Index := 0 to IntervalCount do
                         begin
-                          Values.RealValues[Index] := Power(10,
+                          Values.RealValues[Index] := Power(10.,
                             MinReal + Delta*Index);
                         end;
                       end;
@@ -570,7 +570,7 @@ begin
                       begin
                         for Index := 0 to Contours.Count - 1 do
                         begin
-                          Values.RealValues[Index] := Power(10,Contours.ContourValues[Index]);
+                          Values.RealValues[Index] := Power(10.,Contours.ContourValues[Index]);
                         end;
                       end;
                     end

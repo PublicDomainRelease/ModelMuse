@@ -7,9 +7,10 @@ inherited frmGridValue: TfrmGridValue
   KeyPreview = True
   OnClose = FormClose
   OnResize = FormResize
-  ExplicitWidth = 520
-  ExplicitHeight = 558
-  PixelsPerInch = 120
+  ExplicitTop = -154
+  ExplicitWidth = 518
+  ExplicitHeight = 551
+  PixelsPerInch = 96
   TextHeight = 18
   object btnHelp: TBitBtn
     Left = 306
@@ -264,8 +265,8 @@ inherited frmGridValue: TfrmGridValue
         Height = 26
         Tree.Left = 0
         Tree.Top = 0
-        Tree.Width = 302
-        Tree.Height = 195
+        Tree.Width = 304
+        Tree.Height = 202
         Tree.Align = alClient
         Tree.Header.AutoSizeIndex = 0
         Tree.Header.Font.Charset = DEFAULT_CHARSET
@@ -353,7 +354,6 @@ inherited frmGridValue: TfrmGridValue
       TabOrder = 2
       OnExpand = jvrltPathlineExpand
       OnCollapse = jvrltPathlineCollapse
-      ExplicitWidth = 145
       FAWidth = 426
       FAHeight = 511
       FCWidth = 22
@@ -482,14 +482,14 @@ inherited frmGridValue: TfrmGridValue
         object lblLength: TLabel
           Left = 7
           Top = 6
-          Width = 62
+          Width = 107
           Height = 18
-          Caption = 'lblLength'
+          Caption = 'Pathline Length'
         end
         object edLength: TEdit
-          Left = 75
+          Left = 136
           Top = 0
-          Width = 214
+          Width = 249
           Height = 26
           TabOrder = 0
         end

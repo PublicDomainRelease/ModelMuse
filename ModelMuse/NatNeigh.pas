@@ -42,6 +42,8 @@ type
     FVoronoi: TVoronoiDiagram;
     FValues: TFloatArray;
     FQuadTree: TRbwQuadTree;
+    FEpsilonX: Double;
+    FEpsilonY: Double;
     function GetGpcPolygon(DelaunayNodeIndex: integer): TGpcPolygonClass;
     procedure SetTestPolygonGeometry(VertexPositions: TLongIntList;
       Vertices: TVertexList; var TestPolygon: TGpcPolygonClass);
@@ -54,6 +56,8 @@ type
     constructor Create(const X, Y, Values: TFloatArray); overload;
     destructor Destroy; override;
     function Interpolate(const X, Y: double): double;
+    property EpsilonX: Double read FEpsilonX write FEpsilonX;
+    property EpsilonY: Double read FEpsilonY write FEpsilonY;
   end;
 
   {@name is used exactly like @link(TNaturalNeighborInterpolator).
@@ -64,7 +68,7 @@ type
   protected
     procedure FillVoronoiDiagram(const X, Y: TFloatArray;
       XHigh, XLow, YHigh, YLow: Extended); override;
-  end;  
+  end;
 
 procedure GetHighAndLowValuesFromArray(const AnArray: TDoubleDynArray; var HighValue: Extended; var LowValue: Extended); overload;
 procedure GetHighAndLowValuesFromArray(const AnArray: TFloatArray; var HighValue: TFloat; var LowValue: TFloat); overload;
@@ -295,11 +299,19 @@ var
   NewX: Double;
   NewY: Double;
   ValuePointers: TPointerArray;
+  function NearlyTheSame(const A, B, Epsilon: real): boolean;
+  begin
+    result := A = B;
+    if not result then
+    begin
+      result := Abs(A - B) < Epsilon;
+    end;
+  end;
 begin
   NewX := X;
   NewY := Y;
   FQuadTree.FindClosestPointsData(NewX, NewY, ValuePointers);
-  if (X = NewX) and (Y = NewY) then
+  if NearlyTheSame(X, NewX, EpsilonX) and NearlyTheSame(Y, NewY, EpsilonY) then
   begin
     // If the interpolation point is at the same location
     // as one of the original points, use the value associated with

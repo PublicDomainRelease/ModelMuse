@@ -47,7 +47,7 @@ var
   X: Extended;
   Y: Extended;
   ANode: TSutraNode2D;
-  ElementNumber: Integer;
+//  ElementNumber: Integer;
   NodeIndex: Integer;
   AnElement: TSutraElement2D;
   NumberedNode: TSutraNodeNumber2D_Item;
@@ -96,7 +96,7 @@ begin
         AnElement := TSutraElement2D.Create(Mesh2D.Elements);
         AnElement.ElementNumber := NewElementNumber;
         Inc(NewElementNumber);
-        ElementNumber := StrToInt(Splitter[1]);
+        {ElementNumber :=}StrToInt(Splitter[1]);
         for NodeIndex := 2 to 5 do
         begin
           NodeNumber := StrToInt(Splitter[NodeIndex]);

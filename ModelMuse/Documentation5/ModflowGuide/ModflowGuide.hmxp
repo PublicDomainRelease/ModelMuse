@@ -108,7 +108,7 @@
         <config-value name="MODFLOW-FMP2">MODFLOW-FMP2</config-value>
       </config-group>
       <config-value name="imageshortcuts_includebaggage">1</config-value>
-      <config-value name="make0include">CHM,ALLMODELS,INSIDE-MODFLOW,OPT_ATOC,OPT_BREADTRAIL,OPT_COMMENTS,OPT_FB,OPT_PRINT,OPT_SORTABLE,OPT_TOGGLE,OPT_TOGTOC</config-value>
+      <config-value name="make0include">CHM,ALLMODELS,INSIDE-MODFLOW</config-value>
       <config-value name="make0status">*</config-value>
       <config-value name="make3include">HTML,ALLMODELS,INSIDE-MODFLOW,OPT_ATOC,OPT_BREADTRAIL,OPT_COMMENTS,OPT_FB,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
       <config-value name="make3status">*</config-value>
@@ -132,7 +132,7 @@
       <config-value name="usesecondarywindows">1</config-value>
       <config-value name="outputfile">ModflowGuide.chm</config-value>
       <config-value name="deletetemp">1</config-value>
-      <config-value name="skin">..\..\..\..\..\Program Files (x86)\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.53 Skins\Skins Horizontal Tabs\sky_blue_horiz.hmskin</config-value>
+      <config-value name="skin">C:\Program Files (x86)\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.53 Skins\Skins Horizontal Tabs\sky_blue_horiz.hmskin</config-value>
     </config-group>
     <config-group name="hxs">
       <config-value name="namespace"></config-value>

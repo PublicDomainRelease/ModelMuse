@@ -14,21 +14,25 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
     TabOrder = 0
     object tabBasic: TTabSheet
       Caption = 'Basic'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         468
-        331)
+        328)
       object lblModpathFile: TLabel
         Left = 8
         Top = 8
-        Width = 111
-        Height = 13
+        Width = 132
+        Height = 16
         Caption = 'MODPATH endpoint file'
       end
       object lblColorScheme: TLabel
         Left = 8
         Top = 108
-        Width = 64
-        Height = 13
+        Width = 78
+        Height = 16
         Caption = 'Color scheme'
       end
       object pbColorScheme: TPaintBox
@@ -43,23 +47,23 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
       object lblColorAdjustment: TLabel
         Left = 8
         Top = 211
-        Width = 82
-        Height = 13
+        Width = 98
+        Height = 16
         Caption = 'Color adjustment'
       end
       object lblCycles: TLabel
         Left = 364
         Top = 211
-        Width = 31
-        Height = 13
+        Width = 36
+        Height = 16
         Anchors = [akTop, akRight]
         Caption = 'Cycles'
       end
       object lblModelSelection: TLabel
         Left = 8
         Top = 273
-        Width = 73
-        Height = 13
+        Width = 88
+        Height = 16
         Caption = 'Model selection'
       end
       object fedModpathFile: TJvFilenameEdit
@@ -96,7 +100,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         Left = 8
         Top = 128
         Width = 457
-        Height = 21
+        Height = 24
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
         DropDownCount = 12
@@ -159,7 +163,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         Left = 8
         Top = 292
         Width = 241
-        Height = 21
+        Height = 24
         Style = csDropDownList
         TabOrder = 7
         Visible = False
@@ -169,9 +173,13 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         468
-        331)
+        328)
       object rgShow2D: TRadioGroup
         Left = 9
         Top = 0

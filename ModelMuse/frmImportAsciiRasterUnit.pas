@@ -283,7 +283,7 @@ begin
         end;
       end;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         NodeElemString := StrCell;
         CenterString := StrCellCenter

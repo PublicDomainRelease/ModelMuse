@@ -13,15 +13,12 @@ inherited frmSpecifyMesh: TfrmSpecifyMesh
     Top = 0
     Width = 503
     Height = 312
-    ActivePage = tabElements
+    ActivePage = tabNodes
     Align = alClient
     TabOrder = 0
+    OnChange = pgcMeshDesignChange
     object tabNodes: TTabSheet
       Caption = 'Nodes'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       inline frameNodes: TframeGrid
         Left = 0
         Top = 0
@@ -188,6 +185,8 @@ inherited frmSpecifyMesh: TfrmSpecifyMesh
           Height = 238
           ColCount = 5
           FixedCols = 1
+          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowMoving, goEditing, goAlwaysShowEditor]
+          OnBeforeDrawCell = frameElementsGridBeforeDrawCell
           Columns = <
             item
               AutoAdjustRowHeights = True
@@ -333,13 +332,13 @@ inherited frmSpecifyMesh: TfrmSpecifyMesh
     end
     object btnOK: TBitBtn
       Left = 296
-      Top = 7
+      Top = 6
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
       Kind = bkOK
       NumGlyphs = 2
-      TabOrder = 1
+      TabOrder = 0
       OnClick = btnOKClick
     end
     object btnHelp: TBitBtn
@@ -350,7 +349,7 @@ inherited frmSpecifyMesh: TfrmSpecifyMesh
       Anchors = [akTop, akRight]
       Kind = bkHelp
       NumGlyphs = 2
-      TabOrder = 0
+      TabOrder = 1
       OnClick = btnHelpClick
     end
   end

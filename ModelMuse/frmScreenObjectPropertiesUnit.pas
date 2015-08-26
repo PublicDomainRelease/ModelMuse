@@ -34,7 +34,7 @@ uses Windows,
   frameScreenObjectCropIDUnit, frameScreenObjectCfpPipesUnit,
   frameScreenObjectCfpFixedUnit, frameScreenObjectSwrUnit,
   frameScreenObjectSwrReachUnit, ModflowSwrReachUnit, frameScreenObjectMnw1Unit,
-  frameScreenObjectFarmIDUnit;
+  frameScreenObjectFarmIDUnit, frameScreenObjectFootprintWellUnit;
 
   { TODO : Consider making this a property sheet like the Object Inspector that
   could stay open at all times.  Boundary conditions and vertices might be
@@ -305,6 +305,18 @@ type
     frameMNW1: TframeScreenObjectMnw1;
     jvspFarmID: TJvStandardPage;
     frameFarmID: TframeScreenObjectFarmID;
+    btnConvertTimeUnits: TButton;
+    btnEditFeatureFormulas: TButton;
+    tabFootprintFeatures: TTabSheet;
+    frameScreenObjectFootprintWell: TframeScreenObjectFootprintWell;
+    pnlText: TPanel;
+    grpLabelVertices: TGroupBox;
+    lblVertexXOffset: TLabel;
+    lblVertexYOffset: TLabel;
+    btnVertexFont: TButton;
+    rdeVertexXOffset: TRbwDataEntry;
+    rdeVertexYOffset: TRbwDataEntry;
+    cbVertexLabelVisible: TCheckBox;
     // @name changes which check image is displayed for the selected item
     // in @link(jvtlModflowBoundaryNavigator).
     procedure jvtlModflowBoundaryNavigatorMouseDown(Sender: TObject;
@@ -560,6 +572,10 @@ type
     procedure cbCaptionVisibleClick(Sender: TObject);
     procedure memoCaptionChange(Sender: TObject);
     procedure btnCaptionFontClick(Sender: TObject);
+    procedure btnConvertTimeUnitsClick(Sender: TObject);
+    procedure btnEditFeatureFormulasClick(Sender: TObject);
+    procedure cbVertexLabelVisibleClick(Sender: TObject);
+    procedure btnVertexFontClick(Sender: TObject);
   published
     // Clicking @name closes the @classname without changing anything.
     // See @link(btnCancelClick),
@@ -1510,6 +1526,8 @@ type
     FCaptionFontChanged: Boolean;
     FCaptionTextChanged: Boolean;
     FCaptionFont: TFont;
+    FVertexCaptionFontChanged: Boolean;
+    FVertexCaptionFont: TFont;
     Function GenerateNewDataSetFormula(DataArray: TDataArray): string;
     // @name assigns new formulas for @link(TDataArray)s for each
     // @link(TScreenObject) in @link(FNewProperties).
@@ -1581,6 +1599,7 @@ type
     // @param(List List contains a series of @link(TScreenObject)s that are
     // being edited.  Copies of those @link(TScreenObject)s will be placed in
     // Collection.)
+    // See also @link(TfrmEditFeatureFormula.FillPropertyCollection).
     procedure FillPropertyCollection(Collection: TScreenObjectEditCollection;
       List: TList);
 
@@ -1923,6 +1942,7 @@ type
       ColumnOffset: Integer; ScreenObjectList: TList;
       TimeList: TParameterTimeList);
     procedure GetSwrReaches(const ScreenObjectList: TList);
+    procedure GetFootprintWells;
 
     // @name is set to @true when the @classname has stored values of the
     // @link(TScreenObject)s being edited.
@@ -2161,7 +2181,8 @@ uses Math, StrUtils, JvToolEdit, frmGoPhastUnit, AbstractGridUnit,
   ModflowFmpPrecipitationUnit, ModflowFmpEvapUnit, ModflowFmpCropSpatialUnit,
   ModflowFmpWellUnit, ModflowCfpPipeUnit, ModflowCfpFixedUnit,
   ModflowCfpRechargeUnit, ModflowSwrUnit, ModflowSwrDirectRunoffUnit,
-  ObjectLabelUnit, ModflowMnw1Unit, ModflowFmpFarmIdUnit, OpenGL;
+  ObjectLabelUnit, ModflowMnw1Unit, ModflowFmpFarmIdUnit, OpenGL,
+  frmTimeUnitsConverterUnit, frmEditFeatureFormulaUnit, FootprintBoundary;
 
 resourcestring
   StrConcentrationObserv = 'Concentration Observations: ';
@@ -2410,6 +2431,15 @@ begin
   end;
 end;
 
+procedure TfrmScreenObjectProperties.btnConvertTimeUnitsClick(Sender: TObject);
+var
+  frmTimeUnitsConverter: TfrmTimeUnitsConverter;
+begin
+  inherited;
+  frmTimeUnitsConverter := TfrmTimeUnitsConverter.Create(nil);
+  frmTimeUnitsConverter.Show;
+end;
+
 procedure TfrmScreenObjectProperties.btnDataSetFormulaClick(Sender: TObject);
 var
   NewFormula: string;
@@ -2541,6 +2571,36 @@ begin
     VariableList.Free;
     // Don't allow the user to click the OK button if any formulas are invalid.
     EnableOK_Button;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.btnEditFeatureFormulasClick(
+  Sender: TObject);
+var
+  ScreenObjects: TScreenObjectList;
+  index: Integer;
+  frmEditFeatureFormula: TfrmEditFeatureFormula;
+begin
+  inherited;
+  Hide;
+  ModalResult := mrCancel;
+  ScreenObjects := TScreenObjectList.Create;
+  try
+    ScreenObjects.Capacity := FScreenObjectList.Count;
+    for index := 0 to FScreenObjectList.Count - 1 do
+    begin
+      ScreenObjects.Add(
+        TScreenObject(FScreenObjectList[index]));
+    end;
+    frmEditFeatureFormula := TfrmEditFeatureFormula.Create(nil);
+    try
+      frmEditFeatureFormula.GetData(ScreenObjects);
+      frmEditFeatureFormula.ShowModal;
+    finally
+      frmEditFeatureFormula.Free
+    end;
+  finally
+    ScreenObjects.Free;
   end;
 end;
 
@@ -3182,9 +3242,21 @@ var
   TreeViewFilled: boolean;
   SelectCell: TGridRect;
   ObjectLabel: TObjectLabel;
+  ObjectVertexLabel: TObjectVertexLabel;
 begin
   // This line should always be the first line.
   IsLoaded := False;
+
+  rgElevationCount.Enabled := frmGoPhast.ModelSelection <> msFootPrint;
+  if not rgElevationCount.Enabled  then
+  begin
+    edZ.Enabled := False;
+    edHighZ.Enabled := False;
+    edLowZ.Enabled := False;
+    btnZ.Enabled := False;
+    btnHighZ.Enabled := False;
+    btnLowZ.Enabled := False;
+  end;
 
   HideGLViewersWithMicrosoftOpenGL;
 
@@ -3225,6 +3297,7 @@ begin
   memoComments.Text := AScreenObject.Comment;
 
   FCaptionFontChanged := False;
+  FVertexCaptionFontChanged := False;
   ObjectLabel := AScreenObject.ObjectLabel;
   cbCaptionVisible.AllowGrayed := False;
   cbCaptionVisible.Checked := ObjectLabel.Visible;
@@ -3232,6 +3305,13 @@ begin
   rdeCaptionY.IntegerValue := ObjectLabel.OffSet.Y;
   memoCaption.Lines.Text := ObjectLabel.Caption;
   FCaptionTextChanged := False;
+
+  ObjectVertexLabel := AScreenObject.ObjectVertexLabel;
+  cbVertexLabelVisible.AllowGrayed := False;
+  cbVertexLabelVisible.Checked := ObjectVertexLabel.Visible;
+  rdeVertexXOffset.IntegerValue := ObjectVertexLabel.OffSet.X;
+  rdeVertexYOffset.IntegerValue := ObjectVertexLabel.OffSet.Y;
+
 
   SetCheckBoxCaptions;
   frameModpathParticles.InitializeFrame;
@@ -3356,6 +3436,7 @@ begin
       FillPropertyCollection(FNewProperties, List);
     end;
     GetModflowBoundaries(List);
+    GetFootprintWells;
   finally
     List.Free;
   end;
@@ -3801,6 +3882,29 @@ begin
     frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
     frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
     frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.btnVertexFontClick(Sender: TObject);
+var
+  AScreenObject: TScreenObject;
+begin
+  inherited;
+  if FScreenObject <> nil then
+  begin
+    dlgFontCaption.Font := FScreenObject.ObjectVertexLabel.Font;
+  end
+  else
+  begin
+    AScreenObject := FScreenObjectList[0];
+    dlgFontCaption.Font := AScreenObject.ObjectVertexLabel.Font;
+  end;
+  if dlgFontCaption.Execute then
+  begin
+    FVertexCaptionFont.Free;
+    FVertexCaptionFont := TFont.Create;
+    FVertexCaptionFont.Assign(dlgFontCaption.Font);
+    FVertexCaptionFontChanged := True;
   end;
 end;
 
@@ -4894,6 +4998,7 @@ begin
       // is greater than 1.
       tabNodes.TabVisible := False;
       GetModflowBoundaries(AScreenObjectList);
+      GetFootprintWells;
       GetAdditionalUsedModels(AScreenObjectList);
       SetSelectedSutraBoundaryNode;
     end;
@@ -4936,8 +5041,10 @@ begin
 end;
 
 procedure TfrmScreenObjectProperties.HideGLViewersWithMicrosoftOpenGL;
+{$IFDEF Win64}
 var
   VendorString: PAnsiChar;
+{$ENDIF}
 begin
   // Work-around for buggy Microsoft OpenGL driver.
 {$IFDEF Win64}
@@ -4964,6 +5071,7 @@ procedure TfrmScreenObjectProperties.SetObjectCaption(List: TList);
 var
   AScreenObject: TScreenObject;
   ObjectLabel: TObjectLabel;
+  ObjectVertexLabel: TObjectVertexLabel;
   index: Integer;
 begin
   for index := 0 to List.Count - 1 do
@@ -4986,12 +5094,28 @@ begin
     begin
       ObjectLabel.Font := FCaptionFont;
     end;
+
+    ObjectVertexLabel := AScreenObject.ObjectVertexLabel;
+    if cbVertexLabelVisible.State <> cbGrayed then
+    begin
+      ObjectVertexLabel.Visible := cbVertexLabelVisible.Checked;
+    end;
+    if (rdeVertexXOffset.Text <> '') and (rdeVertexYOffset.Text <> '') then
+    begin
+      ObjectVertexLabel.OffSet := Point(rdeVertexXOffset.IntegerValue,
+        rdeVertexYOffset.IntegerValue);
+    end;
+    if FVertexCaptionFontChanged then
+    begin
+      ObjectVertexLabel.Font :=   FVertexCaptionFont
+    end;
   end;
 end;
 
 procedure TfrmScreenObjectProperties.GetObjectLabelForAdditionalScreenObject(AScreenObject: TScreenObject);
 var
   ObjectLabel: TObjectLabel;
+  ObjectVertexLabel: TObjectVertexLabel;
 begin
   ObjectLabel := AScreenObject.ObjectLabel;
   if cbCaptionVisible.Checked <> ObjectLabel.Visible then
@@ -5007,6 +5131,22 @@ begin
   begin
     rdeCaptionY.Text := '';
   end;
+
+  ObjectVertexLabel := AScreenObject.ObjectVertexLabel;
+  if cbVertexLabelVisible.Checked <> ObjectVertexLabel.Visible then
+  begin
+    cbVertexLabelVisible.AllowGrayed := True;
+    cbVertexLabelVisible.State := cbGrayed;
+  end;
+  if (rdeVertexXOffset.Text <> '') and (rdeVertexXOffset.IntegerValue <> ObjectVertexLabel.OffSet.X) then
+  begin
+    rdeVertexXOffset.Text := '';
+  end;
+  if (rdeVertexYOffset.Text <> '') and (rdeVertexYOffset.IntegerValue <> ObjectVertexLabel.OffSet.Y) then
+  begin
+    rdeVertexYOffset.Text := '';
+  end;
+
 end;
 
 procedure TfrmScreenObjectProperties.SetModflowBoundaryColCount;
@@ -5955,6 +6095,8 @@ begin
       end;
     end;
   end;
+
+  frameScreenObjectFootprintWell.SetData(FNewProperties);
 end;
 
 procedure TfrmScreenObjectProperties.UpdateVertices;
@@ -12649,7 +12791,8 @@ begin
   end;
 end;
 
-procedure TfrmScreenObjectProperties.GetModflowBoundaries(const AScreenObjectList: TList);
+procedure TfrmScreenObjectProperties.GetModflowBoundaries(
+  const AScreenObjectList: TList);
 begin
   GetChdBoundary(AScreenObjectList);
   GetGhbBoundary(AScreenObjectList);
@@ -12691,7 +12834,13 @@ begin
   GetSwrStageBoundary(AScreenObjectList);
   GetSwrDirectRunoffBoundary(AScreenObjectList);
   SetSelectedMfBoundaryNode;
+
   GetChildModels(AScreenObjectList);
+end;
+
+procedure TfrmScreenObjectProperties.GetFootprintWells;
+begin
+  frameScreenObjectFootprintWell.GetData(FNewProperties);
 end;
 
 procedure TfrmScreenObjectProperties.GetFormulaInterpretation(
@@ -13386,6 +13535,8 @@ begin
     (frmGoPhast.ModelSelection in ModflowSelection);
   tabSutraFeatures.TabVisible := CanSetData and
     (frmGoPhast.ModelSelection = msSutra22);
+  tabFootprintFeatures.TabVisible := CanSetData and
+    (frmGoPhast.ModelSelection = msFootprint);
 end;
 
 procedure TfrmScreenObjectProperties.AssignNewDataSetFormula(
@@ -13460,6 +13611,7 @@ begin
 //  frameIface.glsvViewer.Free;
 //  frameModpathParticles.GLSceneViewer1.Free;
 
+  FVertexCaptionFont.Free;
   FCaptionFont.Free;
   FCurrentEdit := nil;
 
@@ -15784,6 +15936,7 @@ var
   DataSetPostion: Integer;
   ADataArray: TDataArray;
   SwrReaches: TSwrReachBoundary;
+  FootprintWell: TFootprintWell;
 begin
 { TODO : See if some of this can be combined with ValidateEdFormula. }
 
@@ -15870,6 +16023,10 @@ begin
   else if Sender = frameSwrReach.btnEditReachLength then
   begin
     ed := frameSwrReach.edReachLength
+  end
+  else if Sender = frameScreenObjectFootprintWell.btnPumpingRate then
+  begin
+    ed := frameScreenObjectFootprintWell.edPumpingRate;
   end
   else
   begin
@@ -16123,7 +16280,20 @@ begin
           break;
         end;
       end;
-     end
+    end
+    else if Sender = frameScreenObjectFootprintWell.btnPumpingRate then
+    begin
+      for ScreenObjectIndex := 0 to FScreenObjectList.Count - 1 do
+      begin
+        AScreenObject := FScreenObjectList[ScreenObjectIndex];
+        FootprintWell := AScreenObject.FootprintWell;
+        if FootprintWell <> nil then
+        begin
+          FunctionString := FootprintWell.Withdrawal;
+          break;
+        end;
+      end;
+    end
     else
     begin
       Assert(False);
@@ -16146,6 +16316,10 @@ begin
     then
   begin
     Compiler := GetCompiler(dso3D, eaBlocks);
+  end
+  else if Sender = frameScreenObjectFootprintWell.btnPumpingRate then
+  begin
+    Compiler := GetCompiler(dsoTop, eaBlocks);
   end
   else
   begin
@@ -16325,6 +16499,7 @@ begin
     or (ed = frameCfpPipes.edElevation)
     or (ed = frameCfpFixedHeads.edFixedHead)
     or (ed = frameSwrReach.edReachLength)
+    or (ed = frameScreenObjectFootprintWell.edPumpingRate)
     then
   begin
     // do nothing
@@ -16523,7 +16698,7 @@ var
   FloatValue: double;
 begin
   inherited;
-  if IsLoaded then
+  if IsLoaded and (ARow < rdgImportedData.RowCount) then
   begin
     ValueStorage := rdgImportedData.Objects[ACol, 0] as TValueArrayStorage;
     Assert(ValueStorage <> nil);
@@ -16958,6 +17133,12 @@ begin
   StoreUzfBoundary
 end;
 
+procedure TfrmScreenObjectProperties.cbVertexLabelVisibleClick(Sender: TObject);
+begin
+  inherited;
+  cbVertexLabelVisible.AllowGrayed := False;
+end;
+
 procedure TfrmScreenObjectProperties.SetCheckBoxCaptions;
 var
   NodeElemString: string;
@@ -16982,7 +17163,7 @@ begin
         lblGridCellSize.Caption := StrGridElementSize;
       end;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         cbSetGridCellSize.Caption := StrUseToSetGridCell;
         lblGridCellSize.Caption := StrGridCellSize;
@@ -22048,6 +22229,14 @@ begin
   btnHelp.HelpKeyword := HelpKeyWord;
 
   btnCopyVertices.Visible := pageMain.ActivePage = tabNodes;
+
+  btnConvertTimeUnits.Visible :=
+    (pageMain.ActivePage = tabModflowBoundaryConditions)
+    or (pageMain.ActivePage = tabSutraFeatures);
+
+  btnEditFeatureFormulas.Visible :=
+    (pageMain.ActivePage = tabModflowBoundaryConditions)
+    and (FScreenObjectList <> nil) and (FScreenObjectList.Count > 1);
 end;
 
 procedure TfrmScreenObjectProperties.

@@ -160,6 +160,9 @@ function CheckBudgetPrecision(AFile: TFileStream; out HufFormat: boolean): TModf
 
 implementation
 
+uses
+  ModelMuseUtilities;
+
 resourcestring
   StrUnableToReadFile = 'Unable to read file. Check that the file is an unstructured, non-formatted file. In MODFLOW-2005, this is determined in OPENSPEC.inc';
 
@@ -1871,6 +1874,9 @@ procedure ReadModflowAsciiRealArray(F: TFileVariable; var KSTP, KPER: Integer;
 var
   ColIndex: Integer;
   RowIndex: Integer;
+  Splitter: TStringList;
+  index: Integer;
+  ALine: string;
 begin
   Read(F.AFile, KSTP);
   Read(F.AFile, KPER);
@@ -1881,28 +1887,51 @@ begin
   Read(F.AFile, NROW);
   Read(F.AFile, ILAY);
   ReadLn(F.AFile);
-  if ReadArray then
-  begin
-    SetLength(AnArray, NROW, NCOL);
-    for RowIndex := 0 to NROW - 1 do
+  Splitter := TStringList.Create;
+  try
+    index := 0;
+    Splitter.Clear;
+    if ReadArray then
     begin
-      for ColIndex := 0 to NCOL - 1 do
+      SetLength(AnArray, NROW, NCOL);
+      for RowIndex := 0 to NROW - 1 do
       begin
-        Read(F.AFile, AnArray[RowIndex, ColIndex]);
+        for ColIndex := 0 to NCOL - 1 do
+        begin
+          if index >= Splitter.Count then
+          begin
+            Readln(F.AFile, ALine);
+            Splitter.CommaText := ALine;
+            index := 0;
+          end;
+          AnArray[RowIndex, ColIndex] := FortranStrToFloat(Splitter[index]);
+          Inc(index);
+//          Read(F.AFile, );
+        end;
+      end;
+    end
+    else
+    begin
+      for RowIndex := 0 to NROW - 1 do
+      begin
+        for ColIndex := 0 to NCOL - 1 do
+        begin
+          if index >= Splitter.Count then
+          begin
+            Readln(F.AFile, ALine);
+            Splitter.CommaText := ALine;
+            index := 0;
+          end;
+//          AnArray[RowIndex, ColIndex] := FortranStrToFloat(Splitter[index]);
+          Inc(index);
+//          Read(F.AFile, Dummy);
+        end;
       end;
     end;
-  end
-  else
-  begin
-    for RowIndex := 0 to NROW - 1 do
-    begin
-      for ColIndex := 0 to NCOL - 1 do
-      begin
-        Read(F.AFile, Dummy);
-      end;
-    end;
+  finally
+    Splitter.Free;
   end;
-  ReadLn(F.AFile);
+//  ReadLn(F.AFile);
 end;
 
 { THydModData }

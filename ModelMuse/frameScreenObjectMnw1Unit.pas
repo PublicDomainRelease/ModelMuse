@@ -555,7 +555,7 @@ begin
       begin
         Mnw1Collection.Add;
       end;
-      for RowIndex := dgModflowBoundary.RowCount - 1 downto 1 do
+      for RowIndex := seNumberOfTimes.AsInteger - 1 downto 1 do
       begin
         if TryStrToFloat(dgModflowBoundary.Cells[Ord(mcStartTime), RowIndex], StartTime)
           and TryStrToFloat(dgModflowBoundary.Cells[Ord(mcEndTime), RowIndex], EndTime) then

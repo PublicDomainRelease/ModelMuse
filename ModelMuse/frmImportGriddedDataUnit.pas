@@ -78,7 +78,7 @@ type
     FSelectedGrid: TRbwDataGrid4;
     FSelectedCol: Integer;
     FSelectedRow: Integer;
-    procedure InitializeGridForCellList(DataSet: TDataArray);
+    procedure InitializeGridForCellListForGriddedData(DataSet: TDataArray);
     procedure InitializeGridForGriddedData(Grid: TRbwDataGrid4;
       ColumnFormat: TRbwColumnFormat4; ColumnsForward, RowsForward: Boolean);
     procedure InitializeTabSheetFor2DGriddedData(DataSet: TDataArray);
@@ -91,7 +91,7 @@ type
     function IsIgnoredIntegerValue(AValue: integer): boolean;
     function IsIgnoredBooleanValue(AValue: boolean): boolean;
     function IsIgnoredStringValue(AValue: string): boolean;
-    function ReadARowOfListData(DataSet: TDataArray; RowIndex: Integer;
+    function ReadARowOfListGriddedData(DataSet: TDataArray; RowIndex: Integer;
       out FirstIndex, SecondIndex: Integer; out RealData: Double;
       out IntegerData: Integer; out BooleanData: Boolean;
       out StringData: string): boolean;
@@ -100,7 +100,7 @@ type
       var StringData: string): Boolean;
     function ReadAnIndex(var AnIndex: Integer;
       RowIndex, DataColumn: Integer): boolean;
-    function ReadOneRow(DataSet: TDataArray; RowIndex: Integer;
+    function ReadOneRowForGriddedData(DataSet: TDataArray; RowIndex: Integer;
       var Layer, Row, Column: Integer; var RealData: Double;
       var IntegerData: Integer; var BooleanData: Boolean;
       var StringData: string): Boolean;
@@ -130,6 +130,11 @@ type
       DataSet: TDataArray);
     procedure GetGridCount(DataSet: TDataArray; var Limit: Integer);
     procedure RetrieveSelectedObject(var AnObject: TObject);
+    function ReadOneRowForMeshData(DataSet: TDataArray; RowIndex: Integer;
+      var NodeOrElement: Integer; var RealData: Double;
+      var IntegerData: Integer; var BooleanData: Boolean;
+      var StringData: string): Boolean;
+    procedure InitializeGridForCellListForMeshData(DataSet: TDataArray);
     property SelectedVirtNode: PVirtualNode read FSelectedVirtNode;
     procedure SetSelectedNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure GetNodeCaption(Node: PVirtualNode; var CellText: string;
@@ -155,7 +160,7 @@ implementation
 
 uses
   Contnrs, RbwParser, frmGoPhastUnit, ClassificationUnit,PhastModelUnit,
-  UndoItems, GIS_Functions, frmShowHideObjectsUnit, Clipbrd;
+  UndoItems, GIS_Functions, frmShowHideObjectsUnit, Clipbrd, SutraMeshUnit;
 
 resourcestring
   StrImportGriddedData = 'import gridded data';
@@ -168,6 +173,7 @@ resourcestring
   StrColumn = 'Column';
   StrLayer = 'Layer';
   StrValuesToIgnore = 'Values to ignore';
+  StrImportMeshData = 'Import Mesh Data';
 
 {$R *.dfm}
 
@@ -209,7 +215,14 @@ begin
     case jvplCellGrid.ActivePageIndex of
       0:
         begin
-          InitializeGridForCellList(DataArray);
+          if frmGoPhast.ModelSelection = msSutra22 then
+          begin
+            InitializeGridForCellListForMeshData(DataArray);
+          end
+          else
+          begin
+            InitializeGridForCellListForGriddedData(DataArray);
+          end;
         end;
       1:
         begin
@@ -312,6 +325,14 @@ var
   HufDataArrays: TClassificationList;
   DataArrayManager: TDataArrayManager;
 begin
+  if frmGoPhast.ModelSelection = msSutra22 then
+  begin
+    comboMethod.ItemIndex := 0;
+    comboMethod.Enabled := False;
+    comboMethodChange(nil);
+    Caption := StrImportMeshData;
+  end;
+
   jvplCellGrid.ActivePageIndex := comboMethod.ItemIndex;
 
   FStoredClassifications.Clear;
@@ -441,7 +462,7 @@ begin
               RowsForward := False;
             end;
           msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-            msModflowFmp, msModflowCfp:
+            msModflowFmp, msModflowCfp, msFootPrint:
             begin
               ColumnsForward := True;
               RowsForward := True;
@@ -490,7 +511,7 @@ begin
               RowsForward := False;
             end;
           msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-            msModflowFmp, msModflowCfp:
+            msModflowFmp, msModflowCfp, msFootPrint:
             begin
               ColumnsForward := True;
               RowsForward := True;
@@ -539,7 +560,7 @@ begin
               RowsForward := False;
             end;
           msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-            msModflowFmp, msModflowCfp:
+            msModflowFmp, msModflowCfp, msFootPrint:
             begin
               ColumnsForward := False;
               RowsForward := True;
@@ -626,7 +647,7 @@ begin
                 RowsForward := False;
               end;
             msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-              msModflowFmp, msModflowCfp:
+              msModflowFmp, msModflowCfp, msFootPrint:
               begin
                 ColumnsForward := True;
                 RowsForward := True;
@@ -805,7 +826,7 @@ begin
   end;
 end;
 
-function TfrmImportGriddedData.ReadARowOfListData(DataSet: TDataArray;
+function TfrmImportGriddedData.ReadARowOfListGriddedData(DataSet: TDataArray;
   RowIndex: Integer; out FirstIndex, SecondIndex: Integer; out RealData: Double;
   out IntegerData: Integer; out BooleanData: Boolean;
   out StringData: string): Boolean;
@@ -897,7 +918,20 @@ begin
   end;
 end;
 
-function TfrmImportGriddedData.ReadOneRow(DataSet: TDataArray;
+function TfrmImportGriddedData.ReadOneRowForMeshData(DataSet: TDataArray;
+  RowIndex: Integer; var NodeOrElement: Integer; var RealData: Double;
+  var IntegerData: Integer; var BooleanData: Boolean;
+  var StringData: string): Boolean;
+begin
+  result := ReadAnIndex(NodeOrElement, RowIndex, 1);
+  if result then
+  begin
+    result := ReadDataCell(DataSet, RowIndex, 2,
+      RealData, IntegerData, BooleanData, StringData);
+  end;
+end;
+
+function TfrmImportGriddedData.ReadOneRowForGriddedData(DataSet: TDataArray;
   RowIndex: Integer; var Layer, Row, Column: Integer; var RealData: Double;
   var IntegerData: Integer; var BooleanData: Boolean;
   var StringData: string): Boolean;
@@ -908,19 +942,19 @@ begin
     dsoTop:
       begin
         Layer := 1;
-        result := ReadARowOfListData(DataSet, RowIndex, Row, Column,
+        result := ReadARowOfListGriddedData(DataSet, RowIndex, Row, Column,
           RealData, IntegerData, BooleanData, StringData);
       end;
     dsoFront:
       begin
         Row := 1;
-        result := ReadARowOfListData(DataSet, RowIndex, Layer, Column,
+        result := ReadARowOfListGriddedData(DataSet, RowIndex, Layer, Column,
           RealData, IntegerData, BooleanData, StringData);
       end;
     dsoSide:
       begin
         Column := 1;
-        result := ReadARowOfListData(DataSet, RowIndex, Layer, Row,
+        result := ReadARowOfListGriddedData(DataSet, RowIndex, Layer, Row,
           RealData, IntegerData, BooleanData, StringData);
       end;
     dso3D:
@@ -1067,42 +1101,91 @@ procedure TfrmImportGriddedData.GetLocation(var Point2D: TPoint2D;
   DataSet: TDataArray);
 var
   ViewDirection: TViewDirection;
+  Mesh: TSutraMesh3D;
+  Element2D: TSutraElement2D;
+  Node2D: TSutraNode2D;
+  Element3D: TSutraElement3D;
+  Node3D: TSutraNode3D;
 begin
-  case DataSet.EvaluatedAt of
-    eaBlocks:
-      begin
-        APoint := frmGoPhast.Grid.ThreeDElementCenter(Column, Row, Layer);
-      end;
-    eaNodes:
-      begin
-        APoint := frmGoPhast.Grid.ThreeDElementCorner(Column, Row, Layer);
-      end;
-  else
+  if frmGoPhast.ModelSelection = msSutra22 then
+  begin
+    Mesh := frmGoPhast.PhastModel.Mesh;
+    case DataSet.EvaluatedAt of
+      eaBlocks:
+        begin
+          Element2D := Mesh.Mesh2D.Elements[Column];
+          Point2D := Element2D.Center;
+        end;
+      eaNodes:
+        begin
+          Node2D := Mesh.Mesh2D.Nodes[Column];
+          Point2D := Node2D.Location;
+        end;
+      else
+        Assert(False);
+    end;
+    if Mesh.MeshType <> mt3D then
     begin
+      APoint.x := Point2D.x;
+      APoint.y := Point2D.y;
+      APoint.z := 0;
+    end
+    else
+    begin
+    case DataSet.EvaluatedAt of
+      eaBlocks:
+        begin
+          Element3D := Mesh.ElementArray[Layer, Column];
+          APoint := Element3D.CenterLocation;
+        end;
+      eaNodes:
+        begin
+          Node3D := Mesh.NodeArray[Layer, Column];
+          APoint := Node3D.NodeLocation;
+        end;
+      else
+        Assert(False);
+    end;
+    end;
+  end
+  else
+  begin
+    case DataSet.EvaluatedAt of
+      eaBlocks:
+        begin
+          APoint := frmGoPhast.Grid.ThreeDElementCenter(Column, Row, Layer);
+        end;
+      eaNodes:
+        begin
+          APoint := frmGoPhast.Grid.ThreeDElementCorner(Column, Row, Layer);
+        end;
+    else
+      begin
+        Assert(False);
+      end;
+    end;
+    ViewDirection := OrientationToViewDirection(DataSet.Orientation);
+    case ViewDirection of
+      vdTop:
+        begin
+          Point2D.x := APoint.X;
+          Point2D.y := APoint.y;
+          Point2D := frmGoPhast.Grid.
+            RotateFromGridCoordinatesToRealWorldCoordinates(Point2D)
+        end;
+      vdFront:
+        begin
+          Point2D.x := APoint.X;
+          Point2D.y := APoint.Z;
+        end;
+      vdSide:
+        begin
+          Point2D.x := APoint.z;
+          Point2D.y := APoint.Y;
+        end;
+    else
       Assert(False);
     end;
-  end;
-  ViewDirection := OrientationToViewDirection(DataSet.Orientation);
-  case ViewDirection of
-    vdTop:
-      begin
-        Point2D.x := APoint.X;
-        Point2D.y := APoint.y;
-        Point2D := frmGoPhast.Grid.
-          RotateFromGridCoordinatesToRealWorldCoordinates(Point2D)
-      end;
-    vdFront:
-      begin
-        Point2D.x := APoint.X;
-        Point2D.y := APoint.Z;
-      end;
-    vdSide:
-      begin
-        Point2D.x := APoint.z;
-        Point2D.y := APoint.Y;
-      end;
-  else
-    Assert(False);
   end;
 end;
 
@@ -1175,7 +1258,7 @@ begin
                 Layer := 1;
               end;
             msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-              msModflowFmp, msModflowCfp:
+              msModflowFmp, msModflowCfp, msFootPrint:
               begin
                 Column := ColIndex;
                 Row := RowIndex;
@@ -1199,7 +1282,7 @@ begin
                 Layer := Grid.RowCount - RowIndex;
               end;
             msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-              msModflowFmp, msModflowCfp:
+              msModflowFmp, msModflowCfp, msFootPrint:
               begin
                 Column := ColIndex;
                 Row := 1;
@@ -1223,7 +1306,7 @@ begin
                 Layer := Grid.RowCount - RowIndex;
               end;
             msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-              msModflowFmp, msModflowCfp:
+              msModflowFmp, msModflowCfp, msFootPrint:
               begin
                 Column := 1;
                 Row := Grid.ColCount - ColIndex;
@@ -1247,7 +1330,7 @@ begin
                 Layer := GridIndex + 1;
               end;
             msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-              msModflowFmp, msModflowCfp:
+              msModflowFmp, msModflowCfp, msFootPrint:
               begin
                 Column := ColIndex;
                 Row := RowIndex;
@@ -1412,6 +1495,16 @@ var
   Grid: TRbwDataGrid4;
   ColIndex: Integer;
   AnObject: TObject;
+  ModelSelection: TModelSelection;
+  NodeOrElement: integer;
+  Mesh: TSutraMesh3D;
+  Element: TSutraElement3D;
+  Element2D: TSutraElement2D;
+  Node: TSutraNode3D;
+  Node2D: TSutraNode2D;
+  TestElement: TSutraElement3D;
+  LayerIndex: Integer;
+  TestNode: TSutraNode3D;
 begin
   RetrieveSelectedObject(AnObject);
   DataArray := AnObject as TDataArray;
@@ -1427,12 +1520,80 @@ begin
       0:
         begin
           // List
+          ModelSelection := frmGoPhast.ModelSelection;
+          if ModelSelection = msSutra22 then
+          begin
+            Mesh := frmGoPhast.PhastModel.SutraMesh;
+          end
+          else
+          begin
+            Mesh := nil;
+          end;
           for RowIndex := 1 to rdgList.RowCount - 1 do
           begin
-            if not ReadOneRow(DataArray, RowIndex, Layer, Row, Column,
-              RealData, IntegerData, BooleanData, StringData) then
+            if ModelSelection = msSutra22 then
             begin
-              Continue;
+              if not ReadOneRowForMeshData(DataArray, RowIndex, NodeOrElement,
+                RealData, IntegerData, BooleanData, StringData) then
+              begin
+                Continue;
+              end;
+              Row := 0;
+              if Mesh.MeshType = mt3d then
+              begin
+                case DataArray.EvaluatedAt of
+                  eaBlocks:
+                    begin
+                      Element := Mesh.Elements[NodeOrElement-1];
+                      Element2D := Element.Element2D;
+                      Column := Element2D.ElementNumber;
+                      Layer := -1;
+                      for LayerIndex := 0 to Mesh.LayerCount - 1 do
+                      begin
+                        TestElement := Mesh.ElementArray[LayerIndex, Element2D.ElementNumber];
+                        if TestElement = Element then
+                        begin
+                          Layer := LayerIndex;
+                          break;
+                        end;
+                      end;
+                      Assert(Layer >= 0);
+                    end;
+                  eaNodes:
+                    begin
+                      Node := Mesh.Nodes[NodeOrElement-1];
+                      Node2D := Node.Node2D;
+                      Column := Node2D.Number;
+                      Layer := -1;
+                      for LayerIndex := 0 to Mesh.LayerCount do
+                      begin
+                        TestNode := Mesh.NodeArray[LayerIndex, Node2D.Number];
+                        if TestNode = Node then
+                        begin
+                          Layer := LayerIndex;
+                          break;
+                        end;
+                      end;
+                      Assert(Layer >= 0);
+                    end;
+                  else
+                    Assert(False);
+                end;
+              end
+              else
+              begin
+                Layer := 0;
+                Column := NodeOrElement-1;
+              end;
+
+            end
+            else
+            begin
+              if not ReadOneRowForGriddedData(DataArray, RowIndex, Layer, Row, Column,
+                RealData, IntegerData, BooleanData, StringData) then
+              begin
+                Continue;
+              end;
             end;
             InitializeScreenObject(ScreenObject, Layer, ScreenObjectList, DataArray);
             AssignValueToScreenObject(ScreenObject, StringData, BooleanData,
@@ -1564,7 +1725,7 @@ begin
   end;
 end;
 
-procedure TfrmImportGriddedData.InitializeGridForCellList(DataSet: TDataArray);
+procedure TfrmImportGriddedData.InitializeGridForCellListForGriddedData(DataSet: TDataArray);
 var
   ClearColumn: Boolean;
   RowIndex: Integer;
@@ -1708,6 +1869,73 @@ begin
       begin
         Assert(False);
       end;
+    end;
+    rdgList.Cells[0, 1] := '1';
+    for Index := 0 to rdgList.ColCount - 1 do
+    begin
+      rdgList.Columns[Index].AutoAdjustColWidths := True;
+    end;
+  finally
+    rdgList.EndUpdate;
+  end;
+end;
+
+procedure TfrmImportGriddedData.InitializeGridForCellListForMeshData(DataSet: TDataArray);
+var
+//  ClearColumn: Boolean;
+  RowIndex: Integer;
+  Index: Integer;
+//  MaxCol, MaxRow, MaxLayer: integer;
+  Mesh: TSutraMesh3D;
+begin
+//  MaxCol := -1;
+//  MaxRow := -1;
+//  MaxLayer := -1;
+  rdgList.BeginUpdate;
+  try
+    rdgList.ColCount := 3;
+    rdgList.Cells[2, 0] := DataSet.Name;
+    rdgList.Cells[0, 0] := StrN;
+//    ClearColumn := rdgList.Columns[2].Format <>
+//      ConvertDataFormat(DataSet.DataType);
+    for RowIndex := 1 to rdgList.RowCount - 1 do
+    begin
+      rdgList.Cells[1, RowIndex] := '';
+    end;
+    rdgList.Columns[1].Format := ConvertDataFormat(DataSet.DataType);
+    case DataSet.EvaluatedAt of
+      eaBlocks:
+        begin
+          rdgList.Cells[1, 0] := 'Element Number';
+        end;
+      eaNodes:
+        begin
+          rdgList.Cells[1, 0] := 'Node Number';
+        end;
+      else Assert(False);
+    end;
+    rdgList.Columns[1].Format := rcf4Integer;
+    rdgList.Columns[1].CheckMin := True;
+    rdgList.Columns[1].CheckMax := True;
+    rdgList.Columns[1].Min := 1;
+    Mesh := frmGoPhast.PhastModel.Mesh;
+    if Mesh.MeshType = mt3D then
+    begin
+      case DataSet.EvaluatedAt of
+      eaBlocks:
+        begin
+          rdgList.Columns[1].Max := Mesh.ActiveElementCount;
+        end;
+      eaNodes:
+        begin
+          rdgList.Columns[1].Max := Mesh.ActiveNodeCount;
+        end;
+      else Assert(False);
+    end;
+    end
+    else
+    begin
+      rdgList.Columns[1].Max := DataSet.ColumnCount*DataSet.LayerCount;
     end;
     rdgList.Cells[0, 1] := '1';
     for Index := 0 to rdgList.ColCount - 1 do

@@ -12,6 +12,9 @@ uses
   frameInitialGridPositionUnit, frameGridUnit;
 type
   TStandardChoices = (scNewModflow, scNewPhast, scNewSutra,
+  {$IFDEF FootPrint}
+    scNewFootprint,
+  {$ENDIF}
     scExisting, scImportModflow);
 
   {@abstract(@name is used to specify the grid for a new model or open an
@@ -107,6 +110,14 @@ type
     rdeMinimumThickness: TRbwDataEntry;
     lblMinimumThickness: TLabel;
     rgSaturation: TRadioGroup;
+    tabInitialGridFootprint: TTabSheet;
+    gbFootprint: TGroupBox;
+    rdeColumnCountFootprint: TRbwDataEntry;
+    rdeRowCountFootprint: TRbwDataEntry;
+    lblRowCountFootprint: TLabel;
+    lblColumnCountFootprint: TLabel;
+    rdeCellSizeFootprint: TRbwDataEntry;
+    lblCellSizeFootprint: TLabel;
     // @name sets the vertical exaggeration of the model
     // but does not set up the grid.
     procedure btnDontCreateGridClick(Sender: TObject);
@@ -152,6 +163,7 @@ type
     procedure SetUpModflowLayers(ColCount, RowCount: Integer;
       out ModelHeight: Real);
     procedure SetUpSutraModel;
+    procedure SetUpFootprintGrid;
   protected
     procedure Loaded; override;
     { Private declarations }
@@ -228,6 +240,20 @@ begin
                 pcStartup.ActivePageIndex := 3;
                 rgMeshTypeClick(nil);
               end;
+          {$IFDEF Footprint}
+            scNewFootprint:
+              begin
+                btnNext.Caption := StrFinish;
+                btnDontCreateGrid.Visible := True;
+                frameInitialGridPosition.Parent := gbFootprint;
+                frmGoPhast.ModelSelection := msfootprint;
+                frameInitialGridPosition.rdeExaggeration.Visible := False;
+                frameInitialGridPosition.lblVerticalExaggeration.Visible := False;
+                frameInitialGridPosition.rdeZ.Visible := False;
+                frameInitialGridPosition.lblOriginZ.Visible := False;
+                pcStartup.ActivePageIndex := 4;
+              end;
+          {$ENDIF}
             scExisting: // The user has chosen to open an existing model.
               begin
                 if frmGoPhast.odOpenDialog.Execute then
@@ -271,6 +297,11 @@ begin
     3:  // The user is creating a new SUTRA model.
       begin
         SetUpSutraModel;
+        ModalResult := mrOK;
+      end;
+    4: // new footprint model
+      begin
+        SetUpFootprintGrid;
         ModalResult := mrOK;
       end;
   else
@@ -488,6 +519,11 @@ var
   Grid: TRbwDataGrid4;
 begin
   inherited;
+
+{$IFNDEF Footprint}
+  rgChoice.Items.Delete(3);
+{$ENDIF}
+
   SetAppearance;
   Caption := StrModelName;
   Assert(Ord(High(TStandardChoices))+1 = rgChoice.Items.Count);
@@ -576,6 +612,73 @@ Type
     Name: string;
     Elevation: real;
   end;
+
+procedure TfrmStartUp.SetUpFootprintGrid;
+var
+  Dimension: TOneDRealArray;
+  Index: integer;
+  XOrigin, YOrigin: double;
+  Angle: double;
+  XStart, YStart: double;
+  OriginAngle: double;
+  OriginDistance: double;
+  ColWidth, RowWidth: double;
+  ColCount, RowCount: integer;
+  ModelYWidth: Real;
+  ModelXWidth: Real;
+  ModelHeight: Real;
+begin
+  // get some initial data.
+  XOrigin := StrToFloat(frameInitialGridPosition.rdeX.Text);
+  YOrigin := StrToFloat(frameInitialGridPosition.rdeY.Text);
+  Angle := DegToRad(StrToFloat(frameInitialGridPosition.rdeAngle.Text));
+  OriginDistance := Sqrt(Sqr(XOrigin) + Sqr(YOrigin));
+
+  // Determine where the starting positions for the grid in the top view.
+  if OriginDistance <> 0 then
+  begin
+    OriginAngle := ArcTan2(YOrigin, XOrigin);
+    XStart := Cos(Angle - OriginAngle) * OriginDistance;
+    YStart := -Sin(Angle - OriginAngle) * OriginDistance;
+  end
+  else
+  begin
+    XStart := 0;
+    YStart := 0;
+  end;
+
+  frmGoPhast.FootPrintGrid.GridAngle := Angle;
+
+  // Set up the columns.
+  ColWidth := StrToFloat(rdeCellSizeFootprint.Text);
+  ColCount := StrToInt(rdeColumnCountFootprint.Text);
+  SetLength(Dimension, ColCount+1);
+  for Index := 0 to ColCount do
+  begin
+    Dimension[Index] := Index * ColWidth + XStart;
+  end;
+  frmGoPhast.FootPrintGrid.ColumnPositions := Dimension;
+
+  // Set up the rows.
+  RowWidth := ColWidth;
+  RowCount := StrToInt(rdeRowCountFootprint.Text);
+  SetLength(Dimension, RowCount+1);
+  for Index := 0 to RowCount do
+  begin
+    Dimension[Index] := YStart- Index * RowWidth;
+  end;
+  frmGoPhast.FootPrintGrid.RowPositions := Dimension;
+//  frmGoPhast.PhastModel.ClearNameChangeWarnings;
+
+  ModelXWidth := ColCount * ColWidth;
+  ModelYWidth := RowCount * RowWidth;
+
+  // Set the selected layer.
+  frmGoPhast.FootPrintGrid.SelectedLayer := 0;
+  frmGoPhast.PhastModel.DataArrayManager.CreateInitialDataSets;
+  ModelHeight := 1;
+  InitializeView(ModelXWidth, ModelYWidth, ModelHeight);
+end;
 
 procedure TfrmStartUp.SetUpModflowGrid;
 var

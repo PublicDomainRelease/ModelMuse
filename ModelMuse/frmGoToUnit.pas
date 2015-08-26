@@ -654,6 +654,11 @@ begin
               frmGoPhast.ModflowGrid.SelectedRow, APoint.Y);
             SetGridSpinEditValue(seLayer,Layer+1);
           end;
+        msFootPrint:
+          begin
+            Layer := 0;
+            SetGridSpinEditValue(seLayer,Layer+1);
+          end;
         else
           Assert(False);
       end;
@@ -964,7 +969,7 @@ begin
     msUndefined: Assert(False);
     msPhast, msSutra22: tabCell.Caption := StrElement;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         tabCell.Caption := StrBlock;
       end

@@ -205,7 +205,7 @@ begin
         end;
       end;
     msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         Grid := frmGoPhast.PhastModel.Grid;
         result := (Grid <> nil) and (Grid.ColumnCount > 0)
@@ -280,7 +280,7 @@ begin
         end;
       end;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         NodeElemString := StrCell;
         CenterString := StrCellCenter

@@ -2048,6 +2048,7 @@ begin
     RestoreBlockGlGrid;
     Exit;
   end;
+
   SetLength(FBlockGlGrid, ColumnCount + 2, RowCount + 2, LayerCount + 2);
 
   APoint2D := TwoDElementCorner (0, 0);
@@ -2057,42 +2058,70 @@ begin
 
   FBlockGlGrid[0,0,LayerCount+1].P.X := APoint2D.X;
   FBlockGlGrid[0,0,LayerCount+1].P.Y := APoint2D.Y;
-  FBlockGlGrid[0,0,LayerCount+1].P.Z := CellElevation[0,0,LayerCount];
+  try
+    FBlockGlGrid[0,0,LayerCount+1].P.Z := CellElevation[0,0,LayerCount];
+  except on EOverflow do
+    FBlockGlGrid[0,0,LayerCount+1].P.Z := 0;
+  end;
 
 
   APoint2D := TwoDElementCorner (ColumnCount, 0);
   FBlockGlGrid[ColumnCount + 1,0,0].P.X := APoint2D.X;
   FBlockGlGrid[ColumnCount + 1,0,0].P.Y := APoint2D.Y;
-  FBlockGlGrid[ColumnCount + 1,0,0].P.Z := CellElevation[ColumnCount-1,0,0];
+  try
+    FBlockGlGrid[ColumnCount + 1,0,0].P.Z := CellElevation[ColumnCount-1,0,0];
+  except on EOverflow do
+    FBlockGlGrid[ColumnCount + 1,0,0].P.Z := 0;
+  end;
 
   FBlockGlGrid[ColumnCount + 1,0,LayerCount+1].P.X := APoint2D.X;
   FBlockGlGrid[ColumnCount + 1,0,LayerCount+1].P.Y := APoint2D.Y;
-  FBlockGlGrid[ColumnCount + 1,0,LayerCount+1].P.Z :=
-    CellElevation[ColumnCount-1,0,LayerCount];
+  try
+    FBlockGlGrid[ColumnCount + 1,0,LayerCount+1].P.Z :=
+      CellElevation[ColumnCount-1,0,LayerCount];
+  except on EOverflow do
+    FBlockGlGrid[ColumnCount + 1,0,LayerCount+1].P.Z := 0;
+  end;
 
 
   APoint2D := TwoDElementCorner (0, RowCount);
   FBlockGlGrid[0,RowCount + 1,0].P.X := APoint2D.X;
   FBlockGlGrid[0,RowCount + 1,0].P.Y := APoint2D.Y;
-  FBlockGlGrid[0,RowCount + 1,0].P.Z := CellElevation[0,RowCount-1,0];
+  try
+    FBlockGlGrid[0,RowCount + 1,0].P.Z := CellElevation[0,RowCount-1,0];
+  except on EOverflow do
+    FBlockGlGrid[0,RowCount + 1,0].P.Z := 0;
+  end;
 
   APoint2D := TwoDElementCorner (0, RowCount);
   FBlockGlGrid[0,RowCount + 1,LayerCount+1].P.X := APoint2D.X;
   FBlockGlGrid[0,RowCount + 1,LayerCount+1].P.Y := APoint2D.Y;
-  FBlockGlGrid[0,RowCount + 1,LayerCount+1].P.Z :=
-    CellElevation[0,RowCount-1,LayerCount];
+  try
+    FBlockGlGrid[0,RowCount + 1,LayerCount+1].P.Z :=
+      CellElevation[0,RowCount-1,LayerCount];
+  except on EOverflow do
+    FBlockGlGrid[0,RowCount + 1,LayerCount+1].P.Z := 0;
+  end;
 
 
   APoint2D := TwoDElementCorner (ColumnCount, RowCount);
   FBlockGlGrid[ColumnCount + 1,RowCount + 1,0].P.X := APoint2D.X;
   FBlockGlGrid[ColumnCount + 1,RowCount + 1,0].P.Y := APoint2D.Y;
-  FBlockGlGrid[ColumnCount + 1,RowCount + 1,0].P.Z :=
-    CellElevation[ColumnCount-1,RowCount-1,0];
+  try
+    FBlockGlGrid[ColumnCount + 1,RowCount + 1,0].P.Z :=
+      CellElevation[ColumnCount-1,RowCount-1,0];
+  except on EOverflow do
+    FBlockGlGrid[ColumnCount + 1,RowCount + 1,0].P.Z := 0;
+  end;
 
   FBlockGlGrid[ColumnCount + 1,RowCount + 1,LayerCount+1].P.X := APoint2D.X;
   FBlockGlGrid[ColumnCount + 1,RowCount + 1,LayerCount+1].P.Y := APoint2D.Y;
-  FBlockGlGrid[ColumnCount + 1,RowCount + 1,LayerCount+1].P.Z :=
-    CellElevation[ColumnCount-1,RowCount-1,LayerCount];
+  try
+    FBlockGlGrid[ColumnCount + 1,RowCount + 1,LayerCount+1].P.Z :=
+      CellElevation[ColumnCount-1,RowCount-1,LayerCount];
+  except on EOverflow do
+    FBlockGlGrid[ColumnCount + 1,RowCount + 1,LayerCount+1].P.Z := 0;
+  end;
 
 
   for ColumnIndex := 0 to ColumnCount - 1 do
@@ -2104,26 +2133,42 @@ begin
         APoint2D := TwoDElementCenter(ColumnIndex, RowIndex);
         APoint3D.X := APoint2D.x;
         APoint3D.Y := APoint2D.y;
-        APoint3D.Z := (CellElevation[ColumnIndex,RowIndex,LayerIndex]
-          + CellElevation[ColumnIndex,RowIndex,LayerIndex+1])/2;
+        try
+          APoint3D.Z := (CellElevation[ColumnIndex,RowIndex,LayerIndex]
+            + CellElevation[ColumnIndex,RowIndex,LayerIndex+1])/2;
+        except on EOverflow do
+          APoint3D.Z := 0;
+        end;
 
         FBlockGlGrid[ColumnIndex+1,RowIndex+1,LayerIndex+1].P.X := APoint3D.X;
         FBlockGlGrid[ColumnIndex+1,RowIndex+1,LayerIndex+1].P.Y := APoint3D.Y;
-        FBlockGlGrid[ColumnIndex+1,RowIndex+1,LayerIndex+1].P.Z := APoint3D.Z;
+        try
+          FBlockGlGrid[ColumnIndex+1,RowIndex+1,LayerIndex+1].P.Z := APoint3D.Z;
+        except on EOverflow do
+          FBlockGlGrid[ColumnIndex+1,RowIndex+1,LayerIndex+1].P.Z := 0;
+        end;
 
         if LayerIndex = 0 then
         begin
           FBlockGlGrid[ColumnIndex+1,RowIndex+1,LayerIndex].P.X := APoint3D.X;
           FBlockGlGrid[ColumnIndex+1,RowIndex+1,LayerIndex].P.Y := APoint3D.Y;
-          FBlockGlGrid[ColumnIndex+1,RowIndex+1,LayerIndex].P.Z :=
-            CellElevation[ColumnIndex,RowIndex,LayerIndex];
+          try
+            FBlockGlGrid[ColumnIndex+1,RowIndex+1,LayerIndex].P.Z :=
+              CellElevation[ColumnIndex,RowIndex,LayerIndex];
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex+1,RowIndex+1,LayerIndex].P.Z := 0;
+          end;
         end;
         if LayerIndex = LayerCount - 1 then
         begin
           FBlockGlGrid[ColumnIndex+1,RowIndex+1,LayerIndex+2].P.X := APoint3D.X;
           FBlockGlGrid[ColumnIndex+1,RowIndex+1,LayerIndex+2].P.Y := APoint3D.Y;
-          FBlockGlGrid[ColumnIndex+1,RowIndex+1,LayerIndex+2].P.Z :=
-            CellElevation[ColumnIndex,RowIndex,LayerIndex+1];
+          try
+            FBlockGlGrid[ColumnIndex+1,RowIndex+1,LayerIndex+2].P.Z :=
+              CellElevation[ColumnIndex,RowIndex,LayerIndex+1];
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex+1,RowIndex+1,LayerIndex+2].P.Z := 0;
+          end;
         end;
 
         if RowIndex = 0 then
@@ -2131,14 +2176,22 @@ begin
           APoint2D :=  TwoDRowEdgeCenter(ColumnIndex, RowIndex);
           FBlockGlGrid[ColumnIndex+1,RowIndex,LayerIndex+1].P.X := APoint2D.X;
           FBlockGlGrid[ColumnIndex+1,RowIndex,LayerIndex+1].P.Y := APoint2D.Y;
-          FBlockGlGrid[ColumnIndex+1,RowIndex,LayerIndex+1].P.Z := APoint3D.Z;
+          try
+            FBlockGlGrid[ColumnIndex+1,RowIndex,LayerIndex+1].P.Z := APoint3D.Z;
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex+1,RowIndex,LayerIndex+1].P.Z := 0
+          end;
         end;
         if RowIndex = RowCount - 1 then
         begin
           APoint2D :=  TwoDRowEdgeCenter(ColumnIndex, RowIndex+1);
           FBlockGlGrid[ColumnIndex+1,RowIndex+2,LayerIndex+1].P.X := APoint2D.X;
           FBlockGlGrid[ColumnIndex+1,RowIndex+2,LayerIndex+1].P.Y := APoint2D.Y;
-          FBlockGlGrid[ColumnIndex+1,RowIndex+2,LayerIndex+1].P.Z := APoint3D.Z;
+          try
+            FBlockGlGrid[ColumnIndex+1,RowIndex+2,LayerIndex+1].P.Z := APoint3D.Z;
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex+1,RowIndex+2,LayerIndex+1].P.Z := 0;
+          end;
         end;
 
         if ColumnIndex = 0 then
@@ -2146,14 +2199,22 @@ begin
           APoint2D :=  TwoDColumnEdgeCenter(ColumnIndex, RowIndex);
           FBlockGlGrid[ColumnIndex,RowIndex+1,LayerIndex+1].P.X := APoint2D.X;
           FBlockGlGrid[ColumnIndex,RowIndex+1,LayerIndex+1].P.Y := APoint2D.Y;
-          FBlockGlGrid[ColumnIndex,RowIndex+1,LayerIndex+1].P.Z := APoint3D.Z;
+          try
+            FBlockGlGrid[ColumnIndex,RowIndex+1,LayerIndex+1].P.Z := APoint3D.Z;
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex,RowIndex+1,LayerIndex+1].P.Z := 0;
+          end;
         end;
         if ColumnIndex = ColumnCount - 1 then
         begin
           APoint2D :=  TwoDColumnEdgeCenter(ColumnIndex+1, RowIndex);
           FBlockGlGrid[ColumnIndex+2,RowIndex+1,LayerIndex+1].P.X := APoint2D.X;
           FBlockGlGrid[ColumnIndex+2,RowIndex+1,LayerIndex+1].P.Y := APoint2D.Y;
-          FBlockGlGrid[ColumnIndex+2,RowIndex+1,LayerIndex+1].P.Z := APoint3D.Z;
+          try
+            FBlockGlGrid[ColumnIndex+2,RowIndex+1,LayerIndex+1].P.Z := APoint3D.Z;
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex+2,RowIndex+1,LayerIndex+1].P.Z := 0;
+          end;
         end;
 
         if (ColumnIndex = 0) and (RowIndex = 0) then
@@ -2161,28 +2222,44 @@ begin
           APoint2D :=  TwoDElementCorner(ColumnIndex, RowIndex);
           FBlockGlGrid[ColumnIndex,RowIndex,LayerIndex+1].P.X := APoint2D.X;
           FBlockGlGrid[ColumnIndex,RowIndex,LayerIndex+1].P.Y := APoint2D.Y;
-          FBlockGlGrid[ColumnIndex,RowIndex,LayerIndex+1].P.Z := APoint3D.Z;
+          try
+            FBlockGlGrid[ColumnIndex,RowIndex,LayerIndex+1].P.Z := APoint3D.Z;
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex,RowIndex,LayerIndex+1].P.Z := 0;
+          end;
         end;
         if (ColumnIndex = ColumnCount - 1) and (RowIndex = 0) then
         begin
           APoint2D :=  TwoDElementCorner(ColumnIndex+1, RowIndex);
           FBlockGlGrid[ColumnIndex+2,RowIndex,LayerIndex+1].P.X := APoint2D.X;
           FBlockGlGrid[ColumnIndex+2,RowIndex,LayerIndex+1].P.Y := APoint2D.Y;
-          FBlockGlGrid[ColumnIndex+2,RowIndex,LayerIndex+1].P.Z := APoint3D.Z;
+          try
+            FBlockGlGrid[ColumnIndex+2,RowIndex,LayerIndex+1].P.Z := APoint3D.Z;
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex+2,RowIndex,LayerIndex+1].P.Z := 0;
+          end;
         end;
         if (ColumnIndex = 0) and (RowIndex = RowCount - 1) then
         begin
           APoint2D :=  TwoDElementCorner(ColumnIndex, RowIndex+1);
           FBlockGlGrid[ColumnIndex,RowIndex+2,LayerIndex+1].P.X := APoint2D.X;
           FBlockGlGrid[ColumnIndex,RowIndex+2,LayerIndex+1].P.Y := APoint2D.Y;
-          FBlockGlGrid[ColumnIndex,RowIndex+2,LayerIndex+1].P.Z := APoint3D.Z;
+          try
+            FBlockGlGrid[ColumnIndex,RowIndex+2,LayerIndex+1].P.Z := APoint3D.Z;
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex,RowIndex+2,LayerIndex+1].P.Z := 0;
+          end;
         end;
         if (ColumnIndex = ColumnCount - 1) and (RowIndex = RowCount - 1) then
         begin
           APoint2D :=  TwoDElementCorner(ColumnIndex+1, RowIndex+1);
           FBlockGlGrid[ColumnIndex+2,RowIndex+2,LayerIndex+1].P.X := APoint2D.X;
           FBlockGlGrid[ColumnIndex+2,RowIndex+2,LayerIndex+1].P.Y := APoint2D.Y;
-          FBlockGlGrid[ColumnIndex+2,RowIndex+2,LayerIndex+1].P.Z := APoint3D.Z;
+          try
+            FBlockGlGrid[ColumnIndex+2,RowIndex+2,LayerIndex+1].P.Z := APoint3D.Z;
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex+2,RowIndex+2,LayerIndex+1].P.Z := 0;
+          end;
         end;
 
         if (ColumnIndex = 0) and (LayerIndex = 0) then
@@ -2190,24 +2267,36 @@ begin
           APoint2D :=  TwoDColumnEdgeCenter(ColumnIndex, RowIndex);
           FBlockGlGrid[ColumnIndex,RowIndex+1,LayerIndex].P.X := APoint2D.X;
           FBlockGlGrid[ColumnIndex,RowIndex+1,LayerIndex].P.Y := APoint2D.Y;
-          FBlockGlGrid[ColumnIndex,RowIndex+1,LayerIndex].P.Z :=
-            CellElevation[ColumnIndex,RowIndex,LayerIndex];
+          try
+            FBlockGlGrid[ColumnIndex,RowIndex+1,LayerIndex].P.Z :=
+              CellElevation[ColumnIndex,RowIndex,LayerIndex];
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex,RowIndex+1,LayerIndex].P.Z := 0;
+          end;
         end;
         if (ColumnIndex = ColumnCount - 1) and (LayerIndex = 0) then
         begin
           APoint2D :=  TwoDColumnEdgeCenter(ColumnIndex+1, RowIndex);
           FBlockGlGrid[ColumnIndex+2,RowIndex+1,LayerIndex].P.X := APoint2D.X;
           FBlockGlGrid[ColumnIndex+2,RowIndex+1,LayerIndex].P.Y := APoint2D.Y;
-          FBlockGlGrid[ColumnIndex+2,RowIndex+1,LayerIndex].P.Z :=
-            CellElevation[ColumnIndex,RowIndex,LayerIndex];
+          try
+            FBlockGlGrid[ColumnIndex+2,RowIndex+1,LayerIndex].P.Z :=
+              CellElevation[ColumnIndex,RowIndex,LayerIndex];
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex+2,RowIndex+1,LayerIndex].P.Z := 0;
+          end;
         end;
         if (ColumnIndex = 0) and (LayerIndex = LayerCount - 1) then
         begin
           APoint2D :=  TwoDColumnEdgeCenter(ColumnIndex, RowIndex);
           FBlockGlGrid[ColumnIndex,RowIndex+1,LayerIndex+2].P.X := APoint2D.X;
           FBlockGlGrid[ColumnIndex,RowIndex+1,LayerIndex+2].P.Y := APoint2D.Y;
-          FBlockGlGrid[ColumnIndex,RowIndex+1,LayerIndex+2].P.Z :=
-            CellElevation[ColumnIndex,RowIndex,LayerIndex+1];
+          try
+            FBlockGlGrid[ColumnIndex,RowIndex+1,LayerIndex+2].P.Z :=
+              CellElevation[ColumnIndex,RowIndex,LayerIndex+1];
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex,RowIndex+1,LayerIndex+2].P.Z := 0;
+          end;
         end;
         if (ColumnIndex = ColumnCount - 1)
           and (LayerIndex = LayerCount - 1) then
@@ -2215,8 +2304,12 @@ begin
           APoint2D :=  TwoDColumnEdgeCenter(ColumnIndex+1, RowIndex);
           FBlockGlGrid[ColumnIndex+2,RowIndex+1,LayerIndex+2].P.X := APoint2D.X;
           FBlockGlGrid[ColumnIndex+2,RowIndex+1,LayerIndex+2].P.Y := APoint2D.Y;
-          FBlockGlGrid[ColumnIndex+2,RowIndex+1,LayerIndex+2].P.Z :=
-            CellElevation[ColumnIndex,RowIndex,LayerIndex+1];
+          try
+            FBlockGlGrid[ColumnIndex+2,RowIndex+1,LayerIndex+2].P.Z :=
+              CellElevation[ColumnIndex,RowIndex,LayerIndex+1];
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex+2,RowIndex+1,LayerIndex+2].P.Z := 0;
+          end;
         end;
 
         if (RowIndex = 0) and (LayerIndex = 0) then
@@ -2224,32 +2317,48 @@ begin
           APoint2D :=  TwoDRowEdgeCenter(ColumnIndex, RowIndex);
           FBlockGlGrid[ColumnIndex+1,RowIndex,LayerIndex].P.X := APoint2D.X;
           FBlockGlGrid[ColumnIndex+1,RowIndex,LayerIndex].P.Y := APoint2D.Y;
-          FBlockGlGrid[ColumnIndex+1,RowIndex,LayerIndex].P.Z :=
-            CellElevation[ColumnIndex,RowIndex,LayerIndex];
+          try
+            FBlockGlGrid[ColumnIndex+1,RowIndex,LayerIndex].P.Z :=
+              CellElevation[ColumnIndex,RowIndex,LayerIndex];
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex+1,RowIndex,LayerIndex].P.Z := 0;
+          end;
         end;
         if (RowIndex = RowCount - 1) and (LayerIndex = 0) then
         begin
           APoint2D :=  TwoDRowEdgeCenter(ColumnIndex, RowIndex+1);
           FBlockGlGrid[ColumnIndex+1,RowIndex+2,LayerIndex].P.X := APoint2D.X;
           FBlockGlGrid[ColumnIndex+1,RowIndex+2,LayerIndex].P.Y := APoint2D.Y;
-          FBlockGlGrid[ColumnIndex+1,RowIndex+2,LayerIndex].P.Z :=
-            CellElevation[ColumnIndex,RowIndex,LayerIndex];
+          try
+            FBlockGlGrid[ColumnIndex+1,RowIndex+2,LayerIndex].P.Z :=
+              CellElevation[ColumnIndex,RowIndex,LayerIndex];
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex+1,RowIndex+2,LayerIndex].P.Z := 0;
+          end;
         end;
         if (RowIndex = 0) and (LayerIndex = LayerCount - 1) then
         begin
           APoint2D :=  TwoDRowEdgeCenter(ColumnIndex, RowIndex);
           FBlockGlGrid[ColumnIndex+1,RowIndex,LayerIndex+2].P.X := APoint2D.X;
           FBlockGlGrid[ColumnIndex+1,RowIndex,LayerIndex+2].P.Y := APoint2D.Y;
-          FBlockGlGrid[ColumnIndex+1,RowIndex,LayerIndex+2].P.Z :=
-            CellElevation[ColumnIndex,RowIndex,LayerIndex+1];
+          try
+            FBlockGlGrid[ColumnIndex+1,RowIndex,LayerIndex+2].P.Z :=
+              CellElevation[ColumnIndex,RowIndex,LayerIndex+1];
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex+1,RowIndex,LayerIndex+2].P.Z := 0;
+          end;
         end;
         if (RowIndex = RowCount - 1) and (LayerIndex = LayerCount - 1) then
         begin
           APoint2D :=  TwoDRowEdgeCenter(ColumnIndex, RowIndex+1);
           FBlockGlGrid[ColumnIndex+1,RowIndex+2,LayerIndex+2].P.X := APoint2D.X;
           FBlockGlGrid[ColumnIndex+1,RowIndex+2,LayerIndex+2].P.Y := APoint2D.Y;
-          FBlockGlGrid[ColumnIndex+1,RowIndex+2,LayerIndex+2].P.Z :=
-            CellElevation[ColumnIndex,RowIndex,LayerIndex+1];
+          try
+            FBlockGlGrid[ColumnIndex+1,RowIndex+2,LayerIndex+2].P.Z :=
+              CellElevation[ColumnIndex,RowIndex,LayerIndex+1];
+          except on EOverflow do
+            FBlockGlGrid[ColumnIndex+1,RowIndex+2,LayerIndex+2].P.Z := 0;
+          end;
         end;
       end;
     end;
@@ -3289,7 +3398,7 @@ begin
     FNeedToRecalculateSideCellColors := True;
     NeedToRecalculate3DCellColors := True;
 //    frmGoPhast.PhastModel.InvalidateSegments;
-    frmGoPhast.PhastModel.InvalidateScreenObjects;
+    frmGoPhast.InvalidateScreenObjects;
     InvalidateScreenObjects;
     frmGoPhast.InvalidateModel;
     if SelectedLayer >= FLayerCount then

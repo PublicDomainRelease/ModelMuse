@@ -35,7 +35,7 @@ type
 implementation
 
 uses
-  PhastModelUnit, frmGoPhastUnit, ScreenObjectUnit;
+  PhastModelUnit, frmGoPhastUnit, ScreenObjectUnit, DataSetUnit;
 
 const
   FixedHeadPosition = 0;
@@ -94,10 +94,22 @@ begin
 end;
 
 function TCfpFixedBoundary.GetFixedHeadObserver: TObserver;
+var
+  Model: TPhastModel;
+  DataArray: TDataArray;
 begin
   if FDiameterObserver = nil then
   begin
-    CreateObserver('Cfp_FixedHead_', FDiameterObserver);
+    if ParentModel <> nil then
+    begin
+      Model := ParentModel as TPhastModel;
+      DataArray := Model.DataArrayManager.GetDataSetByName(KCfpFixedHeads);
+    end
+    else
+    begin
+      DataArray := nil;
+    end;
+    CreateObserver('Cfp_FixedHead_', FDiameterObserver, DataArray);
   end;
   result := FDiameterObserver;
 end;
@@ -112,10 +124,22 @@ begin
 end;
 
 function TCfpFixedBoundary.GetUsedObserver: TObserver;
+var
+  Model: TPhastModel;
+  DataArray: TDataArray;
 begin
   if FUsedObserver = nil then
   begin
-    CreateObserver('CFP_Fixed_Used_', FUsedObserver);
+    if ParentModel <> nil then
+    begin
+      Model := ParentModel as TPhastModel;
+      DataArray := Model.DataArrayManager.GetDataSetByName(KCfpFixedHeads);
+    end
+    else
+    begin
+      DataArray := nil;
+    end;
+    CreateObserver('CFP_Fixed_Used_', FUsedObserver, DataArray);
   end;
   result := FUsedObserver;
 end;

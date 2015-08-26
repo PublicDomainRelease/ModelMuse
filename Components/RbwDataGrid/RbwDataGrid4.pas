@@ -698,6 +698,10 @@ type
     property IntegerValueDefault[const ACol, ARow: integer;
       DefaultValue: Integer = 0]: integer read GetIntegerValueDefault;
   published
+    // When distributing a text to multiple cells (@link(DistributeText),
+    // if @name is @true, the procedure will use up multiple
+    // lines of data to fill up one row of the grid if there is not enough
+    // data to fill up the a single row of the grid.
     property ExtendedAutoDistributeText: boolean
       read FExtendedAutoDistributeText write SetExtendedAutoDistributeText;
     property AutoMultiEdit: boolean read FAutoMultiEdit write FAutoMultiEdit;

@@ -395,7 +395,7 @@ begin
         // do nothing
       end;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         rdeSpacingRows.Text := '-100';
       end;

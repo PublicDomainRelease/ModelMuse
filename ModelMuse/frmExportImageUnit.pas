@@ -1571,7 +1571,7 @@ const
   MillimeterPerInchTimes100 = 2540;
 begin
   case FilterIndex of
-    1:
+    1: // emf
       begin
         // You would think that Screen.PixelsPerInch would give you
         // what you need here but no such luck.
@@ -1632,7 +1632,7 @@ begin
           MetaFile.Free;
         end;
       end;
-    2:
+    2:  // bmp
       begin
         ABitMap := TBitMap.Create;
         try
@@ -1642,7 +1642,7 @@ begin
           ABitMap.Free;
         end;
       end;
-    3:
+    3: // png
       begin
         Png := TPngImage.Create;
         try
@@ -1652,7 +1652,7 @@ begin
           Png.Free;
         end;
       end;
-    4:
+    4: // jpg
       begin
         Jpeg := TJPEGImage.Create;
         try

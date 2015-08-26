@@ -57,12 +57,18 @@ procedure StoreArrays(X, Y: TRealArray; Triangles: TIntArray);
 
 var
   // If assigned, @name is called in @link(PLOT) when all the contour
-  // lines have been created. Either @name of @link(ShowPlotObject)
-  // Should be assigned before calling @link(TRICP_Pascal).
+  // lines have been created. If @name will be used it
+  // should be assigned before calling @link(TRICP_Pascal).
+  // @seealso(ShowPlotObject)
+  // @seealso(TMultipleContourCreator.CreateAndDrawContours)
+  // @seealso(TCustomContourCreator.PerformAlg626)
   ShowPlot: TShowPlot = nil;
   // If assigned, @name is called in @link(PLOT) when all the contour
-  // lines have been created. Either @name of @link(ShowPlot)
-  // Should be assigned before calling @link(TRICP_Pascal).
+  // lines have been created. If @name will be used it
+  // should be assigned before calling @link(TRICP_Pascal).
+  // @seealso(ShowPlot)
+  // @seealso(TMultipleContourCreator.CreateAndDrawContours)
+  // @seealso(TCustomContourCreator.PerformAlg626)
   ShowPlotObject: TShowPlotObject = nil;
 
   MeshOutline: TOutline = nil;

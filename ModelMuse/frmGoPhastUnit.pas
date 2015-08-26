@@ -25,7 +25,7 @@ uses
   frmRunZoneBudgetUnit, RbwModelCube, frmRunModelMateUnit, Mask, JvExMask,
   JvSpin, JvHint, frmRunMt3dmsUnit, JvExControls, JvArrowButton,
   frmExportModpathShapefileUnit, SutraMeshUnit, frmSwrObservationsUnit,
-  JvExStdCtrls, JvCombobox, JvListComb;
+  JvExStdCtrls, JvCombobox, JvListComb, FootprintGridUnit, frmRunFootprintUnit;
 
   { TODO : 
 Consider making CurrentTool a property of TframeView instead of 
@@ -356,7 +356,7 @@ type
     miSutraTimes: TMenuItem;
     acRunSutra: TAction;
     sdSutraInput: TSaveDialog;
-    acRunSutra1: TMenuItem;
+    miRunSutra: TMenuItem;
     acSutraOutputControl: TAction;
     miSutraOutputControl: TMenuItem;
     miSutraProgramLocations: TMenuItem;
@@ -446,6 +446,18 @@ type
     miFarmProcessDialogBoxes: TMenuItem;
     miEditFarms: TMenuItem;
     tmrSaveTimerDisabled: TTimer;
+    miLinkedRasters: TMenuItem;
+    acFootPrintActive: TAction;
+    miFootPrintActive: TMenuItem;
+    acFootprintProperties: TAction;
+    miFootprintProperties: TMenuItem;
+    acNewFootprintModel: TAction;
+    miNewFootprintModel: TMenuItem;
+    acRunFootprint: TAction;
+    acFootprintProgramLocation: TAction;
+    miFootprintProgramLocation: TMenuItem;
+    sdFootprint: TSaveDialog;
+    miRunFootprint: TMenuItem;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -604,6 +616,13 @@ type
     procedure acExportSutra2DMeshExecute(Sender: TObject);
     procedure acEditFarmsExecute(Sender: TObject);
     procedure tmrSaveTimerDisabledTimer(Sender: TObject);
+    procedure miLinkedRastersClick(Sender: TObject);
+    procedure acFootPrintActiveExecute(Sender: TObject);
+    procedure acFootprintPropertiesExecute(Sender: TObject);
+    procedure acRunFootprintExecute(Sender: TObject);
+    procedure acFootprintProgramLocationExecute(Sender: TObject);
+    procedure sdFootprintShow(Sender: TObject);
+    procedure sdFootprintClose(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -645,6 +664,9 @@ type
     FRenumberMethod: integer;
     FAlreadyShown: Boolean;
     FSaveTime: TDateTime;
+    FFootprintFileName: string;
+    FRunFootprintForm: TfrmRunFootprint;
+    FRunFootprint: boolean;
     procedure SetCreateArchive(const Value: Boolean);
     property CreateArchive: Boolean read FCreateArchive write SetCreateArchive;
     procedure WMMenuSelect(var Msg: TWMMenuSelect); message WM_MENUSELECT;
@@ -1605,7 +1627,7 @@ type
       const CursorComponent: TRbwDynamicCursor);
     // @name writes the transport input file for PHAST.
     // The work is delegated to @link(WritePhastInput).
-    procedure ExportFile(const FileName: string; RunModel: boolean);
+    procedure ExportFile(FileName: string; RunModel: boolean);
     // @name fills AList with the buttons that can't all be down at the same
     // time.
     procedure FillButtonList(AList: TList);
@@ -1672,13 +1694,15 @@ type
     procedure ExportMt3dFromCommandLine(FileName: string);
     function GetSutraMesh: TSutraMesh3D;
     function MfLgr2UpToDate: boolean;
-    function MfFmpUpToDate: boolean;
+    function MfOwhmUpToDate: boolean;
     function MfCfpUpToDate: boolean;
     procedure AdjustSutraBoundaries;
     function GetHelpFormat: THelpFormat;
     procedure CrossSectionChanged(Sender: TObject);
     procedure EnableSwrObs;
     procedure MeshExportProgress(Sender: TObject);
+    function GetFootPrintGrid: TFootprintGrid;
+    function FootprintUpToDate: boolean;
 //    procedure NoClick(Sender: TObject);
 //    procedure OnSaveFormClose(Sender: TObject; var Action: TCloseAction);
 //    procedure YesClick(Sender: TObject);
@@ -1725,6 +1749,10 @@ type
     // TframeView.Paint)  and @link(Tframe3DView.glWidModelViewRender) to
     // exit immediately without doing anything.
     property CanDraw: boolean read GetCanDraw write SetCanDraw;
+    // @name changes the width of the four views of the model. It is used in
+    // a workaround of a problem in drawing the front view of the model in
+    // @link(TCustomCellSelectionTool.DrawSelectedFrontCells)
+    procedure AdjustDrawingWidth;
     procedure BeginSuppressDrawing;
     procedure EndSupressDrawing;
     // @name is used to prevent editing of two or more sets of
@@ -1778,12 +1806,14 @@ type
     procedure InvalidateFront;
     // @name invalidates @link(PhastModel).
     procedure InvalidateModel;
+    procedure InvalidateScreenObjects;
    // @name causes the the side view of the model to be redrawn.
     procedure InvalidateSide;
    // @name causes the the top view of the model to be redrawn.
     procedure InvalidateTop;
     procedure InitializeView(ModelXWidth, ModelYWidth, ModelHeight: Real);
     property ModflowGrid: TModflowGrid read GetModflowGrid;
+    property FootPrintGrid: TFootprintGrid read GetFootPrintGrid;
     // @name is the @link(TPhastModel) that is being edited in GoPhast.
     property PhastModel: TPhastModel read FPhastModel write FPhastModel;
     // @name represents the height of the main form in GoPhast when it is not
@@ -1826,10 +1856,15 @@ type
       write SetTopScreenObjectsChanged;
     // @name tells all the @link(TDataArray)s what the new grid dimensions are.
     procedure UpdateDataSetDimensions;
+    // @name is called from @link(TfrmStartUp).
     procedure UpdateModelSelection;
-    // @seealso(ModelSelectionChange)
+    // @seealso(ModelSelectionChange).
+    // @seealso(TBaseModel.ModelSelection).
     property ModelSelection: TModelSelection read GetModelSelection
       write SetModelSelection;
+    // @name is an event handler for when the @link(ModelSelection) changes
+    // either when a user opens a file or when it is changed through
+    // the menu.
     procedure ModelSelectionChange(Sender: TObject);
     procedure EnableInvertSelection;
     procedure InvalidateGrid;
@@ -1843,6 +1878,8 @@ type
     procedure SutraMeshTypeChanged(Sender: TObject);
     property HelpFormat: THelpFormat read GetHelpFormat write FHelpFormat;
     procedure EnableExportHeadObs(Sender: TObject);
+    procedure EnableModpathToShapefile;
+    function GetFootprintInputFileName: string;
     { Public declarations }
   end;
 
@@ -1892,7 +1929,7 @@ uses
   frmModflowNameFileUnit, frmImportGriddedDataUnit, FluxObservationUnit,
   frmManageFluxObservationsUnit, TempFiles, ZLib,
   GlobalTypesUnit, JupiterUnit, CheckInternetUnit, 
-  frmHUF_LayersUnit, frmBatchFileAdditionsUnit, frmSelectObjectsForEditingUnit, 
+  frmHUF_LayersUnit, frmBatchFileAdditionsUnit, frmSelectObjectsForEditingUnit,
   frmDataSetValuesUnit, frmExportShapefileObjectsUnit, frmDeleteImageUnit,
   frmPhastLocationUnit, frmImportSurferGrdFileUnitUnit, frmImportDEMUnit,
   frmExportImageUnit, frmManageParametersUnit, frmManageHeadObservationsUnit,
@@ -1914,7 +1951,8 @@ uses
   SutraTimeScheduleUnit, frmFarmAllotmentUnit, frmHelpVersionUnit,
   ModflowCfpWriterUnit, frmSwrTabfilesUnit, frmSwrReachGeometryUnit,
   frmSwrStructuresUnit, frmImportMultipleGriddedDataFilesUnit, ImportQuadMesh,
-  Export2DMeshUnit, frmFarmUnit;
+  Export2DMeshUnit, frmFarmUnit, frmLinkRasterUnit, frmFootprintPropertiesUnit,
+  frmFootprintLocationUnit, frmImportFootprintResultsUnit;
 
 const
   StrDisplayOption = 'DisplayOption';
@@ -1985,6 +2023,8 @@ resourcestring
   's.';
   StrYouMustDefineThe2 = 'You must define the grid before you can export the ' +
   'MODFLOW input files.';
+  StrYouMustDefineFootprintGrid = 'You must define the grid before you can export the ' +
+  'footprint input files.';
   StrSpaceCharactersAre = 'Space characters are not allowed in the names of ' +
   'MODFLOW input files.';
   StrYouMustSaveYourM = 'You must save your ModelMuse file before creating o' +
@@ -2057,6 +2097,18 @@ resourcestring
   StrReadingTheFileFai2 = 'Reading the file failed with the error message: "' +
   '%0:s". The file may be corrupt. Check for a file named %1:s. It is a prev' +
   'ious version of the file with the extension changed to ".bak".';
+  StrMeshData = 'Mesh Data...';
+  StrImportMeshDataAs = 'Import mesh data as new objects';
+  StrGriddedData = 'Gridded Data...';
+  StrImportGriddedData = 'Import gridded data as new objects';
+  StrGenerateGrid1 = '&Generate Grid...';
+  StrGenerateGrid2 = 'Generate grid';
+  StrGenerateMesh1 = '&Generate Mesh...';
+  StrGenerateMesh2 = 'Generate mesh';
+  StrYouMustSpecifyFootprint = 'You must specify the location of the Footpri' +
+  'nt program before creating the Footprint input files.';
+  StrAMoreRecentVersionFootprint = 'A more recent version of the Footprint p' +
+  'rogram exists. Do you still want to export the Footprint input file.';
 
 
 {$R *.dfm}
@@ -2475,6 +2527,12 @@ begin
           begin
             rgChoice.ItemIndex := Ord(scNewSutra);
           end
+        {$IFDEF Footprint}
+          else if Sender = acNewFootprintModel then
+          begin
+            rgChoice.ItemIndex := Ord(scNewFootprint);
+          end
+        {$ENDIF}
           else
           begin
             Assert(False);
@@ -2864,6 +2922,12 @@ var
 begin
   inherited;
 
+{$IFNDEF FootPrint}
+  acFootPrintActive.Visible := False;
+  acFootprintProperties.Visible := False;
+  acNewFootprintModel.Visible := False;
+{$ENDIF}
+
   Screen.OnActiveFormChange := ScreenOnActiveFormChange;
   // Some laptops of the Dept. of the Interior contract have a
   // screen height of 600 pixels so ensure that the height of the main
@@ -2873,19 +2937,9 @@ begin
     Height := 600 ;
   end;
 
-{
-  acFarmCrops.Visible := False;
-  acFarmSoils.Visible := False;
-  acFarmClimate.Visible := False;
-  acModflowFmpActive.Visible := False;
-  acFarmAllotment.Visible := False;
-  acEditFarms.Visible := False;
-  miFarmProcessDialogBoxes.Visible := False;
-}
-
-//  {$IFNDEF ModflowLGR2}
-//  acModflowLgr2Active.Visible := False;
-//  {$ENDIF}
+{$IFNDEF LinkedRasters}
+  FreeAndNil(miLinkedRasters);
+{$ENDIF}
 
   FRunSutra := True;
 
@@ -2901,6 +2955,7 @@ begin
   FRunPhast := True;
   FRunModelMate := True;
   FRunMt3dms := True;
+  FRunFootprint := True;
   FSynchronizeCount := 0;
   FCreatingMainForm := True;
   try
@@ -3412,6 +3467,20 @@ begin
   frmMeshInformation.Show;
 end;
 
+procedure TfrmGoPhast.AdjustDrawingWidth;
+begin
+  if frameFrontView.Width > 11 then
+  begin
+    frameSideView.Width := frameSideView.Width + 10;
+  end
+  else
+  begin
+    frameSideView.Width := frameSideView.Width - 7;
+  end;
+  splitVertTopMoved(frameSideView);
+  InvalidateAllViews;
+end;
+
 procedure TfrmGoPhast.AdjustScales;
 begin
   // Synchronize the horizontal and vertical scales with the views of the grid.
@@ -3536,7 +3605,11 @@ begin
     msSutra22:
       begin
         ShowAForm(TfrmImportSutraModelResults);
-      end
+      end;
+    msFootPrint:
+      begin
+        ShowAForm(TfrmImportFootprintResults)
+      end;
     else Assert(False);
   end;
 
@@ -3597,6 +3670,8 @@ begin
         acModflowCfpActive.Checked := True;
     msSutra22:
         acSutraActive.Checked := True;
+    msFootPrint:
+        acFootPrintActive.Checked := True;
     else
       Assert(False);
   end;
@@ -3613,10 +3688,19 @@ begin
         acSubdivide.Hint := StrSubdivideGridEleme;
         btnRunModel.DropDown := nil;
         miExportShapefile.Caption := StrGridDataToShapef;
-        acGenerateGrid.Caption := '&Generate Grid...';
-        acGenerateGrid.Hint := 'Generate grid';
+        acGenerateGrid.Caption := StrGenerateGrid1;
+        acGenerateGrid.Hint := StrGenerateGrid2;
         frameTopView.ZoomBox.Exaggeration := 1;
         acExportSutra2DMesh.Enabled := False;
+        pnlBottom.Visible := True;
+        splitHoriz.Visible := True;
+        acDeleteColumnRow.Enabled := True;
+        acMoveColumnOrRow.Enabled := True;
+        acEditGridLines.Enabled := True;
+        acAddColumn.Enabled := True;
+        acAddRow.Enabled := True;
+        acSetSpacing.Enabled := True;
+        acSmoothGrid.Enabled := True;
       end;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
       msModflowFmp, msModflowCfp:
@@ -3630,10 +3714,19 @@ begin
         acSubdivide.Hint := StrSubdivideGridCells;
         btnRunModel.DropDown := pmExportModel;
         miExportShapefile.Caption := StrGridDataToShapef;
-        acGenerateGrid.Caption := '&Generate Grid...';
-        acGenerateGrid.Hint := 'Generate grid';
+        acGenerateGrid.Caption := StrGenerateGrid1;
+        acGenerateGrid.Hint := StrGenerateGrid2;
         frameTopView.ZoomBox.Exaggeration := 1;
         acExportSutra2DMesh.Enabled := False;
+        pnlBottom.Visible := True;
+        splitHoriz.Visible := True;
+        acDeleteColumnRow.Enabled := True;
+        acMoveColumnOrRow.Enabled := True;
+        acEditGridLines.Enabled := True;
+        acAddColumn.Enabled := True;
+        acAddRow.Enabled := True;
+        acSetSpacing.Enabled := True;
+        acSmoothGrid.Enabled := True;
       end;
     msSutra22:
       begin
@@ -3647,12 +3740,57 @@ begin
 //          + 'Click down and drag to select cells to be subdivided.';
         btnRunModel.DropDown := nil;
         miExportShapefile.Caption := StrMeshDataToShapef;
-        acGenerateGrid.Caption := '&Generate Mesh...';
-        acGenerateGrid.Hint := 'Generate mesh';
+        acGenerateGrid.Caption := StrGenerateMesh1;
+        acGenerateGrid.Hint := StrGenerateMesh2;
         acExportSutra2DMesh.Enabled := True;
+        pnlBottom.Visible := True;
+        splitHoriz.Visible := True;
+        acDeleteColumnRow.Enabled := False;
+        acMoveColumnOrRow.Enabled := False;
+        acEditGridLines.Enabled := False;
+        acAddColumn.Enabled := False;
+        acAddRow.Enabled := False;
+        acSetSpacing.Enabled := False;
+        acSmoothGrid.Enabled := False;
       end;
+    msFootPrint:
+      begin
+        frameSideView.Visible := False;
+        splitVertTop.Visible := False;
+        frameTopView.ModelCube.ZOrigin := zoTop;
+        frameFrontView.ModelCube.YOrigin := yoNorth;
+        acSubdivide.Visible := True;
+        acSubdivide.Caption := StrSubdivideGridCell;
+        acSubdivide.Hint := StrSubdivideGridCells;
+        btnRunModel.DropDown := nil;
+        miExportShapefile.Caption := StrGridDataToShapef;
+        acGenerateGrid.Caption := StrGenerateGrid1;
+        acGenerateGrid.Hint := StrGenerateGrid2;
+        frameTopView.ZoomBox.Exaggeration := 1;
+        acExportSutra2DMesh.Enabled := False;
+        pnlBottom.Visible := False;
+        splitHoriz.Visible := False;
+        acDeleteColumnRow.Enabled := False;
+        acMoveColumnOrRow.Enabled := False;
+        acEditGridLines.Enabled := False;
+        acAddColumn.Enabled := False;
+        acAddRow.Enabled := False;
+        acSetSpacing.Enabled := False;
+        acSmoothGrid.Enabled := False;
+      end
     else Assert(False);
   end;
+{$IFDEF Footprint}
+  acFootprintProperties.Visible := ModelSelection = msFootPrint;
+{$ENDIF}
+  comboZCount.Enabled := ModelSelection <> msFootPrint;
+  if not comboZCount.Enabled then
+  begin
+    comboZCount.ItemIndex := 2;
+  end;
+
+  frameTopView.AdjustScales;
+
   EnableVisualization;
 
   if frameSideView.Visible and (frameSideView.Left < splitVertTop.Left) then
@@ -3679,7 +3817,6 @@ begin
 
   miSWR.Visible := ModelSelection in [msModflowNWT, msModflowFmp];
 
-  // Make these actions permanently visible when FMP support is released.
   acFarmCrops.Visible := PhastModel.ModelSelection = msModflowFmp;
   acFarmSoils.Visible := PhastModel.ModelSelection = msModflowFmp;
   acFarmClimate.Visible := PhastModel.ModelSelection = msModflowFmp;
@@ -3702,11 +3839,20 @@ begin
 
   acImportModelResults.Enabled :=
     PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowLGR2,
-      msModflowNWT, msModflowFmp, msModflowCfp, msSutra22];
+      msModflowNWT, msModflowFmp, msModflowCfp, msSutra22, msFootPrint];
   acImportSutraModelResults.Enabled :=
     PhastModel.ModelSelection = msSutra22;
-  miGriddedData.Enabled :=
-    PhastModel.ModelSelection <> msSutra22;
+  if PhastModel.ModelSelection = msSutra22 then
+  begin
+    miGriddedData.Caption := StrMeshData;
+    miGriddedData.Hint := StrImportMeshDataAs;
+  end
+  else
+  begin
+    miGriddedData.Caption := StrGriddedData;
+    miGriddedData.Hint := StrImportGriddedData;
+  end;
+
   acImportGriddedDataFiles.Enabled :=
     PhastModel.ModelSelection <> msSutra22;
   tlbMesh.Visible := PhastModel.ModelSelection = msSutra22;
@@ -3746,6 +3892,7 @@ begin
   acRunSutra.Enabled := PhastModel.ModelSelection = msSutra22;
   acRunModflowFmp.Enabled := PhastModel.ModelSelection = msModflowFmp;
   acRunModflowCfp.Enabled := PhastModel.ModelSelection = msModflowCfp;
+  acRunFootprint.Enabled := PhastModel.ModelSelection = msFootPrint;
 
   UpdateRunShortCut(acExportPhastInputFile);
   UpdateRunShortCut(acRunModflow);
@@ -3754,6 +3901,7 @@ begin
   UpdateRunShortCut(acRunModflowFMP);
   UpdateRunShortCut(acRunModflowCFP);
   UpdateRunShortCut(acRunSUTRA);
+  UpdateRunShortCut(acRunFootprint);
 
   miLayers.Enabled :=
     PhastModel.ModelSelection in ModflowSelection;
@@ -3818,6 +3966,7 @@ begin
     ControlList.Add(acExportZoneBudget);
     ControlList.Add(acRunMt3dms);
 
+
     ShowControls := PhastModel.ModelSelection in ModflowSelection;
     for ControlIndex := 0 to ControlList.Count - 1 do
     begin
@@ -3876,7 +4025,7 @@ begin
     ControlList.Add(acSutraTimes);
     ControlList.Add(acSutraOutputControl);
     ControlList.Add(acSutraProgramLocations);
-    ControlList.Add(acRunSutra1);
+    ControlList.Add(acRunSutra);
     ControlList.Add(miCustomizeSutraMesh);
 
     ShowControls := PhastModel.ModelSelection = msSutra22;
@@ -3896,6 +4045,10 @@ begin
         Assert(False);
       end;
     end;
+
+    ShowControls := PhastModel.ModelSelection = msFootPrint;
+    acFootprintProgramLocation.Visible := ShowControls;
+    acRunFootprint.Visible := ShowControls;
 
     N8.Visible := False;
     N10.Visible := False;
@@ -3940,7 +4093,7 @@ begin
     msModflowLGR: result := MfLgrUpToDate;
     msModflowLGR2: result := MfLgr2UpToDate;
     msModflowNWT: result := MfNwtUpToDate;
-    msModflowFmp: result := MfFmpUpToDate;
+    msModflowFmp: result := MfOwhmUpToDate;
     msModflowCFP: result := MfCfpUpToDate;
     else Assert(False);
   end;
@@ -4907,6 +5060,7 @@ begin
   begin
     PhastGrid.GridLineDrawingChoice := gldcAll;
     ModflowGrid.GridLineDrawingChoice := gldcAll;
+    FootPrintGrid.GridLineDrawingChoice := gldcAll;
     tbShow2DGrid.ImageIndex := acShowAllGridLines.ImageIndex;
     miShow2DGridlines.ImageIndex := acShowAllGridLines.ImageIndex;
   end
@@ -4914,6 +5068,7 @@ begin
   begin
     PhastGrid.GridLineDrawingChoice := gldcExterior;
     ModflowGrid.GridLineDrawingChoice := gldcExterior;
+    FootPrintGrid.GridLineDrawingChoice := gldcExterior;
     tbShow2DGrid.ImageIndex := acShowExteriorGridLines.ImageIndex;
     miShow2DGridlines.ImageIndex := acShowExteriorGridLines.ImageIndex;
   end
@@ -4921,6 +5076,7 @@ begin
   begin
     PhastGrid.GridLineDrawingChoice := gldcActive;
     ModflowGrid.GridLineDrawingChoice := gldcActive;
+    FootPrintGrid.GridLineDrawingChoice := gldcActive;
     tbShow2DGrid.ImageIndex := acShowActiveGridLines.ImageIndex;
     miShow2DGridlines.ImageIndex := acShowActiveGridLines.ImageIndex;
   end
@@ -4928,6 +5084,7 @@ begin
   begin
     PhastGrid.GridLineDrawingChoice := gldcActiveEdge;
     ModflowGrid.GridLineDrawingChoice := gldcActiveEdge;
+    FootPrintGrid.GridLineDrawingChoice := gldcActiveEdge;
     tbShow2DGrid.ImageIndex := acShowActiveEdge.ImageIndex;
     miShow2DGridlines.ImageIndex := acShowActiveEdge.ImageIndex;
   end
@@ -5250,7 +5407,7 @@ begin
   end;
   case ModelSelection of
     msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         LocalGrid := Grid;
         acDisplayData.Enabled := (LocalGrid <> nil)
@@ -5427,8 +5584,7 @@ begin
       Assert(False);
     msPhast:
       Assert(False);
-    msModflow, msModflowNWT
-    , msModflowCfp:
+    msModflow, msModflowNWT, msModflowCfp:
       begin
         NewFileName := ChangeFileExt(FileName, '.nam');
         NewFileName := PhastModel.FixFileName(NewFileName);
@@ -5461,7 +5617,7 @@ begin
           end;
         end;
       end;
-    msSutra22:
+    msSutra22, msFootPrint:
       begin
         Assert(False);
       end
@@ -5610,7 +5766,11 @@ begin
         begin
           ExportSutra(False, SutraInputFileName);
         end;
-      end
+      end;
+    msFootPrint:
+      begin
+        Assert(False);
+      end;
   else
     Assert(False);
   end;
@@ -5845,7 +6005,7 @@ begin
     begin
       AModel := PhastModel;
     end;
-    AModel.EndPoints.Points.
+    AModel.EndPoints.
       ExportShapefileAtEndingLocations(sdShapefile.FileName);
   end;
 end;
@@ -5879,7 +6039,7 @@ begin
     begin
       AModel := PhastModel;
     end;
-    AModel.EndPoints.Points.
+    AModel.EndPoints.
       ExportShapefileAtStartingLocations(sdShapefile.FileName);
   end;
 end;
@@ -6056,6 +6216,14 @@ begin
   end;
 end;
 
+procedure TfrmGoPhast.InvalidateScreenObjects;
+begin
+  if PhastModel <> nil then
+  begin
+    PhastModel.InvalidateScreenObjects;
+  end;
+end;
+
 procedure TfrmGoPhast.InvalidateSide;
 begin
   // redraw the side view.
@@ -6208,6 +6376,27 @@ selected font. }
   end;
 end;
 
+procedure TfrmGoPhast.acFootPrintActiveExecute(Sender: TObject);
+begin
+  inherited;
+  if ModelSelection <> msFootPrint then
+  begin
+    UndoStack.Submit(TUndoModelSelectionChange.Create(msFootPrint));
+  end;
+end;
+
+procedure TfrmGoPhast.acFootprintProgramLocationExecute(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmFootprintLocation);
+end;
+
+procedure TfrmGoPhast.acFootprintPropertiesExecute(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmFootprintProperties);
+end;
+
 procedure TfrmGoPhast.acHeadObsToShapefileExecute(Sender: TObject);
 var
   FileRoot: TFileName;
@@ -6255,6 +6444,85 @@ begin
   if frmDisplayData <> nil then
   begin
     frmDisplayData.frameHeadObservationResults.UpdateSelectedModel;
+  end;
+end;
+
+procedure TfrmGoPhast.EnableModpathToShapefile;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  miPathlinestoShapefile.Enabled := (PhastModel.PathLines.Lines.Count > 0)
+    or (PhastModel.PathLines.LinesV6.Count > 0);
+  if not miPathlinestoShapefile.Enabled
+    and PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      miPathlinestoShapefile.Enabled :=
+        (ChildModel.PathLines.Lines.Count > 0)
+        or (ChildModel.PathLines.LinesV6.Count > 0);
+      if miPathlinestoShapefile.Enabled then
+      begin
+        break;
+      end;
+    end;
+  end;
+
+//  miEndpointsatStartingLocationstoShapefile.Enabled :=
+//    (PhastModel.EndPoints.Points.Count > 0)
+//    or (PhastModel.EndPoints.PointsV6.Count > 0);
+//  miEndpointsatEndingLocationstoShapefile.Enabled :=
+//    miEndpointsatStartingLocationstoShapefile.Enabled;
+
+  miEndpointsatStartingLocationstoShapefile.Enabled :=
+    (PhastModel.EndPoints.Points.Count > 0)
+    or (PhastModel.EndPoints.PointsV6.Count > 0);
+  begin
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      miEndpointsatStartingLocationstoShapefile.Enabled :=
+        (ChildModel.EndPoints.Points.Count > 0)
+        or (ChildModel.EndPoints.PointsV6.Count > 0);
+      if miEndpointsatStartingLocationstoShapefile.Enabled then
+      begin
+        break;
+      end;
+    end;
+  end;
+  miEndpointsatEndingLocationstoShapefile.Enabled :=
+    miEndpointsatStartingLocationstoShapefile.Enabled;
+
+
+  miTimeSeriestoShapefile.Enabled := (PhastModel.TimeSeries.Series.Count > 0)
+    or (PhastModel.TimeSeries.SeriesV6.Count > 0);
+  if not miTimeSeriestoShapefile.Enabled
+    and PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      miTimeSeriestoShapefile.Enabled :=
+        (ChildModel.TimeSeries.Series.Count > 0)
+        or (ChildModel.TimeSeries.SeriesV6.Count > 0);
+      if miTimeSeriestoShapefile.Enabled then
+      begin
+        break;
+      end;
+    end;
+  end;
+end;
+
+function TfrmGoPhast.GetFootprintInputFileName: string;
+begin
+  result := FFootprintFileName;
+  if (result = '') and (PhastModel.ModelFileName <> '') then
+  begin
+    result := ChangeFileExt(PhastModel.ModelFileName, sdFootprint.DefaultExt);
+    result := PhastModel.FixFileName(result);
+    FFootprintFileName := Result;
   end;
 end;
 
@@ -7578,7 +7846,7 @@ begin
     case Value of
       msUndefined: Assert(False);
       msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-        msModflowFmp, msModflowCfp, msSutra22:
+        msModflowFmp, msModflowCfp, msSutra22, msFootPrint:
         begin
           InvalidateViewOfModel;
           InvalidateAllViews;
@@ -7622,6 +7890,10 @@ begin
           SutraMesh.OnSelectedLayerChange := frameTopView.ItemChange;
         end;
       end;
+    msFootPrint:
+      begin
+        acFootPrintActive.Checked := True;
+      end
     else Assert(False);
   end;
 end;
@@ -7815,7 +8087,10 @@ end;
 
 procedure TfrmGoPhast.UpdateDataSetDimensions;
 begin
-  PhastModel.UpdateDataSetDimensions;
+  if PhastModel <> nil then
+  begin
+    PhastModel.UpdateDataSetDimensions;
+  end;
   InvalidateImage32AllViews;
 end;
 
@@ -8160,6 +8435,18 @@ begin
   end;
 end;
 
+function TfrmGoPhast.GetFootPrintGrid: TFootprintGrid;
+begin
+  if PhastModel = nil then
+  begin
+    result := nil
+  end
+  else
+  begin
+    result := PhastModel.FootPrintGrid;
+  end;
+end;
+
 function TfrmGoPhast.GetGrid: TCustomModelGrid;
 begin
   if PhastModel = nil then
@@ -8189,7 +8476,14 @@ end;
 
 function TfrmGoPhast.GetModelSelection: TModelSelection;
 begin
-  result := PhastModel.ModelSelection;
+  if PhastModel <> nil then
+  begin
+    result := PhastModel.ModelSelection;
+  end
+  else
+  begin
+    result := msUndefined;
+  end;
 end;
 
 function TfrmGoPhast.GetModflowGrid: TModflowGrid;
@@ -8249,6 +8543,19 @@ begin
     WarningMessage := Format(StrTheCurrentVersion, [StrMODFLOW2005]);
     result := (MessageDlg(WarningMessage, mtWarning, [mbYes, mbNo], 0) = mrYes);
   end;
+end;
+
+function TfrmGoPhast.FootprintUpToDate: boolean;
+var
+  FootprintDate: TDateTime;
+begin
+  result := True;
+  FootprintDate := EncodeDate(2015,8,12);
+  if FileExists(PhastModel.ProgramLocations.FootprintLocation) then
+  begin
+    result := TFile.GetLastWriteTime(PhastModel.ProgramLocations.FootprintLocation) >= FootprintDate;
+  end;
+
 end;
 
 //function TfrmGoPhast.ModelMateUpToDate: boolean;
@@ -8318,7 +8625,7 @@ begin
   end;
 end;
 
-function TfrmGoPhast.MfFmpUpToDate: boolean;
+function TfrmGoPhast.MfOwhmUpToDate: boolean;
 var
   WarningMessage: string;
 begin
@@ -8378,6 +8685,12 @@ begin
   begin
     Undo.Free;
   end;
+end;
+
+procedure TfrmGoPhast.miLinkedRastersClick(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmLinkRaster);
 end;
 
 procedure TfrmGoPhast.miLinkSFRStreamsClick(Sender: TObject);
@@ -8539,7 +8852,7 @@ begin
     frameTopView.ZoomBox.Height / ModelYWidth);
   // the following statement may not be required because the
   // magnification is set in SynchronizeViews.
-  if ModelHeight <> 0 then
+  if (ModelHeight <> 0) and (frmGoPhast.ModelSelection <> msFootPrint) then
   begin
     frameFrontView.ZoomBox.Magnification := Min(
       frameTopView.ZoomBox.Magnification,
@@ -9020,6 +9333,11 @@ var
   DataArrayManager: TDataArrayManager;
   WarningMessage: string;
   ChildIndex: integer;
+//  DistributedPumpageDataArray: TDataArray;
+//  ActiveDataArray: TDataArray;
+//  DepthRateDataArray: TDataArray;
+  FootprintWithdrawalDataArray: TDataArray;
+  ActiveDataArray: TDataArray;
 //  AValue: Boolean;
 begin
   Result := False;
@@ -9286,12 +9604,25 @@ begin
           PhastModel.MobileComponents.Loaded;
           PhastModel.ImmobileComponents.Loaded;
 
-
+          FootprintWithdrawalDataArray := DataArrayManager.GetDataSetByName(KWithdrawals);
+          if FootprintWithdrawalDataArray <> nil then
+          begin
+            ActiveDataArray := DataArrayManager.GetDataSetByName(rsActive);
+            if ActiveDataArray <> nil then
+            begin
+              ActiveDataArray.TalksTo(FootprintWithdrawalDataArray);
+            end;
+          end;
 
           for Index := 0 to DataArrayManager.DataSetCount - 1 do
           begin
             DataArrayManager.DataSets[Index].RestoreUpToDateStatus;
           end;
+
+//          if FootprintWithdrawalDataArray <> nil then
+//          begin
+//            FootprintWithdrawalDataArray.UpToDate := False;
+//          end;
 
           // invalidate data sets that depend on data sets that are constant.
           for Index := 0 to DataArrayManager.DataSetCount - 1 do
@@ -9344,20 +9675,10 @@ begin
         msModflowFmp: acModflowFmpActive.Checked := True;
         msModflowCFP: acModflowCfpActive.Checked := True;
         msSutra22: acSutraActive.Checked := True;
+        msFootPrint: acFootPrintActive.Checked := True;
         else Assert(False);
       end;
-      miPathlinestoShapefile.Enabled := (PhastModel.PathLines.Lines.Count > 0)
-        or (PhastModel.PathLines.LinesV6.Count > 0);
-
-      miEndpointsatStartingLocationstoShapefile.Enabled :=
-        (PhastModel.EndPoints.Points.Count > 0)
-        or (PhastModel.EndPoints.PointsV6.Count > 0);
-      miEndpointsatEndingLocationstoShapefile.Enabled :=
-        miEndpointsatStartingLocationstoShapefile.Enabled;
-
-      miTimeSeriestoShapefile.Enabled :=
-        (PhastModel.TimeSeries.Series.Count > 0)
-        or (PhastModel.TimeSeries.SeriesV6.Count > 0);
+      EnableModpathToShapefile;
 
       EnableExportHeadObs(nil);
 
@@ -9535,18 +9856,35 @@ end;
 procedure TfrmGoPhast.miGriddedDataClick(Sender: TObject);
 var
   LocalGrid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
 begin
   inherited;
-  LocalGrid := Grid;
-  if (LocalGrid <> nil) and (LocalGrid.ColumnCount > 0)
-    and (LocalGrid.RowCount > 0) and (LocalGrid.LayerCount > 0) then
+  if ModelSelection = msSutra22 then
   begin
-    ShowAForm(TfrmImportGriddedData);
+    Mesh := PhastModel.Mesh;
+    if (Mesh <> nil) and (Mesh.Mesh2D.Nodes.Count > 0) then
+    begin
+      ShowAForm(TfrmImportGriddedData);
+    end
+    else
+    begin
+      Beep;
+      MessageDlg('You must create the mesh before attempting to import mesh data.', mtError, [mbOK], 0);
+    end;
   end
   else
   begin
-    Beep;
-    MessageDlg(StrYouMustCreateThe, mtError, [mbOK], 0);
+    LocalGrid := Grid;
+    if (LocalGrid <> nil) and (LocalGrid.ColumnCount > 0)
+      and (LocalGrid.RowCount > 0) and (LocalGrid.LayerCount > 0) then
+    begin
+      ShowAForm(TfrmImportGriddedData);
+    end
+    else
+    begin
+      Beep;
+      MessageDlg(StrYouMustCreateThe, mtError, [mbOK], 0);
+    end;
   end;
 end;
 
@@ -9904,6 +10242,23 @@ begin
     end;
     sdSaveDialog.DefaultExt := DefaultExtension;
   end;
+end;
+
+procedure TfrmGoPhast.sdFootprintClose(Sender: TObject);
+begin
+  inherited;
+  FRunFootprint := FRunFootprintForm.cbRun.Checked;
+  FRunFootprintForm.Free;
+end;
+
+procedure TfrmGoPhast.sdFootprintShow(Sender: TObject);
+var
+  ADialog: TSaveDialog;
+begin
+  inherited;
+  ADialog := Sender as TSaveDialog;
+  FRunFootprintForm := TfrmRunFootprint.createfordialog(ADialog);
+  FRunFootprintForm.cbRun.Checked := FRunFootprint;
 end;
 
 procedure TfrmGoPhast.sdModelMateClose(Sender: TObject);
@@ -10265,11 +10620,19 @@ begin
   FRunZoneBudgetForm.cbRun.Checked := FRunZoneBudget;
 end;
 
-procedure TfrmGoPhast.ExportFile(const FileName: string; RunModel: boolean);
+procedure TfrmGoPhast.ExportFile(FileName: string; RunModel: boolean);
+var
+  FileDir: string;
 begin
   Screen.Cursor := crHourGlass;
   CanDraw := False;
   try
+    FileDir := IncludeTrailingPathDelimiter(ExtractFileDir(FileName));
+    FileName := ExtractFileName(FileName);
+    FileName := StringReplace(FileName, ' ', '', [rfReplaceAll, rfIgnoreCase]);
+//    FileName := StringReplace(FileName, '(', '', [rfReplaceAll, rfIgnoreCase]);
+//    FileName := StringReplace(FileName, ')', '', [rfReplaceAll, rfIgnoreCase]);
+    FileName := FileDir+FileName;
     WritePhastInput(FileName, RunModel);
   finally
     Screen.Cursor := crDefault;
@@ -10362,6 +10725,7 @@ begin
           msModflowNWT: ModflowVersionName := StrMODFLOWNWT;
           msModflowFmp: ModflowVersionName := StrMODFLOWOWHM;
           msModflowCfp: ModflowVersionName := StrMODFLOWCFP;
+          else Assert(False);
         end;
         if MessageDlg(Format(StrSDoesNotExistAt, [ModflowVersionName]),
           mtWarning, [mbYes, mbNo], 0) <> mrYes then
@@ -10613,6 +10977,8 @@ begin
           PhastModel.ProgramLocations.ModflowNwtLocation;
         msModflowFmp: ModflowLocation :=
           PhastModel.ProgramLocations.ModflowOwhmLocation;
+        msModflowCfp: ModflowLocation :=
+          PhastModel.ProgramLocations.ModflowCfpLocation;
         else
           Assert(False);
       end;
@@ -11197,6 +11563,60 @@ begin
   SelectDefaultButton;
 end;
 
+procedure TfrmGoPhast.acRunFootprintExecute(Sender: TObject);
+var
+  AGrid: TCustomModelGrid;
+begin
+  inherited;
+  // Check Footprint location
+  AGrid := Grid;
+  if (AGrid = nil) or (AGrid.ColumnCount <= 0)
+    or (AGrid.RowCount <= 0) or (AGrid.LayerCount <= 0) then
+  begin
+    Beep;
+    MessageDlg(StrYouMustDefineFootprintGrid, mtError, [mbOK], 0);
+    Exit;
+  end;
+
+  sdFootprint.FileName := GetFootprintInputFileName;
+  if sdFootprint.Execute then
+  begin
+    if sdFootprint.FileName <> string(AnsiString(sdFootprint.FileName)) then
+    begin
+      Beep;
+      MessageDlg(StrSorryTheFileName, mtError, [mbOK], 0);
+      Exit;
+    end;
+    if not FileExists(PhastModel.ProgramLocations.FootprintLocation) then
+    begin
+      acFootprintProgramLocationExecute(nil);
+    end;
+    if not FileExists(PhastModel.ProgramLocations.FootprintLocation) then
+    begin
+      Beep;
+      MessageDlg(StrYouMustSpecifyFootprint, mtError, [mbOK], 0);
+      Exit;
+    end;
+
+    if not FootprintUpToDate then
+    begin
+      if (MessageDlg(StrAMoreRecentVersionFootprint, mtWarning,
+        [mbYes, mbNo], 0) <> mrYes) then
+      begin
+        Exit;
+      end;
+    end;
+
+    PhastModel.ExportFootprintInput(sdFootprint.FileName, FRunFootprint);
+  end;
+//
+//  if True then
+//  begin
+//
+//  end;
+//  sdFootprint.FileName :=
+end;
+
 procedure TfrmGoPhast.acRunModflowCfpExecute(Sender: TObject);
 begin
   inherited;
@@ -11270,8 +11690,7 @@ begin
       else Assert(False);
     end;
 
-    if ModelSelection in [msModflowLGR
-    ] then
+    if ModelSelection in [msModflowLGR] then
     begin
       if not FileExists(PhastModel.ProgramLocations.ModflowLgrLocation) then
       begin
@@ -11352,10 +11771,24 @@ begin
           end;
         end;
       end;
-      if not MfLgr2UpToDate then
-      begin
-        Exit;
-      end;
+      case ModelSelection of
+        msModflowLGR2:
+          begin
+            if not MfLgr2UpToDate then
+            begin
+              Exit;
+            end;
+          end;
+        msModflowFmp:
+          begin
+            if not MfOwhmUpToDate then
+            begin
+              Exit;
+            end;
+          end
+        else
+          Assert(False);
+        end;
     end;
     // erase the list of model input files to be stored in the archive.
     PhastModel.ModelInputFiles.Clear;

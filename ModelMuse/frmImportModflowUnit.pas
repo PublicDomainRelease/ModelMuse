@@ -133,7 +133,7 @@ begin
                or (Ftype = 'RCT') or (Ftype = 'SOR') or (Ftype = 'SEN')
                or (Ftype = 'PES') or (Ftype = 'OBS') or (Ftype = 'LMG')
                or (Ftype = 'DAF') or (Ftype = 'DAFG') or (Ftype = 'VSC')
-               or (Ftype = 'DTOB') or (Ftype = 'ADV2') then
+               or (Ftype = 'DTOB') or (Ftype = 'ADV2') or (Ftype = 'GWT') then
             begin
               Modflow2000Model := True;
             end;
@@ -149,7 +149,7 @@ begin
           if Splitter.Count > 0 then
           begin
             Ftype := UpperCase(Splitter[0]);
-            // comment out MODFLOW-2000 files
+            // comment out MODFLOW-2000 files or other unhandled file types.
             if (Ftype = 'OBS') or (Ftype = 'LMG') or (Ftype = 'SEN')
                or (Ftype = 'SEN') or (Ftype = 'PES') or (Ftype = 'GLOBAL')
                or (Ftype = 'SOR') or (Ftype = 'DAF') or (Ftype = 'DAFG')
@@ -157,8 +157,11 @@ begin
                or (Ftype = 'BTN') or (Ftype = 'ADV') or (Ftype = 'DSP')
                or (Ftype = 'GCG') or (Ftype = 'VDF') or (Ftype = 'SSM')
                or (Ftype = 'RCT') or (Ftype = 'VSC')
+               or (Ftype = 'CFP') or (Ftype = 'CRCH') or (Ftype = 'COC')
+               or (Ftype = 'BFH') or (Ftype = 'BFH2')
                // CLB, NDC, and WHS are only in Visual MODFLOW.
-               or (Ftype = 'CLB') or (Ftype = 'NDC') or (Ftype = 'WHS') then
+               or (Ftype = 'CLB') or (Ftype = 'NDC') or (Ftype = 'WHS')
+               or (Ftype = 'GWT') then
             begin
               ALine := '#' + ALine;
               NameFile[LineIndex] := ALine;

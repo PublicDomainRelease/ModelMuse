@@ -23,8 +23,15 @@ type
     // See @link(Anisotropy).
     FAnisotropy: real;
     // See @link(Anisotropy).
+    FNodeOrElementQuadTree: TRbwQuadTree;
     procedure SetAnisotropy(const Value: real);
-    procedure GetLimits(var MinY, MaxY, MinX, MaxX: Real; const DataSet: TDataArray);
+    // @name returns the minimum and maximum coordinates with which the
+    // @classname will need to deal. The limits can be used in initializing
+    // a @link(TRbwQuadTree).
+    procedure GetLimits(var MinY, MaxY, MinX, MaxX: Real;
+      const DataSet: TDataArray);
+    procedure InitializeNodeOrElementQuadTree;
+    function GetNodeOrElementQuadTree: TRbwQuadTree;
   protected
     // @name initializes the limits of @link(TRbwQuadTree QuadTree)
     // to the grid limits.
@@ -35,16 +42,19 @@ type
     // Expression.
     procedure InitializeVariablesAndExpression(const Location: TPoint2D;
       const AScreenObject: TScreenObject; SectionIndex: integer; var Expression: TExpression);
+    property NodeOrElementQuadTree: TRbwQuadTree read GetNodeOrElementQuadTree;
   public
     // @name copies the Anisotropy of Source to the item that call
     // @name.
     procedure Assign(Source: TPersistent); override;
     // @name creates an instance of @classname.
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     // @name returns @true if AnotherInterpolator has the same parameters
     // as the @classname being called.
     function SameAs(AnotherInterpolator: TCustom2DInterpolater): boolean;
       override;
+    procedure Initialize(const DataSet: TDataArray); override;
   published
     // @name is taken into account when measuring distances by multiplying
     // the Y coordinate by the anisotropy before measuring distances in
@@ -69,18 +79,25 @@ type
     function RealResult(const Location: TPoint2D): real; override;
   end;
 
-  {@abstract(@name implements an interpolator that returns the value
-   of the @link(TScreenObject) which has a vertex closest
-   to the point of interest.)}
   TCustomPoint2DInterpolator = class(TCustomAnisotropicInterpolator)
   protected
+    // @name stores real number data at each point.
     FRealData: array of real;
+    // @name stores integer data at each point.
     FIntegerData: array of integer;
+    // @name stores boolean data at each point.
     FBooleanData: array of boolean;
+    // @name stores string data at each point.
     FStringData: array of string;
+    // @name sets the length of @link(FRealData), @link(FIntegerData),
+    // @link(FBooleanData) or @link(FStringData) depending on the
+    // @link(TRbwDataType) of the data set.
     procedure SetArraySize(const DataSet: TDataArray; Count: Integer); virtual;
+    // @name stores a data values at APoint.
     procedure StoreDataValue(Count: Integer; const DataSet: TDataArray;
-      APoint: TPoint2D; AScreenObject: TScreenObject; SectionIndex: integer); virtual; abstract;
+      APoint: TPoint2D; AScreenObject: TScreenObject; SectionIndex: integer);
+      virtual; abstract;
+    // @name stores data values for all the relevant @link(TScreenObject)s.
     procedure StoreData(Sender: TObject; const DataSet: TDataArray); virtual;
   public
     // @name creates an instance of @classname and assigns
@@ -89,26 +106,47 @@ type
     procedure Finalize(const DataSet: TDataArray); override;
   end;
 
+  {@abstract(@name implements an interpolator that returns the value
+   of the @link(TScreenObject) which has a vertex closest
+   to the point of interest.)}
   TNearestPoint2DInterpolator = class(TCustomPoint2DInterpolator)
   private
     // @name is used to find the closest node on an object
     // to the location of interest.
     FQuadTree: TRbwQuadTree;
+    // @name is used to finde the closest @link(TScreenObject) to the
+    // location of interest.
     FScreenObjectQuadTree: TRbwQuadTree;
+    // @name is used to assign an annotation to an interpolated values.
     FLastScreenObject: TScreenObject;
+    // @name gets the address of the result and sets @link9FLastScreenObject).
     function GetPointerToResult(const Location: TPoint2D): Pointer;
+    // @name gets the @link(TScreenObject) closest to Location.
     function GetScreenObjectAtLocation(const Location: TPoint2D): TScreenObject;
+    // @name gets a pointer to the closest thing in QuadTree to Location.
     function GetQuadTreePointer(QuadTree: TRbwQuadTree;
       const Location: TPoint2D): Pointer;
   protected
+    // @name initializes @link(TRbwQuadtTree.MaxPoints) in
+    // @link(FQuadTree) and @link(FScreenObjectQuadTree)
+    // after calling inherited.
     procedure SetArraySize(const DataSet: TDataArray; Count: Integer); override;
+    // @name initializes
+    // @link(FQuadTree) and @link(FScreenObjectQuadTree)
+    // and calls inherited.
     procedure StoreData(Sender: TObject; const DataSet: TDataArray); override;
+    // @name stores a single data value in
+    // @link(FQuadTree) and @link(FScreenObjectQuadTree)
+    // and in one of the arrays of @link(TCustomPoint2DInterpolator)
     procedure StoreDataValue(Count: Integer; const DataSet: TDataArray;
       APoint: TPoint2D; AScreenObject: TScreenObject; SectionIndex: integer); override;
   public
+    // @name clears
+    // @link(FQuadTree) and @link(FScreenObjectQuadTree).
     procedure Finalize(const DataSet: TDataArray); override;
     // @name is the name of the interpolator displayed to the user.
     class function InterpolatorName: string; override;
+    // @name returns the @link(TRbwDataTypes) valid with @Classname.
     class function ValidReturnTypes: TRbwDataTypes; override;
     // @name gets the boolean value at Location of the closest
     // @link(TScreenObject)
@@ -130,18 +168,25 @@ type
     // that sets TCustom2DInterpolater.@link(TCustom2DInterpolater.DataSet)
     // by interpolation,
     function StringResult(const Location: TPoint2D): string; override;
+    // @name creates
+    // @link(FQuadTree) and @link(FScreenObjectQuadTree).
     constructor Create(AOwner: TComponent); override;
+    // @name returns an annotation based on @link(FLastScreenObject)
     function LastAnnotation: string; override;
   end;
 
   TInvDistSqPoint2DInterpolator = class(TCustomPoint2DInterpolator)
   private
+    // @names stores the locations of the data values
     FLocations: array of TPoint2D;
   protected
+    // @name sets the size of @link(FLocations) and calls inherited.
     procedure SetArraySize(const DataSet: TDataArray; Count: Integer); override;
+    // @name stores a data value and its location.
     procedure StoreDataValue(Count: Integer; const DataSet: TDataArray;
       APoint: TPoint2D; AScreenObject: TScreenObject; SectionIndex: integer); override;
   public
+    // @name clears @link(FLocations) and calls inherited.
     procedure Finalize(const DataSet: TDataArray); override;
     // @name is the name of the interpolator displayed to the user.
     class function InterpolatorName: string; override;
@@ -150,6 +195,37 @@ type
     class function ValidReturnTypes: TRbwDataTypes; override;
     // @name returns the value at location determined by inverse
     // distance squared interpolation.
+    function RealResult(const Location: TPoint2D): real; override;
+  end;
+
+  TArrayLocation = record
+    Dimen1: Integer;
+    Dimen2: Integer;
+  end;
+
+  TInterpolateScreenObject = class(TScreenObject)
+  public
+    property Model: TBaseModel read FModel write FModel;
+  end;
+
+  TPointAverageInterpolator = class(TCustomPoint2DInterpolator)
+  private
+    FValues: TTwoDRealArray;
+    FCount: TTwoDIntegerArray;
+    FInternalScreenObject: TInterpolateScreenObject;
+    FCellList: TCellAssignmentList;
+    function PointToArrayLocation(APoint: TPoint2D): TArrayLocation;
+  protected
+    procedure SetArraySize(const DataSet: TDataArray; Count: Integer); override;
+    procedure StoreDataValue(Count: Integer; const DataSet: TDataArray;
+      APoint: TPoint2D; AScreenObject: TScreenObject; SectionIndex: integer);
+      override;
+    procedure StoreData(Sender: TObject; const DataSet: TDataArray); override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    class function InterpolatorName: string; override;
+    class function ValidReturnTypes: TRbwDataTypes; override;
     function RealResult(const Location: TPoint2D): real; override;
   end;
 
@@ -162,6 +238,8 @@ type
    of the @link(TScreenObject) nearest to the point of interest.)}
   TNearest2DInterpolator = class(TCustomAnisotropicInterpolator)
   private
+    // @name is a TObjectList.
+    // @name stores @link(TScreenObjectSectionStorage)s.
     FStoredLocations: TList;
     // @name is the TExpression used to assign the result of the
     // interpolation.
@@ -173,6 +251,7 @@ type
     // that set the @link(TDataArray)s
     // for this @classname by interpolation.
     FListOfTScreenObjects : TList;
+    // @name is used in @link(LastAnnotation).
     FNearestScreenObject: TScreenObject;
     // @name gets the TExpression for the nearest @link(TScreenObject)
     // that sets TCustom2DInterpolater.@link(TCustom2DInterpolater.DataSet)
@@ -232,7 +311,8 @@ type
 
   TCustomTriangleInterpolator = class(TCustomAnisotropicInterpolator)
   public
-    function ShouldInterpolate: boolean;override;
+    // @name returns @true if interpolation is possible.
+    function ShouldInterpolate: boolean; override;
   end;
 
   TNaturalNeighborInterp = class(TCustomTriangleInterpolator)
@@ -241,6 +321,9 @@ type
     FSinNatNeigh: TNaturalNeighborInterpolatorTripack;
     FCosNatNeigh: TNaturalNeighborInterpolatorTripack;
     procedure StoreData(Sender: TObject; const DataSet: TDataArray);
+  protected
+    procedure SetEpsilonX(const Value: Double); override;
+    procedure SetEpsilonY(const Value: Double); override;
   public
     constructor Create(AOwner: TComponent); override;
     procedure Finalize(const DataSet: TDataArray); override;
@@ -456,7 +539,7 @@ begin
                 AScreenObject.ViewDirection, DataSet.EvaluatedAt);
             end;
           msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-            msModflowFmp, msModflowCfp:
+            msModflowFmp, msModflowCfp, msFootPrint:
             begin
               TopCell := frmGoPhast.Grid.TopContainingCell(ClosestLocation,
                 DataSet.EvaluatedAt);
@@ -634,6 +717,54 @@ constructor TCustomAnisotropicInterpolator.Create(AOwner: TComponent);
 begin
   inherited;
   FAnisotropy := 1;
+end;
+
+destructor TCustomAnisotropicInterpolator.Destroy;
+begin
+  FNodeOrElementQuadTree.Free;
+  inherited;
+end;
+
+procedure TCustomAnisotropicInterpolator.Initialize(const DataSet: TDataArray);
+begin
+  FreeAndNil(FNodeOrElementQuadTree);
+  inherited;
+end;
+
+procedure TCustomAnisotropicInterpolator.InitializeNodeOrElementQuadTree;
+var
+  Mesh: TSutraMesh2D;
+  AnElement: TSutraElement2D;
+  APoint: TPoint2D;
+  Index: Integer;
+  ANode: TSutraNode2D;
+begin
+  if FNodeOrElementQuadTree = nil then
+  begin
+    FNodeOrElementQuadTree := TRbwQuadTree.Create(Nil);
+    InitializeQuadTreeLimits(FNodeOrElementQuadTree, DataSet);
+    Mesh := (FModel as TCustomModel).SutraMesh.Mesh2D;
+    case DataSet.EvaluatedAt of
+      eaBlocks:
+        begin
+          for Index := 0 to Mesh.Elements.Count - 1 do
+          begin
+            AnElement := Mesh.Elements[Index];
+            APoint := AnElement.Center;
+            APoint.y := APoint.y*Anisotropy;
+            FNodeOrElementQuadTree.AddPoint(APoint.x, APoint.y, AnElement);
+          end;
+        end;
+      eaNodes:
+        begin
+          for Index := 0 to Mesh.Nodes.Count - 1 do
+          begin
+            ANode := Mesh.Nodes[Index];
+            FNodeOrElementQuadTree.AddPoint(ANode.x, ANode.y*Anisotropy, ANode);
+          end;
+        end;
+    end;
+  end;
 end;
 
 procedure TCustomAnisotropicInterpolator.InitializeQuadTreeLimits(
@@ -864,6 +995,12 @@ begin
   end;
 end;
 
+function TCustomAnisotropicInterpolator.GetNodeOrElementQuadTree: TRbwQuadTree;
+begin
+  InitializeNodeOrElementQuadTree;
+  result := FNodeOrElementQuadTree;
+end;
+
 procedure TCustomAnisotropicInterpolator.SetAnisotropy(const Value: real);
 begin
   if Value <= 0 then
@@ -1080,6 +1217,9 @@ var
   NearestSegment: TCellElementSegment;
   Model: TCustomModel;
   ErrorFunction: string;
+  APointer: Pointer;
+  AnElement2D: TSutraElement2D;
+  ANode2D: TSutraNode2D;
 begin
   Assert(DataSet <> nil);
   DataSetIndex := AScreenObject.IndexOfDataSet(DataSet);
@@ -1122,7 +1262,7 @@ begin
           AScreenObject.ViewDirection, DataSet.EvaluatedAt);
       end;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         // With MODFLOW, the only 2D data sets are in the top view.
         Assert(DataSet.Orientation = dsoTop);
@@ -1140,8 +1280,34 @@ begin
         Assert(AScreenObject.ViewDirection = vdTop);
         TopCell := Model.Mesh.TopContainingCellOrElement(Location,
           DataSet.EvaluatedAt);
-        Cell.Col := TopCell.Col;
-        Cell.Row := TopCell.Row;
+        if TopCell.Col < 0 then
+        begin
+//          APoint := Location;
+//          APoint.Y := APoint.Y*Anisotropy;
+          APointer := NodeOrElementQuadTree.NearestPointsFirstData(
+            Location.X, Location.y*Anisotropy);
+          case DataSet.EvaluatedAt of
+            eaBlocks:
+              begin
+                AnElement2D := APointer;
+                Cell.Col := AnElement2D.ElementNumber;
+                Cell.Row := 0;
+              end;
+            eaNodes:
+              begin
+                ANode2D := APointer;
+                Cell.Col := ANode2D.Number;
+                Cell.Row := 0;
+              end;
+            else
+              Assert(False);
+          end;
+        end
+        else
+        begin
+          Cell.Col := TopCell.Col;
+          Cell.Row := TopCell.Row;
+        end;
         Cell.Lay := 0;
       end;
     else
@@ -1150,6 +1316,7 @@ begin
   if Cell.Col < 0 then
   begin
     Cell.Col := 0;
+//    Assert(False);
   end;
   if Cell.Row < 0 then
   begin
@@ -1157,7 +1324,7 @@ begin
   end;
   case Model.ModelSelection of
     msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         case DataSet.EvaluatedAt of
           eaBlocks:
@@ -2309,6 +2476,40 @@ begin
 
 end;
 
+procedure TNaturalNeighborInterp.SetEpsilonX(const Value: Double);
+begin
+  inherited;
+  if FNatNeigh <> nil then
+  begin
+    FNatNeigh.EpsilonX := EpsilonX;
+  end;
+  if FSinNatNeigh <> nil then
+  begin
+    FSinNatNeigh.EpsilonX := EpsilonX;
+  end;
+  if FCosNatNeigh <> nil then
+  begin
+    FCosNatNeigh.EpsilonX := EpsilonX;
+  end;
+end;
+
+procedure TNaturalNeighborInterp.SetEpsilonY(const Value: Double);
+begin
+  inherited;
+  if FNatNeigh <> nil then
+  begin
+    FNatNeigh.EpsilonY := EpsilonY;
+  end;
+  if FSinNatNeigh <> nil then
+  begin
+    FSinNatNeigh.EpsilonY := EpsilonY;
+  end;
+  if FCosNatNeigh <> nil then
+  begin
+    FCosNatNeigh.EpsilonY := EpsilonY;
+  end;
+end;
+
 procedure TNaturalNeighborInterp.StoreData(Sender: TObject;
   const DataSet: TDataArray);
 var  
@@ -2478,20 +2679,228 @@ begin
       begin
         FNatNeigh := TNaturalNeighborInterpolatorTripack.Create(
           XArray, YArray, ZArray, MinX, MinY, MaxX, MaxY);
+        FNatNeigh.EpsilonX := EpsilonX;
+        FNatNeigh.EpsilonY := EpsilonY;
       end;
     atDegrees, atRadians:
       begin
         FSinNatNeigh := TNaturalNeighborInterpolatorTripack.Create(
           XArray, YArray, ZSinArray, MinX, MinY, MaxX, MaxY);
+        FSinNatNeigh.EpsilonX := EpsilonX;
+        FSinNatNeigh.EpsilonY := EpsilonY;
         FCosNatNeigh := TNaturalNeighborInterpolatorTripack.Create(
           XArray, YArray, ZCosArray, MinX, MinY, MaxX, MaxY);
+        FCosNatNeigh.EpsilonX := EpsilonX;
+        FCosNatNeigh.EpsilonY := EpsilonY;
       end;
     else Assert(False);
   end;
-  
+
 end;
 
 class function TNaturalNeighborInterp.ValidReturnTypes: TRbwDataTypes;
+begin
+  result := [rdtDouble];
+end;
+
+{ TPointAverageInterpolator }
+
+constructor TPointAverageInterpolator.Create(AOwner: TComponent);
+var
+  APoint: TPoint2D;
+begin
+  inherited;
+  FInternalScreenObject := TInterpolateScreenObject.Create(nil);
+  FInternalScreenObject.ElevationCount := ecZero;
+  APoint.x := 0;
+  APoint.y := 0;
+  FInternalScreenObject.AddPoint(APoint, True);
+  FInternalScreenObject.SetValuesOfIntersectedCells := true;
+  FInternalScreenObject.Model := frmGoPhast.PhastModel;
+  FCellList := TCellAssignmentList.Create
+end;
+
+destructor TPointAverageInterpolator.Destroy;
+begin
+  FCellList.Free;
+  FInternalScreenObject.Free;
+  inherited;
+end;
+
+class function TPointAverageInterpolator.InterpolatorName: string;
+begin
+  result := 'Point Average';
+end;
+
+function TPointAverageInterpolator.PointToArrayLocation(
+  APoint: TPoint2D): TArrayLocation;
+var
+  AGrid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
+  ACell: TCellAssignment;
+begin
+  FCellList.Clear;
+  FInternalScreenObject.Points[0] := APoint;
+  AGrid := (FModel as TCustomModel).Grid;
+  if AGrid = nil then
+  begin
+    Mesh := (FModel as TCustomModel).Mesh;
+    FInternalScreenObject.GetCellsToAssign(Mesh, '0', nil, DataSet,
+      FCellList, alAll, FModel);
+  end
+  else
+  begin
+    FInternalScreenObject.GetCellsToAssign(AGrid, '0', nil, DataSet,
+      FCellList, alAll, FModel);
+  end;
+  if FCellList.Count > 0 then
+  begin
+    Assert(FCellList.Count = 1);
+    ACell := FCellList[0];
+    case FInternalScreenObject.ViewDirection of
+      vdTop:
+        begin
+          Result.Dimen1 := ACell.Row;
+          Result.Dimen2 := ACell.Column;
+        end;
+      vdFront:
+        begin
+          Result.Dimen1 := ACell.Layer;
+          Result.Dimen2 := ACell.Column;
+        end;
+      vdSide:
+        begin
+          Result.Dimen1 := ACell.Layer;
+          Result.Dimen2 := ACell.Row;
+        end;
+      else Assert(False);
+    end;
+  end
+  else
+  begin
+    Result.Dimen1 := -1;
+    Result.Dimen2 := -1;
+  end;
+end;
+
+function TPointAverageInterpolator.RealResult(const Location: TPoint2D): real;
+var
+  ALocation: TArrayLocation;
+  PointCount: Integer;
+begin
+  ALocation := PointToArrayLocation(Location);
+  if ALocation.Dimen1 >= 0 then
+  begin
+    PointCount := FCount[ALocation.Dimen1, ALocation.Dimen2];
+    if PointCount > 0 then
+    begin
+      result := FValues[ALocation.Dimen1, ALocation.Dimen2]/PointCount;
+    end
+    else
+    begin
+      result := 0;
+    end;
+  end
+  else
+  begin
+    result := 0;
+  end;
+end;
+
+procedure TPointAverageInterpolator.SetArraySize(const DataSet: TDataArray;
+  Count: Integer);
+var
+  OuterIndex: Integer;
+  InnerIndex: Integer;
+begin
+  case DataSet.EvaluatedAt of
+    eaBlocks:
+      begin
+        case DataSet.Orientation of
+          dsoTop:
+            begin
+              SetLength(FValues, DataSet.RowCount, DataSet.ColumnCount);
+              SetLength(FCount, DataSet.RowCount, DataSet.ColumnCount);
+            end;
+          dsoFront:
+            begin
+              SetLength(FValues, DataSet.LayerCount, DataSet.ColumnCount);
+              SetLength(FCount, DataSet.LayerCount, DataSet.ColumnCount);
+            end;
+          dsoSide:
+            begin
+              SetLength(FValues, DataSet.LayerCount, DataSet.RowCount);
+              SetLength(FCount, DataSet.LayerCount, DataSet.RowCount);
+            end;
+          else Assert(False);
+        end;
+      end;
+    eaNodes:
+      begin
+        case DataSet.Orientation of
+          dsoTop:
+            begin
+              SetLength(FValues, DataSet.RowCount+1, DataSet.ColumnCount+1);
+              SetLength(FCount, DataSet.RowCount+1, DataSet.ColumnCount+1);
+            end;
+          dsoFront:
+            begin
+              SetLength(FValues, DataSet.LayerCount+1, DataSet.ColumnCount+1);
+              SetLength(FCount, DataSet.LayerCount+1, DataSet.ColumnCount+1);
+            end;
+          dsoSide:
+            begin
+              SetLength(FValues, DataSet.LayerCount+1, DataSet.RowCount+1);
+              SetLength(FCount, DataSet.LayerCount+1, DataSet.RowCount+1);
+            end;
+          else Assert(False);
+        end;
+      end;
+  end;
+  for OuterIndex := 0 to Length(FValues) - 1 do
+  begin
+    for InnerIndex := 0 to Length(FValues[0])  - 1 do
+    begin
+      FValues[OuterIndex, InnerIndex] := 0;
+      FCount[OuterIndex, InnerIndex] := 0;
+    end;
+  end;
+end;
+
+procedure TPointAverageInterpolator.StoreData(Sender: TObject;
+  const DataSet: TDataArray);
+begin
+  case DataSet.Orientation of
+    dsoTop: FInternalScreenObject.ViewDirection := vdTop;
+    dsoFront: FInternalScreenObject.ViewDirection := vdFront;
+    dsoSide: FInternalScreenObject.ViewDirection := vdSide;
+    else Assert(False);
+  end;
+  FInternalScreenObject.EvaluatedAt := DataSet.EvaluatedAt;
+//  FInternalScreenObject.Model := DataSet.Model;
+  inherited;
+end;
+
+procedure TPointAverageInterpolator.StoreDataValue(Count: Integer;
+  const DataSet: TDataArray; APoint: TPoint2D; AScreenObject: TScreenObject;
+  SectionIndex: integer);
+var
+  ALocation: TArrayLocation;
+  Expression: TExpression;
+begin
+  ALocation := PointToArrayLocation(APoint);
+  if ALocation.Dimen1 >= 0 then
+  begin
+    InitializeVariablesAndExpression(APoint, AScreenObject, SectionIndex, Expression);
+    Assert(DataSet.DataType = rdtDouble);
+    FValues[ALocation.Dimen1, ALocation.Dimen2] :=
+      FValues[ALocation.Dimen1, ALocation.Dimen2] + Expression.DoubleResult;
+    FCount[ALocation.Dimen1, ALocation.Dimen2] :=
+      FCount[ALocation.Dimen1, ALocation.Dimen2] + 1;
+  end;
+end;
+
+class function TPointAverageInterpolator.ValidReturnTypes: TRbwDataTypes;
 begin
   result := [rdtDouble];
 end;
@@ -2504,5 +2913,6 @@ initialization
   RegisterClass(TFittedSurfaceIntepolator);
   RegisterClass(TInvDistSqPoint2DInterpolator);
   RegisterClass(TNaturalNeighborInterp);
+  RegisterClass(TPointAverageInterpolator);
 
 end.

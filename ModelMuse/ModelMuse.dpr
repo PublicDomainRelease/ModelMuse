@@ -560,7 +560,22 @@ uses
   frmFarmUnit in 'frmFarmUnit.pas' {frmFarm},
   ModflowFmpFarmIdUnit in 'ModflowFmpFarmIdUnit.pas',
   frameScreenObjectFarmIDUnit in 'frameScreenObjectFarmIDUnit.pas' {frameScreenObjectFarmID: TFrame},
-  frmBudgetPrecisionQueryUnit in 'frmBudgetPrecisionQueryUnit.pas' {frmBudgetPrecisionQuery};
+  frmBudgetPrecisionQueryUnit in 'frmBudgetPrecisionQueryUnit.pas' {frmBudgetPrecisionQuery},
+  RasterValuesAlongSegmentsUnit in 'RasterValuesAlongSegmentsUnit.pas',
+  frmLinkRasterUnit in 'frmLinkRasterUnit.pas' {frmLinkRaster},
+  LinkedRastersUnit in 'LinkedRastersUnit.pas',
+  frmTimeUnitsConverterUnit in 'frmTimeUnitsConverterUnit.pas' {frmTimeUnitsConverter},
+  frmEditFeatureFormulaUnit in 'frmEditFeatureFormulaUnit.pas' {frmEditFeatureFormula},
+  FootprintGridUnit in 'FootprintGridUnit.pas',
+  FootprintBoundary in 'FootprintBoundary.pas',
+  frameScreenObjectFootprintWellUnit in 'frameScreenObjectFootprintWellUnit.pas' {frameScreenObjectFootprintWell: TFrame},
+  FootprintPropertiesUnit in 'FootprintPropertiesUnit.pas',
+  frmFootprintPropertiesUnit in 'frmFootprintPropertiesUnit.pas' {frmFootprintProperties},
+  FootprintFileUnit in '..\Footprint\FootprintFileUnit.pas',
+  FootPrintUtilities in '..\Footprint\FootPrintUtilities.pas',
+  frmFootprintLocationUnit in 'frmFootprintLocationUnit.pas' {frmFootprintLocation},
+  frmImportFootprintResultsUnit in 'frmImportFootprintResultsUnit.pas' {frmImportFootprintResults},
+  frmRunFootprintUnit in 'frmRunFootprintUnit.pas' {frmRunFootprint};
 
 {$R *.res}
 {#BACKUP ModelMuse.cfg}

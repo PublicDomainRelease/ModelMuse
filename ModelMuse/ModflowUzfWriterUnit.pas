@@ -78,6 +78,9 @@ resourcestring
 //  StrWritingDataSet8 = '  Writing Data Set 8.';
   StrWritingDataSets9to16 = '  Writing Data Sets 9 to 16.';
   StrWritingStressP = '    Writing Stress Period %d';
+  StrInvalidS = 'Invalid %s';
+  StrWhenTheUZFPackage = 'When the UZF package is used, %s should be greater' +
+  ' than zero for any cells where unsaturated flow should occur.';
 
 { TModflowUzfWriter }
 
@@ -486,8 +489,32 @@ end;
 procedure TModflowUzfWriter.WriteDataSet2;
 var
   IUZFBND: TDataArray;
+  RowIndex: Integer;
+  ColIndex: Integer;
+  OK: Boolean;
 begin
   IUZFBND := Model.DataArrayManager.GetDataSetByName(StrUzfLayer);
+  OK := False;
+  for RowIndex := 0 to IUZFBND.RowCount - 1 do
+  begin
+    for ColIndex := 0 to IUZFBND.ColumnCount - 1 do
+    begin
+      OK := IUZFBND.IntegerData[0,RowIndex,ColIndex] > 0;
+      if OK then
+      begin
+        Break;
+      end;
+    end;
+    if OK then
+    begin
+      Break;
+    end;
+  end;
+  if not OK then
+  begin
+    frmErrorsAndWarnings.AddError(Model, Format(StrInvalidS, [IUZFBND.DisplayName]),
+      Format(StrWhenTheUZFPackage, [IUZFBND.DisplayName]));
+  end;
   WriteArray(IUZFBND, 0, 'Data Set 2: IUZFBND', StrNoValueAssigned);
 end;
 
@@ -624,6 +651,7 @@ procedure TModflowUzfWriter.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
   GageStart: integer;
+  IUZFBND: TDataArray;
 begin
   if not Package.IsSelected then
   begin
@@ -646,6 +674,8 @@ begin
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheETDemandRateI);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheETExtinctionDe);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheETExtinctionWa);
+  IUZFBND := Model.DataArrayManager.GetDataSetByName(StrUzfLayer);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, Format(StrInvalidS, [IUZFBND.DisplayName]));
 
   NameOfFile := FileName(AFileName);
   WriteToNameFile(StrUZF, Model.UnitNumbers.UnitNumber(StrUZF), NameOfFile, foInput);

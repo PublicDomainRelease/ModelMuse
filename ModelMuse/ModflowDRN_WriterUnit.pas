@@ -62,10 +62,11 @@ resourcestring
   StrDrainElevationIsB = 'Drain elevation is below the bottom of the cell at' +
   ' the following locations.';
   StrLargeDrainElevatioDetailed = 'Large drain elevation gradient between %0:s and %' +
-  '1:s.';
+  '1:s. Amount: %2:g';
   StrLargeDrainElevatio = 'Large drain elevation gradient';
   StrHighDrainConductan = 'High Drain conductance compared to the cell-to-cell '
   + 'conductance may cause numerical difficulties';
+  StrNegativeOrZeroDrainConductance = 'Negative Drain conductance';
 //  StrLayerRowColumn = 'Layer, Row Column = %0:d, %1:d, %2:d';
 
 { TModflowDRN_Writer }
@@ -87,6 +88,7 @@ var
   CellBottomElevation: Real;
   AqCond: Double;
   Ratio: Extended;
+  Delta: double;
   procedure CheckGradient;
   var
     DeltaDrnElevation: double;
@@ -117,7 +119,7 @@ var
         Cell2 := Format(StrLayerRowColObject, [
           OtherCell.Layer+1, OtherCell.Row+1, OtherCell.Column+1, ScreenObject.Name]);
         WarningMessage := Format(StrLargeDrainElevatioDetailed,
-          [Cell1, Cell2]);
+          [Cell1, Cell2, Gradient]);
         frmErrorsAndWarnings.AddWarning(Model, StrLargeDrainElevatio,
           WarningMessage, ScreenObject);
       end;
@@ -140,19 +142,20 @@ begin
   begin
     if (Drn_Cell.Elevation < CellBottomElevation) then
     begin
+      Delta := CellBottomElevation - Drn_Cell.Elevation;
       ScreenObject := Drn_Cell.ScreenObject as TScreenObject;
       if Model.ModelSelection = msModflowNWT then
       begin
         frmErrorsAndWarnings.AddError(Model, StrDrainElevationIsB,
-          Format(StrLayerRowColObject, [
-          Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name]),
+          Format(StrLayerRowColObjectAmount, [
+          Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name, Delta]),
           ScreenObject);
       end
       else
       begin
         frmErrorsAndWarnings.AddWarning(Model, StrDrainElevationIsB,
-          Format(StrLayerRowColObject, [
-          Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name]),
+          Format(StrLayerRowColObjectAmount, [
+          Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name, Delta]),
           ScreenObject);
       end;
     end;
@@ -164,10 +167,18 @@ begin
       begin
         ScreenObject := Drn_Cell.ScreenObject as TScreenObject;
         frmErrorsAndWarnings.AddWarning(Model,StrHighDrainConductan,
-          Format(StrLayerRowColObject, [
-          Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name]),
+          Format(StrLayerRowColObjectAmount, [
+          Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name, Ratio]),
           ScreenObject);
       end;
+    end
+    else
+    begin
+      ScreenObject := Drn_Cell.ScreenObject as TScreenObject;
+      frmErrorsAndWarnings.AddWarning(Model,StrNegativeOrZeroDrainConductance,
+        Format(StrLayerRowColObject, [
+        Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name]),
+        ScreenObject);
     end;
   end;
   if Drn_Cell.Row > 0 then
@@ -338,6 +349,7 @@ begin
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrDrainElevationIsB);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrLargeDrainElevatio);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, StrHighDrainConductan);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrNegativeOrZeroDrainConductance);
     if not Package.IsSelected then
     begin
       Exit
@@ -452,6 +464,7 @@ var
   CellIndex: Integer;
 begin
   // Data set 4b
+  InitializeCells;
   for CellIndex := 0 to CellList.Count - 1 do
   begin
     Cell := CellList[CellIndex] as TDrn_Cell;

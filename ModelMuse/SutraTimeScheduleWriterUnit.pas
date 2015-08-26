@@ -208,7 +208,7 @@ begin
   FAllTimes := TRealList.Create;
   FCustomSchedules := TScreenObjectScheduleList.Create;
   FItemDictionary := TTimeValuesDictionary.Create([doOwnsValues]);
-    FScheduleList := TTimeValuesList.Create;
+  FScheduleList := TTimeValuesList.Create;
   try
     Evaluate;
 

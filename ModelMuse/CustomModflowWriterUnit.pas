@@ -794,6 +794,7 @@ resourcestring
   'have the correct observation type selected.';
   StrLayerRowCol = 'Layer, Row, Col = [%0:d, %1:d, %2:d]';
   StrLayerRowColObject = 'Layer, Row, Col = [%0:d, %1:d, %2:d] defined by the object %3:s';
+  StrLayerRowColObjectAmount = 'Layer, Row, Col = [%0:d, %1:d, %2:d] defined by the object %3:s. Amount: %4:g.';
   StrEvaluatingS = '  Evaluating %s';
   StrEvaluatingSData = 'Evaluating %s data.';
   StrWritingStressPer = '  Writing Stress Period %d';
@@ -851,6 +852,10 @@ resourcestring
   StrNoParametersAreBe = 'No parameters are being used in one or more stress' +
   ' periods in the %s package.';
   StrNoValuesAssignedT = 'No values assigned to the following data sets';
+  StrMissingObservationObjects = 'In the %s package, no objects are part of ' +
+  'the following observations.';
+  StrOneOrMoreBoundari = 'One or more boundaries in the %s are in inactive c' +
+  'ells';
 
 var
 //  NameFile: TStringList;
@@ -2443,8 +2448,7 @@ begin
   if not ActiveDataArray.BooleanData[ValueCell.Layer,
     ValueCell.Row, ValueCell.Column] then
   begin
-    WarningRoot := 'One or more boundaries in the ' + PackageName
-      + ' are in inactive cells';
+    WarningRoot := Format(StrOneOrMoreBoundari, [PackageName]);
     if WarningRoot = FWarningRoot then
     begin
       WarningRoot := FWarningRoot;
@@ -4566,6 +4570,7 @@ var
   FluxObsCountWarning: string;
   DataSet1: string;
   PrintObservations: Boolean;
+  MissingObservationObjectsErrorMessage: string;
 begin
   // if the package is not selected, quit.
   if not ObservationPackage.IsSelected then
@@ -4585,6 +4590,9 @@ begin
     FluxObsCountWarning := Format(StrInSNoFlowObser,
       [ObservationPackage.PackageIdentifier]);
     frmErrorsAndWarnings.RemoveWarningGroup(Model, FluxObsCountWarning);
+    MissingObservationObjectsErrorMessage :=
+      Format(StrMissingObservationObjects, [PackageAbbreviation]);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, MissingObservationObjectsErrorMessage);
 
     // count the number of cell groups for which flux observations are listed
     NQ_Pkg := 0;
@@ -4651,6 +4659,12 @@ begin
         end;
         if Purpose = ObservationGroup.Purpose then
         begin
+          if ObservationGroup.ObservationFactors.Count = 0 then
+          begin
+            frmErrorsAndWarnings.AddError(Model,
+              MissingObservationObjectsErrorMessage,
+              ObservationGroup.ObservationName);
+          end;
           DataSet4 := TStringList.Create;
           try
             WriteObservationDataSet4(ObservationGroup, DataSet4);

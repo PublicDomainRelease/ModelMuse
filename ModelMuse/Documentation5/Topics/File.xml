@@ -8,7 +8,7 @@
     </header>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The menu items under File are listed in table 3. &#160;The commands under this menu have to do with opening, saving, importing or exporting files. &#160;Many of the choices under File|Import refer to features of data sets and objects that are described under &#160;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="Data_Sets_Dialog_Box" styleclass="Normal" translate="true">Data Sets Dialog Box</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Object_Properties_Dialog_Box" styleclass="Normal" translate="true">Object Properties Dialog Box</link><text styleclass="Normal" translate="true">.</text></para>
     <para styleclass="Table Caption"><text styleclass="Table Caption" translate="true">Table 3. File Menu</text></para>
-    <para styleclass="Normal" style="text-align:center;"><table rowcount="49" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Normal" style="text-align:center;"><table rowcount="50" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td colspan="2" style="width:626px;">
           <para styleclass="Normal"><line style="height:1px; color:#000000;" /></para>
@@ -53,6 +53,14 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="width:221px;">
+          <para styleclass="Table Header" style="text-align:left;"><conditional-text type="IF" value="FOOTPRINT"/><text styleclass="Table Header" translate="true">New|New FootPrint Project</text><conditional-text type="END"/></para>
+        </td>
+        <td style="width:405px;">
+          <para styleclass="Table Cell"><conditional-text type="IF" value="FOOTPRINT"/><text styleclass="Table Cell" translate="true">Creates a new well footprint project. &#160;</text><conditional-text type="END"/></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:221px;">
           <para styleclass="Table Header" style="text-align:left;"><image src="Open.png" scale="100.00%" styleclass="Table Header"><title translate="true">Open button</title></image><text styleclass="Table Header" translate="true"> Open </text></para>
         </td>
         <td style="width:405px;">
@@ -80,7 +88,7 @@
           <para styleclass="Normal"><image src="ImportModelResults.bmp" scale="100.00%" styleclass="Image Caption"><title translate="true">Import and display model results button</title></image><text styleclass="Image Caption" translate="true">&#32;</text><text styleclass="Table Header" translate="true">Import|Model Results...</text></para>
         </td>
         <td style="width:405px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Import, head, drawdown, or flows from a MODFLOW or SUTRA model into ModelMuse and optionally color the grid using one of the imported data sets. For MODFLOW models, see </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Select_Results_to_Import_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Select Model Results to Import</link><text styleclass="Table Cell" translate="true"> dialog box. For SUTRA models see </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Import_SUTRA_Model_Results_Dia" styleclass="Normal" style="font-weight:bold;" translate="true">Import SUTRA Model Results</link><text styleclass="Normal" translate="true"> dialog box.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Import, head, drawdown, or flows from a MODFLOW</text><conditional-text type="IF" value="FOOTPRINT"/><text styleclass="Table Cell" translate="true">,</text><conditional-text type="ELSE"/><text styleclass="Table Cell" translate="true"> or</text><conditional-text type="END"/><text styleclass="Table Cell" translate="true"> SUTRA</text><conditional-text type="IF" value="FOOTPRINT"/><text styleclass="Table Cell" translate="true">, or Footprint</text><conditional-text type="END"/><text styleclass="Table Cell" translate="true"> model into ModelMuse and optionally color the grid using one of the imported data sets. For MODFLOW models, see </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Select_Results_to_Import_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Select Model Results to Import</link><text styleclass="Table Cell" translate="true"> dialog box. For SUTRA models see </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Import_SUTRA_Model_Results_Dia" styleclass="Normal" style="font-weight:bold;" translate="true">Import SUTRA Model Results</link><text styleclass="Normal" translate="true"> dialog box. </text><conditional-text type="IF" value="FOOTPRINT"/><text styleclass="Normal" translate="true">For Footprint projects see </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Import_Footprint_Results" styleclass="Strong" translate="true">Import Footprint Results</link><text styleclass="Normal" translate="true"> dialog box.</text><conditional-text type="END"/></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -133,10 +141,10 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="width:221px;">
-          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Import|Gridded Data...</text></para>
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Import|Gridded Data.../Import|Mesh Data...</text></para>
         </td>
         <td style="width:405px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Import data at locations specified by column, row, and layer numbers. &#160;See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Import_Gridded_Data_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Import Gridded Data</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Import data at locations specified by column, row, and layer numbers or at specific node or element numbers. &#160;See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Import_Gridded_Data_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Import Gridded/Mesh Data</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">

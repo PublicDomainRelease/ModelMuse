@@ -87,6 +87,8 @@ type
     procedure seRow2Changed(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure seColCountChange(Sender: TObject);
+    procedure seRowCountChange(Sender: TObject);
 
   private
     FGettingData: Boolean;
@@ -212,66 +214,74 @@ procedure TfrmSubdivide.GetData(const ACol, ARow, ALayer: integer);
 begin
   FGettingData := True;
   try
-  if ACol < 0 then
-  begin
-    seCol1.Enabled := False;
-    seCol2.Enabled := False;
-    seColCount.Enabled := False;
-    seCol1.MinValue := 0;
-    seCol2.MinValue := 0;
-    seCol1.Value := 0;
-    seCol2.Value := 0;
-  end
-  else
-  begin
-    seCol1.MaxValue := frmGoPhast.Grid.ColumnCount;
-    seCol2.MaxValue := seCol1.MaxValue;
-    seCol1.Value := SubdivideGridTool.FirstSubdivideColumn + 1;
-    seCol2.Value := ACol + 1;
-  end;
+    if ACol < 0 then
+    begin
+      seCol1.Enabled := False;
+      seCol2.Enabled := False;
+      seColCount.Enabled := False;
+      seCol1.MinValue := 0;
+      seCol2.MinValue := 0;
+      seCol1.Value := 0;
+      seCol2.Value := 0;
+    end
+    else
+    begin
+      seCol1.MaxValue := frmGoPhast.Grid.ColumnCount;
+      seCol2.MaxValue := seCol1.MaxValue;
+      seCol1.Value := SubdivideGridTool.FirstSubdivideColumn + 1;
+      seCol2.Value := ACol + 1;
+    end;
 
-  if ARow < 0 then
-  begin
-    seRow1.Enabled := False;
-    seRow2.Enabled := False;
-    seRowCount.Enabled := False;
-    seRow1.MinValue := 0;
-    seRow2.MinValue := 0;
-    seRow1.Value := 0;
-    seRow2.Value := 0;
-  end
-  else
-  begin
-    seRow1.MaxValue := frmGoPhast.Grid.RowCount;
-    seRow2.MaxValue := seRow1.MaxValue;
-    seRow1.Value := SubdivideGridTool.FirstSubdivideRow + 1;
-    seRow2.Value := ARow + 1;
-  end;
+    if ARow < 0 then
+    begin
+      seRow1.Enabled := False;
+      seRow2.Enabled := False;
+      seRowCount.Enabled := False;
+      seRow1.MinValue := 0;
+      seRow2.MinValue := 0;
+      seRow1.Value := 0;
+      seRow2.Value := 0;
+    end
+    else
+    begin
+      seRow1.MaxValue := frmGoPhast.Grid.RowCount;
+      seRow2.MaxValue := seRow1.MaxValue;
+      seRow1.Value := SubdivideGridTool.FirstSubdivideRow + 1;
+      seRow2.Value := ARow + 1;
+    end;
 
-  if ALayer < 0 then
-  begin
-    seLayer1.Enabled := False;
-    seLayer2.Enabled := False;
-    seLayerCount.Enabled := False;
-    seLayer1.MinValue := 0;
-    seLayer2.MinValue := 0;
-    seLayer1.Value := 0;
-    seLayer2.Value := 0;
-  end
-  else
-  begin
-    seLayer1.MaxValue := frmGoPhast.Grid.LayerCount;
-    seLayer2.MaxValue := seLayer1.MaxValue;
-    seLayer1.Value := SubdivideGridTool.FirstSubdivideLayer + 1;
-    seLayer2.Value := ALayer + 1;
-  end;
+    if ALayer < 0 then
+    begin
+      seLayer1.Enabled := False;
+      seLayer2.Enabled := False;
+      seLayerCount.Enabled := False;
+      seLayer1.MinValue := 0;
+      seLayer2.MinValue := 0;
+      seLayer1.Value := 0;
+      seLayer2.Value := 0;
+    end
+    else
+    begin
+      seLayer1.MaxValue := frmGoPhast.Grid.LayerCount;
+      seLayer2.MaxValue := seLayer1.MaxValue;
+      seLayer1.Value := SubdivideGridTool.FirstSubdivideLayer + 1;
+      seLayer2.Value := ALayer + 1;
+    end;
 
-  if frmGoPhast.PhastModel.ModelSelection <> msPhast then
-  begin
-    seLayer1.Enabled := False;
-    seLayer2.Enabled := False;
-    seLayerCount.Enabled := False;
-  end;
+    if frmGoPhast.ModelSelection <> msPhast then
+    begin
+      seLayer1.Enabled := False;
+      seLayer2.Enabled := False;
+      seLayerCount.Enabled := False;
+    end;
+
+    if frmGoPhast.ModelSelection = msFootPrint then
+    begin
+      seCol1.MaxValue := 1;
+      seRow1.MaxValue := 1;
+      seCol2.MinValue := seCol2.MaxValue;
+      seRow2.MinValue := seRow2.MaxValue;
+    end;
   finally
     FGettingData := False;
   end;
@@ -402,6 +412,18 @@ begin
   end;
 end;
 
+procedure TfrmSubdivide.seColCountChange(Sender: TObject);
+begin
+  inherited;
+  if frmGoPhast.ModelSelection = msFootPrint then
+  begin
+    if seRowCount.AsInteger <> seColCount.AsInteger then
+    begin
+      seRowCount.AsInteger := seColCount.AsInteger;
+    end;
+  end;
+end;
+
 procedure TfrmSubdivide.seLayer2Changed(Sender: TObject);
 begin
   inherited;
@@ -435,6 +457,18 @@ begin
     SubdivideGridTool.Layer32.Changed;
     frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
     frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
+  end;
+end;
+
+procedure TfrmSubdivide.seRowCountChange(Sender: TObject);
+begin
+  inherited;
+  if frmGoPhast.ModelSelection = msFootPrint then
+  begin
+    if seRowCount.AsInteger <> seColCount.AsInteger then
+    begin
+      seColCount.AsInteger := seRowCount.AsInteger;
+    end;
   end;
 end;
 
@@ -571,7 +605,7 @@ begin
         result := StrClickOnGridAndDr;
       end;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         result := StrClickOnGridAndDrCell;
       end;

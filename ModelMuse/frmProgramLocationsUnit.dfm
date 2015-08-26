@@ -4,9 +4,8 @@ inherited frmProgramLocations: TfrmProgramLocations
   Caption = 'MODFLOW Program Locations'
   ClientHeight = 586
   ClientWidth = 623
-  ExplicitTop = -117
-  ExplicitWidth = 639
-  ExplicitHeight = 624
+  ExplicitWidth = 641
+  ExplicitHeight = 631
   PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
@@ -79,12 +78,11 @@ inherited frmProgramLocations: TfrmProgramLocations
       object htlblModflow: TJvHTLabel
         Left = 15
         Top = 25
-        Width = 478
+        Width = 355
         Height = 19
         Caption = 
-          '<a href="http://water.usgs.gov/nrp/gwsoftware/modflow2005/modflo' +
-          'w2005.html">http://water.usgs.gov/nrp/gwsoftware/modflow2005/mod' +
-          'flow2005.html</a>'
+          '<a href="http://water.usgs.gov/ogw/modflow/MODFLOW.html">http://' +
+          'water.usgs.gov/ogw/modflow/MODFLOW.html</a>'
       end
       object fedModflow: TJvFilenameEdit
         Left = 15
@@ -120,12 +118,11 @@ inherited frmProgramLocations: TfrmProgramLocations
       object JvHTLabel1: TJvHTLabel
         Left = 15
         Top = 25
-        Width = 444
+        Width = 262
         Height = 19
         Caption = 
-          '<a href="http://water.usgs.gov/nrp/gwsoftware/modflow2005_lgr/mf' +
-          'lgr.html">http://water.usgs.gov/nrp/gwsoftware/modflow2005_lgr/m' +
-          'flgr.html</a>'
+          '<a href="http://water.usgs.gov/ogw/modflow-lgr/">http://water.us' +
+          'gs.gov/ogw/modflow-lgr/</a>'
       end
       object fedModflowLgr: TJvFilenameEdit
         Left = 15
@@ -161,12 +158,11 @@ inherited frmProgramLocations: TfrmProgramLocations
       object jvhtlblMfLgr2: TJvHTLabel
         Left = 15
         Top = 25
-        Width = 444
+        Width = 262
         Height = 19
         Caption = 
-          '<a href="http://water.usgs.gov/nrp/gwsoftware/modflow2005_lgr/mf' +
-          'lgr.html">http://water.usgs.gov/nrp/gwsoftware/modflow2005_lgr/m' +
-          'flgr.html</a>'
+          '<a href="http://water.usgs.gov/ogw/modflow-lgr/">http://water.us' +
+          'gs.gov/ogw/modflow-lgr/</a>'
       end
       object fedModflowLgr2: TJvFilenameEdit
         Left = 15
@@ -202,12 +198,11 @@ inherited frmProgramLocations: TfrmProgramLocations
       object htlblModflowNWT: TJvHTLabel
         Left = 15
         Top = 25
-        Width = 464
+        Width = 268
         Height = 19
         Caption = 
-          '<a href="http://water.usgs.gov/nrp/gwsoftware/modflow_nwt/Modflo' +
-          'wNwt.html">http://water.usgs.gov/nrp/gwsoftware/modflow_nwt/Modf' +
-          'lowNwt.html</a>'
+          '<a href="http://water.usgs.gov/ogw/modflow-nwt/">http://water.us' +
+          'gs.gov/ogw/modflow-nwt/</a>'
       end
       object fedModflowNWT: TJvFilenameEdit
         Left = 15
@@ -224,7 +219,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object jvrltModpath: TJvRollOut
       Left = 1
-      Top = 151
+      Top = 195
       Width = 621
       Height = 22
       Align = alTop
@@ -233,6 +228,7 @@ inherited frmProgramLocations: TfrmProgramLocations
       ImageOptions.Images = ilShowHide
       TabOrder = 4
       OnExpand = jvrltExpand
+      ExplicitTop = 151
       DesignSize = (
         621
         22)
@@ -265,7 +261,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object jvrltZoneBudget: TJvRollOut
       Left = 1
-      Top = 173
+      Top = 217
       Width = 621
       Height = 22
       Align = alTop
@@ -274,6 +270,7 @@ inherited frmProgramLocations: TfrmProgramLocations
       ImageOptions.Images = ilShowHide
       TabOrder = 5
       OnExpand = jvrltExpand
+      ExplicitTop = 173
       DesignSize = (
         621
         22)
@@ -306,7 +303,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object jvrltMt3dms: TJvRollOut
       Left = 1
-      Top = 195
+      Top = 239
       Width = 621
       Height = 22
       Align = alTop
@@ -315,6 +312,7 @@ inherited frmProgramLocations: TfrmProgramLocations
       ImageOptions.Images = ilShowHide
       TabOrder = 6
       OnExpand = jvrltExpand
+      ExplicitTop = 195
       DesignSize = (
         621
         22)
@@ -344,7 +342,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object jvrltModelMate: TJvRollOut
       Left = 1
-      Top = 217
+      Top = 261
       Width = 621
       Height = 22
       Align = alTop
@@ -353,6 +351,7 @@ inherited frmProgramLocations: TfrmProgramLocations
       ImageOptions.Images = ilShowHide
       TabOrder = 7
       OnExpand = jvrltExpand
+      ExplicitTop = 217
       DesignSize = (
         621
         22)
@@ -382,7 +381,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object jvrltTextEditor: TJvRollOut
       Left = 1
-      Top = 239
+      Top = 283
       Width = 621
       Height = 56
       Align = alTop
@@ -390,6 +389,7 @@ inherited frmProgramLocations: TfrmProgramLocations
       ImageOptions.Images = ilShowHide
       TabOrder = 8
       OnExpand = jvrltExpand
+      ExplicitTop = 239
       DesignSize = (
         621
         56)
@@ -412,7 +412,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object jvrltModelMonitor: TJvRollOut
       Left = 1
-      Top = 295
+      Top = 339
       Width = 621
       Height = 56
       Align = alTop
@@ -420,6 +420,7 @@ inherited frmProgramLocations: TfrmProgramLocations
       ImageOptions.Images = ilShowHide
       TabOrder = 9
       OnExpand = jvrltExpand
+      ExplicitTop = 295
       DesignSize = (
         621
         56)
@@ -442,16 +443,17 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object jvrltModflowFmp: TJvRollOut
       Left = 1
-      Top = 433
+      Top = 173
       Width = 621
-      Height = 82
+      Height = 22
       Align = alTop
       Caption = 'MF2005-OWHM'
+      Collapsed = True
       ImageOptions.Images = ilShowHide
       TabOrder = 11
       DesignSize = (
         621
-        82)
+        22)
       FAWidth = 145
       FAHeight = 82
       FCWidth = 22
@@ -480,16 +482,17 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object jvrltModflowCFP: TJvRollOut
       Left = 1
-      Top = 351
+      Top = 151
       Width = 621
-      Height = 82
+      Height = 22
       Align = alTop
       Caption = 'MF2005-CFP'
+      Collapsed = True
       ImageOptions.Images = ilShowHide
       TabOrder = 10
       DesignSize = (
         621
-        82)
+        22)
       FAWidth = 145
       FAHeight = 82
       FCWidth = 22

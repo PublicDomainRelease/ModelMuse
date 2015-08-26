@@ -3,9 +3,9 @@ inherited frmFilesToArchive: TfrmFilesToArchive
   HelpKeyword = 'Files_to_Archive_Dialog_Box'
   Caption = ' Files To Archive'
   ClientWidth = 512
-  ExplicitWidth = 528
-  ExplicitHeight = 264
-  PixelsPerInch = 96
+  ExplicitWidth = 530
+  ExplicitHeight = 271
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0

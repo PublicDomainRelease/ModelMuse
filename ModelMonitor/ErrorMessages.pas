@@ -482,6 +482,7 @@ begin
     WarningValues.Add('Well is inactive');
     WarningValues.Add('Extremely thin cell');
     WarningValues.Add('EXTINCTION WATER CONTENT FOR CELL');
+    WarningValues.Add('ROOTING DEPTH FOR CELL');
 
 
     // MODFLOW-NWT

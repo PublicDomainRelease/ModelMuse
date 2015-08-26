@@ -440,6 +440,7 @@ type
   TCustomListArrayBoundColl = class(TCustomMF_BoundColl)
   private
     FListDuplicatesAllowed: Boolean;
+    FSectionDuplicatesAllowed: Boolean;
     { TODO -cRefactor : Consider replacing Model with an interface. }
     //
     procedure AssignArrayCellsWithItem(Item: TCustomModflowBoundaryItem;
@@ -466,6 +467,11 @@ type
     // cell are added together.
     property ListDuplicatesAllowed: boolean read FListDuplicatesAllowed
       write FListDuplicatesAllowed;
+    // @name is set to @True in @link(TSwrReachCollection).
+    // When @name is set to @True, separate boundaries can be set by the same
+    // section of the same object in the same cell.
+    property SectionDuplicatesAllowed: Boolean read FSectionDuplicatesAllowed
+      write FSectionDuplicatesAllowed;
     function OkListDataTypes(BoundaryIndex: Integer): TRbwDataTypes; virtual;
     { TODO -cRefactor : Consider replacing Model with an interface. }
     // @name should be called just before a formula is about
@@ -708,7 +714,8 @@ type
       var FormulaObject: TFormulaObject);
     function CreateFormulaObject(Orientation: TDataSetOrientation)
       : TFormulaObject;
-    procedure CreateObserver(ObserverNameRoot: string; var Observer: TObserver);
+    procedure CreateObserver(ObserverNameRoot: string; var Observer: TObserver;
+      Displayer: TObserver);
     function BoundaryObserverPrefix: string; virtual; abstract;
     procedure CreateBoundaryObserver;
   public
@@ -1260,6 +1267,7 @@ constructor TCustomListArrayBoundColl.Create(Boundary: TModflowBoundary;
 begin
   inherited;
   FListDuplicatesAllowed := True;
+  FSectionDuplicatesAllowed := False;
 end;
 
 function TCustomListArrayBoundColl.OkListDataTypes(BoundaryIndex: Integer): TRbwDataTypes;
@@ -3302,64 +3310,63 @@ begin
     Grid := LocalModel.ModflowGrid;
     Compiler := LocalModel.rpThreeDFormulaCompiler;
 
-//    FirstUsedTime := Max(FirstUsedTime,
-//      LocalModel.ModflowStressPeriods.First.StartTime);
-//    LastUsedTime := Min(LastUsedTime, LocalModel.ModflowStressPeriods.Last.EndTime);
-
-
     AScreenObject.GetCellsToAssign(Grid, '0', nil, nil, CellList, alAll, LocalModel);
 
-    // eliminate cells that are at the same location and are part of the same section;
-    SparseArrays := TObjectList.Create;
-    try
-      if FListDuplicatesAllowed then
-      begin
-        MaxArrays := AScreenObject.SectionCount;
-      end
-      else
-      begin
-        MaxArrays := 1;
-      end;
-      for SectionIndex := 0 to MaxArrays - 1 do
-      begin
-        AScreenObject.GetModelDimensions(LocalModel, NumberOfLayers,
-          NumberOfRows, NumberOfColumns);
-        SparseArray := T3DSparseBooleanArray.Create(GetQuantum(NumberOfLayers),
-          GetQuantum(NumberOfRows), GetQuantum(NumberOfColumns));
-        SparseArrays.Add(SparseArray)
-      end;
-      SparseArray := SparseArrays[0];
-      for CellIndex := CellList.Count - 1 downto 0 do
-      begin
-        ACell := CellList[CellIndex];
-        if ACell.LgrEdge then
+    // FSectionDuplicatesAllowed is set to True in TSwrReachCollection.
+    if not FSectionDuplicatesAllowed then
+    begin
+      // eliminate cells that are at the same location and are part of the same section;
+      SparseArrays := TObjectList.Create;
+      try
+        if FListDuplicatesAllowed then
         begin
-          EliminateIndicies.Add(CellIndex);
-        end
-        else if LocalModel.IsLayerSimulated(ACell.Layer) then
-        begin
-          if FListDuplicatesAllowed then
-          begin
-            SparseArray := SparseArrays[ACell.Section];
-          end;
-          Layer := LocalModel.
-            DataSetLayerToModflowLayer(ACell.Layer);
-          if SparseArray.IsValue[Layer, ACell.Row, ACell.Column] then
-          begin
-            EliminateIndicies.Add(CellIndex);
-          end
-          else
-          begin
-            SparseArray.Items[Layer, ACell.Row, ACell.Column] := True;
-          end;
+          MaxArrays := AScreenObject.SectionCount;
         end
         else
         begin
-          EliminateIndicies.Add(CellIndex);
+          MaxArrays := 1;
         end;
+        for SectionIndex := 0 to MaxArrays - 1 do
+        begin
+          AScreenObject.GetModelDimensions(LocalModel, NumberOfLayers,
+            NumberOfRows, NumberOfColumns);
+          SparseArray := T3DSparseBooleanArray.Create(GetQuantum(NumberOfLayers),
+            GetQuantum(NumberOfRows), GetQuantum(NumberOfColumns));
+          SparseArrays.Add(SparseArray)
+        end;
+        SparseArray := SparseArrays[0];
+        for CellIndex := CellList.Count - 1 downto 0 do
+        begin
+          ACell := CellList[CellIndex];
+          if ACell.LgrEdge then
+          begin
+            EliminateIndicies.Add(CellIndex);
+          end
+          else if LocalModel.IsLayerSimulated(ACell.Layer) then
+          begin
+            if FListDuplicatesAllowed then
+            begin
+              SparseArray := SparseArrays[ACell.Section];
+            end;
+            Layer := LocalModel.
+              DataSetLayerToModflowLayer(ACell.Layer);
+            if SparseArray.IsValue[Layer, ACell.Row, ACell.Column] then
+            begin
+              EliminateIndicies.Add(CellIndex);
+            end
+            else
+            begin
+              SparseArray.Items[Layer, ACell.Row, ACell.Column] := True;
+            end;
+          end
+          else
+          begin
+            EliminateIndicies.Add(CellIndex);
+          end;
+        end;
+      finally
+        SparseArrays.Free;
       end;
-    finally
-      SparseArrays.Free;
     end;
 
     for Index := 0 to EliminateIndicies.Count - 1  do
@@ -3812,7 +3819,7 @@ begin
 end;
 
 procedure TModflowScreenObjectProperty.CreateObserver(ObserverNameRoot: string;
-  var Observer: TObserver);
+  var Observer: TObserver; Displayer: TObserver);
 var
   ScreenObject: TScreenObject;
   Model: TPhastModel;
@@ -3824,8 +3831,13 @@ begin
   begin
     Model := FModel as TPhastModel;
     Assert(Model <> nil);
-    BoundaryObserver.TalksTo(Model.HfbDisplayer);
-    Observer.TalksTo(Model.HfbDisplayer);
+    if Displayer <> nil then
+    begin
+//      BoundaryObserver.TalksTo(Model.HfbDisplayer);
+//      Observer.TalksTo(Model.HfbDisplayer);
+      BoundaryObserver.TalksTo(Displayer);
+      Observer.TalksTo(Displayer);
+    end;
     BoundaryObserver.TalksTo(Observer);
     Model.HfbDisplayer.Invalidate;
   end;

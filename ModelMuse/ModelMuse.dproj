@@ -59,12 +59,12 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<VerInfo_Release>1</VerInfo_Release>
+			<VerInfo_Release>2</VerInfo_Release>
 			<VerInfo_MajorVer>3</VerInfo_MajorVer>
 			<VerInfo_MinorVer>6</VerInfo_MinorVer>
 			<DCC_ExeOutput>.\$(Config)\$(Platform)</DCC_ExeOutput>
 			<VerInfo_Locale>1033</VerInfo_Locale>
-			<VerInfo_Keys>FileVersion=3.6.1.0;ProductVersion=3.6.1.0</VerInfo_Keys>
+			<VerInfo_Keys>FileVersion=3.6.2.0;ProductVersion=3.6.2.0</VerInfo_Keys>
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 			<Manifest_File>None</Manifest_File>
 			<DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>
@@ -109,7 +109,7 @@
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
 			<DCC_DebugDCUs>true</DCC_DebugDCUs>
 			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
-			<DCC_Define>DEBUG;FMP;$(DCC_Define)</DCC_Define>
+			<DCC_Define>DEBUG;FMP;EditFeature;FootPrint;$(DCC_Define)</DCC_Define>
 			<DCC_Optimize>false</DCC_Optimize>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
@@ -1263,6 +1263,41 @@
 			</DCCReference>
 			<DCCReference Include="frmBudgetPrecisionQueryUnit.pas">
 				<Form>frmBudgetPrecisionQuery</Form>
+				<FormType>dfm</FormType>
+			</DCCReference>
+			<DCCReference Include="RasterValuesAlongSegmentsUnit.pas"/>
+			<DCCReference Include="frmLinkRasterUnit.pas">
+				<Form>frmLinkRaster</Form>
+			</DCCReference>
+			<DCCReference Include="LinkedRastersUnit.pas"/>
+			<DCCReference Include="frmTimeUnitsConverterUnit.pas">
+				<Form>frmTimeUnitsConverter</Form>
+				<FormType>dfm</FormType>
+			</DCCReference>
+			<DCCReference Include="frmEditFeatureFormulaUnit.pas">
+				<Form>frmEditFeatureFormula</Form>
+				<FormType>dfm</FormType>
+			</DCCReference>
+			<DCCReference Include="FootprintGridUnit.pas"/>
+			<DCCReference Include="FootprintBoundary.pas"/>
+			<DCCReference Include="frameScreenObjectFootprintWellUnit.pas">
+				<Form>frameScreenObjectFootprintWell</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="FootprintPropertiesUnit.pas"/>
+			<DCCReference Include="frmFootprintPropertiesUnit.pas">
+				<Form>frmFootprintProperties</Form>
+			</DCCReference>
+			<DCCReference Include="..\Footprint\FootprintFileUnit.pas"/>
+			<DCCReference Include="..\Footprint\FootPrintUtilities.pas"/>
+			<DCCReference Include="frmFootprintLocationUnit.pas">
+				<Form>frmFootprintLocation</Form>
+			</DCCReference>
+			<DCCReference Include="frmImportFootprintResultsUnit.pas">
+				<Form>frmImportFootprintResults</Form>
+			</DCCReference>
+			<DCCReference Include="frmRunFootprintUnit.pas">
+				<Form>frmRunFootprint</Form>
 				<FormType>dfm</FormType>
 			</DCCReference>
 			<None Include="ModelMuse.todo"/>

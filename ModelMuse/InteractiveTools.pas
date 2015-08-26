@@ -2258,7 +2258,7 @@ begin
         result := StrClickOnGridLineA;
       end;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         case ViewDirection of
           vdTop: result := StrClickOnGridLineA;
@@ -2607,7 +2607,7 @@ begin
         result := StrClickOnGridBounda;
       end;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         case ViewDirection of
           vdTop: result := StrClickOnGridBounda;
@@ -3295,10 +3295,23 @@ begin
 
             SelectColor32 := Color32(Color);
             SelectColor32 := SetAlpha(SelectColor32, Opacity);
-            DrawBigPolygon32(BitMap, SelectColor32,
-              SelectColor32, 0, Polygon, P, MultiplePolygons, True);
+            try
+              // This is a work-around rather than a real fix.
+              DrawBigPolygon32(BitMap, SelectColor32,
+                SelectColor32, 0, Polygon, P, MultiplePolygons, True);
+            except on EAccessViolation do
+              begin
+                frmGoPhast.AdjustDrawingWidth;
+                Exit;
+              end;
+            end;
           end;
         end;
+      end;
+    msFootPrint:
+      begin
+        Assert(False);
+        { TODO -cFootprint : Need to draw selected col or row. }
       end
     else
       Assert(False);
@@ -3431,8 +3444,23 @@ begin
 
             SelectColor32 := Color32(Color);
             SelectColor32 := SetAlpha(SelectColor32, Opacity);
+            try
+              DrawBigPolygon32(BitMap, SelectColor32,
+                SelectColor32, 0, Polygon, P, MultiplePolygons, True);
+            except on EAccessViolation do
+              begin
+                // This is a work-around rather than a real fix.
+                frmGoPhast.AdjustDrawingWidth;
+                Exit;
+              end;
+            end;
           end;
         end;
+      end;
+    msFootPrint:
+      begin
+        Assert(False);
+        { TODO -cFootprint : Need to draw selected col or row. }
       end
     else
       Assert(False);

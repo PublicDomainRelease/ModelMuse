@@ -153,6 +153,8 @@ const
   ObjectCurrentVertexX = 'ObjectCurrentVertexX';
   ObjectCurrentVertexY = 'ObjectCurrentVertexY';
   ObjectCurrentVertexZ = 'ObjectCurrentVertexZ';
+  StrRasterValueAlongObject = 'RasterValueAlongObject';
+  StrRasterSlopeAlongObject = 'RasterSlopeAlongObject';
 
 
 function GetColumnWidth(Column: Integer): Double;
@@ -172,7 +174,8 @@ implementation
 uses frmGoPhastUnit, DataSetUnit, FastGEO, LayerStructureUnit, PhastModelUnit,
   ValueArrayStorageUnit, HufDefinition, OrderedCollectionUnit,
   ModflowPackageSelectionUnit, Math, ModflowGridUnit, ModflowParameterUnit,
-  frmErrorsAndWarningsUnit, SutraMeshUnit, AbstractGridUnit;
+  frmErrorsAndWarningsUnit, SutraMeshUnit, AbstractGridUnit,
+  RasterValuesAlongSegmentsUnit;
 
 resourcestring
   StrInSVANIParamete = 'In %s, VANI parameters are defined even though that ' +
@@ -198,6 +201,11 @@ resourcestring
   ' not intersected by an object.';
   StrProblemEvaluating = 'Problem evaluating %s';
   StrThereAreTooFewIm = 'There are too few imported values for %0:s in %1:s.';
+  StrLinkedRasterNotFo = 'Linked Raster not found';
+  StrTheSFunctionCanTop = 'The %s function can only be used with objects on the' +
+  ' top view of the model.';
+  StrTheSFunctionCanLength = 'The %s function can only be used along the len' +
+  'gth of an Object.';
 
 var  
   SpecialImplementors: TList;
@@ -288,6 +296,8 @@ var
   FractionOfObjectLengthFunction: TFunctionRecord;
   NodeCountFunction: TFunctionRecord;
   InterpolationedValuesFunction: TFunctionRecord;
+  RasterValueAlongObject: TFunctionRecord;
+  RasterSlopeAlongObject: TFunctionRecord;
   VertexValuesFunction: TFunctionRecord;
 
   ListRealValueFunction: TFunctionRecord;
@@ -497,6 +507,8 @@ begin
   AddItem(ImportedValuesBFunction, True);
   AddItem(ImportedValuesTFunction, True);
   AddItem(InterpolationedValuesFunction, True);
+  AddItem(RasterValueAlongObject, True);
+  AddItem(RasterSlopeAlongObject, True);
   AddItem(VertexValuesFunction, True);
   AddItem(GridNumberFunction, True);
   AddItem(GridNameFunction, True);
@@ -1035,6 +1047,203 @@ begin
   while result < -90 do
   begin
     result := result +180;
+  end;
+end;
+
+function _ValueAlongSegment(Values: array of pointer): double;
+var
+  RasterName: string;
+  Raster: IRaster;
+  ErrorMessage: string;
+//  ASegment: TSegment2D;
+  SegmentStart: Integer;
+  SegmentEnd: Integer;
+  Segments: TCellElementSegmentList;
+  PriorSegment: TCellElementSegment;
+  ASegmentObject: TCellElementSegment;
+  ALine: TPolyLine2D;
+  Grid: TCustomModelGrid;
+  SegmentIndex: Integer;
+  PointIndex: Integer;
+  function NearlyTheSame(const A, B: real): boolean;
+  begin
+    result := A = B;
+    if not result then
+    begin
+      result := Abs(A - B) / (Abs(A) + Abs(B)) < Epsilon;
+    end;
+  end;
+  function PointsNearlyTheSame(Point1, Point2: TPoint2D): boolean;
+  begin
+    result := NearlyTheSame(Point1.X, Point2.X) and
+      NearlyTheSame(Point1.Y, Point2.Y);
+  end;
+begin
+  result := 0;
+  if (GlobalCurrentSegment = nil) or (GlobalCurrentScreenObject = nil)
+    or (GlobalCurrentScreenObject.Count <= 1) or (GlobalCurrentModel = nil) then
+  begin
+    if GlobalCurrentScreenObject = nil then
+    begin
+      ErrorMessage := Format(StrTheSFunctionCan, [StrRasterValueAlongObject]);
+      frmErrorsAndWarnings.AddError(GlobalCurrentModel,
+        ErrorMessage, ErrorMessage);
+    end
+    else
+    begin
+      ErrorMessage := Format(StrTheSFunctionCanLength,
+         [StrRasterValueAlongObject]);
+      frmErrorsAndWarnings.AddError(GlobalCurrentModel, ErrorMessage,
+        GlobalCurrentScreenObject.Name, GlobalCurrentScreenObject);
+    end;
+    Exit;
+  end
+  else if GlobalCurrentScreenObject.ViewDirection <> vdTop then
+  begin
+    frmErrorsAndWarnings.AddError(GlobalCurrentModel,
+      Format(StrTheSFunctionCanTop, [StrRasterValueAlongObject]),
+      GlobalCurrentScreenObject.Name, GlobalCurrentScreenObject);
+    Exit;
+  end
+  else
+  begin
+    RasterName := PString(Values[0])^;
+    Raster := (GlobalCurrentModel as TCustomModel).
+      LinkedRasters.RasterByName(RasterName);
+    if Assigned(Raster) then
+    begin
+      Assert(GlobalCurrentSegment.PositionInSegmentList >= 0);
+
+
+      Segments := GlobalCurrentScreenObject.Segments[GlobalCurrentModel];
+
+      SegmentStart := GlobalCurrentSegment.PositionInSegmentList;
+      PriorSegment := GlobalCurrentSegment;
+      for SegmentIndex := SegmentStart - 1 downto 0 do
+      begin
+        ASegmentObject := Segments[SegmentIndex];
+        if (ASegmentObject.Layer = GlobalCurrentSegment.Layer)
+          and (ASegmentObject.Row = GlobalCurrentSegment.Row)
+          and (ASegmentObject.Col = GlobalCurrentSegment.Col)
+          and PointsNearlyTheSame(ASegmentObject.EndPoint,
+          PriorSegment.StartPoint) then
+        begin
+          SegmentStart := SegmentIndex;
+          PriorSegment := ASegmentObject;
+        end
+        else
+        begin
+          Break
+        end;
+      end;
+
+      SegmentEnd := GlobalCurrentSegment.PositionInSegmentList;
+      PriorSegment := GlobalCurrentSegment;
+      for SegmentIndex := SegmentEnd + 1 to Segments.Count -1 do
+      begin
+        ASegmentObject := Segments[SegmentIndex];
+        if (ASegmentObject.Layer = GlobalCurrentSegment.Layer)
+          and (ASegmentObject.Row = GlobalCurrentSegment.Row)
+          and (ASegmentObject.Col = GlobalCurrentSegment.Col)
+          and PointsNearlyTheSame(ASegmentObject.StartPoint,
+          PriorSegment.EndPoint) then
+        begin
+          SegmentEnd := SegmentIndex;
+          PriorSegment := ASegmentObject;
+        end
+        else
+        begin
+          Break
+        end;
+      end;
+
+      SetLength(ALine, SegmentEnd-SegmentStart+2);
+      ASegmentObject := Segments[SegmentStart];
+      ALine[0] := ASegmentObject.Segment[1];
+      for SegmentIndex := SegmentStart to SegmentEnd do
+      begin
+        ASegmentObject := Segments[SegmentIndex];
+        ALine[SegmentIndex-SegmentStart+1] := ASegmentObject.Segment[2];
+      end;
+
+      Grid := frmGoPhast.Grid;
+      if (Grid <> nil) and (Grid.GridAngle <> 0) then
+      begin
+        for PointIndex := 0 to Length(ALine) - 1 do
+        begin
+          ALine[PointIndex] := Grid.RotateFromGridCoordinatesToRealWorldCoordinates(ALine[PointIndex]);
+        end;
+      end;
+
+//      ASegment := GlobalCurrentSegment.Segment;
+//      if frmGoPhast.Grid <> nil then
+//      begin
+//        ASegment[1] := frmGoPhast.Grid.RotateFromGridCoordinatesToRealWorldCoordinates(ASegment[1]);
+//        ASegment[2] := frmGoPhast.Grid.RotateFromGridCoordinatesToRealWorldCoordinates(ASegment[2]);
+//      end;
+      result := GetLineValueFromRaster(ALine, Raster);
+    end
+    else
+    begin
+      frmErrorsAndWarnings.AddError(GlobalCurrentModel,
+        StrLinkedRasterNotFo, RasterName);
+    end;
+  end;
+end;
+
+function _SlopeAlongSegment(Values: array of pointer): double;
+var
+  RasterName: string;
+  Raster: IRaster;
+  ErrorMessage: string;
+  ASegment: TSegment2D;
+begin
+  result := 0;
+  if (GlobalCurrentSegment = nil) or (GlobalCurrentScreenObject = nil)
+    or (GlobalCurrentScreenObject.Count <= 1) or (GlobalCurrentModel = nil) then
+  begin
+    if GlobalCurrentScreenObject = nil then
+    begin
+      ErrorMessage := Format(StrTheSFunctionCan, [StrRasterSlopeAlongObject]);
+      frmErrorsAndWarnings.AddError(GlobalCurrentModel,
+        ErrorMessage, ErrorMessage);
+    end
+    else
+    begin
+      ErrorMessage := Format(StrTheSFunctionCanLength,
+         [StrRasterSlopeAlongObject]);
+      frmErrorsAndWarnings.AddError(GlobalCurrentModel, ErrorMessage,
+        GlobalCurrentScreenObject.Name, GlobalCurrentScreenObject);
+    end;
+    Exit;
+  end
+  else if GlobalCurrentScreenObject.ViewDirection <> vdTop then
+  begin
+    frmErrorsAndWarnings.AddError(GlobalCurrentModel,
+      Format(StrTheSFunctionCanTop, [StrRasterSlopeAlongObject]),
+      GlobalCurrentScreenObject.Name, GlobalCurrentScreenObject);
+    Exit;
+  end
+  else
+  begin
+    RasterName := PString(Values[0])^;
+    Raster := (GlobalCurrentModel as TCustomModel).
+      LinkedRasters.RasterByName(RasterName);
+    if Assigned(Raster) then
+    begin
+      ASegment := GlobalCurrentSegment.Segment;
+      if frmGoPhast.Grid <> nil then
+      begin
+        ASegment[1] := frmGoPhast.Grid.RotateFromGridCoordinatesToRealWorldCoordinates(ASegment[1]);
+        ASegment[2] := frmGoPhast.Grid.RotateFromGridCoordinatesToRealWorldCoordinates(ASegment[2]);
+      end;
+      result := GetSegmentValueFromRaster(ASegment, Raster);
+    end
+    else
+    begin
+      frmErrorsAndWarnings.AddError(GlobalCurrentModel,
+        StrLinkedRasterNotFo, RasterName);
+    end;
   end;
 end;
 
@@ -1709,6 +1918,10 @@ begin
             Assert(False);
         end;
       end;
+    msFootPrint:
+      begin
+        Result := 0;
+      end
     else Assert(False);
   end;
   Inc(result);
@@ -1792,6 +2005,10 @@ begin
       begin
         Result := _ElevationToLayer(Values);
       end;
+    msFootPrint:
+      begin
+        result := 0;
+      end
     else Assert(False);
   end;
 end;
@@ -2075,6 +2292,10 @@ begin
             Assert(False);
         end;
       end;
+    msFootPrint:
+      begin
+        result := 0;
+      end
   else
     Assert(False);
   end;
@@ -2098,7 +2319,7 @@ begin
   result := 0;
   case frmGoPhast.ModelSelection of
     msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         result := _ColumnWidth([Values[0]]) * _RowWidth([Values[1]]);
       end;
@@ -2259,7 +2480,11 @@ begin
         Polygons := Mesh.FrontPolygons(Angle, GlobalEvaluatedAt, Limits);
         result := Abs(Area(Polygons[Layer, Col]));
 
-      end
+      end;
+    msFootPrint:
+      begin
+        result := 0;
+      end;
     else
       begin
         result := 0;
@@ -2330,7 +2555,11 @@ begin
     msSutra22:
       begin
         result := 0;
-      end
+      end;
+    msFootPrint:
+      begin
+        result := 0;
+      end;
     else
       begin
         result := 0;
@@ -2387,6 +2616,10 @@ begin
           else
             Assert(False);
         end;
+      end;
+    msFootPrint:
+      begin
+        result := 0;
       end;
     else
       Assert(False);
@@ -2541,6 +2774,10 @@ begin
           else Assert(False);
         end;
       end;
+    msFootPrint:
+      begin
+        result := 0;
+      end
   else
     Assert(False);
   end;
@@ -2612,6 +2849,10 @@ begin
             Assert(False);
         end;
       end;
+    msFootPrint:
+      begin
+        result := 0;
+      end
     else
       Assert(False);
   end;
@@ -4451,7 +4692,8 @@ var
   LayerGroup: TSutraLayerGroup;
 begin
   result := inherited GetVariablesUsed;
-  if frmGoPhast.ModelSelection in ModelsWithGrid then
+  if (frmGoPhast.ModelSelection in ModelsWithGrid)
+    and (frmGoPhast.ModelSelection <> msFootPrint)  then
   begin
     result.Add(rsActive);
   end
@@ -4476,7 +4718,8 @@ var
   LayerIndex: Integer;
   LayerGroup: TSutraLayerGroup;
 begin
-  if frmGoPhast.ModelSelection in ModflowSelection then
+  if (frmGoPhast.ModelSelection in ModelsWithGrid)
+    and (frmGoPhast.ModelSelection <> msFootPrint)  then
   begin
     result := inherited UsesVariable(Variable)
       or (Variable.Name = UpperCase(rsActive));
@@ -5351,6 +5594,37 @@ initialization
   InterpolationedValuesFunction.Prototype := StrObject+''
     + StrInterpolatedVertexValues + '(Key)';
   InterpolationedValuesFunction.Hidden := False;
+
+  RasterValueAlongObject.ResultType := rdtDouble;
+  RasterValueAlongObject.RFunctionAddr := _ValueAlongSegment;
+  SetLength(RasterValueAlongObject.InputDataTypes, 1);
+  RasterValueAlongObject.InputDataTypes[0] := rdtString;
+  RasterValueAlongObject.OptionalArguments := 0;
+  RasterValueAlongObject.CanConvertToConstant := False;
+  RasterValueAlongObject.Name := StrRasterValueAlongObject;
+  RasterValueAlongObject.Prototype := StrObject+''
+    + StrRasterValueAlongObject + '(RasterName)';
+{$IFDEF LinkedRasters}
+  RasterValueAlongObject.Hidden := False;
+{$ELSE}
+  RasterValueAlongObject.Hidden := True;
+{$ENDIF}
+
+  RasterSlopeAlongObject.ResultType := rdtDouble;
+  RasterSlopeAlongObject.RFunctionAddr := _SlopeAlongSegment;
+  SetLength(RasterSlopeAlongObject.InputDataTypes, 1);
+  RasterSlopeAlongObject.InputDataTypes[0] := rdtString;
+  RasterSlopeAlongObject.OptionalArguments := 0;
+  RasterSlopeAlongObject.CanConvertToConstant := False;
+  RasterSlopeAlongObject.Name := StrRasterSlopeAlongObject;
+  RasterSlopeAlongObject.Prototype := StrObject+''
+    + StrRasterSlopeAlongObject + '(RasterName)';
+{$IFDEF LinkedRasters}
+  RasterSlopeAlongObject.Hidden := False;
+{$ELSE}
+  RasterSlopeAlongObject.Hidden := True;
+{$ENDIF}
+
 
   VertexValuesFunction.ResultType := rdtDouble;
   VertexValuesFunction.RFunctionAddr := _VertexValue;

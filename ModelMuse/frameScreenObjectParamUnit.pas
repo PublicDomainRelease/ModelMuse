@@ -47,6 +47,7 @@ type
     procedure clbParametersStateChange(Sender: TObject; Index: Integer);
     procedure dgModflowBoundarySelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
+    procedure clbParametersClickCheck(Sender: TObject);
   private
     // See @link(UnselectableColumnsIfParametersUsed).
     FUnselectableColumnsIfParametersUsed: TColumns;
@@ -99,6 +100,12 @@ begin
     ParameterColumnSuffix.Add(TimeList.ParamDescription);
   end;
   SetButtonCaptions;
+end;
+
+procedure TframeScreenObjectParam.clbParametersClickCheck(Sender: TObject);
+begin
+  inherited;
+  dgModflowBoundary.Invalidate;
 end;
 
 procedure TframeScreenObjectParam.clbParametersStateChange(Sender: TObject;
@@ -229,6 +236,15 @@ begin
     and (clbParameters.Items.Count > 0) then
   begin
     CanSelect := False;
+  end;
+  if (clbParameters.Items.Count > 0)
+    and (clbParameters.Items.Objects[0] = nil)
+    and (clbParameters.State[0] = cbUnchecked) then
+  begin
+    if (ACol >= 2) and (ACol <= ParameterColumnSuffix.Count + 1) then
+    begin
+      CanSelect := False;
+    end;
   end;
 end;
 

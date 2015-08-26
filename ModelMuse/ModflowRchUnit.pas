@@ -301,7 +301,7 @@ type
     Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     Destructor Destroy; override;
     // @name fills ValueTimeList via a call to AssignCells for each
-    // link  @link(TRchStorage) in
+    // @link(TRchStorage) in
     // @link(TCustomMF_BoundColl.Boundaries Values.Boundaries);
     // Those represent non-parameter boundary conditions.
     // @name fills ParamList with the names of the

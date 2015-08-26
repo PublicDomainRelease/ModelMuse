@@ -42,7 +42,7 @@ uses
   ModflowCfpPipeUnit, ModflowCfpFixedUnit, ModflowCfpRechargeUnit,
   ModflowSwrUnit, ModflowSwrDirectRunoffUnit, ModflowSwrReachUnit,
   ObjectLabelUnit, ModflowMnw1Unit, CacheableSparseDataSets,
-  ModflowFmpFarmIdUnit;
+  ModflowFmpFarmIdUnit, FootprintBoundary, System.Generics.Collections;
 
 type
   //
@@ -203,6 +203,7 @@ type
     FSubSegments: TSegment2DArray;
     FLgrEdge: boolean;
     FScreenObject: TScreenObject;
+    FPositionInSegmentList: integer;
     procedure Store(Stream: TStream);
     procedure Restore(Stream: TDecompressionStream);
   public
@@ -260,6 +261,8 @@ type
     property LgrEdge: boolean read FLgrEdge write FLgrEdge;
     constructor Create(ScreenObject: TScreenObject);
     function IsSame(AnotherSegment: TCellElementSegment): boolean;
+    property Segment: TSegment2D read FSegment;
+    property PositionInSegmentList: integer read FPositionInSegmentList;
   end;
 
   TCellElementLeaf = class(TRangeTreeLeaf)
@@ -656,14 +659,6 @@ type
     // at that location was determined.
     function EncloseAnnotation(const DataSetFormula: string;
       const OtherData: TObject): string; virtual;
-    // {@name (1) gets the proper DataSetFormula to apply to DataSet,
-    // (2) gets the proper TRbwParser for DataSet, and (3) compiles
-    // DataSetFormula to get Expression.  However, it doesn't need to do
-    // any of that is PHAST-style interpolation is used.
-    // See @link(TPhastInterpolationValues).}
-    procedure InitializeExpression(out Compiler: TRbwParser;
-      out DataSetFunction: string; out Expression: TExpression;
-      const DataSet: TDataArray; const OtherData: TObject); virtual;
     {@name gets all the @link(TDataArray)s listed in UsedVariables and calls
     @link(TDataArray.Initialize) for each of them.}
     procedure InitializeVariables(const UsedVariables: TStringList;
@@ -710,6 +705,15 @@ type
     // @name sets @link(SelectedCells) to @true for each cells that is
     // enclosed or intersected by the @link(TScreenObject).
     procedure AssignSelectedCells(AModel: TBaseModel); virtual; abstract;
+  public
+    // {@name (1) gets the proper DataSetFormula to apply to DataSet,
+    // (2) gets the proper TRbwParser for DataSet, and (3) compiles
+    // DataSetFormula to get Expression.  However, it doesn't need to do
+    // any of that is PHAST-style interpolation is used.
+    // See @link(TPhastInterpolationValues).}
+    procedure InitializeExpression(out Compiler: TRbwParser;
+      out DataSetFunction: string; out Expression: TExpression;
+      const DataSet: TDataArray; const OtherData: TObject); virtual;
   end;
 
   TCustomScreenObjectDelegateClass = class of TCustomScreenObjectDelegate;
@@ -1405,6 +1409,7 @@ view. }
     FSwrDirectRunoff: TSwrDirectRunoffBoundary;
     FSwrReaches: TSwrReachBoundary;
     FModflowMnw1Boundary: TMnw1Boundary;
+    FModel: TBaseModel;
   public
     procedure Invalidate;
     { TODO -cRefactor : Consider replacing Model with an interface. }
@@ -1494,6 +1499,7 @@ view. }
     // ATime.
     function UsesATime(ATime: Double): Boolean;
     procedure ReplaceATime(OldTime, NewTime: Double);
+    property Model: TBaseModel read FModel write FModel;
   end;
 
   TUsedWithModelItem = class(TPhastCollectionItem)
@@ -1611,9 +1617,6 @@ view. }
       const SubPolygon: TSubPolygon): boolean;
   private
     FCanInvalidateModel: boolean;
-    { TODO -cRefactor : Consider replacing Model with an interface. }
-    //
-    FModel: TBaseModel;
     // @name holds all the subscriptions related to
     // mixtures for @link(TDataArray)s.
     FDataSetMixtureSubscriptions: TObjectList;
@@ -1675,7 +1678,7 @@ view. }
     // See @link(DataSetFormulas).
     FDataSetFormulas: TList;
     // See @link(DataSets).
-    FDataSets: TList;
+    FDataSets: TList<TDataArray>;
     {
      @name holds a list of @link(SubscriptionUnit.TObserver)s
      related to @link(DataSetUnit.TDataArray)s set by this @classname.
@@ -1835,6 +1838,8 @@ view. }
     FDuplicatesAllowed: Boolean;
     FSfrSegmentNumber: integer;
     FObjectLabel: TObjectLabel;
+    FObjectVertexLabel: TObjectVertexLabel;
+    FFootprintWell: TFootprintWell;
     procedure CreateLastSubPolygon;
     procedure DestroyLastSubPolygon;
     function GetSubPolygonCount: integer;
@@ -2596,9 +2601,14 @@ view. }
     procedure SetModflowSwrReaches(const Value: TSwrReachBoundary);
     function StoreModflowSwrReaches: Boolean;
     procedure SetObjectLabel(const Value: TObjectLabel);
+    procedure SetObjectVertexLabel(const Value: TObjectVertexLabel);
     function GetModflowMnw1Boundary: TMnw1Boundary;
     procedure SetModflowMnw1Boundary(const Value: TMnw1Boundary);
     function StoreModflowMnw1Boundary: Boolean;
+    function GetFootprintWell: TFootprintWell;
+    procedure SetFootprintWell(const Value: TFootprintWell);
+    function StoreFootprintWell: Boolean;
+    procedure DrawVertexLabels(const Bitmap32: TBitmap32);
     property SubPolygonCount: integer read GetSubPolygonCount;
     property SubPolygons[Index: integer]: TSubPolygon read GetSubPolygon;
     procedure DeleteExtraSections;
@@ -2819,6 +2829,9 @@ view. }
       HigherElevVariables: TList; LowerElevExpression: TExpression);
     procedure DrawLabel(const Bitmap32: TBitmap32);
   protected
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    FModel: TBaseModel;
     {
      @name is true during @link(TScreenObjectItem.UpdateScreenObject).}
     FIsUpdating: boolean;
@@ -2947,12 +2960,6 @@ view. }
     procedure InitializeExpression(out Compiler: TRbwParser;
       out DataSetFormula: string; out Expression: TExpression;
       const DataSet: TDataArray; const OtherData: TObject);
-    // @name fills UsedVariables with the names of the variables
-    // use by Expression.  It initializes the @link(TDataArray)s associated
-    // with those variables.
-    procedure InitializeVariables(const UsedVariables: TStringList;
-      const DataSet: TDataArray; const Expression: TExpression;
-      const Compiler: TRbwParser); virtual;
     // @name provides a string that can be used in annotations to indicate
     // that the value of a cell or element has been set by virtue of being
     // intersected by a @classname and how the value
@@ -3022,14 +3029,6 @@ view. }
     procedure SetUpToDate(const Value: boolean); override;
     // See @link(ViewDirection).
     procedure SetViewDirection(const Value: TViewDirection); virtual;
-    { @name gets the variables names from UsedVariables and gets the
-      corresponding TCustomValues from Compiler.  It sets each TCustomValue
-      to have the value of its corresponding data set at the location specified
-      by Layer, Row, Column.  However, if the corresponding @link(TDataArray),
-      is a 2D data set, either Layer, Row, or Column is changed to zero.}
-    procedure UpdateVariables(const UsedVariables: TStringList;
-      const DataSet: TDataArray; Layer, Row, Column: integer;
-      const Compiler: TRbwParser);
     // @name is used to access the formula for the Mixture specified by
     // Index when PHAST style interpolation is used with a mixture.
     // See @link(TPhastInterpolationValues).
@@ -3043,6 +3042,20 @@ view. }
     procedure UpdateMixtureExpression;
     procedure UpdateFormulaExpression;
   public
+    // @name fills UsedVariables with the names of the variables
+    // use by Expression.  It initializes the @link(TDataArray)s associated
+    // with those variables.
+    procedure InitializeVariables(const UsedVariables: TStringList;
+      const DataSet: TDataArray; const Expression: TExpression;
+      const Compiler: TRbwParser); virtual;
+    { @name gets the variables names from UsedVariables and gets the
+      corresponding TCustomValues from Compiler.  It sets each TCustomValue
+      to have the value of its corresponding data set at the location specified
+      by Layer, Row, Column.  However, if the corresponding @link(TDataArray),
+      is a 2D data set, either Layer, Row, or Column is changed to zero.}
+    procedure UpdateVariables(const UsedVariables: TStringList;
+      const DataSet: TDataArray; Layer, Row, Column: integer;
+      const Compiler: TRbwParser);
     function CoordinateCaption: string;
     function HigherCoordinateCaption: string;
     function LowerCoordinateCaption: string;
@@ -3165,6 +3178,7 @@ view. }
     procedure CreateSwrStageBoundary;
     procedure CreateSwrDirectRunoffBoundary;
     procedure CreateSwrReachesBoundary;
+    procedure CreateFootprintWell;
     { TODO -cRefactor : Consider replacing Model with an interface. }
     //
     function ModflowDataSetUsed(DataArray: TDataArray; AModel: TBaseModel): boolean;
@@ -3869,6 +3883,10 @@ SectionStarts.}
       write SetDuplicatesAllowed default True;
     // Name is used to display a label near an @classname.
     property ObjectLabel: TObjectLabel read FObjectLabel write SetObjectLabel;
+    property ObjectVertexLabel: TObjectVertexLabel read FObjectVertexLabel
+      write SetObjectVertexLabel;
+    property FootprintWell: TFootprintWell read GetFootprintWell
+      write SetFootprintWell stored StoreFootprintWell;
   end;
 
   // @name does not own its @link(TScreenObject)s.
@@ -4239,6 +4257,105 @@ SectionStarts.}
       FMixtureFormulas;
   end;
 
+  TCustomBlockGridDelegate = class(TCustomScreenObjectDelegate)
+  strict protected
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    procedure GetTopCellsToAssign(const DataSetFunction: string;
+      OtherData: TObject; const DataSet: TDataArray;
+      CellList: TCellAssignmentList; AssignmentLocation: TAssignmentLocation;
+      AModel: TBaseModel); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    procedure AssignValuesToDataSet(const DataSet: TDataArray;
+      OtherData: TObject; AModel: TBaseModel;
+      UseLgrEdgeCells: TLgrCellTreatment;
+      AssignmentLocation: TAssignmentLocation = alAll);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    procedure GetCellsToAssign(const DataSetFunction: string;
+      OtherData: TObject; const EvaluatedAt: TEvaluatedAt;
+      CellList: TCellAssignmentList; AssignmentLocation: TAssignmentLocation;
+      Orientation: TDataSetOrientation; AModel: TBaseModel);
+    function GetPerpendiularLimit(const Grid: TCustomModelGrid): integer;
+    {@name assigns values of ColIndex, RowIndex, LayerIndex based on the
+    @link(FScreenObject).@link(TScreenObject.ViewDirection)
+    and HorizontalIndex1, HorizontalIndex2, and
+    PerpendicularIndex}
+    procedure AssignColAndRowIndicies(var ColIndex, RowIndex,
+      LayerIndex: Integer; const HorizontalIndex1, HorizontalIndex2,
+      PerpendicularIndex: Integer);
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    {@name returns the extent of the grid that should be searched for
+    enclosed or intersected cells.}
+    procedure AssignParallellLimits(AModel: TBaseModel; out FirstParallelIndexA,
+      LastParallelIndexA, FirstParallelIndexB, LastParallelIndexB: Integer);
+    // @name creates a set of segments for each cell intersected by
+    // @link(FScreenObject) in front or side views.
+    function IsPointInside(const CellLocation3D: T3DRealPoint;
+      Grid: TCustomModelGrid; out SectionIndex: integer): boolean;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    // @name assigns values to FTopElevation and FBottomElevation
+    // based on the cell specified by ColIndex, RowIndex, and LayerIndex.
+    function AssignElevations(const ColIndex, RowIndex, LayerIndex: integer;
+      AModel: TBaseModel): boolean;
+    function ElevationOk(const Grid: TCustomModelGrid; const PerpendicularIndex,
+      ColIndex, RowIndex: integer): boolean; virtual; abstract;
+  public
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    procedure AssignSelectedCells(AModel: TBaseModel); override;
+  end;
+
+
+  TFootprintDelegate = class(TCustomBlockGridDelegate)
+  strict protected
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    procedure AssignValuesToFrontDataSet(
+      const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
+      UseLgrEdgeCells: TLgrCellTreatment;
+      AssignmentLocation: TAssignmentLocation = alAll);override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    procedure AssignValuesToSideDataSet(
+      const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
+      UseLgrEdgeCells: TLgrCellTreatment;
+      AssignmentLocation: TAssignmentLocation = alAll); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    procedure AssignValuesToTopDataSet(
+      const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
+      UseLgrEdgeCells: TLgrCellTreatment;
+      AssignmentLocation: TAssignmentLocation = alAll); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    procedure UpdateFrontSegments(AModel: TBaseModel;
+      const EvaluatedAt: TEvaluatedAt);override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    procedure UpdateSideSegments(AModel: TBaseModel;
+      const EvaluatedAt: TEvaluatedAt);override;
+    function ElevationOk(const Grid: TCustomModelGrid; const PerpendicularIndex,
+      ColIndex, RowIndex: integer): boolean; override;
+  protected
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    procedure GetSideCellsToAssign(
+      const DataSetFunction: string; OtherData: TObject;
+      const DataSet: TDataArray; CellList: TCellAssignmentList;
+      AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
+    { TODO -cRefactor : Consider replacing Model with an interface. }
+    //
+    procedure GetFrontCellsToAssign(
+      const DataSetFunction: string; OtherData: TObject;
+      const DataSet: TDataArray; CellList: TCellAssignmentList;
+      AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
+  public
+//    constructor Create(ScreenObject: TScreenObject); override;
+//    destructor Destroy; override;
+  end;
+
   TPhastDelegate = class(TCustomScreenObjectDelegate)
   strict private
     FMixtureVariables: TStringList;
@@ -4340,21 +4457,8 @@ SectionStarts.}
     AlternateDataType: TRbwDataType;
   end;
 
-  TModflowDelegate = class(TCustomScreenObjectDelegate)
+  TModflowDelegate = class(TCustomBlockGridDelegate)
   strict private
-    {@name assigns values of ColIndex, RowIndex, LayerIndex based on the
-    @link(FScreenObject).@link(TScreenObject.ViewDirection)
-    and HorizontalIndex1, HorizontalIndex2, and
-    PerpendicularIndex}
-    procedure AssignColAndRowIndicies(
-      var ColIndex, RowIndex, LayerIndex : Integer;
-      const HorizontalIndex1, HorizontalIndex2, PerpendicularIndex: Integer);
-    { TODO -cRefactor : Consider replacing Model with an interface. }
-    {@name returns the extent of the grid that should be searched for
-    enclosed or intersected cells.}
-    procedure AssignParallellLimits(AModel: TBaseModel;
-      out FirstParallelIndexA, LastParallelIndexA,
-      FirstParallelIndexB, LastParallelIndexB: Integer);
     // @name is used with the front and side views of the model.
     // It returns the layer number of the cell containing Location.
     function FindLayer(const ColOrRow: integer; const Location: TEdgePoint;
@@ -4411,43 +4515,17 @@ SectionStarts.}
     procedure CreateSegment(const Point1,Point2: TEdgePoint;
       const LayerIndex, PerpendicularIndex, HorizontalIndex,
       VertexIndex, SectionIndex: Integer; var ASegment: TCellElementSegment);
-    // @name creates a set of segments for each cell intersected by
-    // @link(FScreenObject) in front or side views.
-    function IsPointInside(const CellLocation3D: T3DRealPoint;
-      Grid: TCustomModelGrid;
-      out SectionIndex: integer): boolean;
-    function GetPerpendiularLimit(const Grid: TCustomModelGrid): integer;
-    { TODO -cRefactor : Consider replacing Model with an interface. }
-    //
-    procedure AssignValuesToDataSet(
-      const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-      UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
     procedure UpdateHorizontalRangeOfCellsToCheck(
       var FirstHorizontalIndex, LastHorizontalIndex: Integer;
       const HorizontalIndex, HorizontalLimit: Integer;
       const APoint, PreviousPoint: TEdgePoint);
   private
-    { TODO -cRefactor : Consider replacing Model with an interface. }
-    // @name assigns values to FTopElevation and FBottomElevation
-    // based on the cell specified by ColIndex, RowIndex, and LayerIndex.
-    function AssignElevations(Const ColIndex, RowIndex,
-      LayerIndex: integer; AModel: TBaseModel): boolean;
-    function ElevationOk(const Grid: TCustomModelGrid;
-      const PerpendicularIndex: integer; const ColIndex: integer;
-      const RowIndex: integer): boolean;
     function GetCellOutlines(const Grid: TCustomModelGrid;
       const RowOrCol: integer): T2DRealPointArray;
     { TODO -cRefactor : Consider replacing Model with an interface. }
     //
     procedure UpdateSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);
-    { TODO -cRefactor : Consider replacing Model with an interface. }
-    //
-    procedure GetCellsToAssign(
-      const DataSetFunction: string; OtherData: TObject;
-      const EvaluatedAt: TEvaluatedAt; CellList: TCellAssignmentList;
-      AssignmentLocation: TAssignmentLocation; Orientation: TDataSetOrientation;
-      AModel: TBaseModel);
     { TODO -cRefactor : Consider replacing Model with an interface. }
     //
     procedure AddFrontSideSubSegments(var ASegment: TCellElementSegment;
@@ -4457,6 +4535,8 @@ SectionStarts.}
     //
     function DataSetUsed(const DataSet: TDataArray;
       var OtherData: TObject; AModel: TBaseModel): boolean; override;
+    function ElevationOk(const Grid: TCustomModelGrid; const PerpendicularIndex,
+      ColIndex, RowIndex: integer): boolean; override;
   protected
     { TODO -cRefactor : Consider replacing Model with an interface. }
     //
@@ -4470,19 +4550,10 @@ SectionStarts.}
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
-    { TODO -cRefactor : Consider replacing Model with an interface. }
-    //
-    procedure GetTopCellsToAssign(
-      const DataSetFunction: string; OtherData: TObject;
-      const DataSet: TDataArray; CellList: TCellAssignmentList;
-      AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
   public
     procedure InitializeExpression(out Compiler: TRbwParser;
       out DataSetFunction: string; out Expression: TExpression;
       const DataSet: TDataArray; const OtherData: TObject); override;
-    { TODO -cRefactor : Consider replacing Model with an interface. }
-    //
-    procedure AssignSelectedCells(AModel: TBaseModel); override;
     { TODO -cRefactor : Consider replacing Model with an interface. }
     // See @link(AssignValuesToDataSet).
     procedure AssignValuesToFrontDataSet(
@@ -5995,6 +6066,7 @@ begin
   end;
 
   ObjectLabel := AScreenObject.ObjectLabel;
+  ObjectVertexLabel := AScreenObject.ObjectVertexLabel;
   // copy the data of the other screen object.
   ChildModelName := AScreenObject.ChildModelName;
 //  ChildModelDiscretization := AScreenObject.ChildModelDiscretization;
@@ -6212,6 +6284,8 @@ begin
   ModflowSwrReaches := AScreenObject.ModflowSwrReaches;
 
   SutraBoundaries := AScreenObject.SutraBoundaries;
+
+  FootprintWell := AScreenObject.FootprintWell;
 
   // avoid creating AScreenObject.FPointPositionValues if it
   // hasn't been created yet.
@@ -7407,7 +7481,8 @@ begin
       msSutra22:
         begin
           Draw1ElevSutra(Direction, Bitmap32, DrawAsSelected);
-        end
+        end;
+      msFootPrint: ; // do nothing.
       else
         Assert(False);
     end;
@@ -7605,6 +7680,7 @@ begin
       end;
     end;
   end;
+  DrawVertexLabels(Bitmap32);
   DrawLabel(Bitmap32);
 end;
 
@@ -7979,6 +8055,59 @@ begin
   FCachedCells.Invalidate;
 end;
 
+procedure TScreenObject.DrawVertexLabels(const Bitmap32: TBitmap32);
+var
+  StartPoint: TPoint;
+  AZoomBox: TQRbwZoomBox2;
+  CoordIndex: Integer;
+  ExistingFont: TFont;
+  SectionIndex: Integer;
+  VertexLabel: string;
+begin
+  if ObjectVertexLabel.Visible then
+  begin
+    ExistingFont := TFont.Create;
+    try
+      ExistingFont.Assign(Bitmap32.Font);
+      Bitmap32.Font := ObjectVertexLabel.Font;
+      SectionIndex := 0;
+      for CoordIndex := 0 to Length(CanvasCoordinates) - 1 do
+      begin
+        StartPoint := CanvasCoordinates[CoordIndex];
+        AZoomBox := ZoomBox(ViewDirection);
+        if (StartPoint.X >= 0) and (StartPoint.Y >= 0)
+          and (StartPoint.X < AZoomBox.Image32.Width)
+          and (StartPoint.Y < AZoomBox.Image32.Height) then
+        begin
+          StartPoint.X := StartPoint.X + ObjectVertexLabel.OffSet.X;
+          StartPoint.Y := StartPoint.Y - ObjectVertexLabel.OffSet.Y;
+          if (SectionStart[SectionIndex] = CoordIndex) and SectionClosed[SectionIndex] then
+          begin
+            // do nothing
+          end
+          else if (SectionEnd[SectionIndex] = CoordIndex) and SectionClosed[SectionIndex] then
+          begin
+            VertexLabel := IntToStr(SectionStart[SectionIndex]+1)
+              + ', ' + IntToStr(CoordIndex+1);
+            Bitmap32.Textout(StartPoint.X, StartPoint.Y, VertexLabel);
+          end
+          else
+          begin
+            Bitmap32.Textout(StartPoint.X, StartPoint.Y, IntToStr(CoordIndex+1));
+          end;
+        end;
+        if SectionEnd[SectionIndex] = CoordIndex then
+        begin
+          Inc(SectionIndex);
+        end;
+      end;
+    finally
+      Bitmap32.Font := ExistingFont;
+      ExistingFont.Free;
+    end;
+  end;
+end;
+
 procedure TScreenObject.DrawLabel(const Bitmap32: TBitmap32);
 var
   LineIndex: Integer;
@@ -8047,9 +8176,13 @@ begin
   begin
     result := nil;
   end
+  else if FModel is TPhastModel then
+  begin
+    result := TPhastModel(FModel).GetCurrentScreenObject(VD);
+  end
   else
   begin
-    result := (FModel as TPhastModel).GetCurrentScreenObject(VD)
+    result := ((FModel as TChildModel).ParentModel as TPhastModel).GetCurrentScreenObject(VD);
   end;
 end;
 
@@ -8064,7 +8197,7 @@ begin
   begin
     Exit;
   end;
-  if (FModel <> nil) and (FModel as TPhastModel).Clearing then
+  if (FModel <> nil) and (FModel as TCustomModel).Clearing then
   begin
     Exit;
   end;
@@ -9933,6 +10066,8 @@ begin
   inherited Create(nil);
   FObjectLabel := TObjectLabel.Create;
   FObjectLabel.OnChange := RefreshGui;
+  FObjectVertexLabel := TObjectVertexLabel.Create;
+  FObjectVertexLabel.OnChange := RefreshGui;
   FDuplicatesAllowed := True;
   FPriorObjectIntersectLengthCol := -1;
   FPriorObjectIntersectLengthRow := -1;
@@ -9960,7 +10095,7 @@ begin
   FCellSize := 1;
   if FDataSets = nil then
   begin
-    FDataSets := TList.Create;
+    FDataSets := TList<TDataArray>.Create;
   end;
   if FDataSetFormulas = nil then
   begin
@@ -10909,6 +11044,12 @@ var
             BlockBottom := LocalModel.ModflowGrid.
               LayerElevations[ASegment.Col, ASegment.Row, ElevationIndex+1];
           end;
+        msFootPrint:
+          begin
+            BlockTop := 1;
+            BlockBottom := 0;
+            { TODO -cFootprint : This needs to be finished. }
+          end
         else Assert(False);
       end;
     end;
@@ -12871,7 +13012,8 @@ begin
       msSutra22:
         begin
           Draw2ElevSutra(Direction, Bitmap32);
-        end
+        end;
+      msFootPrint: ; // do nothing.
       else
         Assert(False)
     end;
@@ -13543,6 +13685,11 @@ end;
 procedure TScreenObject.SetObjectLabel(const Value: TObjectLabel);
 begin
   FObjectLabel.Assign(Value);
+end;
+
+procedure TScreenObject.SetObjectVertexLabel(const Value: TObjectVertexLabel);
+begin
+  FObjectVertexLabel.Assign(Value);
 end;
 
 procedure TScreenObject.ResetSubscriptions;
@@ -14598,7 +14745,7 @@ end;
 function TScreenObject.GetCompiler(const Orientation: TDataSetOrientation;
   const EvaluatedAt: TEvaluatedAt): TRbwParser;
 begin
-  result := (FModel as TPhastModel).GetCompiler(Orientation, EvaluatedAt);
+  result := (FModel as TCustomModel).GetCompiler(Orientation, EvaluatedAt);
 end;
 
 function TScreenObject.GetRow(const Grid: TCustomModelGrid; const Y: real): integer;
@@ -15220,7 +15367,14 @@ begin
         end;
       ecOne:
         begin
-          TempFormula := ElevationFormula;
+          if LocalModel.ModelSelection = msFootPrint then
+          begin
+            TempFormula := '0';
+          end
+          else
+          begin
+            TempFormula := ElevationFormula;
+          end;
           Compiler := GetCompiler(dso3D);
           try
             Compiler.Compile(TempFormula);
@@ -15236,7 +15390,14 @@ begin
         end;
       ecTwo:
         begin
-          TempFormula := HigherElevationFormula;
+          if LocalModel.ModelSelection = msFootPrint then
+          begin
+            TempFormula := '1';
+          end
+          else
+          begin
+            TempFormula := HigherElevationFormula;
+          end;
           Compiler := GetCompiler(dso3D);
           try
             Compiler.Compile(TempFormula);
@@ -15250,7 +15411,14 @@ begin
           InitializeUsedDataSets(LocalModel, Compiler, HigherElevExpression,
             HigherElevVariables, HigherElevDataSets);
 
-          TempFormula := LowerElevationFormula;
+          if LocalModel.ModelSelection = msFootPrint then
+          begin
+            TempFormula := '0';
+          end
+          else
+          begin
+            TempFormula := LowerElevationFormula;
+          end;
           Compiler := GetCompiler(dso3D);
           try
             Compiler.Compile(TempFormula);
@@ -16316,6 +16484,23 @@ begin
   end;
 end;
 
+procedure TScreenObject.SetFootprintWell(const Value: TFootprintWell);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if FFootprintWell <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(FFootprintWell);
+  end
+  else
+  begin
+    CreateFootprintWell;
+    FFootprintWell.Assign(Value);
+  end;
+end;
+
 procedure TScreenObject.SetFormulaParsers;
 var
   Index: Integer;
@@ -16332,6 +16517,16 @@ begin
     FormulaObject.Parser := frmGoPhast.PhastModel.GetCompiler(
       ADataArray.Orientation, ADataArray.EvaluatedAt);
 
+  end;
+end;
+
+procedure TScreenObject.CreateFootprintWell;
+begin
+  if FFootprintWell = nil then
+  begin
+    FFootprintWell := TFootprintWell.Create(FModel, self);
+//    FFootprintWell.ScreenObject := self;
+//    FFootprintWell.Orientation := FViewDirection;
   end;
 end;
 
@@ -16618,6 +16813,7 @@ var
   FormulaIndex: Integer;
   FormulaObject: TFormulaObject;
 begin
+  FreeAndNil(FFootprintWell);
   FSutraBoundaries.Free;
   FStoredSutraAngle.Free;
   FUsedModels.Free;
@@ -16725,6 +16921,7 @@ begin
   FImportedValues.Free;
   FCachedCells.Free;
   FObjectLabel.Free;
+  FObjectVertexLabel.Free;
 end;
 
 procedure TScreenObject.DestroyLastSubPolygon;
@@ -16741,6 +16938,16 @@ function TScreenObject.GetFluxBoundary: TFluxBoundary;
 begin
   CreatePhastFluxBoundary;
   result := FFluxBoundary
+end;
+
+function TScreenObject.GetFootprintWell: TFootprintWell;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateFootprintWell;
+  end;
+  result := FFootprintWell;
 end;
 
 function TScreenObject.GetDataSetCapacity: integer;
@@ -17427,7 +17634,7 @@ end;
 function TScreenObject.Delegate: TCustomScreenObjectDelegate;
 begin
   result := FDelegateCollection.Delegate(
-    (FModel as TPhastModel).ModelSelection);
+    (FModel as TCustomModel).ModelSelection);
 end;
 
 function TScreenObject.IsOutsideBoxPlusBuffer(const Location: TPoint2D;
@@ -20420,6 +20627,7 @@ end;
 function TCellElementSegmentList.Add(ASegment: TCellElementSegment): Integer;
 begin
   result := inherited Add(ASegment);
+  ASegment.FPositionInSegmentList := result;
 end;
 
 procedure TCellElementSegmentList.CacheData;
@@ -20508,6 +20716,8 @@ var
   PolyIndex: Integer;
   Epsilon: double;
   PointIndex: Integer;
+//  AnisotropicLocation: TPoint2D;
+  IntervalCheckIndex: Integer;
   procedure ProcessSegment;
   begin
     if MinX > Segment.X1  then
@@ -20573,7 +20783,7 @@ begin
       FEndPoints.MaxPoints := FStartPoints.MaxPoints;
       Segment := Items[0];
       MinX := Segment.X1;
-      MinY := Segment.Y1;
+      MinY := Segment.Y1*Anisotropy;
       MaxX := MinX;
       MaxY := MinY;
       ProcessSegment;
@@ -20783,13 +20993,28 @@ begin
       ModelOutline := frmGoPhast.PhastModel.
         Mesh.MeshBox(FScreenObject.ViewDirection, FScreenObject.SutraAngle);
     end;
-    for PointIndex := 0 to Length(ModelOutline) - 1 do
+//    AnisotropicLocation := Location;
+//    if Anisotropy <> 1 then
+//    begin
+//      AnisotropicLocation.y := AnisotropicLocation.y*Anisotropy
+//    end;
+    if Anisotropy > 1 then
     begin
-      ModelOutline[PointIndex].y := ModelOutline[PointIndex].y * Anisotropy;
+      for PointIndex := 0 to Length(ModelOutline) - 1 do
+      begin
+        ModelOutline[PointIndex].y := ModelOutline[PointIndex].y * Anisotropy;
+      end;
     end;
     if (Length(ModelOutline) > 0)
       and not PointInConvexPolygon(Location, ModelOutline) then
     begin
+//    if Anisotropy > 1 then
+//    begin
+      for PointIndex := 0 to Length(ModelOutline) - 1 do
+      begin
+        ModelOutline[PointIndex].y := ModelOutline[PointIndex].y * Anisotropy;
+      end;
+//    end;
       // define the search circle.
       SearchCircle.x := Location.x;
       SearchCircle.y := Location.y{*Anisotropy};
@@ -20797,8 +21022,8 @@ begin
       // interesect the last edge with the circle.
       GridEdgeSegment[1] := ModelOutline[Length(ModelOutline)-1];
       GridEdgeSegment[2] := ModelOutline[0];
-      GridEdgeSegment[1].y := GridEdgeSegment[1].y*Anisotropy;
-      GridEdgeSegment[2].y := GridEdgeSegment[2].y*Anisotropy;
+//      GridEdgeSegment[1].y := GridEdgeSegment[1].y{*Anisotropy};
+//      GridEdgeSegment[2].y := GridEdgeSegment[2].y{*Anisotropy};
       SetLength(IntersectionArray,Length(ModelOutline)*2);
       PolyCount := 0;
       IntersectionPoint(GridEdgeSegment,SearchCircle, ICnt, I1,I2);
@@ -20817,8 +21042,8 @@ begin
       begin
         GridEdgeSegment[1] := ModelOutline[PolyIndex-1];
         GridEdgeSegment[2] := ModelOutline[PolyIndex];
-        GridEdgeSegment[1].y := GridEdgeSegment[1].y*Anisotropy;
-        GridEdgeSegment[2].y := GridEdgeSegment[2].y*Anisotropy;
+//        GridEdgeSegment[1].y := GridEdgeSegment[1].y{*Anisotropy};
+//        GridEdgeSegment[2].y := GridEdgeSegment[2].y{*Anisotropy};
         IntersectionPoint(GridEdgeSegment,SearchCircle, ICnt, I1,I2);
         if ICnt >= 1 then
         begin
@@ -20890,6 +21115,12 @@ begin
         Max(MinY, IntervalDefinitions[2].LowerBoundary);
       IntervalDefinitions[3].UpperBoundary :=
         Min(MaxY, IntervalDefinitions[3].UpperBoundary);
+
+      for IntervalCheckIndex := 0 to 3 do
+      begin
+        Assert(IntervalDefinitions[IntervalCheckIndex].LowerBoundary
+          <= IntervalDefinitions[IntervalCheckIndex].UpperBoundary);
+      end;
     end;
 
     SectionList := FRangeTree.Search(IntervalDefinitions);
@@ -21065,6 +21296,7 @@ end;
 constructor TCellElementSegment.Create(ScreenObject: TScreenObject);
 begin
   inherited Create;
+  FPositionInSegmentList := -1;
   FScreenObject := ScreenObject;
 end;
 
@@ -21129,6 +21361,7 @@ begin
   Stream.Read(FSegment, SizeOf(FSegment));
   FSectionIndex := ReadCompInt(Stream);
   LgrEdge := ReadCompBoolean(Stream);
+  FPositionInSegmentList := ReadCompInt(Stream);
 
   SubSegLength := ReadCompInt(Stream);
   SetLength(FSubSegments, SubSegLength);
@@ -21161,6 +21394,7 @@ begin
   Stream.Write(FSegment, SizeOf(FSegment));
   WriteCompInt(Stream, FSectionIndex);
   WriteCompBoolean(Stream, LgrEdge);
+  WriteCompInt(Stream, FPositionInSegmentList);
 
   SubSegLength := System.Length(FSubSegments);
   WriteCompInt(Stream, SubSegLength);
@@ -21494,7 +21728,11 @@ begin
         msSutra22:
           begin
             Item.DelegateClass := TSutraDelegate.ClassName;
-          end
+          end;
+        msFootPrint:
+          begin
+            Item.DelegateClass := TFootprintDelegate.ClassName;
+          end;
         else
           begin
             Assert(False);
@@ -24680,6 +24918,9 @@ function TModflowDelegate.ElevationOk(const Grid: TCustomModelGrid;
   const RowIndex: integer): boolean;
 var
   MFGrid: TModflowGrid;
+  CellBottom: Double;
+  CellTop: Double;
+  CellCenter: double;
 begin
   result := False;
   case FScreenObject.ViewDirection of
@@ -24710,13 +24951,19 @@ begin
               begin
                 Exit
               end;
+              CellTop := MFGrid.LayerElevations[
+                  ColIndex, RowIndex,PerpendicularIndex];
+              CellBottom := MFGrid.LayerElevations[
+                  ColIndex, RowIndex,PerpendicularIndex+1];
               result :=
-                (FScreenObject.BottomElevation <
-                  MFGrid.LayerElevations[
-                  ColIndex, RowIndex,PerpendicularIndex])
-                and (FScreenObject.TopElevation >
-                  MFGrid.LayerElevations[
-                  ColIndex, RowIndex,PerpendicularIndex+1]);
+                (FScreenObject.BottomElevation < CellTop)
+                and (FScreenObject.TopElevation > CellBottom);
+              if result and FScreenObject.SetValuesOfEnclosedCells then
+              begin
+                CellCenter := (CellBottom+CellTop)/2;
+                result := (FScreenObject.TopElevation >= CellCenter)
+                  and (CellCenter >= FScreenObject.BottomElevation);
+              end;
             end;
           else Assert(False);
         end;
@@ -24814,7 +25061,7 @@ begin
     UseLgrEdgeCells, AssignmentLocation);
 end;
 
-function TModflowDelegate.IsPointInside(
+function TCustomBlockGridDelegate.IsPointInside(
   const CellLocation3D: T3DRealPoint;
   Grid: TCustomModelGrid; out SectionIndex: integer): boolean;
 var
@@ -24839,7 +25086,7 @@ begin
   end;
 end;
 
-function TModflowDelegate.GetPerpendiularLimit(
+function TCustomBlockGridDelegate.GetPerpendiularLimit(
   const Grid: TCustomModelGrid): integer;
 begin
   result := -1;
@@ -24851,7 +25098,7 @@ begin
   end;
 end;
 
-function TModflowDelegate.AssignElevations(Const ColIndex, RowIndex,
+function TCustomBlockGridDelegate.AssignElevations(Const ColIndex, RowIndex,
   LayerIndex: integer; AModel: TBaseModel): boolean;
 begin
   result := True;
@@ -24894,7 +25141,7 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.AssignSelectedCells(
+procedure TCustomBlockGridDelegate.AssignSelectedCells(
   AModel: TBaseModel);
 var
   CellList: TCellAssignmentList;
@@ -24935,7 +25182,7 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.AssignValuesToDataSet(
+procedure TCustomBlockGridDelegate.AssignValuesToDataSet(
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 var
@@ -24967,8 +25214,6 @@ begin
     end;
 
   // DataSetUsed doesn't test for transient data sets.
-//  if DataSetUsed(DataSet, OtherData) then
-//  begin
     UsedVariables := TStringList.Create;
     try
       try
@@ -25037,7 +25282,6 @@ begin
       (FModel as TPhastModel).DataArrayManager.CacheDataArrays;
       UsedVariables.Free;
     end;
-//  end;
   finally
     CellList.Free;
   end;
@@ -25089,7 +25333,7 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.AssignParallellLimits(AModel: TBaseModel;
+procedure TCustomBlockGridDelegate.AssignParallellLimits(AModel: TBaseModel;
   out FirstParallelIndexA, LastParallelIndexA,
   FirstParallelIndexB, LastParallelIndexB: Integer);
 var
@@ -25167,7 +25411,7 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.AssignColAndRowIndicies(
+procedure TCustomBlockGridDelegate.AssignColAndRowIndicies(
   var ColIndex, RowIndex, LayerIndex : Integer;
   const HorizontalIndex1, HorizontalIndex2, PerpendicularIndex: Integer);
 begin
@@ -25239,7 +25483,7 @@ begin
   inherited;
 end;
 
-procedure TModflowDelegate.GetCellsToAssign(
+procedure TCustomBlockGridDelegate.GetCellsToAssign(
   const DataSetFunction: string; OtherData: TObject;
   const EvaluatedAt: TEvaluatedAt; CellList: TCellAssignmentList;
   AssignmentLocation: TAssignmentLocation; Orientation: TDataSetOrientation;
@@ -25589,7 +25833,7 @@ begin
     AssignmentLocation, Orientation, AModel);
 end;
 
-procedure TModflowDelegate.GetTopCellsToAssign(
+procedure TCustomBlockGridDelegate.GetTopCellsToAssign(
   const DataSetFunction: string; OtherData: TObject; const DataSet: TDataArray;
   CellList: TCellAssignmentList; AssignmentLocation: TAssignmentLocation;
   AModel: TBaseModel);
@@ -28855,6 +29099,10 @@ begin
   begin
     FModflowBoundaries.StopTalkingToAnyone;
   end;
+  if FFootprintWell <> nil then
+  begin
+    FFootprintWell.StopTalkingToAnyone;
+  end;
 end;
 
 function TScreenObject.StoreFlux: boolean;
@@ -28862,6 +29110,11 @@ begin
   result := (FFluxBoundary <> nil) and
     ((FluxBoundary.BoundaryValue.Count > 0)
     or (FluxBoundary.Solution.Count > 0));
+end;
+
+function TScreenObject.StoreFootprintWell: Boolean;
+begin
+  result := (FFootprintWell <> nil) and FFootprintWell.Used;
 end;
 
 function TScreenObject.StoreImportedHigherSectionElevations: Boolean;
@@ -29393,6 +29646,7 @@ begin
   FMixtureCompiler := nil;
   FMixtureExpression := nil;
   UsedVariables := nil;
+  StackPosition := -1;
   try
     if (Stack <> nil) then
     begin
@@ -36334,7 +36588,7 @@ begin
   begin
     if FModflowChdBoundary = nil then
     begin
-      FModflowChdBoundary := TChdBoundary.Create(nil, nil);
+      FModflowChdBoundary := TChdBoundary.Create(Model, nil);
     end;
     FModflowChdBoundary.Assign(Source.FModflowChdBoundary);
   end;
@@ -36347,7 +36601,7 @@ begin
   begin
     if FModflowGhbBoundary = nil then
     begin
-      FModflowGhbBoundary := TGhbBoundary.Create(nil, nil);
+      FModflowGhbBoundary := TGhbBoundary.Create(Model, nil);
     end;
     FModflowGhbBoundary.Assign(Source.FModflowGhbBoundary);
   end;
@@ -36360,7 +36614,7 @@ begin
   begin
     if FModflowWellBoundary = nil then
     begin
-      FModflowWellBoundary := TMfWellBoundary.Create(nil, nil);
+      FModflowWellBoundary := TMfWellBoundary.Create(Model, nil);
     end;
     FModflowWellBoundary.Assign(Source.FModflowWellBoundary);
   end;
@@ -36373,7 +36627,7 @@ begin
   begin
     if FModflowRivBoundary = nil then
     begin
-      FModflowRivBoundary := TRivBoundary.Create(nil, nil);
+      FModflowRivBoundary := TRivBoundary.Create(Model, nil);
     end;
     FModflowRivBoundary.Assign(Source.FModflowRivBoundary);
   end;
@@ -36386,7 +36640,7 @@ begin
   begin
     if FModflowDrnBoundary = nil then
     begin
-      FModflowDrnBoundary := TDrnBoundary.Create(nil, nil);
+      FModflowDrnBoundary := TDrnBoundary.Create(Model, nil);
     end;
     FModflowDrnBoundary.Assign(Source.FModflowDrnBoundary);
   end;
@@ -36399,7 +36653,7 @@ begin
   begin
     if FModflowDrtBoundary = nil then
     begin
-      FModflowDrtBoundary := TDrtBoundary.Create(nil, nil);
+      FModflowDrtBoundary := TDrtBoundary.Create(Model, nil);
     end;
     FModflowDrtBoundary.Assign(Source.FModflowDrtBoundary);
   end;
@@ -36412,7 +36666,7 @@ begin
   begin
     if FModflowRchBoundary = nil then
     begin
-      FModflowRchBoundary := TRchBoundary.Create(nil, nil);
+      FModflowRchBoundary := TRchBoundary.Create(Model, nil);
     end;
     FModflowRchBoundary.Assign(Source.FModflowRchBoundary);
   end;
@@ -36425,7 +36679,7 @@ begin
   begin
     if FModflowEvtBoundary = nil then
     begin
-      FModflowEvtBoundary := TEvtBoundary.Create(nil, nil);
+      FModflowEvtBoundary := TEvtBoundary.Create(Model, nil);
     end;
     FModflowEvtBoundary.Assign(Source.FModflowEvtBoundary);
   end;
@@ -36438,7 +36692,7 @@ begin
   begin
     if FModflowEtsBoundary = nil then
     begin
-      FModflowEtsBoundary := TEtsBoundary.Create(nil, nil);
+      FModflowEtsBoundary := TEtsBoundary.Create(Model, nil);
     end;
     FModflowEtsBoundary.Assign(Source.FModflowEtsBoundary);
   end;
@@ -36451,7 +36705,7 @@ begin
   begin
     if FModflowResBoundary = nil then
     begin
-      FModflowResBoundary := TResBoundary.Create(nil, nil);
+      FModflowResBoundary := TResBoundary.Create(Model, nil);
     end;
     FModflowResBoundary.Assign(Source.FModflowResBoundary);
   end;
@@ -36464,7 +36718,7 @@ begin
   begin
     if FModflowLakBoundary = nil then
     begin
-      FModflowLakBoundary := TLakBoundary.Create(nil, nil);
+      FModflowLakBoundary := TLakBoundary.Create(Model, nil);
     end;
     FModflowLakBoundary.Assign(Source.FModflowLakBoundary);
   end;
@@ -36477,7 +36731,7 @@ begin
   begin
     if FModflowSfrBoundary = nil then
     begin
-      FModflowSfrBoundary := TSfrBoundary.Create(nil, nil);
+      FModflowSfrBoundary := TSfrBoundary.Create(Model, nil);
     end;
     FModflowSfrBoundary.Assign(Source.FModflowSfrBoundary);
   end;
@@ -36490,7 +36744,7 @@ begin
   begin
     if FModflowStrBoundary = nil then
     begin
-      FModflowStrBoundary := TStrBoundary.Create(nil, nil);
+      FModflowStrBoundary := TStrBoundary.Create(Model, nil);
     end;
     FModflowStrBoundary.Assign(Source.FModflowStrBoundary);
   end;
@@ -36503,7 +36757,7 @@ begin
   begin
     if FModflowUzfBoundary = nil then
     begin
-      FModflowUzfBoundary := TUzfBoundary.Create(nil, nil);
+      FModflowUzfBoundary := TUzfBoundary.Create(Model, nil);
     end;
     FModflowUzfBoundary.Assign(Source.FModflowUzfBoundary);
   end;
@@ -36516,7 +36770,7 @@ begin
   begin
     if FModflowHeadObservations = nil then
     begin
-      FModflowHeadObservations := THobBoundary.Create(nil, nil);
+      FModflowHeadObservations := THobBoundary.Create(Model, nil);
     end;
     FModflowHeadObservations.Assign(Source.FModflowHeadObservations);
   end;
@@ -36529,7 +36783,7 @@ begin
   begin
     if FModflowHfbBoundary = nil then
     begin
-      FModflowHfbBoundary := THfbBoundary.Create(nil, nil);
+      FModflowHfbBoundary := THfbBoundary.Create(Model, nil);
     end;
     FModflowHfbBoundary.Assign(Source.FModflowHfbBoundary);
   end;
@@ -36542,7 +36796,7 @@ begin
   begin
     if FModflowGage = nil then
     begin
-      FModflowGage := TStreamGage.Create(nil, nil);
+      FModflowGage := TStreamGage.Create(Model.Invalidate, nil);
     end;
     FModflowGage.Assign(Source.FModflowGage);
   end;
@@ -36555,7 +36809,7 @@ begin
   begin
     if FModflowMnw2Boundary = nil then
     begin
-      FModflowMnw2Boundary := TMnw2Boundary.Create(nil, nil);
+      FModflowMnw2Boundary := TMnw2Boundary.Create(Model, nil);
     end;
     FModflowMnw2Boundary.Assign(Source.FModflowMnw2Boundary);
   end;
@@ -36569,7 +36823,7 @@ begin
   begin
     if FModflowMnw1Boundary = nil then
     begin
-      FModflowMnw1Boundary := TMnw1Boundary.Create(nil, nil);
+      FModflowMnw1Boundary := TMnw1Boundary.Create(Model, nil);
     end;
     FModflowMnw1Boundary.Assign(Source.FModflowMnw1Boundary);
   end;
@@ -36583,7 +36837,7 @@ begin
   begin
     if FModflowHydmodData = nil then
     begin
-      FModflowHydmodData := THydmodData.Create(nil, nil);
+      FModflowHydmodData := THydmodData.Create(Model, nil);
     end;
     FModflowHydmodData.Assign(Source.FModflowHydmodData);
   end;
@@ -36596,7 +36850,7 @@ begin
   begin
     if FMt3dmsConcBoundary = nil then
     begin
-      FMt3dmsConcBoundary := TMt3dmsConcBoundary.Create(nil, nil);
+      FMt3dmsConcBoundary := TMt3dmsConcBoundary.Create(Model, nil);
     end;
     FMt3dmsConcBoundary.Assign(Source.FMt3dmsConcBoundary);
   end;
@@ -36609,7 +36863,7 @@ begin
   begin
     if FMt3dmsTransObservations = nil then
     begin
-      FMt3dmsTransObservations := TMt3dmsTransObservations.Create(nil, nil);
+      FMt3dmsTransObservations := TMt3dmsTransObservations.Create(Model, nil);
     end;
     FMt3dmsTransObservations.Assign(Source.FMt3dmsTransObservations);
   end;
@@ -36622,7 +36876,7 @@ begin
   begin
     if FModflowFhbHeadBoundary = nil then
     begin
-      FModflowFhbHeadBoundary := TFhbHeadBoundary.Create(nil, nil);
+      FModflowFhbHeadBoundary := TFhbHeadBoundary.Create(Model, nil);
     end;
     FModflowFhbHeadBoundary.Assign(Source.FModflowFhbHeadBoundary);
   end;
@@ -36635,7 +36889,7 @@ begin
   begin
     if FModflowFhbFlowBoundary = nil then
     begin
-      FModflowFhbFlowBoundary := TFhbFlowBoundary.Create(nil, nil);
+      FModflowFhbFlowBoundary := TFhbFlowBoundary.Create(Model, nil);
     end;
     FModflowFhbFlowBoundary.Assign(Source.FModflowFhbFlowBoundary);
   end;
@@ -36648,7 +36902,7 @@ begin
   begin
     if FFmpWellBoundary = nil then
     begin
-      FFmpWellBoundary := TFmpWellBoundary.Create(nil, nil);
+      FFmpWellBoundary := TFmpWellBoundary.Create(Model, nil);
     end;
     FFmpWellBoundary.Assign(Source.FFmpWellBoundary);
   end;
@@ -36661,7 +36915,7 @@ begin
   begin
     if FFmpPrecipBoundary = nil then
     begin
-      FFmpPrecipBoundary := TFmpPrecipBoundary.Create(nil, nil);
+      FFmpPrecipBoundary := TFmpPrecipBoundary.Create(Model, nil);
     end;
     FFmpPrecipBoundary.Assign(Source.FFmpPrecipBoundary);
   end;
@@ -36674,7 +36928,7 @@ begin
   begin
     if FFmpRefEvapBoundary = nil then
     begin
-      FFmpRefEvapBoundary := TFmpRefEvapBoundary.Create(nil, nil);
+      FFmpRefEvapBoundary := TFmpRefEvapBoundary.Create(Model, nil);
     end;
     FFmpRefEvapBoundary.Assign(Source.FFmpRefEvapBoundary);
   end;
@@ -36687,7 +36941,7 @@ begin
   begin
     if FFmpCropIDBoundary = nil then
     begin
-      FFmpCropIDBoundary := TFmpCropIDBoundary.Create(nil, nil);
+      FFmpCropIDBoundary := TFmpCropIDBoundary.Create(Model, nil);
     end;
     FFmpCropIDBoundary.Assign(Source.FFmpCropIDBoundary);
   end;
@@ -36700,7 +36954,7 @@ begin
   begin
     if FFmpFarmIDBoundary = nil then
     begin
-      FFmpFarmIDBoundary := TFmpFarmIDBoundary.Create(nil, nil);
+      FFmpFarmIDBoundary := TFmpFarmIDBoundary.Create(Model, nil);
     end;
     FFmpFarmIDBoundary.Assign(Source.FFmpFarmIDBoundary);
   end;
@@ -36713,7 +36967,7 @@ begin
   begin
     if FCfpPipes = nil then
     begin
-      FCfpPipes := TCfpPipeBoundary.Create(nil, nil);
+      FCfpPipes := TCfpPipeBoundary.Create(Model, nil);
     end;
     FCfpPipes.Assign(Source.FCfpPipes);
   end;
@@ -36726,7 +36980,7 @@ begin
   begin
     if FCfpFixedHeads = nil then
     begin
-      FCfpFixedHeads := TCfpFixedBoundary.Create(nil, nil);
+      FCfpFixedHeads := TCfpFixedBoundary.Create(Model, nil);
     end;
     FCfpFixedHeads.Assign(Source.FCfpFixedHeads);
   end;
@@ -36739,7 +36993,7 @@ begin
   begin
     if FCfpRchFraction = nil then
     begin
-      FCfpRchFraction := TCfpRchFractionBoundary.Create(nil, nil);
+      FCfpRchFraction := TCfpRchFractionBoundary.Create(Model, nil);
     end;
     FCfpRchFraction.Assign(Source.FCfpRchFraction);
   end;
@@ -36752,7 +37006,7 @@ begin
   begin
     if FSwrRain = nil then
     begin
-      FSwrRain := TSwrRainBoundary.Create(nil, nil);
+      FSwrRain := TSwrRainBoundary.Create(Model, nil);
     end;
     FSwrRain.Assign(Source.FSwrRain);
   end;
@@ -36765,7 +37019,7 @@ begin
   begin
     if FSwrEvap = nil then
     begin
-      FSwrEvap := TSwrEvapBoundary.Create(nil, nil);
+      FSwrEvap := TSwrEvapBoundary.Create(Model, nil);
     end;
     FSwrEvap.Assign(Source.FSwrEvap);
   end;
@@ -36778,7 +37032,7 @@ begin
   begin
     if FSwrLatInflow = nil then
     begin
-      FSwrLatInflow := TSwrLatInflowBoundary.Create(nil, nil);
+      FSwrLatInflow := TSwrLatInflowBoundary.Create(Model, nil);
     end;
     FSwrLatInflow.Assign(Source.FSwrLatInflow);
   end;
@@ -36791,7 +37045,7 @@ begin
   begin
     if FSwrStage = nil then
     begin
-      FSwrStage := TSwrStageBoundary.Create(nil, nil);
+      FSwrStage := TSwrStageBoundary.Create(Model, nil);
     end;
     FSwrStage.Assign(Source.FSwrStage);
   end;
@@ -36804,7 +37058,7 @@ begin
   begin
     if FSwrDirectRunoff = nil then
     begin
-      FSwrDirectRunoff := TSwrDirectRunoffBoundary.Create(nil, nil);
+      FSwrDirectRunoff := TSwrDirectRunoffBoundary.Create(Model, nil);
     end;
     FSwrDirectRunoff.Assign(Source.FSwrDirectRunoff);
   end;
@@ -36817,7 +37071,7 @@ begin
   begin
     if FSwrReaches = nil then
     begin
-      FSwrReaches := TSwrReachBoundary.Create(nil, nil);
+      FSwrReaches := TSwrReachBoundary.Create(Model, nil);
     end;
     FSwrReaches.Assign(Source.FSwrReaches);
   end;
@@ -41318,6 +41572,63 @@ begin
   FModelSelection := msModflowCfp;
 end;
 
+{ TFootprintDelegate }
+
+procedure TFootprintDelegate.AssignValuesToFrontDataSet(
+  const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
+  UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation);
+begin
+// do nothing
+end;
+
+procedure TFootprintDelegate.AssignValuesToSideDataSet(
+  const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
+  UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation);
+begin
+// do nothing
+end;
+
+procedure TFootprintDelegate.AssignValuesToTopDataSet(const DataSet: TDataArray;
+  OtherData: TObject; AModel: TBaseModel; UseLgrEdgeCells: TLgrCellTreatment;
+  AssignmentLocation: TAssignmentLocation = alAll);
+begin
+  AssignValuesToDataSet(DataSet, OtherData, AModel,
+    lctUse, alAll);
+end;
+
+function TFootprintDelegate.ElevationOk(const Grid: TCustomModelGrid;
+  const PerpendicularIndex, ColIndex, RowIndex: integer): boolean;
+begin
+  result := True;
+end;
+
+procedure TFootprintDelegate.GetFrontCellsToAssign(
+  const DataSetFunction: string; OtherData: TObject; const DataSet: TDataArray;
+  CellList: TCellAssignmentList; AssignmentLocation: TAssignmentLocation;
+  AModel: TBaseModel);
+begin
+// do nothing
+end;
+
+procedure TFootprintDelegate.GetSideCellsToAssign(const DataSetFunction: string;
+  OtherData: TObject; const DataSet: TDataArray; CellList: TCellAssignmentList;
+  AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
+begin
+// do nothing
+end;
+
+procedure TFootprintDelegate.UpdateFrontSegments(AModel: TBaseModel;
+  const EvaluatedAt: TEvaluatedAt);
+begin
+// do nothing
+end;
+
+procedure TFootprintDelegate.UpdateSideSegments(AModel: TBaseModel;
+  const EvaluatedAt: TEvaluatedAt);
+begin
+// do nothing
+end;
+
 initialization
   RegisterClass(TScreenObject);
   RegisterClass(TPhastDelegate);
@@ -41328,6 +41639,7 @@ initialization
   RegisterClass(TModflowFmpDelegate);
   RegisterClass(TModflowCfpDelegate);
   RegisterClass(TSutraDelegate);
+  RegisterClass(TFootprintDelegate);
   RegisterClass(TMultiValueScreenObject);
   RegisterClass(TScreenObjectClipboard);
 

@@ -171,28 +171,29 @@ begin
 end;
 
 procedure TUndoImportTimeSeries.EnableMenuItems;
-var
-  ChildIndex: Integer;
-  ChildModel: TChildModel;
+//var
+//  ChildIndex: Integer;
+//  ChildModel: TChildModel;
 begin
-  frmGoPhast.miTimeSeriestoShapefile.Enabled :=
-    (frmGoPhast.PhastModel.TimeSeries.Series.Count > 0)
-    or (frmGoPhast.PhastModel.TimeSeries.SeriesV6.Count > 0);
-  if not frmGoPhast.miTimeSeriestoShapefile.Enabled
-    and frmGoPhast.PhastModel.LgrUsed then
-  begin
-    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
-    begin
-      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
-      frmGoPhast.miTimeSeriestoShapefile.Enabled :=
-        (ChildModel.TimeSeries.Series.Count > 0)
-        or (ChildModel.TimeSeries.SeriesV6.Count > 0);
-      if frmGoPhast.miTimeSeriestoShapefile.Enabled then
-      begin
-        break;
-      end;
-    end;
-  end;
+  frmGoPhast.EnableModpathToShapefile;
+//  frmGoPhast.miTimeSeriestoShapefile.Enabled :=
+//    (frmGoPhast.PhastModel.TimeSeries.Series.Count > 0)
+//    or (frmGoPhast.PhastModel.TimeSeries.SeriesV6.Count > 0);
+//  if not frmGoPhast.miTimeSeriestoShapefile.Enabled
+//    and frmGoPhast.PhastModel.LgrUsed then
+//  begin
+//    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+//    begin
+//      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+//      frmGoPhast.miTimeSeriestoShapefile.Enabled :=
+//        (ChildModel.TimeSeries.Series.Count > 0)
+//        or (ChildModel.TimeSeries.SeriesV6.Count > 0);
+//      if frmGoPhast.miTimeSeriestoShapefile.Enabled then
+//      begin
+//        break;
+//      end;
+//    end;
+//  end;
 end;
 
 { TframeModpathTimeSeriesDisplay }

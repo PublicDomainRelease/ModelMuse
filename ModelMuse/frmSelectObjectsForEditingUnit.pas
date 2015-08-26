@@ -15,6 +15,7 @@ type
     pmChangeStates: TPopupMenu;
     miCheckSelected: TMenuItem;
     UncheckSelected1: TMenuItem;
+    btnEditFeature: TButton;
     procedure FormCreate(Sender: TObject); override;
     procedure vstObjectsChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure btnOKClick(Sender: TObject);
@@ -22,7 +23,10 @@ type
     procedure btnDeleteClick(Sender: TObject);
     procedure miCheckSelectedClick(Sender: TObject);
     procedure UncheckSelected1Click(Sender: TObject);
+    procedure btnEditFeatureClick(Sender: TObject);
   private
+    { TODO : Consider replacing this with a TScreenObjectList}
+    //
     FListOfScreenObjects: TList;
     procedure SetData;
     procedure UpdateScreenObjectList;
@@ -41,7 +45,7 @@ implementation
 
 uses
   frmGoPhastUnit, frmScreenObjectPropertiesUnit, GoPhastTypes,
-  UndoItemsScreenObjects;
+  UndoItemsScreenObjects, frmEditFeatureFormulaUnit;
 
 {$R *.dfm}
 
@@ -70,6 +74,43 @@ begin
       ListOfScreenObjects.Free;
     end;
   end;
+end;
+
+procedure TfrmSelectObjectsForEditing.btnEditFeatureClick(Sender: TObject);
+var
+  ScreenObjects: TScreenObjectList;
+  index: Integer;
+  frmEditFeatureFormula: TfrmEditFeatureFormula;
+begin
+  inherited;
+  if not frmGoPhast.CanEdit then Exit;
+  frmGoPhast.CanEdit := False;
+  try
+    if FListOfScreenObjects.Count > 0 then
+    begin
+      ScreenObjects := TScreenObjectList.Create;
+      try
+        ScreenObjects.Capacity := FListOfScreenObjects.Count;
+        for index := 0 to FListOfScreenObjects.Count - 1 do
+        begin
+          ScreenObjects.Add(
+            TScreenObject(FListOfScreenObjects[index]));
+        end;
+        frmEditFeatureFormula := TfrmEditFeatureFormula.Create(nil);
+        try
+          frmEditFeatureFormula.GetData(ScreenObjects);
+          frmEditFeatureFormula.ShowModal;
+        finally
+          frmEditFeatureFormula.Free
+        end;
+      finally
+        ScreenObjects.Free;
+      end;
+    end;
+  finally
+    frmGoPhast.CanEdit := True;
+  end;
+
 end;
 
 procedure TfrmSelectObjectsForEditing.btnOKClick(Sender: TObject);
@@ -130,6 +171,7 @@ begin
   inherited;
   UpdateScreenObjectList;
   GetData;
+  btnEditFeature.Enabled := frmGoPhast.ModelSelection in ModflowSelection;
 end;
 
 procedure TfrmSelectObjectsForEditing.HandleChecked(

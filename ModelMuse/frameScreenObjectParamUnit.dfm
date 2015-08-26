@@ -30,6 +30,7 @@ inherited frameScreenObjectParam: TframeScreenObjectParam
       ItemHeight = 16
       TabOrder = 1
       OnStateChange = clbParametersStateChange
+      OnClickCheck = clbParametersClickCheck
       InternalVersion = 202
     end
   end
@@ -116,6 +117,8 @@ inherited frameScreenObjectParam: TframeScreenObjectParam
           CheckStyle = csCheck
           AutoAdjustColWidths = True
         end>
+      ExplicitLeft = 1
+      ExplicitTop = 51
       ExplicitHeight = 126
     end
   end

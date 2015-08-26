@@ -538,8 +538,16 @@ begin
     frmGoPhast.PhastModel.AddDataSet(LayerData);
     LayerData.DataType := rdtDouble;
     LayerData.Orientation := dsoTop;
-    LayerData.Formula :=
-      FortranFloatToStr(AModel.ModflowOptions.HNoFlow);
+    if FResultFormat = mfMt3dConc then
+    begin
+      LayerData.Formula :=
+        FortranFloatToStr(AModel.ModflowPackages.Mt3dBasic.InactiveConcentration);
+    end
+    else
+    begin
+      LayerData.Formula :=
+        FortranFloatToStr(AModel.ModflowOptions.HNoFlow);
+    end;
     LayerData.TwoInterpolatorClass := TLinearSfrpackInterpolator.ClassName;
 
 //    Grid := frmGoPhast.PhastModel.ModflowGrid;

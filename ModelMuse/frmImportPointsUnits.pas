@@ -17,6 +17,7 @@ type
   TRivColumns = (rcStartTime, rcEndTime, rcStage, rcConductance, rcBottom);
   TWelColumns = (wcStartTime, wcEndTime, wcPumpingRate);
   THobColumns = (hcName, hcTime, hcHead, hcStatistic, hcStatFlag);
+  TFootprintWellColumns = (fwcWithdrawal);
 
   {@abstract(@name is the command used to import
     points or reverse the import.)}
@@ -183,6 +184,8 @@ type
       PointCount: Integer; var AScreenObject: TScreenObject);
     procedure ImportModflowBoundary(var InvalidRow: Boolean;
       AScreenObject: TScreenObject; RowIndex: Integer);
+    procedure GetData;
+    procedure UpdateFootprintWellColumns;
     { Private declarations }
   public
     { Public declarations }
@@ -198,7 +201,7 @@ uses Clipbrd, Contnrs, GoPhastTypes, frmGoPhastUnit, RbwParser,
   ModflowConstantHeadBoundaryUnit, ModflowGhbUnit, ModflowWellUnit,
   ModflowRivUnit, ModelMuseUtilities, ModflowDrnUnit, AbstractGridUnit,
   frameHeadObservationsUnit, IntListUnit, framePackageHobUnit, ModflowHobUnit,
-  frameCustomCellObservationUnit;
+  frameCustomCellObservationUnit, FootprintPropertiesUnit, FootprintBoundary;
 
 {$R *.dfm}
 
@@ -231,6 +234,7 @@ resourcestring
   StrReadingData = 'Reading Data';
   StrProgress = 'Progress';
   StrNone = 'none';
+  StrFootprintWithdrawal = 'Withdrawal';
 
 procedure TfrmImportPoints.seRowsChange(Sender: TObject);
 begin
@@ -239,62 +243,9 @@ begin
 end;
 
 procedure TfrmImportPoints.FormCreate(Sender: TObject);
-var
-  Packages: TModflowPackages;
 begin
   inherited;
-  rgEvaluatedAt.Items[Ord(eaBlocks)] := EvalAtToString(eaBlocks,
-    frmGoPhast.PhastModel.ModelSelection, True, True);
-  rgEvaluatedAt.Items[Ord(eaNodes)] := EvalAtToString(eaNodes,
-    frmGoPhast.PhastModel.ModelSelection, True, True);
-  rgEvaluatedAt.Enabled := frmGoPhast.PhastModel.ModelSelection
-    in [msPhast, msSutra22];
-  if not rgEvaluatedAt.Enabled then
-  begin
-    rgEvaluatedAt.ItemIndex := 0;
-  end;
-
-  if (frmGoPhast.PhastModel.ModelSelection in ModflowSelection) then
-  begin
-    Packages := frmGoPhast.PhastModel.ModflowPackages;
-    if Packages.ChdBoundary.IsSelected then
-    begin
-      comboBoundaryChoice.Items.AddObject(Packages.ChdBoundary.PackageIdentifier,
-        Packages.ChdBoundary);
-    end;
-    if Packages.DrnPackage.IsSelected then
-    begin
-      comboBoundaryChoice.Items.AddObject(Packages.DrnPackage.PackageIdentifier,
-        Packages.DrnPackage);
-    end;
-    if Packages.GhbBoundary.IsSelected then
-    begin
-      comboBoundaryChoice.Items.AddObject(Packages.GhbBoundary.PackageIdentifier,
-        Packages.GhbBoundary);
-    end;
-    if Packages.RivPackage.IsSelected then
-    begin
-      comboBoundaryChoice.Items.AddObject(Packages.RivPackage.PackageIdentifier,
-        Packages.RivPackage);
-    end;
-    if Packages.WelPackage.IsSelected then
-    begin
-      comboBoundaryChoice.Items.AddObject(Packages.WelPackage.PackageIdentifier,
-        Packages.WelPackage);
-    end;
-    if Packages.HobPackage.IsSelected then
-    begin
-      comboBoundaryChoice.Items.AddObject(Packages.HobPackage.PackageIdentifier,
-        Packages.HobPackage);
-    end;
-  end;
-
-  FImportFileName := '';
-  cbIntersectedCellsClick(nil);
-  SetCheckBoxCaptions;
-  pcImportPoints.ActivePageIndex := 0;
-  UpdateDimensionColumns;
-  UpdateDataSets;
+  GetData;
 end;
 
 procedure TfrmImportPoints.UpdateChdColumns;
@@ -320,6 +271,29 @@ begin
       else Assert(False);
     end;
   end;
+end;
+
+procedure TfrmImportPoints.UpdateFootprintWellColumns;
+const
+  RequiredColumns = 1;
+var
+  FirstColumn: Integer;
+  ColIndex: TFootprintWellColumns;
+  ACol: Integer;
+begin
+  FirstColumn := rgElevationCount.ItemIndex + 2;
+  dgData.ColCount := FirstColumn + RequiredColumns;
+  SetBoundaryColumnFormats;
+
+  for ColIndex := Low(TFootprintWellColumns) to High(TFootprintWellColumns) do
+  begin
+    ACol := FirstColumn + Ord(ColIndex);
+    Assert(ACol < dgData.ColCount);
+    case ColIndex of
+      fwcWithdrawal: dgData.Cells[ACol, 0] := StrFootprintWithdrawal;
+    end;
+  end;
+
 end;
 
 procedure TfrmImportPoints.UpdateHobColumns;
@@ -383,7 +357,8 @@ begin
   for Index := 0 to DataArrayManager.DataSetCount -1 do
   begin
     DataSet := DataArrayManager.DataSets[Index];
-    if DataSet.EvaluatedAt = EvalAt then
+    if (DataSet.EvaluatedAt = EvalAt) and not (dcFormula in DataSet.Lock)
+      and DataSet.Visible then
     begin
       ShouldIncludeDataSet := false;
       case DataSet.Orientation of
@@ -955,215 +930,307 @@ var
   ObsCount: Integer;
   NewItemName: string;
   LocalObsRoot: string;
+  AFootPrint: TFootprintWell;
+  AValue: double;
+  DataArray: TDataArray;
+  DataArrayPosition: Integer;
 begin
   InvalidRow := False;
   Values := TRealList.Create;
   IntValues := TIntegerList.Create;
   try
-    Package := comboBoundaryChoice.Items.Objects[comboBoundaryChoice.ItemIndex]
-      as TModflowPackageSelection;
-    Packages := frmGoPhast.PhastModel.ModflowPackages;
-    for ColIndex := FRequiredCols to dgData.ColCount - 1 do
+    if frmGoPhast.ModelSelection in ModflowSelection then
     begin
-      if (Package = Packages.HobPackage) and (ColIndex = dgData.ColCount - 1) then
+      Package := comboBoundaryChoice.Items.Objects[comboBoundaryChoice.ItemIndex]
+        as TModflowPackageSelection;
+      Packages := frmGoPhast.PhastModel.ModflowPackages;
+      for ColIndex := FRequiredCols to dgData.ColCount - 1 do
       begin
-        try
-          IntValues.Add(StrToInt(dgData.Cells[ColIndex, RowIndex]));
-        except
-          on E: EConvertError do
-          begin
-            InvalidRow := True;
-            Exit;
-          end;
-        end;
-      end
-      else
-      if (Package = Packages.HobPackage) and (ColIndex = FRequiredCols) then
-      begin
-        // skip the name column.
-        Values.Add(0);
-      end
-      else
-      begin
-        try
-          Values.Add(StrToFloat(dgData.Cells[ColIndex, RowIndex]));
-        except
-          on E: EConvertError do
-          begin
-            InvalidRow := True;
-            Exit;
-          end;
-        end;
-      end;
-    end;
-    ABoundary := nil;
-    HobBoundary := nil;
-    if Package = Packages.ChdBoundary then
-    begin
-      AScreenObject.CreateChdBoundary;
-      ABoundary := AScreenObject.ModflowBoundaries.ModflowChdBoundary;
-    end
-    else if Package = Packages.GhbBoundary then
-    begin
-      AScreenObject.CreateGhbBoundary;
-      ABoundary := AScreenObject.ModflowBoundaries.ModflowGhbBoundary;
-    end
-    else if Package = Packages.WelPackage then
-    begin
-      AScreenObject.CreateWelBoundary;
-      ABoundary := AScreenObject.ModflowBoundaries.ModflowWellBoundary;
-    end
-    else if Package = Packages.RivPackage then
-    begin
-      AScreenObject.CreateRivBoundary;
-      ABoundary := AScreenObject.ModflowBoundaries.ModflowRivBoundary;
-    end
-    else if Package = Packages.DrnPackage then
-    begin
-      AScreenObject.CreateDrnBoundary;
-      ABoundary := AScreenObject.ModflowBoundaries.ModflowDrnBoundary;
-    end
-    else if Package = Packages.HobPackage then
-    begin
-      AScreenObject.CreateHeadObservations;
-      HobBoundary := AScreenObject.ModflowBoundaries.ModflowHeadObservations;
-      ObsCount := HobBoundary.Values.Count;
-      if ObsCount = 0 then
-      begin
-        Inc(FObsCount);
-      end;
-      LocalObsRoot := HobBoundary.ObservationName;
-      if LocalObsRoot = '' then
-      begin
-        LocalObsRoot := Trim(dgData.Cells[FRequiredCols + Ord(hcName), RowIndex]);
-      end;
-      if LocalObsRoot = '' then
-      begin
-        NewObsName := FObsRoot + IntToStr(FObsCount) + '_';
-        NewItemName := NewObsName + IntToStr(ObsCount+1);
-        while (Length(NewItemName) > 12) and (FObsRoot <> '') do
+        if (Package = Packages.HobPackage) and (ColIndex = dgData.ColCount - 1) then
         begin
-          FObsRoot := Copy(FObsRoot, 1, Length(FObsRoot) -1);
+          try
+            IntValues.Add(StrToInt(dgData.Cells[ColIndex, RowIndex]));
+          except
+            on E: EConvertError do
+            begin
+              InvalidRow := True;
+              Exit;
+            end;
+          end;
+        end
+        else
+        if (Package = Packages.HobPackage) and (ColIndex = FRequiredCols) then
+        begin
+          // skip the name column.
+          Values.Add(0);
+        end
+        else
+        begin
+          try
+            Values.Add(StrToFloat(dgData.Cells[ColIndex, RowIndex]));
+          except
+            on E: EConvertError do
+            begin
+              InvalidRow := True;
+              Exit;
+            end;
+          end;
+        end;
+      end;
+      ABoundary := nil;
+      HobBoundary := nil;
+      if Package = Packages.ChdBoundary then
+      begin
+        AScreenObject.CreateChdBoundary;
+        ABoundary := AScreenObject.ModflowBoundaries.ModflowChdBoundary;
+      end
+      else if Package = Packages.GhbBoundary then
+      begin
+        AScreenObject.CreateGhbBoundary;
+        ABoundary := AScreenObject.ModflowBoundaries.ModflowGhbBoundary;
+      end
+      else if Package = Packages.WelPackage then
+      begin
+        AScreenObject.CreateWelBoundary;
+        ABoundary := AScreenObject.ModflowBoundaries.ModflowWellBoundary;
+      end
+      else if Package = Packages.RivPackage then
+      begin
+        AScreenObject.CreateRivBoundary;
+        ABoundary := AScreenObject.ModflowBoundaries.ModflowRivBoundary;
+      end
+      else if Package = Packages.DrnPackage then
+      begin
+        AScreenObject.CreateDrnBoundary;
+        ABoundary := AScreenObject.ModflowBoundaries.ModflowDrnBoundary;
+      end
+      else if Package = Packages.HobPackage then
+      begin
+        AScreenObject.CreateHeadObservations;
+        HobBoundary := AScreenObject.ModflowBoundaries.ModflowHeadObservations;
+        ObsCount := HobBoundary.Values.Count;
+        if ObsCount = 0 then
+        begin
+          Inc(FObsCount);
+        end;
+        LocalObsRoot := HobBoundary.ObservationName;
+        if LocalObsRoot = '' then
+        begin
+          LocalObsRoot := Trim(dgData.Cells[FRequiredCols + Ord(hcName), RowIndex]);
+        end;
+        if LocalObsRoot = '' then
+        begin
           NewObsName := FObsRoot + IntToStr(FObsCount) + '_';
           NewItemName := NewObsName + IntToStr(ObsCount+1);
+          while (Length(NewItemName) > 12) and (FObsRoot <> '') do
+          begin
+            FObsRoot := Copy(FObsRoot, 1, Length(FObsRoot) -1);
+            NewObsName := FObsRoot + IntToStr(FObsCount) + '_';
+            NewItemName := NewObsName + IntToStr(ObsCount+1);
+          end;
+        end
+        else
+        begin
+          NewItemName := LocalObsRoot + IntToStr(ObsCount+1);
+          while (Length(NewItemName) > 12) and (LocalObsRoot <> '') do
+          begin
+            LocalObsRoot := Copy(LocalObsRoot, 1, Length(LocalObsRoot) -1);
+            NewObsName := LocalObsRoot + IntToStr(FObsCount) + '_';
+            NewItemName := NewObsName + IntToStr(ObsCount+1);
+          end;
+          NewObsName := LocalObsRoot;
+        end;
+        HobBoundary.ObservationName := NewObsName;
+        if CharInSet(NewObsName[1], ['0'..'9']) then
+        begin
+          NewObsName := 'Obs_' + NewObsName;
+        end;
+        AScreenObject.Name := TScreenObject.ValidName(NewObsName);
+      end
+      else
+      begin
+        Assert(False);
+      end;
+      if ABoundary is TSpecificModflowBoundary then
+      begin
+        TSpecificModflowBoundary(ABoundary).FormulaInterpretation := fiDirect;
+      end;
+
+      BoundaryItem := nil;
+      HobItem := nil;
+      AParam := comboParameter.Items.Objects[comboParameter.ItemIndex]
+        as TModflowTransientListParameter;
+      if AParam = nil then
+      begin
+        if ABoundary <> nil then
+        begin
+          BoundaryItem := ABoundary.Values.Add as TCustomModflowBoundaryItem;
+        end;
+        if HobBoundary <> nil then
+        begin
+          HobItem := HobBoundary.Values.Add as THobItem;
         end;
       end
       else
       begin
-        NewItemName := LocalObsRoot + IntToStr(ObsCount+1);
-        while (Length(NewItemName) > 12) and (LocalObsRoot <> '') do
+        AnItem := ABoundary.Parameters.GetParamByName(AParam.ParameterName);
+        if AnItem = nil then
         begin
-          LocalObsRoot := Copy(LocalObsRoot, 1, Length(LocalObsRoot) -1);
-          NewObsName := LocalObsRoot + IntToStr(FObsCount) + '_';
-          NewItemName := NewObsName + IntToStr(ObsCount+1);
+          AnItem := ABoundary.Parameters.Add;
+          AnItem.Param.Param := AParam;
         end;
-        NewObsName := LocalObsRoot;
+        BoundaryItem := AnItem.Param.Add as TCustomModflowBoundaryItem;
       end;
-      HobBoundary.ObservationName := NewObsName;
-      if CharInSet(NewObsName[1], ['0'..'9']) then
+      if Package = Packages.ChdBoundary then
       begin
-        NewObsName := 'Obs_' + NewObsName;
-      end;
-      AScreenObject.Name := TScreenObject.ValidName(NewObsName);
-    end
-    else
-    begin
-      Assert(False);
-    end;
-    if ABoundary is TSpecificModflowBoundary then
-    begin
-      TSpecificModflowBoundary(ABoundary).FormulaInterpretation := fiDirect;
-    end;
-
-    BoundaryItem := nil;
-    HobItem := nil;
-    AParam := comboParameter.Items.Objects[comboParameter.ItemIndex]
-      as TModflowTransientListParameter;
-    if AParam = nil then
-    begin
-      if ABoundary <> nil then
+        ChdItem := BoundaryItem as TChdItem;
+        ChdItem.StartTime := Values[Ord(ccStartTime)];
+        ChdItem.EndTime := Values[Ord(ccEndTime)];
+        ChdItem.StartHead := FortranFloatToStr(Values[Ord(ccStartHead)]);
+        ChdItem.EndHead := FortranFloatToStr(Values[Ord(ccEndHead)]);
+      end
+      else if Package = Packages.GhbBoundary then
       begin
-        BoundaryItem := ABoundary.Values.Add as TCustomModflowBoundaryItem;
-      end;
-      if HobBoundary <> nil then
+        GhbItem := BoundaryItem as TGhbItem;
+        GhbItem.StartTime := Values[Ord(gcStartTime)];
+        GhbItem.EndTime := Values[Ord(gcEndTime)];
+        GhbItem.BoundaryHead := FortranFloatToStr(Values[Ord(gcBoundaryHead)]);
+        GhbItem.Conductance := FortranFloatToStr(Values[Ord(gcConductance)]);
+      end
+      else if Package = Packages.WelPackage then
       begin
-        HobItem := HobBoundary.Values.Add as THobItem;
-      end;
-    end
-    else
-    begin
-      AnItem := ABoundary.Parameters.GetParamByName(AParam.ParameterName);
-      if AnItem = nil then
+        WelItem := BoundaryItem as TWellItem;
+        WelItem.StartTime := Values[Ord(wcStartTime)];
+        WelItem.EndTime := Values[Ord(wcEndTime)];
+        WelItem.PumpingRate := FortranFloatToStr(Values[Ord(wcPumpingRate)]);
+      end
+      else if Package = Packages.RivPackage then
       begin
-        AnItem := ABoundary.Parameters.Add;
-        AnItem.Param.Param := AParam;
-      end;
-      BoundaryItem := AnItem.Param.Add as TCustomModflowBoundaryItem;
-    end;
-    if Package = Packages.ChdBoundary then
-    begin
-      ChdItem := BoundaryItem as TChdItem;
-      ChdItem.StartTime := Values[Ord(ccStartTime)];
-      ChdItem.EndTime := Values[Ord(ccEndTime)];
-      ChdItem.StartHead := FortranFloatToStr(Values[Ord(ccStartHead)]);
-      ChdItem.EndHead := FortranFloatToStr(Values[Ord(ccEndHead)]);
-    end
-    else if Package = Packages.GhbBoundary then
-    begin
-      GhbItem := BoundaryItem as TGhbItem;
-      GhbItem.StartTime := Values[Ord(gcStartTime)];
-      GhbItem.EndTime := Values[Ord(gcEndTime)];
-      GhbItem.BoundaryHead := FortranFloatToStr(Values[Ord(gcBoundaryHead)]);
-      GhbItem.Conductance := FortranFloatToStr(Values[Ord(gcConductance)]);
-    end
-    else if Package = Packages.WelPackage then
-    begin
-      WelItem := BoundaryItem as TWellItem;
-      WelItem.StartTime := Values[Ord(wcStartTime)];
-      WelItem.EndTime := Values[Ord(wcEndTime)];
-      WelItem.PumpingRate := FortranFloatToStr(Values[Ord(wcPumpingRate)]);
-    end
-    else if Package = Packages.RivPackage then
-    begin
-      RivItem := BoundaryItem as TRivItem;
-      RivItem.StartTime := Values[Ord(rcStartTime)];
-      RivItem.EndTime := Values[Ord(rcEndTime)];
-      RivItem.RiverStage := FortranFloatToStr(Values[Ord(rcStage)]);
-      RivItem.Conductance := FortranFloatToStr(Values[Ord(rcConductance)]);
-      RivItem.RiverBottom := FortranFloatToStr(Values[Ord(rcBottom)]);
-    end
-    else if Package = Packages.DrnPackage then
-    begin
-      DrnItem := BoundaryItem as TDrnItem;
-      DrnItem.StartTime := Values[Ord(dcStartTime)];
-      DrnItem.EndTime := Values[Ord(dcEndTime)];
-      DrnItem.Elevation := FortranFloatToStr(Values[Ord(dcElevation)]);
-      DrnItem.Conductance := FortranFloatToStr(Values[Ord(dcConductance)]);
-    end
-    else if Package = Packages.HobPackage then
-    begin
-      HobItem.Time := Values[Ord(hcTime)];
-      HobItem.Head := Values[Ord(hcHead)];
-      HobItem.Statistic := Values[Ord(hcStatistic)];
-      IntValue := IntValues[0];
-      if IntValue < Ord(Low(TStatFlag)) then
+        RivItem := BoundaryItem as TRivItem;
+        RivItem.StartTime := Values[Ord(rcStartTime)];
+        RivItem.EndTime := Values[Ord(rcEndTime)];
+        RivItem.RiverStage := FortranFloatToStr(Values[Ord(rcStage)]);
+        RivItem.Conductance := FortranFloatToStr(Values[Ord(rcConductance)]);
+        RivItem.RiverBottom := FortranFloatToStr(Values[Ord(rcBottom)]);
+      end
+      else if Package = Packages.DrnPackage then
       begin
-        IntValue := Ord(Low(TStatFlag))
-      end;
-      if IntValue > Ord(High(TStatFlag)) then
+        DrnItem := BoundaryItem as TDrnItem;
+        DrnItem.StartTime := Values[Ord(dcStartTime)];
+        DrnItem.EndTime := Values[Ord(dcEndTime)];
+        DrnItem.Elevation := FortranFloatToStr(Values[Ord(dcElevation)]);
+        DrnItem.Conductance := FortranFloatToStr(Values[Ord(dcConductance)]);
+      end
+      else if Package = Packages.HobPackage then
       begin
-        IntValue := Ord(High(TStatFlag))
+        HobItem.Time := Values[Ord(hcTime)];
+        HobItem.Head := Values[Ord(hcHead)];
+        HobItem.Statistic := Values[Ord(hcStatistic)];
+        IntValue := IntValues[0];
+        if IntValue < Ord(Low(TStatFlag)) then
+        begin
+          IntValue := Ord(Low(TStatFlag))
+        end;
+        if IntValue > Ord(High(TStatFlag)) then
+        begin
+          IntValue := Ord(High(TStatFlag))
+        end;
+        HobItem.StatFlag := TStatFlag(IntValue);
+      end
+      else
+      begin
+        Assert(False);
       end;
-      HobItem.StatFlag := TStatFlag(IntValue);
     end
-    else
+    else if frmGoPhast.ModelSelection = msFootPrint then
     begin
-      Assert(False);
+      Assert(comboBoundaryChoice.Items.Objects[comboBoundaryChoice.ItemIndex]
+        is TFootprintProperties);
+      try
+        AValue := StrToFloat(dgData.Cells[Ord(fwcWithdrawal)+2, RowIndex]);
+      except
+        on E: EConvertError do
+        begin
+          InvalidRow := True;
+          Exit;
+        end;
+      end;
+      AScreenObject.CreateFootprintWell;
+      AFootPrint := AScreenObject.FootprintWell;
+      AFootPrint.IsUsed := True;
+      AFootPrint.Withdrawal := FortranFloatToStr(AValue);
+      DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(KWithdrawals);
+      DataArrayPosition := AScreenObject.AddDataSet(DataArray);
+      AScreenObject.DataSetFormulas[DataArrayPosition] := AFootPrint.Withdrawal;
     end;
   finally
     Values.Free;
     IntValues.Free;
   end;
+end;
+
+procedure TfrmImportPoints.GetData;
+var
+  Packages: TModflowPackages;
+begin
+  rgEvaluatedAt.Items[Ord(eaBlocks)] := EvalAtToString(eaBlocks,
+    frmGoPhast.PhastModel.ModelSelection, True, True);
+  rgEvaluatedAt.Items[Ord(eaNodes)] := EvalAtToString(eaNodes,
+    frmGoPhast.PhastModel.ModelSelection, True, True);
+  rgEvaluatedAt.Enabled :=
+    frmGoPhast.PhastModel.ModelSelection in [msPhast, msSutra22];
+  if not rgEvaluatedAt.Enabled then
+  begin
+    rgEvaluatedAt.ItemIndex := 0;
+  end;
+  if (frmGoPhast.PhastModel.ModelSelection in ModflowSelection) then
+  begin
+    Packages := frmGoPhast.PhastModel.ModflowPackages;
+    if Packages.ChdBoundary.IsSelected then
+    begin
+      comboBoundaryChoice.Items.AddObject(
+        Packages.ChdBoundary.PackageIdentifier, Packages.ChdBoundary);
+    end;
+    if Packages.DrnPackage.IsSelected then
+    begin
+      comboBoundaryChoice.Items.AddObject(
+        Packages.DrnPackage.PackageIdentifier, Packages.DrnPackage);
+    end;
+    if Packages.GhbBoundary.IsSelected then
+    begin
+      comboBoundaryChoice.Items.AddObject(
+        Packages.GhbBoundary.PackageIdentifier, Packages.GhbBoundary);
+    end;
+    if Packages.RivPackage.IsSelected then
+    begin
+      comboBoundaryChoice.Items.AddObject(
+        Packages.RivPackage.PackageIdentifier, Packages.RivPackage);
+    end;
+    if Packages.WelPackage.IsSelected then
+    begin
+      comboBoundaryChoice.Items.AddObject(
+        Packages.WelPackage.PackageIdentifier, Packages.WelPackage);
+    end;
+    if Packages.HobPackage.IsSelected then
+    begin
+      comboBoundaryChoice.Items.AddObject(
+        Packages.HobPackage.PackageIdentifier, Packages.HobPackage);
+    end;
+  end
+  else if frmGoPhast.PhastModel.ModelSelection = msFootPrint then
+  begin
+    rgElevationCount.Enabled := False;
+    comboBoundaryChoice.Items.AddObject(
+      StrFootprintWithdrawal, frmGoPhast.PhastModel.FootprintProperties);
+  end;
+
+  FImportFileName := '';
+  cbIntersectedCellsClick(nil);
+  SetCheckBoxCaptions;
+  pcImportPoints.ActivePageIndex := 0;
+  UpdateDimensionColumns;
+  UpdateDataSets;
+  rgElevationCountClick(nil);
 end;
 
 procedure TfrmImportPoints.dgDataColMoving(Sender: TObject; const Origin,
@@ -1223,10 +1290,22 @@ begin
 //    comboBoundaryChoice.ItemIndex := 0;
     comboBoundaryChoiceChange(nil);
   end;
-  comboBoundaryChoice.Enabled := (frmGoPhast.PhastModel.ModelSelection
-    in ModflowSelection)
-    and (rgElevationCount.ItemIndex > 0)
-    and (comboBoundaryChoice.Items.Count > 1);
+  if frmGoPhast.PhastModel.ModelSelection
+    in ModflowSelection then
+  begin
+    comboBoundaryChoice.Enabled :=
+     (rgElevationCount.ItemIndex > 0)
+      and (comboBoundaryChoice.Items.Count > 1);
+  end
+  else if frmGoPhast.PhastModel.ModelSelection = msFootPrint then
+  begin
+    comboBoundaryChoice.Enabled :=
+      (comboBoundaryChoice.Items.Count > 1);
+  end
+  else
+  begin
+    comboBoundaryChoice.Enabled := False;
+  end;
 
   UpdateDimensionColumns;
   UpdateDataSets;
@@ -1260,7 +1339,6 @@ var
   AZ2Col: integer;
   ColIndex: integer;
   ExistingObjectCount: integer;
-//  LastValue: string;
   ElevValues1: TValueArrayStorage;
   ElevValues2: TValueArrayStorage;
   Item: TValueArrayItem;
@@ -1268,7 +1346,6 @@ var
   FirstPoint: Boolean;
   PointCount: Integer;
   InvalidRow: Boolean;
-//  BV: TCustomMF_ListBoundColl;
   NewScreenObject: Boolean;
   ValueListIndex: Integer;
   VList: TValueArrayStorage;
@@ -1890,82 +1967,90 @@ begin
     begin
       jvclbDataSets.Checked[ItemIndex] := False;
     end;
-    Package := comboBoundaryChoice.Items.Objects[
-      comboBoundaryChoice.ItemIndex] as TModflowPackageSelection;
-    Packages := frmGoPhast.PhastModel.ModflowPackages;
-    comboParameter.Enabled := True;
     comboParameter.Items.Clear;
     comboParameter.Items.Add(StrNone);
     comboParameter.ItemIndex := 0;
-    TransientParameters := frmGoPhast.PhastModel.ModflowTransientParameters;
-    for ParameterIndex := 0 to TransientParameters.Count - 1 do
+    if frmGoPhast.ModelSelection in ModflowSelection then
     begin
-      AParam := TransientParameters[ParameterIndex];
-      case AParam.ParameterType of
-        ptCHD:
-          begin
-            if Package = Packages.ChdBoundary then
+      Package := comboBoundaryChoice.Items.Objects[
+        comboBoundaryChoice.ItemIndex] as TModflowPackageSelection;
+      Packages := frmGoPhast.PhastModel.ModflowPackages;
+      comboParameter.Enabled := True;
+      TransientParameters := frmGoPhast.PhastModel.ModflowTransientParameters;
+      for ParameterIndex := 0 to TransientParameters.Count - 1 do
+      begin
+        AParam := TransientParameters[ParameterIndex];
+        case AParam.ParameterType of
+          ptCHD:
             begin
-              comboParameter.Items.AddObject(AParam.ParameterName, AParam);
+              if Package = Packages.ChdBoundary then
+              begin
+                comboParameter.Items.AddObject(AParam.ParameterName, AParam);
+              end;
             end;
-          end;
-        ptGHB:
-          begin
-            if Package = Packages.GhbBoundary then
+          ptGHB:
             begin
-              comboParameter.Items.AddObject(AParam.ParameterName, AParam);
+              if Package = Packages.GhbBoundary then
+              begin
+                comboParameter.Items.AddObject(AParam.ParameterName, AParam);
+              end;
             end;
-          end;
-        ptQ:
-          begin
-            if Package = Packages.WelPackage then
+          ptQ:
             begin
-              comboParameter.Items.AddObject(AParam.ParameterName, AParam);
+              if Package = Packages.WelPackage then
+              begin
+                comboParameter.Items.AddObject(AParam.ParameterName, AParam);
+              end;
             end;
-          end;
-        ptRIV:
-          begin
-            if Package = Packages.RivPackage then
+          ptRIV:
             begin
-              comboParameter.Items.AddObject(AParam.ParameterName, AParam);
+              if Package = Packages.RivPackage then
+              begin
+                comboParameter.Items.AddObject(AParam.ParameterName, AParam);
+              end;
             end;
-          end;
-        ptDRN:
-          begin
-            if Package = Packages.DrnPackage then
+          ptDRN:
             begin
-              comboParameter.Items.AddObject(AParam.ParameterName, AParam);
+              if Package = Packages.DrnPackage then
+              begin
+                comboParameter.Items.AddObject(AParam.ParameterName, AParam);
+              end;
             end;
-          end;
+        end;
       end;
-    end;
-    if Package = Packages.ChdBoundary then
-    begin
-      UpdateChdColumns;
+      if Package = Packages.ChdBoundary then
+      begin
+        UpdateChdColumns;
+      end
+      else if Package = Packages.GhbBoundary then
+      begin
+        UpdateGhbColumns;
+      end
+      else if Package = Packages.WelPackage then
+      begin
+        UpdateWelColumns;
+      end
+      else if Package = Packages.RivPackage then
+      begin
+        UpdateRivColumns;
+      end
+      else if Package = Packages.DrnPackage then
+      begin
+        UpdateDrnColumns;
+      end
+      else if Package = Packages.HobPackage then
+      begin
+        UpdateHobColumns;
+      end
+      else
+      begin
+        Assert(False);
+      end;
     end
-    else if Package = Packages.GhbBoundary then
+    else if frmGoPhast.ModelSelection = msFootPrint then
     begin
-      UpdateGhbColumns;
-    end
-    else if Package = Packages.WelPackage then
-    begin
-      UpdateWelColumns;
-    end
-    else if Package = Packages.RivPackage then
-    begin
-      UpdateRivColumns;
-    end
-    else if Package = Packages.DrnPackage then
-    begin
-      UpdateDrnColumns;
-    end
-    else if Package = Packages.HobPackage then
-    begin
-      UpdateHobColumns;
-    end
-    else
-    begin
-      Assert(False);
+      comboParameter.Enabled := False;
+      UpdateFootprintWellColumns;
     end;
   end
   else

@@ -5,9 +5,9 @@ inherited frmModflowTime: TfrmModflowTime
   ClientHeight = 327
   ClientWidth = 754
   OnResize = FormResize
-  ExplicitWidth = 770
-  ExplicitHeight = 365
-  PixelsPerInch = 96
+  ExplicitWidth = 772
+  ExplicitHeight = 372
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -50,6 +50,15 @@ inherited frmModflowTime: TfrmModflowTime
       NumGlyphs = 2
       TabOrder = 0
       OnClick = btnHelpClick
+    end
+    object btnConvertTimeUnits: TButton
+      Left = 8
+      Top = 6
+      Width = 161
+      Height = 25
+      Caption = 'Convert time units'
+      TabOrder = 3
+      OnClick = btnConvertTimeUnitsClick
     end
   end
   object pgcMain: TPageControl
@@ -480,7 +489,6 @@ inherited frmModflowTime: TfrmModflowTime
           Width = 145
           Height = 26
           Style = csDropDownList
-          ItemHeight = 18
           TabOrder = 1
           Text = 'seconds (1)'
           OnChange = comboTimeUnitChange
@@ -518,10 +526,6 @@ inherited frmModflowTime: TfrmModflowTime
     object tabMt3dms: TTabSheet
       Caption = 'MT3DMS'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       inline frameGrid: TframeGrid
         Left = 0
         Top = 0

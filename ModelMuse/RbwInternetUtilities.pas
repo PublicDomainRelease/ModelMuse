@@ -111,6 +111,52 @@ resourcestring
   StrFailedToCloseURL = 'Failed to close URL';
   StrFailedToCloseInte = 'Failed to close Internet connection';
 
+procedure DeleteIECacheEntry(const Url: string);
+var
+  lpEntryInfo: PInternetCacheEntryInfo;
+  hCacheDir: LongWord;
+  dwEntrySize: LongWord;
+  CachedUrl: string;
+  FoundCachedUrl: Boolean;
+  AtPosition: integer;
+begin
+// modified from http://www.delphitricks.com/source-code/internet/delete_the_temporary_internet_files.html
+  dwEntrySize := 0;
+  FindFirstUrlCacheEntry(nil, TInternetCacheEntryInfo(nil^), dwEntrySize);
+  GetMem(lpEntryInfo, dwEntrySize);
+  try
+    if dwEntrySize > 0 then lpEntryInfo^.dwStructSize := dwEntrySize;
+    hCacheDir := FindFirstUrlCacheEntry(nil, lpEntryInfo^, dwEntrySize);
+    try
+      if hCacheDir <> 0 then
+      begin
+        FoundCachedUrl := False;
+        repeat
+          CachedUrl := string(lpEntryInfo^.lpszSourceUrlName);
+          AtPosition := Pos('@', CachedUrl);
+          if AtPosition >= 1 then
+          begin
+            CachedUrl := Copy(CachedUrl, AtPosition+1, MaxInt);
+          end;
+          if CachedUrl = Url then
+          begin
+            DeleteUrlCacheEntry(lpEntryInfo^.lpszSourceUrlName);
+            break;
+          end;
+          FreeMem(lpEntryInfo, dwEntrySize);
+          dwEntrySize := 0;
+          FindNextUrlCacheEntry(hCacheDir, TInternetCacheEntryInfo(nil^), dwEntrySize);
+          GetMem(lpEntryInfo, dwEntrySize);
+          if dwEntrySize > 0 then lpEntryInfo^.dwStructSize := dwEntrySize;
+        until not FindNextUrlCacheEntry(hCacheDir, lpEntryInfo^, dwEntrySize);
+      end;
+    finally
+      FindCloseUrlCache(hCacheDir);
+    end;
+  finally
+    FreeMem(lpEntryInfo, dwEntrySize);
+  end;
+end;
 {$IFDEF LINUX}
 
 function LaunchURL(Browser: string; const URL: string): pid_t;
@@ -364,6 +410,8 @@ var
   Stream: TMemoryStream;
   AmountRead: DWORD;
 begin
+  DeleteIECacheEntry(URL_String);
+
   result := False;
   if InternetAttemptConnect(0) <> ERROR_SUCCESS then
   begin
@@ -379,7 +427,8 @@ begin
   end;
 
   try
-    URL := InternetOpenUrl(Connection, PChar(URL_String), nil, 0, 0, 0);
+    URL := InternetOpenUrl(Connection, PChar(URL_String), nil, 0,
+      INTERNET_FLAG_PRAGMA_NOCACHE, 0);
     if URL = nil then
     begin
       raise EInternetConnectionError.Create(Format(StrUnableToOpenURL, [URL_String]));

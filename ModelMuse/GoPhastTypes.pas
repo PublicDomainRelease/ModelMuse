@@ -19,6 +19,10 @@ type
   }
   TOneDIntegerArray = array of integer;
 
+  {@abstract(@name is a two-dimensional array of integers.)
+  }
+  TTwoDIntegerArray = array of TOneDIntegerArray;
+
   {@abstract(@name is a two-dimensional array of doubles.)
   }
   TTwoDRealArray = array of TOneDRealArray;
@@ -190,13 +194,14 @@ type
   // @name is used to indicate what type of model is active.
   // The type of model should never be set to msUndefined.
   TModelSelection = (msUndefined, msPhast, msModflow, msModflowLGR,
-    msModflowLGR2, msModflowNWT, msModflowFmp, msModflowCfp, msSutra22);
+    msModflowLGR2, msModflowNWT, msModflowFmp, msModflowCfp, msSutra22,
+    msFootPrint);
 
 const
   ModflowSelection = [msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
     msModflowFmp, msModflowCfp];
   ModelsWithGrid  = [msPhast, msModflow, msModflowLGR, msModflowLGR2,
-    msModflowNWT, msModflowFmp, msModflowCfp];
+    msModflowNWT, msModflowFmp, msModflowCfp, msFootPrint];
   HighGradient = 0.01;
 
 type
@@ -376,6 +381,8 @@ type
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
+  // @name is used to ensure that a value for a string is saved even if it
+  // is an empty string.
   TStringStorage = class(TPersistent)
   private
     FValue: string;
@@ -968,7 +975,7 @@ begin
         end;
       end;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         case Eval of
           eaBlocks:

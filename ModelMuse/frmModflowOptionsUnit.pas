@@ -113,6 +113,7 @@ type
     procedure pcOptionsChange(Sender: TObject);
     procedure comboModelChange(Sender: TObject);
     procedure cbStopErrorClick(Sender: TObject);
+    procedure feInitialHeadsChange(Sender: TObject);
   private
     FCurrentOptions: TModelOptions;
     FModelOptionsCollection: TModelOptionsCollection;
@@ -334,6 +335,20 @@ begin
     begin
       Options.ProjectName := edProjectName.Text;
     end;
+  end;
+end;
+
+procedure TfrmModflowOptions.feInitialHeadsChange(Sender: TObject);
+begin
+  inherited;
+  if (feInitialHeads.FileName <> '')
+    and not FileExists(feInitialHeads.FileName) then
+  begin
+    feInitialHeads.Color := clRed;
+  end
+  else
+  begin
+    feInitialHeads.Color := clWindow;
   end;
 end;
 

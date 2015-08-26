@@ -4,7 +4,7 @@ interface
 
 uses
   CustomModflowWriterUnit, ModflowPackageSelectionUnit, Forms, PhastModelUnit,
-  ModflowTimeUnit, Classes;
+  ModflowTimeUnit, Classes, Winapi.Windows;
 
 type
   TMt3dmsBtnWriter = class(TCustomModflowWriter)
@@ -103,6 +103,11 @@ resourcestring
   StrSomethingIsWrongW = 'Something is wrong with the file you specied for t' +
   'he initial concentration. Please check that you used the right version of' +
   ' MT3DMS to create the file. The file is namead %s.';
+  StrTheInitialConcentr = 'The initial concentration file that you specified' +
+  ', "%s" can not be used because it is empty.';
+  StrAllCellsInactiveI = 'All cells inactive in MT3DMS';
+  StrEveryCellInTheMo = 'Every cell in the model is inactive for MT3DMS as s' +
+  'pecified in the %s data set';
 
 { TMt3dmsBtnWriter }
 
@@ -160,6 +165,13 @@ var
 begin
   DataArray := Model.DataArrayManager.GetDataSetByName(StrMT3DMSActive);
   DataArray.Initialize;
+
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrAllCellsInactiveI);
+  if (DataArray.IsUniform = iuTrue) and (not DataArray.BooleanData[0,0,0]) then
+  begin
+    frmErrorsAndWarnings.AddWarning(Model, StrAllCellsInactiveI,
+      Format(StrEveryCellInTheMo, [DataArray.DisplayName]));
+  end;
   for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
   begin
     if Model.IsLayerSimulated(LayerIndex) then
@@ -212,7 +224,7 @@ var
           if AFileStream.Size = 0 then
           begin
             Beep;
-            ErrorMessage := Format('The initial concentration file that you specified, "%s" can not be used because it is empty.', [FileName]);
+            ErrorMessage := Format(StrTheInitialConcentr, [FileName]);
             MessageDlg(ErrorMessage, mtError, [mbOK], 0);
             Exit;
           end;

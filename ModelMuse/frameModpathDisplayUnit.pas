@@ -169,28 +169,29 @@ begin
 end;
 
 procedure TUndoImportPathline.EnableMenuItems;
-var
-  ChildIndex: integer;
-  ChildModel: TChildModel;
+//var
+//  ChildIndex: integer;
+//  ChildModel: TChildModel;
 begin
-  frmGoPhast.miPathlinestoShapefile.Enabled :=
-    (frmGoPhast.PhastModel.PathLines.Lines.Count > 0)
-    or (frmGoPhast.PhastModel.PathLines.LinesV6.Count > 0);
-  if not frmGoPhast.miPathlinestoShapefile.Enabled
-    and frmGoPhast.PhastModel.LgrUsed then
-  begin
-    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
-    begin
-      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
-      frmGoPhast.miPathlinestoShapefile.Enabled :=
-        (ChildModel.PathLines.Lines.Count > 0)
-        or (ChildModel.PathLines.LinesV6.Count > 0);
-      if frmGoPhast.miPathlinestoShapefile.Enabled then
-      begin
-        break;
-      end;
-    end;
-  end;
+  frmGoPhast.EnableModpathToShapefile;
+//  frmGoPhast.miPathlinestoShapefile.Enabled :=
+//    (frmGoPhast.PhastModel.PathLines.Lines.Count > 0)
+//    or (frmGoPhast.PhastModel.PathLines.LinesV6.Count > 0);
+//  if not frmGoPhast.miPathlinestoShapefile.Enabled
+//    and frmGoPhast.PhastModel.LgrUsed then
+//  begin
+//    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+//    begin
+//      if frmGoPhast.miPathlinestoShapefile.Enabled then
+//      begin
+//        break;
+//      end;
+//      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+//      frmGoPhast.miPathlinestoShapefile.Enabled :=
+//        (ChildModel.PathLines.Lines.Count > 0)
+//        or (ChildModel.PathLines.LinesV6.Count > 0);
+//    end;
+//  end;
 end;
 
 procedure TUndoImportPathline.ForceRedraw;

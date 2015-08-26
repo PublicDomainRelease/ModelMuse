@@ -15,11 +15,11 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
   end
   inherited comboDataSets: TComboBox
     Top = 37
-    Width = 604
+    Width = 586
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 1
     ExplicitTop = 37
-    ExplicitWidth = 608
+    ExplicitWidth = 586
   end
   inherited comboInterpolators: TComboBox
     Top = 91
@@ -76,7 +76,7 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
   object rgFilterMethod: TRadioGroup [11]
     Left = 360
     Top = 84
-    Width = 270
+    Width = 252
     Height = 140
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Filter method'
@@ -88,11 +88,12 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
       'Point closest to cell center'
       'None')
     TabOrder = 3
+    ExplicitWidth = 270
   end
   object rdgFilesAndDataSets: TRbwDataGrid4 [12]
     Left = 8
     Top = 8
-    Width = 622
+    Width = 604
     Height = 53
     Anchors = [akLeft, akTop, akRight]
     ColCount = 3

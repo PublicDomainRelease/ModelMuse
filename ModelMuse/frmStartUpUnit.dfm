@@ -22,8 +22,6 @@ inherited frmStartUp: TfrmStartUp
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 1
-    ExplicitTop = 366
-    ExplicitWidth = 753
     DesignSize = (
       751
       47)
@@ -83,25 +81,19 @@ inherited frmStartUp: TfrmStartUp
     Top = 0
     Width = 751
     Height = 359
-    ActivePage = tabModelChoice
+    ActivePage = tabInitialGridFootprint
     Align = alClient
     TabOrder = 0
     OnChange = pcStartupChange
-    ExplicitWidth = 753
-    ExplicitHeight = 366
     object tabModelChoice: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'Start_Up_Dialog_Box'
       Caption = 'tabModelChoice'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rgChoice: TRadioGroup
         Left = 0
         Top = 0
-        Width = 745
-        Height = 333
+        Width = 743
+        Height = 326
         HelpType = htKeyword
         HelpKeyword = 'Start_Up_Dialog_Box'
         Align = alClient
@@ -111,6 +103,7 @@ inherited frmStartUp: TfrmStartUp
           'Create new MODFLOW model'
           'Create new PHAST model'
           'Create new SUTRA model'
+          'Create new Footprint project'
           'Open an existing ModelMuse project'
           'Import MODFLOW-2005 or MODFLOW-NWT model')
         TabOrder = 0
@@ -309,10 +302,6 @@ inherited frmStartUp: TfrmStartUp
       HelpKeyword = 'Initial_Grid_Dialog_Box'
       Caption = 'tabInitialModflowGrid'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbInitialGridModflow: TGroupBox
         Left = 0
         Top = 0
@@ -321,8 +310,6 @@ inherited frmStartUp: TfrmStartUp
         Align = alClient
         Caption = 'Specify initial grid (optional)'
         TabOrder = 0
-        ExplicitWidth = 745
-        ExplicitHeight = 333
         object Label8: TLabel
           Left = 344
           Top = 68
@@ -496,18 +483,12 @@ inherited frmStartUp: TfrmStartUp
             end>
           OnEndUpdate = rdgInitialLayersEndUpdate
           WordWrapRowCaptions = False
-          ExplicitLeft = 457
-          ExplicitHeight = 311
         end
       end
     end
     object tabInitialSutraMesh: TTabSheet
       Caption = 'tabInitialSutraMesh'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         743
         326)
@@ -681,7 +662,7 @@ inherited frmStartUp: TfrmStartUp
         FixedCols = 1
         RowCount = 3
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
-        TabOrder = 4
+        TabOrder = 5
         ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = True
@@ -769,7 +750,7 @@ inherited frmStartUp: TfrmStartUp
         Top = 125
         Width = 100
         Height = 22
-        TabOrder = 3
+        TabOrder = 4
         Text = '1e-3'
         DataType = dtReal
         Max = 1.000000000000000000
@@ -788,7 +769,84 @@ inherited frmStartUp: TfrmStartUp
         Items.Strings = (
           'Saturated'
           'Unsaturated')
-        TabOrder = 5
+        TabOrder = 3
+      end
+    end
+    object tabInitialGridFootprint: TTabSheet
+      HelpType = htKeyword
+      HelpKeyword = 'Initial_Grid_Dialog_Box_for_Fo'
+      Caption = 'tabInitialGridFootprint'
+      ImageIndex = 4
+      object gbFootprint: TGroupBox
+        Left = 0
+        Top = 0
+        Width = 743
+        Height = 326
+        Align = alClient
+        Caption = 'Specify initial grid (optional)'
+        TabOrder = 0
+        object lblRowCountFootprint: TLabel
+          Left = 91
+          Top = 68
+          Width = 109
+          Height = 18
+          Caption = 'Number of rows'
+        end
+        object lblColumnCountFootprint: TLabel
+          Left = 91
+          Top = 28
+          Width = 133
+          Height = 18
+          Caption = 'Number of columns'
+        end
+        object lblCellSizeFootprint: TLabel
+          Left = 344
+          Top = 28
+          Width = 62
+          Height = 18
+          Caption = 'Cell Size'
+        end
+        object rdeColumnCountFootprint: TRbwDataEntry
+          Left = 11
+          Top = 24
+          Width = 73
+          Height = 28
+          Cursor = crIBeam
+          TabOrder = 0
+          Text = '10'
+          DataType = dtInteger
+          Max = 1.000000000000000000
+          Min = 1.000000000000000000
+          CheckMin = True
+          ChangeDisabledColor = True
+        end
+        object rdeRowCountFootprint: TRbwDataEntry
+          Left = 11
+          Top = 64
+          Width = 73
+          Height = 28
+          Cursor = crIBeam
+          TabOrder = 2
+          Text = '10'
+          DataType = dtInteger
+          Max = 1.000000000000000000
+          Min = 1.000000000000000000
+          CheckMin = True
+          ChangeDisabledColor = True
+        end
+        object rdeCellSizeFootprint: TRbwDataEntry
+          Left = 264
+          Top = 24
+          Width = 73
+          Height = 28
+          Cursor = crIBeam
+          TabOrder = 1
+          Text = '100'
+          DataType = dtReal
+          Max = 1.000000000000000000
+          CheckMin = True
+          ChangeDisabledColor = True
+        end
       end
     end
   end

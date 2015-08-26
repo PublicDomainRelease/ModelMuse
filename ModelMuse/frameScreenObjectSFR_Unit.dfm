@@ -10,7 +10,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
     Top = 0
     Width = 561
     Height = 506
-    ActivePage = tabTime
+    ActivePage = tabUnsaturatedProperties
     Align = alClient
     TabOrder = 0
     object tabBasic: TTabSheet
@@ -725,6 +725,8 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
       end
     end
     object tabNetwork: TTabSheet
+      HelpType = htKeyword
+      HelpKeyword = 'Network_Tab'
       Caption = 'Network'
       ImageIndex = 9
       object pnlNetwork: TPanel
@@ -2581,6 +2583,8 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
       end
     end
     object tabExternalFlowFile: TTabSheet
+      HelpType = htKeyword
+      HelpKeyword = 'External_Flow_File'
       Caption = 'External Flow File'
       ImageIndex = 10
       inline frameExternalFileValues: TframeGrid
@@ -2725,6 +2729,8 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
       end
     end
     object tabGage: TTabSheet
+      HelpType = htKeyword
+      HelpKeyword = 'Gage_Tab'
       Caption = 'Gage'
       ImageIndex = 8
       DesignSize = (

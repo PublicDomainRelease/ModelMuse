@@ -121,6 +121,9 @@ Type
     // error.
     function SumOfAngles: double;
     function IdealElementCount: integer;
+    procedure ClearElements;
+    procedure AddElement(AnElement: TSutraElement2D);
+
   published
     property X: FastGEO.TFloat read FLocation.x write SetX;
     property Y: FastGEO.TFloat read FLocation.y write SetY;
@@ -286,6 +289,7 @@ Type
     procedure Assign(Source: TPersistent); override;
     procedure AssignIElement(Source: IElement);
     function IsInside(APoint: TPoint2D): Boolean;
+    function OnEdge(APoint: TPoint2D): Boolean;
     function Center: TPoint2D;
     function Intersection(const Input: TSegment2D;
       out IntersectingSegment: TSegment2D): boolean;
@@ -1291,6 +1295,11 @@ begin
   result := Abs(Area(OutlinePolygon));
 end;
 
+procedure TSutraNode2D.AddElement(AnElement: TSutraElement2D);
+begin
+  FElements.Add(AnElement);
+end;
+
 procedure TSutraNode2D.Assign(Source: TPersistent);
 var
   SourceNode: TSutraNode2D;
@@ -1448,6 +1457,26 @@ begin
   end;
 end;
 
+Function ComparePointsUp(const P1, P2: TPoint2D): integer;
+begin
+  result := Sign(P1.y - P2.y);
+end;
+
+Function ComparePointsDown(const P1, P2: TPoint2D): integer;
+begin
+  result := Sign(P2.y - P1.y);
+end;
+
+Function ComparePointsRight(const P1, P2: TPoint2D): integer;
+begin
+  result := Sign(P1.x - P2.x);
+end;
+
+Function ComparePointsLeft(const P1, P2: TPoint2D): integer;
+begin
+  result := Sign(P2.x - P1.x);
+end;
+
 Function ComparePointRightDown(const P1, P2: TPoint2D): integer;
 begin
   result := Sign(P1.x - P2.x);
@@ -1486,6 +1515,42 @@ var
   APoint: TPoint2D;
   PointIndex: Integer;
   InputLength: double;
+  function ClosestPointToInput: TPoint2d;
+  var
+//    MinIndex: Integer;
+    MinDistance: double;
+    TestPoint: TPoint2D;
+    PIndex: integer;
+    TestDistance: double;
+    FoundFirst: boolean;
+  begin
+    FoundFirst := False;
+    MinDistance := MaxInt;
+    for PIndex := 0 to Length(Outline) - 1 do
+    begin
+      if (Outline[PIndex].x = Location.x) and (Outline[PIndex].y = Location.y) then
+      begin
+        Continue;
+      end;
+      if FoundFirst then
+      begin
+        TestPoint := ClosestPointOnSegmentFromPoint(Input, Outline[PIndex]);
+        TestDistance := Distance(TestPoint, Outline[PIndex]);
+        if TestDistance < MinDistance then
+        begin
+          MinDistance := TestDistance;
+          result := TestPoint;
+        end;
+      end
+      else
+      begin
+        FoundFirst := True;
+        TestPoint := ClosestPointOnSegmentFromPoint(Input, Outline[PIndex]);
+        result := TestPoint;
+        MinDistance := Distance(TestPoint, Outline[PIndex]);
+      end;
+    end;
+  end;
 begin
   result := False;
   try
@@ -1529,13 +1594,58 @@ begin
         begin
           SetLength(IntersectingSegments, 1);
           IntersectingSegments[0] := Input;
+          IntersectingSegments[0][2] := ClosestPointToInput;
+          result := true;
+        end
+        else if IsInsideCell(Input[2]) then
+        begin
+          SetLength(IntersectingSegments, 1);
+          IntersectingSegments[0] := Input;
+          IntersectingSegments[0][1] := ClosestPointToInput;
+          result := true;
+        end
+        else if Distance(Input[1], Location) < 1e-7 then
+        begin
+          SetLength(IntersectingSegments, 1);
+          IntersectingSegments[0][1] := Location;
+          IntersectingSegments[0][2] := ClosestPointToInput;
+          result := true;
+        end
+        else if Distance(Input[2], Location) < 1e-7 then
+        begin
+          SetLength(IntersectingSegments, 1);
+          IntersectingSegments[0][2] := Location;
+          IntersectingSegments[0][1] := ClosestPointToInput;
           result := true;
         end;
+
         Exit;
       end;
       IntersectionList.Add(Input[1]);
       IntersectionList.Add(Input[2]);
-      if Input[2].x >= Input[1].x then
+      if Input[2].x = Input[1].x then
+      begin
+        if Input[2].y >= Input[1].y then
+        begin
+          IntersectionList.Sort(TPoint2DComparer.Construct(ComparePointsUp));
+        end
+        else
+        begin
+          IntersectionList.Sort(TPoint2DComparer.Construct(ComparePointsDown));
+        end;
+      end
+      else if Input[2].y = Input[1].y then
+      begin
+        if Input[2].x >= Input[1].x then
+        begin
+          IntersectionList.Sort(TPoint2DComparer.Construct(ComparePointsRight));
+        end
+        else
+        begin
+          IntersectionList.Sort(TPoint2DComparer.Construct(ComparePointsLeft));
+        end;
+      end
+      else if Input[2].x >= Input[1].x then
       begin
         if Input[2].y >= Input[1].y then
         begin
@@ -1599,6 +1709,11 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TSutraNode2D.ClearElements;
+begin
+  FElements.Clear;
 end;
 
 function TSutraNode2D.GetActiveElement(Index: Integer): IElement;
@@ -1922,7 +2037,7 @@ end;
 
 function TSutraNode2D.IsInsideCell(APoint: TPoint2D): Boolean;
 const
-  DistEpsilon = 1e-8;
+  DistEpsilon = 5e-6;
 var
   AVertex: Tgpc_vertex;
   CellOutline : TVertexArray;
@@ -2376,6 +2491,14 @@ procedure TSutraNodeNumber2D_Item.SetNode(const Value: TSutraNode2D);
 var
   Element: TSutraElement2D;
 begin
+  Element := (Collection as TSutraNodeNumber2D_Collection).FElement;
+  if (Value <> FNode) and (FNode <> nil) then
+  begin
+    if (Element <> nil) and ((FNode as TSutraNode2D).FElements.IndexOf(Element) >= 0) then
+    begin
+      (FNode as TSutraNode2D).FElements.Remove(Element);
+    end;
+  end;
   inherited SetNode(Value);
   Element := (Collection as TSutraNodeNumber2D_Collection).FElement;
   if (Element <> nil) and (Value.FElements.IndexOf(Element) < 0) then
@@ -2971,6 +3094,31 @@ begin
   end;
 end;
 
+function TSutraElement2D.OnEdge(APoint: TPoint2D): Boolean;
+var
+  NodeIndex: Integer;
+  PriorNode: TSutraNode2D;
+  Node: TSutraNode2D;
+  ASegment: TSegment2D;
+begin
+  result := false;
+  PriorNode := Nodes[Nodes.Count - 1].Node;
+  for NodeIndex := 0 to Nodes.Count - 1 do
+  begin
+    Node := Nodes[NodeIndex].Node;
+    ASegment[1] := PriorNode.Location;
+    ASegment[2] := Node.Location;
+    if ((APoint.Y <= Node.Y) = (APoint.Y >+ PriorNode.Y)) and
+      (Collinear(PriorNode.Location, APoint, Node.Location)
+      or (Distance(APoint, ASegment) < Distance(ASegment[1], ASegment[2])/10000)) then
+    begin
+      result := True;
+      break;
+    end;
+    PriorNode := Node;
+  end;
+end;
+
 function TSutraElement2D.NodeAngle(ANode: TSutraNode2D): double;
 var
   NodePosition: Integer;
@@ -3267,6 +3415,16 @@ begin
     begin
       Element := AList[index];
       if Element.IsInside(APoint) then
+      begin
+        Result.Row := 0;
+        Result.Col := Element.ElementNumber;
+        Exit;
+      end;
+    end;
+    for index := 0 to AList.Count - 1 do
+    begin
+      Element := AList[index];
+      if Element.OnEdge(APoint) then
       begin
         Result.Row := 0;
         Result.Col := Element.ElementNumber;

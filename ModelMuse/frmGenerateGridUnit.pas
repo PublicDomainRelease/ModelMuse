@@ -105,7 +105,7 @@ begin
         cbSmoothGrid.Checked := False;
       end;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         Count := 0;
         for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
@@ -135,8 +135,9 @@ end;
 procedure TfrmGenerateGrid.SetData;
 var
   ErrorMessage: string;
+  WarningMessage: string;
 begin
-  if GenerateGrid(ErrorMessage, not cbSpecifyGridAngle.Checked,
+  if GenerateGrid(ErrorMessage, WarningMessage, not cbSpecifyGridAngle.Checked,
     DegToRad(strToFloat(rdeGridAngle.Text)),
     cbSmoothGrid.Checked and cbColumns.Checked,
     cbSmoothGrid.Checked and cbRows.Checked,
@@ -147,6 +148,11 @@ begin
     begin
       SetDefaultOrientation;
       glWidModelView.Invalidate;
+    end;
+    if WarningMessage <> '' then
+    begin
+      Beep;
+      MessageDlg(WarningMessage, mtWarning, [mbOK], 0);
     end;
   end
   else

@@ -187,6 +187,7 @@ resourcestring
   StrOneOrMoreCellsHa = 'One or more cells have ratios of row to column widt' +
   'h that exceed the recommended maximum of 10.';
   StrColumn0dRow1 = 'Column %0:d, Row %1:d';
+  StrTheTopOfOneOrMo = 'The top of one or more cells is below its bottom.';
 
 procedure ReadReal2DArray(const Reader: TReader;
   var Positions: TTwoDRealArray; const Count1, Count2: integer);
@@ -341,6 +342,10 @@ var
   LayerBottom: Real;
 begin
   if not FCellElevationsNeedUpdating then Exit;
+  if not (frmGoPhast.ModelSelection in ModflowSelection) then
+  begin
+    Exit;
+  end;
   if (ColumnCount <= 0) or (RowCount <= 0) or (LayerCount <= 0) then
   begin
     Exit;
@@ -896,7 +901,7 @@ var
   ActiveAbove: Boolean;
   ActiveBelow: Boolean;
 begin
-  ErrorString := 'The top of one or more cells is below its bottom.';
+  ErrorString := StrTheTopOfOneOrMo;
   Elevations := LayerElevations;
   LocalModel := Model as TCustomModel;
   DataArrayManager := LocalModel.DataArrayManager;
@@ -1669,7 +1674,6 @@ begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
       begin
         ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
-//        ChildModelItem.ChildModel.DataArrayManager.UpdateDataSetDimensions;
         if (SelectedRow >= ChildModel.FirstRow)
           and (SelectedRow <= ChildModel.LastRow) then
         begin
@@ -1836,7 +1840,6 @@ begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
       begin
         ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
-//        ChildModelItem.ChildModel.DataArrayManager.UpdateDataSetDimensions;
         if (SelectedColumn >= ChildModel.FirstCol)
           and (SelectedColumn <= ChildModel.LastCol) then
         begin
@@ -1864,7 +1867,6 @@ begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
       begin
         ChildModelItem := LocalModel.ChildModels[ChildIndex];
-//        ChildModelItem.ChildModel.DataArrayManager.UpdateDataSetDimensions;
         ChildModelItem.ChildModel.ModflowGrid.DrawTop(BitMap, ZoomBox);
       end;
     end;

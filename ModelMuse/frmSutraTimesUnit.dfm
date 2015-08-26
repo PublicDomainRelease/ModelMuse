@@ -50,6 +50,15 @@ inherited frmSutraTimes: TfrmSutraTimes
       NumGlyphs = 2
       TabOrder = 2
     end
+    object btnConvertTimeUnits: TButton
+      Left = 5
+      Top = 6
+      Width = 161
+      Height = 33
+      Caption = 'Convert time units'
+      TabOrder = 3
+      OnClick = btnConvertTimeUnitsClick
+    end
   end
   object pcMain: TPageControl
     Left = 0

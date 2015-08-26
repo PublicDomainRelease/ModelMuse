@@ -325,9 +325,17 @@ begin
   end;
 //  if FShowVideos then
   begin
-    FLastTipDate := FIniFile.ReadDateTime(StrCustomization, StrTipDate, 0);
+    try
+      FLastTipDate := FIniFile.ReadDateTime(StrCustomization, StrTipDate, 0);
+    except on EConvertError do
+      FLastTipDate := Now;
+    end;
   end;
-  FLastCheckInternetDate := FIniFile.ReadDateTime(StrCustomization, StrInternetCheckDate, FLastTipDate);
+  try
+    FLastCheckInternetDate := FIniFile.ReadDateTime(StrCustomization, StrInternetCheckDate, FLastTipDate);
+  except on EConvertError do
+    FLastCheckInternetDate := Now;
+  end;
 end;
 
 end.

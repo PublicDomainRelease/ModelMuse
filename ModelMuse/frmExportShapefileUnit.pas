@@ -344,7 +344,8 @@ begin
           SutraTimeOptions.CalculateAllTimes;
           RealList.Assign(SutraTimeOptions.AllTimes);
           RealList.Sorted := True;
-        end
+        end;
+      msFootPrint: ; // do nothing.
     else
       Assert(False);
     end;
@@ -1690,7 +1691,7 @@ var
 begin
   case frmGoPhast.ModelSelection of
     msPhast, msModflow, msModflowNWT
-      , msModflowCfp, msSutra22:
+      , msModflowCfp, msSutra22, msFootPrint:
       begin
         comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel);
         comboModel.Visible := False;
@@ -2102,7 +2103,7 @@ begin
         Caption := StrExportGridDataTo;
       end;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT,
-      msModflowFmp, msModflowCfp:
+      msModflowFmp, msModflowCfp, msFootPrint:
       begin
         lblElements.Caption := StrCellShapefileName;
         lblNodes.Caption := StrCellCornerShapefi;
@@ -2190,8 +2191,15 @@ begin
   try
     LocalModel := comboModel.Items.Objects[comboModel.ItemIndex] as TCustomModel;
     FLocalGrid := LocalModel.Grid;
-    FLocalMesh := LocalModel.SutraMesh;
-    Assert((FLocalGrid <> nil) or (FLocalMesh <> nil));
+    FLocalMesh := LocalModel.Mesh;
+    if (FLocalGrid = nil) then
+    begin
+      Assert(FLocalMesh <> nil);
+    end
+    else
+    begin
+      Assert(FLocalMesh = nil);
+    end;
     NodeDataSets := TList.Create;
     NodeTimeLists := TList.Create;
     ElementDataSets := TList.Create;

@@ -7,7 +7,7 @@ uses
   Forms, Classes, ModflowBoundaryDisplayUnit, GoPhastTypes,
   PhastModelUnit, Generics.Collections, ModflowSwrReachUnit,
   ScreenObjectUnit, FastGEO, ModflowSwrStructureUnit, SwrReachObjectUnit,
-  ModflowSwrObsUnit;
+  ModflowSwrObsUnit, IntListUnit;
 
 type
   TStructureList = TList<TStructure>;
@@ -167,6 +167,9 @@ resourcestring
   'SWR package.';
   StrInvalidTabFileNam = 'Invalid tab file name';
   StrStructure0sTab = 'Structure: %0:s; Tabfile: %1:s';
+//  StrUnusedSWRReachGeo = 'Unused SWR reach geometry';
+//  StrTheSWRReachGeomet = 'The SWR reach geometry named "%s" has not been use' +
+//  'd. This can cause problems for SWR.';
 
 { TModflowSwrWriter }
 
@@ -2212,8 +2215,18 @@ var
   ValueCellList: TValueCellList;
   Reach: TReachObject;
   TransientCell: TSwrTransientCell;
+  NextGeoNumber: integer;
+  GeoIndex: Integer;
+  GeoItem: TReachGeometryItem;
 begin
   // Data set 10
+  for GeoIndex := 0 to Model.SwrReachGeometry.Count - 1 do
+  begin
+    GeoItem := Model.SwrReachGeometry[GeoIndex];
+    GeoItem.GeoNumber := 0;
+  end;
+
+  NextGeoNumber := 1;
   ValueCellList := FTransientReachList[TimeIndex];
   Assert(ValueCellList.Count = FReachList.Count);
   for CellIndex := 0 to ValueCellList.Count - 1 do
@@ -2221,7 +2234,17 @@ begin
     TransientCell := ValueCellList[CellIndex] as TSwrTransientCell;
     Reach := FReachList[CellIndex];
     WriteInteger(Reach.FReachData.Reach);
-    WriteInteger(TransientCell.GeoNumber);
+
+//    WriteInteger(TransientCell.GeoNumber);
+
+    GeoItem := Model.SwrReachGeometry[TransientCell.GeoNumber-1];
+    if GeoItem.GeoNumber = 0 then
+    begin
+      GeoItem.GeoNumber := NextGeoNumber;
+      Inc(NextGeoNumber);
+    end;
+    WriteInteger(GeoItem.GeoNumber);
+
     WriteFloat(TransientCell.VerticalOffSet);
     WriteString(' # Data Set 10 IGMODRCH IGEONUMR GZSHIFT');
     NewLine;
@@ -2641,6 +2664,7 @@ var
   TimeIndex: Integer;
   Dummy: TDataArray;
 begin
+//  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrUnusedSWRReachGeo);
   { TODO -cFMP : This needs to be finished. }
   if Model.ModelSelection <> msModflowNWT then
   begin
@@ -2747,14 +2771,17 @@ var
   TableIndex: Integer;
   TableItem: TReachTableItem;
 begin
-  // Write all the geometry in the first stress period.
-  // Reuse in subsequent stress periods.
   for GeoIndex := 0 to Model.SwrReachGeometry.Count - 1 do
   begin
     GeoItem := Model.SwrReachGeometry[GeoIndex];
 
     // Data set 11A
-    IGEONUM := GeoIndex+1;
+    if GeoItem.GeoNumber = 0 then
+    begin
+      Continue;
+    end;
+
+    IGEONUM := GeoItem.GeoNumber;
     WriteInteger(IGEONUM);
 
     IGEOTYPE := ord(GeoItem.GeometryType) + 1;

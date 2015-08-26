@@ -443,12 +443,14 @@ procedure AddInterpolatorsToList(const List: TList);
 begin
   // Added in order from fastest to slowest.
   AddNewInterpolator(List, TNearestPoint2DInterpolator);
+  AddNewInterpolator(List, TPointAverageInterpolator);
   AddNewInterpolator(List, TLinearSfrpackInterpolator);
   AddNewInterpolator(List, TFittedSurfaceIntepolator);
   AddNewInterpolator(List, TNaturalNeighborInterp);
   AddNewInterpolator(List, TNearest2DInterpolator);
   AddNewInterpolator(List, TInvDistSqPoint2DInterpolator);
   AddNewInterpolator(List, TInvDistSq2DInterpolator);
+
 end;
 
 procedure TfrmDataSets.FormActivate(Sender: TObject);
@@ -928,6 +930,12 @@ begin
         comboOrientation.Items[1].Brush.Color := clBtnFace;
         comboOrientation.Items[2].Brush.Color := clBtnFace;
       end;
+    msFootPrint:
+      begin
+        comboOrientation.Items[1].Brush.Color := clBtnFace;
+        comboOrientation.Items[2].Brush.Color := clBtnFace;
+        comboOrientation.Items[3].Brush.Color := clBtnFace;
+      end
     else
       Assert(False);
   end;
@@ -1277,6 +1285,26 @@ begin
           1,2:
             begin
               // Front and side data set orientations are not allowed
+              // in MODFLOW.
+              // These items are drawn with a gray background to indicate
+              // they can not be selected.
+              comboOrientation.ItemIndex :=
+                Ord(SelectedEdit.Orientation);
+            end;
+          else Assert(False);
+        end;
+      end;
+    msFootPrint:
+      begin
+        case comboOrientation.ItemIndex of
+          0:
+            begin
+              SelectedEdit.Orientation :=
+                TDataSetOrientation(comboOrientation.ItemIndex);
+            end;
+          1,2,3:
+            begin
+              // Front, side and 3D data set orientations are not allowed
               // in MODFLOW.
               // These items are drawn with a gray background to indicate
               // they can not be selected.

@@ -49,9 +49,9 @@ uses ModflowTimeUnit, frmErrorsAndWarningsUnit,
   DataSetUnit, FastGEO;
 
 resourcestring
-  StrInTheFollowingRiv = 'In the following river cells, the stage is below t' +
+  StrInTheFollowingRiv = 'In the following river cells, the stage is equal to or below t' +
   'he river bottom.';
-  StrLayerDRowDC = 'Layer: %0:d, Row %1:d, Column %2:d';
+  StrLayerDRowDC = 'Layer: %0:d, Row %1:d, Column %2:d. Amount: %3:g.';
   StrTheFollowingRiver = 'The following River observation names may be valid' +
   ' for MODFLOW but they are not valid for UCODE.';
   StrWritingRIVPackage = 'Writing RIV Package input.';
@@ -67,10 +67,11 @@ resourcestring
   StrRiverStageIsBelowBottom = 'River stage is below the river bottom at the' +
   ' following locations.';
   StrLargeRiverStageGrDetailed = 'Large river stage gradient between %0:s an' +
-  'd %1:s.';
+  'd %1:s. Amount: %2:g';
   StrLargeRiverStageGr = 'Large river stage gradient';
   StrHighRiverConductan = 'High River conductance compared to the cell-to-ce' +
   'll conductance may cause numerical difficulties';
+  StrZeroRiverConductan = 'Negative or zero River conductance';
 
 { TModflowRIV_Writer }
 
@@ -91,6 +92,7 @@ var
   CellBottomElevation: Real;
   AqCond: Double;
   Ratio: Extended;
+  Delta: double;
   procedure CheckGradient;
   var
     DeltaRivElevation: double;
@@ -121,7 +123,7 @@ var
         Cell2 := Format(StrLayerRowColObject, [
           OtherCell.Layer+1, OtherCell.Row+1, OtherCell.Column+1, ScreenObject.Name]);
         WarningMessage := Format(StrLargeRiverStageGrDetailed,
-          [Cell1, Cell2]);
+          [Cell1, Cell2, Gradient]);
         frmErrorsAndWarnings.AddWarning(Model, StrLargeRiverStageGr,
           WarningMessage, ScreenObject);
       end;
@@ -143,19 +145,20 @@ begin
   begin
     if (Riv_Cell.RiverStage < CellBottomElevation) then
     begin
+      Delta := CellBottomElevation-Riv_Cell.RiverStage;
       ScreenObject := Riv_Cell.ScreenObject as TScreenObject;
       if Model.ModelSelection = msModflowNWT then
       begin
         frmErrorsAndWarnings.AddError(Model, StrRiverStageIsBelow,
-          Format(StrLayerRowColObject, [
-          Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]),
+          Format(StrLayerRowColObjectAmount, [
+          Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name, Delta]),
           ScreenObject);
       end
       else
       begin
         frmErrorsAndWarnings.AddWarning(Model, StrRiverStageIsBelow,
-          Format(StrLayerRowColObject, [
-          Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]),
+          Format(StrLayerRowColObjectAmount, [
+          Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name, Delta]),
           ScreenObject);
       end;
     end;
@@ -163,29 +166,33 @@ begin
     if (Riv_Cell.RiverBottom < Model.Grid.CellElevation[
       Riv_Cell.Column, Riv_Cell.Row, Riv_Cell.Layer+1]) then
     begin
+      Delta := Model.Grid.CellElevation[
+        Riv_Cell.Column, Riv_Cell.Row, Riv_Cell.Layer+1]
+        - Riv_Cell.RiverBottom;
       ScreenObject := Riv_Cell.ScreenObject as TScreenObject;
       if Model.ModelSelection = msModflowNWT then
       begin
         frmErrorsAndWarnings.AddError(Model, StrRiverBottomIsBelo,
-          Format(StrLayerRowColObject, [
-          Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]),
+          Format(StrLayerRowColObjectAmount, [
+          Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name, Delta]),
           ScreenObject);
       end
       else
       begin
         frmErrorsAndWarnings.AddWarning(Model, StrRiverBottomIsBelo,
-          Format(StrLayerRowColObject, [
-          Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]),
+          Format(StrLayerRowColObjectAmount, [
+          Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name, Delta]),
           ScreenObject);
       end;
     end;
 
     if Riv_Cell.RiverStage <= Riv_Cell.RiverBottom then
     begin
+      Delta := Riv_Cell.RiverBottom - Riv_Cell.RiverStage;
       ScreenObject := Riv_Cell.ScreenObject as TScreenObject;
       frmErrorsAndWarnings.AddError(Model, StrRiverStageIsBelowBottom,
-        Format(StrLayerRowColObject, [
-        Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]),
+        Format(StrLayerRowColObjectAmount, [
+        Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name, Delta]),
         ScreenObject);
     end;
 
@@ -197,12 +204,19 @@ begin
       begin
         ScreenObject := Riv_Cell.ScreenObject as TScreenObject;
         frmErrorsAndWarnings.AddWarning(Model,StrHighRiverConductan,
-          Format(StrLayerRowColObject, [
-          Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]),
+          Format(StrLayerRowColObjectAmount, [
+          Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name, Ratio]),
           ScreenObject);
       end;
+    end
+    else
+    begin
+      ScreenObject := Riv_Cell.ScreenObject as TScreenObject;
+      frmErrorsAndWarnings.AddWarning(Model,StrZeroRiverConductan,
+        Format(StrLayerRowColObject, [
+        Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]),
+        ScreenObject);
     end;
-
   end;
   if Riv_Cell.Row > 0 then
   begin
@@ -274,6 +288,7 @@ var
   Riv_Cell: TRiv_Cell;
   LocalLayer: integer;
   ScreenObject: TScreenObject;
+  Delta: double;
 begin
   Riv_Cell := Cell as TRiv_Cell;
   LocalLayer := Model.
@@ -291,18 +306,19 @@ begin
   NewLine;
   if Riv_Cell.RiverStage <= Riv_Cell.RiverBottom then
   begin
+    Delta := Riv_Cell.RiverBottom - Riv_Cell.RiverStage;
     ScreenObject := Riv_Cell.ScreenObject as TScreenObject;
     if Model.ModelSelection = msModflowNWT then
     begin
       frmErrorsAndWarnings.AddError(Model, StrInTheFollowingRiv,
-        Format(StrLayerDRowDC, [Riv_Cell.Layer+1, Riv_Cell.Row+1,
-        Riv_Cell.Column+1]), ScreenObject);
+        Format(StrLayerRowColObjectAmount, [Riv_Cell.Layer+1, Riv_Cell.Row+1,
+        Riv_Cell.Column+1, ScreenObject.Name, Delta]), ScreenObject);
     end
     else
     begin
       frmErrorsAndWarnings.AddWarning(Model, StrInTheFollowingRiv,
-        Format(StrLayerDRowDC, [Riv_Cell.Layer+1, Riv_Cell.Row+1,
-        Riv_Cell.Column+1]), ScreenObject);
+        Format(StrLayerRowColObjectAmount, [Riv_Cell.Layer+1, Riv_Cell.Row+1,
+        Riv_Cell.Column+1, ScreenObject.Name, Delta]), ScreenObject);
     end;
   end;
 end;
@@ -503,6 +519,7 @@ var
   CellIndex: Integer;
 begin
   // Data set 4b
+  InitializeCells;
   for CellIndex := 0 to CellList.Count - 1 do
   begin
     Cell := CellList[CellIndex] as TRiv_Cell;

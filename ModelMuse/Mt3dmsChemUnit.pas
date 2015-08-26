@@ -1237,6 +1237,22 @@ begin
         BoundaryTypes.Add(ISSTYPE_ETS);
       end;
     end;
+    if Packages.Mnw2Package.IsSelected then
+    begin
+      if (LocalScreenObject.ModflowMnw2Boundary <> nil)
+        and LocalScreenObject.ModflowMnw2Boundary.Used then
+      begin
+        BoundaryTypes.Add(ISSTYPE_MNW);
+      end;
+    end;
+    if Packages.Mnw1Package.IsSelected then
+    begin
+      if (LocalScreenObject.ModflowMnw1Boundary <> nil)
+        and LocalScreenObject.ModflowMnw1Boundary.Used then
+      begin
+        BoundaryTypes.Add(ISSTYPE_MNW);
+      end;
+    end;
 //    if Packages.SfrPackage.IsSelected then
 //    begin
 //      if (LocalScreenObject.ModflowSfrBoundary <> nil)

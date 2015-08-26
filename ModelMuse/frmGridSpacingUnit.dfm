@@ -23,7 +23,6 @@ inherited frmGridSpacing: TfrmGridSpacing
     ActivePage = tabLayers
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 437
     object tabColumns: TTabSheet
       Caption = 'Columns (X'#39')'
       ExplicitLeft = 0
@@ -308,10 +307,6 @@ inherited frmGridSpacing: TfrmGridSpacing
     object tabLayers: TTabSheet
       Caption = 'Layers (Z)'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 429
-      ExplicitHeight = 0
       object pnlLayers: TPanel
         Left = 0
         Top = 162
@@ -320,7 +315,6 @@ inherited frmGridSpacing: TfrmGridSpacing
         Align = alBottom
         ParentColor = True
         TabOrder = 1
-        ExplicitWidth = 429
         DesignSize = (
           451
           81)
@@ -361,7 +355,6 @@ inherited frmGridSpacing: TfrmGridSpacing
           Anchors = [akTop, akRight]
           TabOrder = 0
           OnChange = seLayersChange
-          ExplicitLeft = 324
         end
       end
       object dgLayers: TRbwDataGrid4
@@ -437,7 +430,6 @@ inherited frmGridSpacing: TfrmGridSpacing
             AutoAdjustColWidths = False
           end>
         WordWrapRowCaptions = False
-        ExplicitWidth = 429
         RowHeights = (
           24
           24
@@ -455,7 +447,6 @@ inherited frmGridSpacing: TfrmGridSpacing
     Align = alBottom
     ParentColor = True
     TabOrder = 2
-    ExplicitWidth = 437
     DesignSize = (
       459
       41)
@@ -468,7 +459,6 @@ inherited frmGridSpacing: TfrmGridSpacing
       Kind = bkCancel
       NumGlyphs = 2
       TabOrder = 2
-      ExplicitLeft = 339
     end
     object btnOK: TBitBtn
       Left = 264
@@ -480,7 +470,6 @@ inherited frmGridSpacing: TfrmGridSpacing
       NumGlyphs = 2
       TabOrder = 1
       OnClick = btnOKClick
-      ExplicitLeft = 242
     end
     object btnHelp: TBitBtn
       Left = 168
@@ -492,7 +481,6 @@ inherited frmGridSpacing: TfrmGridSpacing
       NumGlyphs = 2
       TabOrder = 0
       OnClick = btnHelpClick
-      ExplicitLeft = 146
     end
   end
   object pnlDescribe: TPanel
@@ -503,7 +491,6 @@ inherited frmGridSpacing: TfrmGridSpacing
     Align = alTop
     ParentColor = True
     TabOrder = 0
-    ExplicitWidth = 437
     DesignSize = (
       459
       129)

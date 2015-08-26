@@ -4,7 +4,7 @@ unit AsciiRasterReaderUnit;
 
 interface
 
-uses SysUtils, Classes, FastGEO, ComCtrls, Forms;
+uses SysUtils, Classes, FastGEO, ComCtrls, Forms, RasterValuesAlongSegmentsUnit;
 
 Type
   EAsciiRasterError = class(Exception);
@@ -24,6 +24,35 @@ Type
 
   TOnReadPointEvent = procedure (Sender: TObject; Point: TPoint3D) of object;
 
+  TZArray = array of array of Extended;
+
+  TAsciiRaster = class(TInterfacedObject, IRaster)
+  private
+    FRasterHeader: TRasterHeader;
+    FZ: TZArray;
+    function GetLowerLeft: TPoint2D;
+    function GetXCount: integer;
+    function GetYCount: integer;
+    function GetXSpacing: Double;
+    function GetYSpacing: Double;
+    function GetZ(XIndex, YIndex: Integer): Double;
+    function GetIgnore(XIndex, YIndex: Integer): Boolean;
+  public
+    // @name is the lower left corner of the grid. The data point for the
+    // lower left cells is at
+    // (LowerLeft.x + (XSpacing/2), LowerLeft.y + (YSpacing/2)).
+    // ESRI ASCII grid files follow this format. Surfer Grid files need to
+    // be adjusted because they give the coordinates of the cell centers
+    // directly.
+    property LowerLeft: TPoint2D read GetLowerLeft;
+    property XCount: Integer read GetXCount;
+    property YCount: Integer read GetYCount;
+    property XSpacing: Double read GetXSpacing;
+    property YSpacing: Double read GetYSpacing;
+    property Z[XIndex, YIndex: Integer]: double read GetZ;
+    property Ignore[XIndex, YIndex: Integer]: Boolean read GetIgnore;
+  end;
+
   TAsciiRasterReader = class(TObject)
   private
     RasterFile: TextFile;
@@ -32,13 +61,18 @@ Type
     function ReadHeader(var ShouldReadNoDataValue: boolean): TRasterHeader;
     procedure ReadValues(var Values: TPoint3DArray; RasterHeader: TRasterHeader;
       Progress : TProgressBar);
+    procedure ReadZValues(var Values: TZArray; RasterHeader: TRasterHeader;
+      Progress : TProgressBar);
     procedure SetFileName(const Value: string);
     function GetValidFileHeader: boolean;
     function GetFileHeader: TRasterHeader;
   public
     procedure ReadAsciiRaster(var Values: TPoint3DArray;
       Progress : TProgressBar = nil); overload;
+    // This version of @name is intended to be used with @link(OnReadPoint).
     procedure ReadAsciiRaster(Progress : TProgressBar = nil); overload;
+    procedure ReadAsciiRaster(Raster: TAsciiRaster;
+      Progress : TProgressBar = nil); overload;
     property OnReadPoint: TOnReadPointEvent read FOnReadPoint write FOnReadPoint;
     property FileName: string read FFileName write SetFileName;
     property ValidFileHeader: boolean read GetValidFileHeader;
@@ -375,6 +409,69 @@ begin
   end;
 end;
 
+procedure TAsciiRasterReader.ReadZValues(var Values: TZArray;
+  RasterHeader: TRasterHeader; Progress: TProgressBar);
+var
+  ColIndex: Integer;
+  RowIndex: Integer;
+  LineIndex: Integer;
+  Lines: TStringList;
+  AValue: Extended;
+  AString: string;
+  ALine: string;
+  APoint: TPoint3D;
+begin
+  if not Assigned(Values) then
+  begin
+    raise EAsciiRasterError.Create(StrErrorCallingTAscii);
+  end;
+  Lines := TStringList.Create;
+  try
+    Lines.Delimiter := ' ';
+    LineIndex := 0;
+    if Progress <> nil then
+    begin
+      Progress.Max := RasterHeader.NumberOfRows;
+      Progress.Step := 1;
+      Progress.Position := 0;
+    end;
+    for RowIndex := 0 to RasterHeader.NumberOfRows - 1 do
+    begin
+      for ColIndex := 0 to RasterHeader.NumberOfColumns - 1 do
+      begin
+        if LineIndex = Lines.Count then
+        begin
+          ReadLn(RasterFile, ALine);
+          Lines.DelimitedText := ALine;
+          LineIndex := 0;
+        end;
+        AString := Trim(Lines[LineIndex]);
+        try
+          AValue := FortranStrToFloat(AString);
+        except on EConvertError do
+          raise EAsciiRasterError.Create(Format(StrErrorReadingDataV,
+            [RowIndex + 1, ColIndex + 1, AString]));
+        end;
+
+        Values[RowIndex,ColIndex] := AValue;
+
+        if Assigned(OnReadPoint) then
+        begin
+          OnReadPoint(self, APoint);
+        end;
+        Inc(LineIndex);
+      end;
+      if Progress <> nil then
+      begin
+        Progress.StepIt;
+        Application.ProcessMessages;
+      end;
+    end;
+  finally
+    Lines.Free;
+  end;
+end;
+
 procedure TAsciiRasterReader.SetFileName(const Value: string);
 begin
   FFileName := Value;
@@ -415,6 +512,86 @@ begin
   finally
     CloseFile(RasterFile);
   end;
+end;
+
+procedure TAsciiRasterReader.ReadAsciiRaster(Raster: TAsciiRaster;
+  Progress: TProgressBar);
+var
+  ShouldReadNoDataValue: Boolean;
+begin
+  if not FileExists(FileName) then
+  begin
+    raise EAsciiRasterError.Create(Format(StrSDoesNotExist, [FileName]));
+  end;
+
+  // Determine if the NODATA_VALUE should be read.
+  AssignFile(RasterFile, FileName);
+  try
+    Reset(RasterFile);
+    ShouldReadNoDataValue := True;
+    ReadHeader(ShouldReadNoDataValue);
+  finally
+    CloseFile(RasterFile);
+  end;
+
+  // Read file.
+  AssignFile(RasterFile, FileName);
+  try
+    Reset(RasterFile);
+    Raster.FRasterHeader := ReadHeader(ShouldReadNoDataValue);
+    SetLength(Raster.FZ, Raster.FRasterHeader.NumberOfRows,
+      Raster.FRasterHeader.NumberOfColumns);
+    ReadZValues(Raster.FZ, Raster.FRasterHeader, Progress);
+  finally
+    CloseFile(RasterFile);
+  end;
+end;
+
+{ TAsciiRaster }
+
+function TAsciiRaster.GetIgnore(XIndex, YIndex: Integer): Boolean;
+begin
+  result := FZ[FRasterHeader.NumberOfRows - 1 - YIndex, XIndex]
+    = FRasterHeader.IgnoreValue;
+end;
+
+function TAsciiRaster.GetLowerLeft: TPoint2D;
+begin
+  result.x := FRasterHeader.LowerLeftX;
+  result.Y := FRasterHeader.LowerLeftY;
+  if FRasterHeader.XCoordPos = cpCenter then
+  begin
+    result.x := result.x - FRasterHeader.CellSize;
+  end;
+  if FRasterHeader.YCoordPos = cpCenter then
+  begin
+    result.Y := result.Y - FRasterHeader.CellSize;
+  end;
+end;
+
+function TAsciiRaster.GetXCount: integer;
+begin
+  Result := FRasterHeader.NumberOfColumns;
+end;
+
+function TAsciiRaster.GetXSpacing: Double;
+begin
+  Result := FRasterHeader.CellSize;
+end;
+
+function TAsciiRaster.GetYCount: integer;
+begin
+  Result := FRasterHeader.NumberOfRows;
+end;
+
+function TAsciiRaster.GetYSpacing: Double;
+begin
+  Result := FRasterHeader.CellSize;
+end;
+
+function TAsciiRaster.GetZ(XIndex, YIndex: Integer): Double;
+begin
+  Result := FZ[FRasterHeader.NumberOfRows - 1 - YIndex, XIndex];
 end;
 
 end.

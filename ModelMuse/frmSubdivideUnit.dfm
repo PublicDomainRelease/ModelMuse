@@ -10,9 +10,9 @@ inherited frmSubdivide: TfrmSubdivide
   Font.Height = 21
   Font.Name = 'adobe-helvetica'
   OnClose = FormClose
-  ExplicitWidth = 732
-  ExplicitHeight = 267
-  PixelsPerInch = 120
+  ExplicitWidth = 740
+  ExplicitHeight = 271
+  PixelsPerInch = 96
   TextHeight = 21
   object btnCancel: TBitBtn
     Left = 622
@@ -114,6 +114,7 @@ inherited frmSubdivide: TfrmSubdivide
       Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 2
+      OnChange = seColCountChange
     end
   end
   object GroupBox2: TGroupBox
@@ -188,6 +189,7 @@ inherited frmSubdivide: TfrmSubdivide
       Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 2
+      OnChange = seRowCountChange
     end
   end
   object GroupBox3: TGroupBox

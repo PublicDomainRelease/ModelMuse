@@ -144,7 +144,7 @@ begin
         if FLogTransform then
         begin
           rdgContourData.Cells[Ord(ccValue),Row] :=
-            FloatToSTr(Power(10,Contours.ContourValues[Index]));
+            FloatToSTr(Power(10.,Contours.ContourValues[Index]));
         end
         else
         begin

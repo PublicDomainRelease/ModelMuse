@@ -146,12 +146,15 @@ type
     procedure RemoveGeom(Geom: TReachGeometryItem);
   public
     function Add: TSwrTransientReachItem;
+    constructor Create(Boundary: TModflowBoundary;
+      Model: TBaseModel; ScreenObject: TObject); override;
   end;
 
   TSwrTransientCell = class(TValueCell)
   private
     FValues: TSwrReachTransientRecord;
     FStressPeriod: integer;
+    // @name is set equal to @link(TReachGeometryItem).Index + 1;
     FGeoNumber: integer;
     FObjectName: string;
     function GetVerticalOffSet: double;
@@ -179,6 +182,7 @@ type
     property VerticalOffSet: double read GetVerticalOffSet;
     property VerticalOffSetAnnotation: string read GetVerticalOffSetAnnotation;
     function IsIdentical(AnotherCell: TValueCell): boolean; override;
+    // @name is set equal to @link(TReachGeometryItem).Index + 1;
     property GeoNumber: integer read FGeoNumber;
     property Stage: double read GetStage;
     property StageAnnotation: string read GetStageAnnotation;
@@ -638,6 +642,13 @@ begin
   end;
 end;
 
+constructor TSwrReachCollection.Create(Boundary: TModflowBoundary;
+  Model: TBaseModel; ScreenObject: TObject);
+begin
+  inherited;
+  SectionDuplicatesAllowed := True;
+end;
+
 function TSwrReachCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
   result := TSwrReachListLink;
@@ -827,6 +838,7 @@ begin
   FValues.Cache(Comp, Strings);
   WriteCompInt(Comp, FStressPeriod);
   WriteCompInt(Comp, FGeoNumber);
+  WriteCompString(Comp, ObjectName);
 end;
 
 function TSwrTransientCell.GetColumn: integer;
@@ -940,6 +952,7 @@ begin
   FValues.Restore(Decomp, Annotations);
   FStressPeriod := ReadCompInt(Decomp);
   FGeoNumber := ReadCompInt(Decomp);
+  FObjectName := ReadCompStringSimple(Decomp);
 end;
 
 procedure TSwrTransientCell.SetColumn(const Value: integer);

@@ -142,7 +142,8 @@ procedure TfrmFilesToArchive.JvLinkLabel1LinkClick(Sender: TObject;
   LinkNumber: Integer; LinkText, LinkParam: string);
 begin
   inherited;
-  TWebTools.OpenWebPage('http://water.usgs.gov/admin/memo/GW/gw11.01.html');
+//  TWebTools.OpenWebPage('http://water.usgs.gov/admin/memo/GW/gw11.01.html');
+  TWebTools.OpenWebPage('http://water.usgs.gov/admin/memo/GW/gw2015.02.pdf');
 end;
 
 procedure TfrmFilesToArchive.ColorText;

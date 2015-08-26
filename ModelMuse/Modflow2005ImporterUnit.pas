@@ -949,7 +949,7 @@ Type
     MultiplierArray: string;
     ZoneArray: string;
     Zones: array of integer;
-    function SimilarZone(Cluster: TClusterObject): boolean;
+    function SimilarMultAndZone(Cluster: TClusterObject): boolean;
   end;
 
   TArrayInstanceObject = class(TObjectArray)
@@ -10590,7 +10590,9 @@ var
   MultiplierName: string;
 begin
   Readln(FImporter.FFile, MultiplierName);
+  MultiplierName := Copy(Trim(MultiplierName), 1, 10);
   Readln(FImporter.FFile, ZoneName);
+  ZoneName := Copy(Trim(ZoneName), 1, 10);
   FProgressHandler(FilePos(FImporter.FFile));
   MultiplierName := Trim(MultiplierName);
   ZoneName := Trim(ZoneName);
@@ -11531,7 +11533,7 @@ begin
   for Index := 0 to ClusterList.Count - 1 do
   begin
     Cluster := ClusterList[Index];
-    result := ACluster.SimilarZone(Cluster);
+    result := ACluster.SimilarMultAndZone(Cluster);
     if result then
     begin
       ClusterList.Add(ACluster);
@@ -11572,6 +11574,7 @@ begin
   FRchPackage := FModel.ModflowPackages.RchPackage;
   FRchPackage.IsSelected := True;
   FRchPackage.Comments := FComments;
+  FRchPackage.AssignmentMethod := umAdd;
   SetRechargeOption;
   EvaluateTimeVaryingLayers(FRchPackage);
 
@@ -11916,11 +11919,12 @@ end;
 
 { TClusterObject }
 
-function TClusterObject.SimilarZone(Cluster: TClusterObject): boolean;
+function TClusterObject.SimilarMultAndZone(Cluster: TClusterObject): boolean;
 var
   Index: Integer;
 begin
-  result := AnsiCompareText(Cluster.ZoneArray, ZoneArray) = 0;
+  result := (AnsiCompareText(Cluster.ZoneArray, ZoneArray) = 0)
+    and (AnsiCompareText(Cluster.MultiplierArray, MultiplierArray) = 0);
   if result then
   begin
     result := Length(Zones) = Length(Cluster.Zones);

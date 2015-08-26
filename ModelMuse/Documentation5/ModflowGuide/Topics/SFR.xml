@@ -225,7 +225,7 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Normal"><table rowcount="41" colcount="2" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Normal"><table rowcount="40" colcount="2" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td colspan="2">
           <para styleclass="Normal"><text styleclass="Normal" translate="true">FOR EACH SIMULATION</text></para>
@@ -258,10 +258,10 @@
       </tr>
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-LGR,MODFLOW-NWT"/><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Table Header" translate="true">MODFLOW-2005, MODFLOW-NWT, MODFLOW-LGR Version 2: </text><conditional-text type="END"/><text styleclass="Heading2_atoc_" translate="true">Data Set 1a</text><conditional-text type="END"/></para>
+          <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-FMP2,MODFLOW-LGR,MODFLOW-NWT"/><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/><text styleclass="Table Header" translate="true">MODFLOW-2005, MODFLOW-NWT, &#160;MODFLOW-OWHM, MODFLOW-LGR Version 2: </text><conditional-text type="END"/><text styleclass="Heading2_atoc_" translate="true">Data Set 1a</text><conditional-text type="END"/></para>
         </td>
         <td>
-          <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="Normal" translate="true">[</text><text styleclass="Keywords" translate="true">REACHINPUT</text><text styleclass="Normal" translate="true">&#32;</text><text styleclass="Keywords" translate="true">TRANSROUTE</text><text styleclass="Normal" translate="true">]</text></para>
+          <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-FMP2,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="Normal" translate="true">[</text><text styleclass="Keywords" translate="true">REACHINPUT</text><text styleclass="Normal" translate="true">&#32;</text><text styleclass="Keywords" translate="true">TRANSROUTE</text><text styleclass="Normal" translate="true">]</text></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
@@ -318,7 +318,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">An integer value equal to the largest number of rows of specified inflows for any of the tabular inflow files if TABFILES is specified. MAXVAL is used for memory allocation. For example, if there are two tabular inflow files and the files contain 100 and 200 inflow values, respectively, then MAXVAL would be specified as 200.</text></para>
+                      <para styleclass="Normal"><anchor id="MAXVAL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">An integer value equal to the largest number of rows of specified inflows for any of the tabular inflow files if TABFILES is specified. MAXVAL is used for memory allocation. For example, if there are two tabular inflow files and the files contain 100 and 200 inflow values, respectively, then MAXVAL would be specified as 200.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -1480,17 +1480,12 @@
       </tr>
       <tr style="vertical-align:top">
         <td colspan="2">
-          <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="Normal" translate="true">If keyword </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="TABFILES" styleclass="Keywords" translate="true">TABFILES</link><text styleclass="Normal" translate="true"> has been specified, repeat Item 6f </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" anchor="NUMTAB" styleclass="Normal" translate="true">NUMTAB</link><text styleclass="Normal" translate="true"> times for the first stress period only:</text><conditional-text type="END"/></para>
-        </td>
-      </tr>
-      <tr style="vertical-align:top">
-        <td colspan="2">
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">If Ground-Water Transport (GWT) Process is active (Ftype “GWT” exists), then read Part 6f NSOL times (where NSOL is the number of solutes being simulated):</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">If Ground-Water Transport (GWT) Process is active (Ftype “GWT” exists), then read Part 6g NSOL times (where NSOL is the number of solutes being simulated):</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 6f</text></para>
+          <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 6g</text></para>
         </td>
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">[CONCQ(NSOL)] CONCRUN(NSOL) CONCPPT(NSOL)</text></para>

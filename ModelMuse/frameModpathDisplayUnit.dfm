@@ -169,7 +169,7 @@ object frameModpathDisplay: TframeModpathDisplay
         Left = 8
         Top = 292
         Width = 241
-        Height = 21
+        Height = 24
         Style = csDropDownList
         TabOrder = 7
         Visible = False

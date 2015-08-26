@@ -93,7 +93,7 @@ resourcestring
 
 procedure TfrmProgramLocations.AdjustHeight;
 begin
-  ClientHeight := jvrltModflowFmp.Top + jvrltModflowFmp.Height
+  ClientHeight := jvrltModelMonitor.Top + jvrltModelMonitor.Height
     + pnlBottom.Height;
 end;
 

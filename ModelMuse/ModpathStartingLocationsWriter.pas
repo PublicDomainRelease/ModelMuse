@@ -52,7 +52,7 @@ uses
   ModelMuseUtilities, frmGoPhastUnit, Math;
 
 resourcestring
-  StrAStartingTimeFor = 'A starting time for the MODPATH particles defined '
+  StrAStartingTimeFor = 'Starting times for the MODPATH particles defined '
     + 'with the following objects are not valid. Adjust the beginning and '
     + 'ending time for MODPATH or adjust the release time.';
   StrInvalidMODPATHRefe = 'Invalid MODPATH reference time';

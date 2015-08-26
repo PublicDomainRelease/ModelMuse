@@ -6,14 +6,12 @@ uses
   Types, Classes, Controls, Graphics;
 
 type
-  TObjectLabel = class(TPersistent)
+  TCustomObjectLabel = class(TPersistent)
   private
     FFont: TFont;
     FVisible: boolean;
-    FCaption: TCaption;
     FOnChange: TNotifyEvent;
     FOffSet: TPoint;
-    procedure SetCaption(const Value: TCaption);
     procedure SetFont(const Value: TFont);
     procedure SetOffSet(const Value: TPoint);
     procedure SetOnChange(const Value: TNotifyEvent);
@@ -25,7 +23,6 @@ type
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
   published
-    property Caption: TCaption read FCaption write SetCaption;
     property Font: TFont read FFont write SetFont;
     // Instead of specifying the location of the label, a label offset
     // is specified. This will be the offset from the location of the
@@ -35,18 +32,29 @@ type
     property OnChange: TNotifyEvent read FOnChange write SetOnChange;
   end;
 
+  TObjectLabel = class(TCustomObjectLabel)
+  private
+    FCaption: TCaption;
+    procedure SetCaption(const Value: TCaption);
+  public
+    procedure Assign(Source: TPersistent); override;
+  published
+    property Caption: TCaption read FCaption write SetCaption;
+  end;
+
+  TObjectVertexLabel = class(TCustomObjectLabel);
+
 implementation
 
-{ TObjectLabel }
+{ TCustomObjectLabel }
 
-procedure TObjectLabel.Assign(Source: TPersistent);
+procedure TCustomObjectLabel.Assign(Source: TPersistent);
 var
-  SourceLabel: TObjectLabel;
+  SourceLabel: TCustomObjectLabel;
 begin
-  if Source is TObjectLabel then
+  if Source is TCustomObjectLabel then
   begin
-    SourceLabel := TObjectLabel(Source);
-    Caption := SourceLabel.Caption;
+    SourceLabel := TCustomObjectLabel(Source);
     Font := SourceLabel.Font;
     OffSet := SourceLabel.OffSet;
     Visible := SourceLabel.Visible;
@@ -57,24 +65,37 @@ begin
   end;
 end;
 
-constructor TObjectLabel.Create;
+constructor TCustomObjectLabel.Create;
 begin
   FFont := TFont.Create;
+  FFont.Color := clBlack;
   FOffSet.Y := 20;
 end;
 
-destructor TObjectLabel.Destroy;
+destructor TCustomObjectLabel.Destroy;
 begin
   FFont.Free;
   inherited;
 end;
 
-procedure TObjectLabel.DoChange;
+procedure TCustomObjectLabel.DoChange;
 begin
   if Assigned(OnChange) then
   begin
     OnChange(Self);
   end;
+end;
+
+procedure TObjectLabel.Assign(Source: TPersistent);
+var
+  SourceLabel: TObjectLabel;
+begin
+  if Source is TObjectLabel then
+  begin
+    SourceLabel := TObjectLabel(Source);
+    Caption := SourceLabel.Caption;
+  end;
+  inherited;
 end;
 
 procedure TObjectLabel.SetCaption(const Value: TCaption);
@@ -86,13 +107,13 @@ begin
   end;
 end;
 
-procedure TObjectLabel.SetFont(const Value: TFont);
+procedure TCustomObjectLabel.SetFont(const Value: TFont);
 begin
   FFont.Assign(Value);
   DoChange;
 end;
 
-procedure TObjectLabel.SetOffSet(const Value: TPoint);
+procedure TCustomObjectLabel.SetOffSet(const Value: TPoint);
 begin
   if (FOffSet.X <> Value.X) or (FOffSet.Y <> Value.Y) then
   begin
@@ -101,12 +122,12 @@ begin
   end;
 end;
 
-procedure TObjectLabel.SetOnChange(const Value: TNotifyEvent);
+procedure TCustomObjectLabel.SetOnChange(const Value: TNotifyEvent);
 begin
   FOnChange := Value;
 end;
 
-procedure TObjectLabel.SetVisible(const Value: boolean);
+procedure TCustomObjectLabel.SetVisible(const Value: boolean);
 begin
   if FVisible <> Value then
   begin
